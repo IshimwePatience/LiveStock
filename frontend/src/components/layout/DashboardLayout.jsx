@@ -41,7 +41,7 @@ const DashboardLayout = () => {
           </button>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
             <img src={logo} alt="Logo" className="h-7" />
-            <span className="text-xl text-gray-600 font-medium">Livestock</span>
+            <span className="text-xl text-green-700 font-bold">Livestock</span>
           </div>
         </div>
 
