@@ -6,7 +6,7 @@ import Login from './features/auth/pages/Login'
 import ForgotPassword from './features/auth/pages/ForgotPassword'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './features/dashboard/pages/Overview'
-import Movements from './features/dashboard/pages/Movements'
+import Movements from './features/movements/pages/Movements';
 import api from './lib/api'
 
 // Simple Auth Guard component

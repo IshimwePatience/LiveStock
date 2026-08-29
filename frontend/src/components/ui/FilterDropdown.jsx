@@ -1,28 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ListFilter, Search, Plus, ChevronDown } from 'lucide-react';
 
-const FilterDropdown = () => {
+const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('Parent');
+  const [activeCategory, setActiveCategory] = useState('Type');
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
-  const categories = [
-    'Atlassian Project',
-    'Parent',
-    'Assignee',
-    'Status',
-    'Labels'
-  ];
+  const categories = ['Type', 'Status', 'Animal'];
 
-  const parentOptions = [
-    { id: '1', title: 'No parent', subtitle: '' },
-    { id: '2', title: 'Capacitor migration', subtitle: 'MOBILE-5093' },
-    { id: '3', title: 'Mobile app customisation improvem...', subtitle: 'MOBILE-4968', tooltip: 'Mobile app customisation improvements\nMOBILE-4968' },
-    { id: '4', title: 'Use signals in the app', subtitle: 'MOBILE-4895' },
-    { id: '5', title: 'Fix Moodle app behat flaky failures', subtitle: 'MOBILE-4878' },
-    { id: '6', title: 'Review "tap and drop" question types', subtitle: 'MOBILE-4772' },
-    { id: '7', title: 'Support offline editing in all activity ...', subtitle: 'MOBILE-4770' }
-  ];
+  const optionsMap = {
+    'Type': [
+      { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Requires LAB approval' },
+      { id: 'SECTOR_TO_SECTOR', title: 'Sector to Sector', subtitle: 'Requires DARO approval' }
+    ],
+    'Status': [
+      { id: 'Open', title: 'Open', subtitle: 'Pending or active movements' },
+      { id: 'Closed', title: 'Closed', subtitle: 'Approved and completed' }
+    ],
+    'Animal': [
+      { id: 'cattle', title: 'Cattle', subtitle: 'Cows, bulls, calves' },
+      { id: 'goat', title: 'Goats', subtitle: '' },
+      { id: 'sheep', title: 'Sheep', subtitle: '' },
+      { id: 'pig', title: 'Pigs', subtitle: '' },
+      { id: 'poultry', title: 'Poultry', subtitle: 'Chickens, ducks, turkeys' }
+    ]
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -34,16 +37,47 @@ const FilterDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleCheckboxChange = (categoryId, optionId) => {
+    const currentFilters = selectedFilters[categoryId] || [];
+    let newFilters;
+    
+    if (currentFilters.includes(optionId)) {
+      newFilters = currentFilters.filter(id => id !== optionId);
+    } else {
+      newFilters = [...currentFilters, optionId];
+    }
+    
+    onFilterChange(categoryId, newFilters);
+  };
+
+  const handleClearAll = () => {
+    onFilterChange('all', {});
+  };
+
+  const handleClearCategory = () => {
+    onFilterChange(activeCategory, []);
+  };
+
+  const currentOptions = useMemo(() => {
+    const opts = optionsMap[activeCategory] || [];
+    if (!searchQuery) return opts;
+    const q = searchQuery.toLowerCase();
+    return opts.filter(o => o.title.toLowerCase().includes(q) || o.subtitle.toLowerCase().includes(q));
+  }, [activeCategory, searchQuery]);
+
+  // Determine if filter button should look active
+  const hasActiveFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${
-          isOpen ? 'bg-[#e8f0fe] text-[#1967d2] border-[#1967d2]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+          isOpen || hasActiveFilters ? 'bg-[#e8f0fe] text-[#1967d2] border-[#1967d2]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
         }`}
       >
-        <ListFilter className="w-4 h-4" /> Filter
+        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#1967d2] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
       </button>
 
       {/* Popover Menu */}
@@ -51,14 +85,10 @@ const FilterDropdown = () => {
         <div className="absolute top-full left-0 mt-2 w-[550px] bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col font-sans">
           
           {/* Header Row */}
-          <div className="flex items-center justify-between p-2 border-b border-gray-200">
-            <div className="flex text-sm">
-              <button className="px-3 py-1.5 rounded bg-[#e8f0fe] text-[#1967d2] font-medium border border-[#1967d2] mr-1">Basic</button>
-              <button className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 font-medium mr-1">Advanced</button>
-              <button className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 font-medium">JQL</button>
-            </div>
-            <button className="flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded font-medium">
-              Saved filters <ChevronDown className="w-4 h-4 text-gray-500" />
+          <div className="flex items-center justify-between p-3 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-800 text-sm">Filter Criteria</h3>
+            <button className="flex items-center gap-1 text-sm text-gray-600 hover:bg-gray-100 px-2 py-1 rounded font-medium">
+              Saved presets <ChevronDown className="w-4 h-4 text-gray-400" />
             </button>
           </div>
 
@@ -71,21 +101,22 @@ const FilterDropdown = () => {
                 {categories.map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`w-full text-left px-4 py-2 text-sm ${
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setSearchQuery('');
+                    }}
+                    className={`w-full text-left flex items-center justify-between px-4 py-2 text-sm ${
                       activeCategory === cat 
                         ? 'bg-[#e8f0fe] text-[#1967d2] border-l-4 border-[#1967d2]' 
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                     }`}
                   >
-                    {cat}
+                    <span>{cat}</span>
+                    {selectedFilters[cat]?.length > 0 && (
+                      <span className="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.5 rounded-full">{selectedFilters[cat].length}</span>
+                    )}
                   </button>
                 ))}
-              </div>
-              <div className="px-4 pt-2">
-                <button className="flex items-center gap-1.5 text-sm text-gray-600 hover:bg-gray-100 px-2 py-1.5 rounded border border-gray-200 w-fit font-medium">
-                  <Plus className="w-4 h-4" /> Add field
-                </button>
               </div>
             </div>
 
@@ -98,6 +129,8 @@ const FilterDropdown = () => {
                   </div>
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={`Search ${activeCategory.toLowerCase()}`}
                     className="w-full bg-transparent px-2 py-1.5 outline-none text-sm text-gray-700 placeholder-gray-500"
                   />
@@ -105,22 +138,26 @@ const FilterDropdown = () => {
               </div>
               
               <div className="flex-1 overflow-y-auto pr-2 space-y-1 pb-2">
-                {parentOptions.map((opt) => (
-                  <label key={opt.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer group relative">
-                    <input type="checkbox" className="mt-1 border-gray-300 rounded text-[#1967d2] focus:ring-[#1967d2] w-4 h-4 cursor-pointer" />
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-tight">{opt.title}</span>
-                      {opt.subtitle && <span className="text-xs text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
-                    </div>
-
-                    {/* Custom Tooltip on hover if provided */}
-                    {opt.tooltip && (
-                      <div className="absolute left-10 top-8 hidden group-hover:block z-50 bg-[#1d2125] text-white text-[12px] p-2 rounded shadow-lg whitespace-pre w-56 font-medium leading-tight">
-                        {opt.tooltip}
+                {currentOptions.map((opt) => {
+                  const isChecked = (selectedFilters[activeCategory] || []).includes(opt.id);
+                  return (
+                    <label key={opt.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer group relative">
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked}
+                        onChange={() => handleCheckboxChange(activeCategory, opt.id)}
+                        className="mt-1 border-gray-300 rounded text-[#1967d2] focus:ring-[#1967d2] w-4 h-4 cursor-pointer" 
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-tight">{opt.title}</span>
+                        {opt.subtitle && <span className="text-xs text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
                       </div>
-                    )}
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
+                {currentOptions.length === 0 && (
+                  <div className="text-sm text-gray-500 p-2 text-center mt-4">No matching {activeCategory.toLowerCase()} options</div>
+                )}
               </div>
             </div>
 
@@ -128,8 +165,8 @@ const FilterDropdown = () => {
 
           {/* Footer Row */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-             <button className="text-sm text-gray-600 hover:underline font-medium">Clear all</button>
-             <button className="text-sm text-gray-400 hover:text-gray-600 font-medium">Clear</button>
+             <button onClick={handleClearAll} className="text-sm text-gray-600 hover:underline font-medium">Clear all</button>
+             <button onClick={handleClearCategory} className="text-sm text-gray-400 hover:text-gray-600 font-medium">Clear {activeCategory}</button>
           </div>
           
         </div>

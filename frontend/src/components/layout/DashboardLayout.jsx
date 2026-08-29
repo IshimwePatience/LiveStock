@@ -118,12 +118,12 @@ const DashboardLayout = () => {
           <div className="min-w-[256px]">
             <Link to="/dashboard" className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 ${isActive('/dashboard') ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-100'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            Home
+            Overview
           </Link>
           
           <div className="px-6 py-2.5 text-sm text-gray-700 flex items-center gap-4 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer mt-2">
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            Featured partner apps
+            Police Cases
           </div>
 
           <div className="mt-4">
@@ -138,23 +138,23 @@ const DashboardLayout = () => {
               )}
               <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
                 <PlaySquare className="w-4 h-4 text-gray-500" />
-                Editor's choice
+                Core Modules
               </div>
             </div>
             
             {editorsChoiceOpen && (
               <div className="pl-12 pr-4 space-y-1">
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Work from everywhere</div>
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Business essentials</div>
+                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Veterinary Records</div>
+                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">GPS Tracking</div>
                 <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  Apps to discover
+                  Movements
                 </Link>
               </div>
             )}
           </div>
 
           <div className="px-6 py-2.5 text-sm text-gray-700 flex items-center gap-4 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer mt-4">
-            <span className="font-bold text-gray-500 text-lg ml-0.5">G</span> Built by Google
+            <span className="font-bold text-gray-500 text-lg ml-0.5">G</span> Geo-Fencing
           </div>
 
           <div className="mt-4">
@@ -169,14 +169,14 @@ const DashboardLayout = () => {
               )}
               <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                Top charts
+                Analytics & Reports
               </div>
             </div>
             
             {topChartsOpen && (
               <div className="pl-12 pr-4 space-y-1">
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Most popular</div>
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Top rated</div>
+                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">National Reports</div>
+                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Performance Audit</div>
               </div>
             )}
           </div>
@@ -184,11 +184,11 @@ const DashboardLayout = () => {
           <div className="mt-4 space-y-1">
             <div className="flex items-center gap-3 px-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer">
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h2a2 2 0 011 1v2m-6 0h6"></path></svg>
-              Categories
+              System Settings
             </div>
             <div className="flex items-center gap-3 px-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer">
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-              Admin managed
+              User Management
             </div>
           </div>
           </div>
