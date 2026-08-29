@@ -175,8 +175,8 @@ const DashboardLayout = () => {
             
             {topChartsOpen && (
               <div className="pl-12 pr-4 space-y-1">
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">National Reports</div>
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Performance Audit</div>
+                <Link to="/dashboard/national-reports" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/national-reports') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>National Reports</Link>
+                <Link to="/dashboard/performance-audit" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/performance-audit') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>Performance Audit</Link>
               </div>
             )}
           </div>

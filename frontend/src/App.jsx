@@ -8,6 +8,8 @@ import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './features/dashboard/pages/Overview'
 import Movements from './features/movements/pages/Movements';
 import UserManagement from './features/users/pages/UserManagement';
+import NationalReports from './features/analytics/pages/NationalReports';
+import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
 import api from './lib/api'
 
 // Simple Auth Guard component
@@ -51,6 +53,8 @@ function App() {
         <Route index element={<Overview />} />
         <Route path="movements" element={<Movements />} />
         <Route path="users" element={<UserManagement />} />
+        <Route path="national-reports" element={<NationalReports />} />
+        <Route path="performance-audit" element={<PerformanceAudit />} />
         <Route path="cases" element={<div>Police Cases (Table implementation pending)</div>} />
       </Route>
       </Routes>
