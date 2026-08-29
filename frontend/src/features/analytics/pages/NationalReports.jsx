@@ -14,17 +14,15 @@ const NationalReports = () => {
     <div className="flex flex-col h-full bg-white text-[#172b4d] overflow-x-hidden font-sans">
       
       {/* Top Breadcrumb & Title */}
-      <div className="px-8 pt-6 pb-4">
-        <div className="text-[13px] text-[#6b778c] mb-1 flex items-center gap-2">
-          <span>Dashboards</span> <span className="text-[#dfe1e6]">/</span> <span>National Livestock</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[24px] font-semibold text-[#172b4d] tracking-tight">Livestock Analytics next version</h1>
-            <div className="flex items-center gap-1">
-              <button className="p-1 hover:bg-[#091e4214] rounded"><MoreHorizontal className="w-4 h-4 text-[#42526e]" /></button>
-            </div>
+      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
+        <div>
+          <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+            Overview / Livestock Tracking app
           </div>
+          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            National Reports 
+          </h1>
+        </div>
           <div className="relative">
             <button 
               onClick={() => setShareOpen(!shareOpen)}
@@ -52,10 +50,9 @@ const NationalReports = () => {
             )}
           </div>
         </div>
-      </div>
 
       {/* Tabs */}
-      <div className="px-8 border-b border-[#dfe1e6] flex items-center gap-6 overflow-x-auto">
+      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 overflow-x-auto">
         <div className="flex items-center gap-2 pb-2 text-green-700 text-[14px] font-medium border-b-2 border-green-700 cursor-pointer whitespace-nowrap">
           <BarChart2 className="w-4 h-4" /> National Reports
         </div>
@@ -79,7 +76,7 @@ const NationalReports = () => {
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-6">
         {/* Toolbar */}
         <div className="flex justify-between items-center mb-6">
           <button className="text-[14px] font-medium text-[#42526e] bg-white border border-[#dfe1e6] hover:bg-[#091e420a] px-3 py-1.5 rounded-md shadow-sm">
