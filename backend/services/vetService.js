@@ -4,7 +4,7 @@ class VetService {
   _buildScopeFilter(user) {
     if (user.role === 'SARO') return { '$Animal.sector_id$': user.sector_id };
     if (user.role === 'DARO') return {}; // Could link through sectors to districts in a real DB view
-    return {}; // LAB sees all
+    return {}; // RAB sees all
   }
 
   async addRecord(user, data) {
@@ -25,7 +25,7 @@ class VetService {
 
   async getRecords(user) {
     // In a fully normalized DB with Animal model linked to VetRecord, we would filter by Animal.sector_id.
-    // For now, since VetRecord is mostly flat, we allow DARO/LAB to see all, and SARO to see their own entries.
+    // For now, since VetRecord is mostly flat, we allow DARO/RAB to see all, and SARO to see their own entries.
     const filter = user.role === 'SARO' ? { administered_by: user.id } : {};
 
     return await VetRecord.findAll({

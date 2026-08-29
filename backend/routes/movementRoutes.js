@@ -8,6 +8,6 @@ router.route('/')
   .get(protect, getRequests);
 
 router.route('/:id/approve')
-  .put(protect, authorize('DARO', 'LAB'), approveRequest);
+  .put(protect, authorize('DARO', 'RAB'), approveRequest);
 
 module.exports = router;

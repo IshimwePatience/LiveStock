@@ -43,6 +43,49 @@ class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 
+  async getAllUsers() {
+    const users = await User.findAll({
+      attributes: { exclude: ['password_hash', 'reset_token', 'reset_token_expires'] },
+      order: [['createdAt', 'DESC']]
+    });
+    return users;
+  }
+
+  async updateUser(id, data, currentUserId) {
+    const user = await User.findByPk(id);
+    if (!user) throw new Error('User not found');
+    
+    // Admins can update their own name/email/password, but let's allow general updates.
+    // If they are updating password, hash it.
+    const updateData = { ...data };
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password_hash = await bcrypt.hash(updateData.password, salt);
+      delete updateData.password;
+    }
+
+    await user.update(updateData);
+    return { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status };
+  }
+
+  async deleteUser(id, currentUserId) {
+    if (id === currentUserId) throw new Error('You cannot delete your own account');
+    const user = await User.findByPk(id);
+    if (!user) throw new Error('User not found');
+    await user.destroy();
+    return { message: 'User deleted successfully' };
+  }
+
+  async toggleUserStatus(id, currentUserId) {
+    if (id === currentUserId) throw new Error('You cannot deactivate your own account');
+    const user = await User.findByPk(id);
+    if (!user) throw new Error('User not found');
+    
+    user.status = user.status === 'Active' ? 'Inactive' : 'Active';
+    await user.save();
+    return { id: user.id, status: user.status, message: `User marked as ${user.status}` };
+  }
+
   async forgotPassword(email) {
     const user = await User.findOne({ where: { email } });
     if (!user) throw new Error('User not found');

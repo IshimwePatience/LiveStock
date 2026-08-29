@@ -7,6 +7,7 @@ import ForgotPassword from './features/auth/pages/ForgotPassword'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './features/dashboard/pages/Overview'
 import Movements from './features/movements/pages/Movements';
+import UserManagement from './features/users/pages/UserManagement';
 import api from './lib/api'
 
 // Simple Auth Guard component
@@ -49,6 +50,7 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
         <Route index element={<Overview />} />
         <Route path="movements" element={<Movements />} />
+        <Route path="users" element={<UserManagement />} />
         <Route path="cases" element={<div>Police Cases (Table implementation pending)</div>} />
       </Route>
       </Routes>

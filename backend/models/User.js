@@ -7,13 +7,14 @@ const User = sequelize.define('User', {
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
   password_hash: { type: DataTypes.STRING, allowNull: false },
   role: { 
-    type: DataTypes.ENUM('LAB', 'DARO', 'SARO', 'POLICE'), 
+    type: DataTypes.ENUM('RAB', 'DARO', 'SARO', 'POLICE'), 
     allowNull: false 
   },
   district_id: { type: DataTypes.UUID, allowNull: true },
   sector_id: { type: DataTypes.UUID, allowNull: true },
   reset_token: { type: DataTypes.STRING, allowNull: true },
   reset_token_expires: { type: DataTypes.DATE, allowNull: true },
+  status: { type: DataTypes.STRING, defaultValue: 'Active' },
 });
 
 module.exports = User;

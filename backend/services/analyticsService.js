@@ -2,8 +2,8 @@ const { MovementRequest, Trip, Case, VetRecord, sequelize } = require('../models
 
 class AnalyticsService {
   async getDashboardStats(user) {
-    if (user.role !== 'LAB') {
-      throw new Error('Only LAB can access the national dashboard');
+    if (user.role !== 'RAB') {
+      throw new Error('Only RAB can access the national dashboard');
     }
 
     const totalRequests = await MovementRequest.count();
@@ -36,7 +36,7 @@ class AnalyticsService {
 
     // Prediction 2: Approval bottleneck warning
     if (avgApprovalHours > 24) {
-      insights.push(`Warning: Average approval turnaround time is high (${avgApprovalHours} hours). Recommend allocating more DARO/LAB resources.`);
+      insights.push(`Warning: Average approval turnaround time is high (${avgApprovalHours} hours). Recommend allocating more DARO/RAB resources.`);
     }
 
     // Prediction 3: Security / Case flagging

@@ -4,7 +4,7 @@ const { createCase, getCases } = require('../controllers/caseController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.route('/')
-  .post(protect, authorize('POLICE', 'SARO', 'DARO', 'LAB'), createCase)
+  .post(protect, authorize('POLICE', 'SARO', 'DARO', 'RAB'), createCase)
   .get(protect, getCases);
 
 module.exports = router;

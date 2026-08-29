@@ -1,17 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ListFilter, Search, Plus, ChevronDown } from 'lucide-react';
 
-const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('Type');
-  const [searchQuery, setSearchQuery] = useState('');
-  const dropdownRef = useRef(null);
-
-  const categories = ['Type', 'Status', 'Animal'];
-
-  const optionsMap = {
+const FilterDropdown = ({ 
+  selectedFilters = {}, 
+  onFilterChange = () => {},
+  categories = ['Type', 'Status', 'Animal'],
+  optionsMap = {
     'Type': [
-      { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Requires LAB approval' },
+      { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Requires RAB approval' },
       { id: 'SECTOR_TO_SECTOR', title: 'Sector to Sector', subtitle: 'Requires DARO approval' }
     ],
     'Status': [
@@ -25,7 +21,12 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
       { id: 'pig', title: 'Pigs', subtitle: '' },
       { id: 'poultry', title: 'Poultry', subtitle: 'Chickens, ducks, turkeys' }
     ]
-  };
+  }
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,8 +63,8 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
     const opts = optionsMap[activeCategory] || [];
     if (!searchQuery) return opts;
     const q = searchQuery.toLowerCase();
-    return opts.filter(o => o.title.toLowerCase().includes(q) || o.subtitle.toLowerCase().includes(q));
-  }, [activeCategory, searchQuery]);
+    return opts.filter(o => o.title.toLowerCase().includes(q) || (o.subtitle && o.subtitle.toLowerCase().includes(q)));
+  }, [activeCategory, searchQuery, optionsMap]);
 
   // Determine if filter button should look active
   const hasActiveFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
@@ -74,10 +75,10 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${
-          isOpen || hasActiveFilters ? 'bg-[#e8f0fe] text-[#1967d2] border-[#1967d2]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+          isOpen || hasActiveFilters ? 'bg-green-50 text-green-700 border-green-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
         }`}
       >
-        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#1967d2] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
+        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-green-600 text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
       </button>
 
       {/* Popover Menu */}
@@ -107,7 +108,7 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
                     }}
                     className={`w-full text-left flex items-center justify-between px-4 py-2 text-sm ${
                       activeCategory === cat 
-                        ? 'bg-[#e8f0fe] text-[#1967d2] border-l-4 border-[#1967d2]' 
+                        ? 'bg-green-50 text-green-700 border-l-4 border-green-600' 
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                     }`}
                   >
@@ -123,7 +124,7 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
             {/* Right Column: Options */}
             <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative">
               <div className="pr-3 pb-3">
-                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#1967d2] focus-within:ring-1 focus-within:ring-[#1967d2] transition overflow-hidden">
+                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition overflow-hidden">
                   <div className="pl-2.5 text-gray-500">
                     <Search className="w-4 h-4" strokeWidth={2} />
                   </div>
@@ -146,7 +147,7 @@ const FilterDropdown = ({ selectedFilters = {}, onFilterChange = () => {} }) => 
                         type="checkbox" 
                         checked={isChecked}
                         onChange={() => handleCheckboxChange(activeCategory, opt.id)}
-                        className="mt-1 border-gray-300 rounded text-[#1967d2] focus:ring-[#1967d2] w-4 h-4 cursor-pointer" 
+                        className="mt-1 border-gray-300 rounded text-green-600 focus:ring-green-600 w-4 h-4 cursor-pointer" 
                       />
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-tight">{opt.title}</span>

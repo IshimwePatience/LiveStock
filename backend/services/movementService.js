@@ -7,7 +7,7 @@ class MovementService {
   _buildScopeFilter(user) {
     if (user.role === 'SARO') return { origin_id: user.sector_id };
     if (user.role === 'DARO') return { origin_id: user.district_id };
-    return {}; // LAB sees all
+    return {}; // RAB sees all
   }
 
   async createRequest(user, data) {
@@ -55,8 +55,8 @@ class MovementService {
     if (request.type === 'SECTOR_TO_SECTOR' && user.role !== 'DARO') {
       throw new Error('Only DARO can approve sector-to-sector');
     }
-    if (request.type === 'DISTRICT_TO_DISTRICT' && user.role !== 'LAB') {
-      throw new Error('Only LAB can approve district-to-district');
+    if (request.type === 'DISTRICT_TO_DISTRICT' && user.role !== 'RAB') {
+      throw new Error('Only RAB can approve district-to-district');
     }
 
     request.status = 'APPROVED';

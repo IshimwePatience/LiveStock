@@ -209,7 +209,7 @@ const Landing = () => {
                   <ApprovalIcon />
                </div>
                <h3 className="text-xl font-bold text-gray-800">Digital Approvals</h3>
-               <p className="text-sm text-gray-500 leading-relaxed">Receive rapid clearances from LAB and DARO officials directly through the digital platform.</p>
+               <p className="text-sm text-gray-500 leading-relaxed">Receive rapid clearances from RAB and DARO officials directly through the digital platform.</p>
             </div>
 
             {/* Card 4 */}

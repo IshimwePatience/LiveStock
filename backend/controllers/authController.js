@@ -36,4 +36,40 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, registerUser, forgotPassword, resetPassword };
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await authService.getAllUsers();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const user = await authService.updateUser(req.params.id, req.body, req.user.id);
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const result = await authService.deleteUser(req.params.id, req.user.id);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const toggleUserStatus = async (req, res) => {
+  try {
+    const result = await authService.toggleUserStatus(req.params.id, req.user.id);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { loginUser, registerUser, forgotPassword, resetPassword, getAllUsers, updateUser, deleteUser, toggleUserStatus };

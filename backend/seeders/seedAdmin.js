@@ -7,25 +7,25 @@ const seedAdmin = async () => {
     await connectDB();
     await sequelize.sync({ force: false }); // Ensure DB tables exist
 
-    const adminEmail = 'admin@lab.gov.rw';
+    const adminEmail = 'admin@rab.gov.rw';
     const adminExists = await User.findOne({ where: { email: adminEmail } });
 
     if (adminExists) {
-      console.log('LAB Admin already exists!');
+      console.log('RAB Admin already exists!');
       process.exit();
     }
 
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash('LabAdmin123!', salt);
+    const password_hash = await bcrypt.hash('RabAdmin123!', salt);
 
     await User.create({
-      name: 'Super Admin (LAB)',
+      name: 'Super Admin (RAB)',
       email: adminEmail,
       password_hash,
-      role: 'LAB',
+      role: 'RAB',
     });
 
-    console.log('LAB Admin seeded successfully! Email: admin@lab.gov.rw, Password: LabAdmin123!');
+    console.log('RAB Admin seeded successfully! Email: admin@rab.gov.rw, Password: RabAdmin123!');
     process.exit();
   } catch (error) {
     console.error('Error seeding admin:', error);

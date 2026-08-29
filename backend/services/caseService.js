@@ -9,7 +9,7 @@ class CaseService {
       // For simplicity, we just return all cases for police, or filter by reporter's district
       return {}; 
     }
-    if (user.role === 'LAB') return {};
+    if (user.role === 'RAB') return {};
     
     // SARO/DARO only see cases they reported
     return { reporter_id: user.id };
