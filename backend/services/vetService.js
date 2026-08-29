@@ -15,9 +15,10 @@ class VetService {
     // We should ensure the animal belongs to the SARO's sector, but for simplicity:
     const record = await VetRecord.create({
       animal_tag: data.animal_tag,
-      treatment_type: data.treatment_type,
-      notes: data.notes,
-      administered_by: user.id
+      antibiotics: data.antibiotics,
+      vaccines: data.vaccines,
+      saro_id: user.id,
+      trip_id: data.trip_id // Trip is required
     });
 
     return record;
@@ -26,11 +27,11 @@ class VetService {
   async getRecords(user) {
     // In a fully normalized DB with Animal model linked to VetRecord, we would filter by Animal.sector_id.
     // For now, since VetRecord is mostly flat, we allow DARO/RAB to see all, and SARO to see their own entries.
-    const filter = user.role === 'SARO' ? { administered_by: user.id } : {};
+    const filter = user.role === 'SARO' ? { saro_id: user.id } : {};
 
     return await VetRecord.findAll({
       where: filter,
-      include: [{ model: User, as: 'AdministeredBy', attributes: ['name', 'role'] }],
+      include: [{ model: User, attributes: ['name', 'role'] }],
       order: [['createdAt', 'DESC']]
     });
   }

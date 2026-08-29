@@ -121,10 +121,10 @@ const DashboardLayout = () => {
             Overview
           </Link>
           
-          <div className="px-6 py-2.5 text-sm text-gray-700 flex items-center gap-4 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer mt-2">
+          <Link to="/dashboard/cases" className={`px-6 py-2.5 text-sm flex items-center gap-4 rounded-r-full mr-4 mt-2 ${isActive('/dashboard/cases') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             Police Cases
-          </div>
+          </Link>
 
           <div className="mt-4">
             <div 
@@ -144,7 +144,7 @@ const DashboardLayout = () => {
             
             {editorsChoiceOpen && (
               <div className="pl-12 pr-4 space-y-1">
-                <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">Veterinary Records</div>
+                <Link to="/dashboard/vet-records" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/vet-records') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>Veterinary Records</Link>
                 <div className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-r-full cursor-pointer">GPS Tracking</div>
                 <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>
                   Movements

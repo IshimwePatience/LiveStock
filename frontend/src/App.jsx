@@ -10,6 +10,8 @@ import Movements from './features/movements/pages/Movements';
 import UserManagement from './features/users/pages/UserManagement';
 import NationalReports from './features/analytics/pages/NationalReports';
 import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
+import PoliceCases from './features/police/pages/PoliceCases';
+import VetRecords from './features/vet/pages/VetRecords';
 import api from './lib/api'
 
 // Simple Auth Guard component
@@ -55,7 +57,8 @@ function App() {
         <Route path="users" element={<UserManagement />} />
         <Route path="national-reports" element={<NationalReports />} />
         <Route path="performance-audit" element={<PerformanceAudit />} />
-        <Route path="cases" element={<div>Police Cases (Table implementation pending)</div>} />
+        <Route path="cases" element={<PoliceCases />} />
+        <Route path="vet-records" element={<VetRecords />} />
       </Route>
       </Routes>
     </>
