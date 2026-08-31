@@ -99,7 +99,8 @@ class MovementService {
       where: filter,
       include: [
         { model: User, as: 'Initiator', attributes: ['name', 'email'] },
-        { model: User, as: 'Approver', attributes: ['name', 'email'] }
+        { model: User, as: 'Approver', attributes: ['name', 'email'] },
+        { model: MovementAnimal, as: 'Animals' }
       ],
       order: [['createdAt', 'DESC']]
     });

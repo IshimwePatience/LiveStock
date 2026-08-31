@@ -85,10 +85,26 @@ const Movements = () => {
       const reporterInitials = getInitials(reporterName);
       const reporterColor = getColorForInitials(reporterInitials);
 
-      // Priority based on count
-      let priority = 'Minor';
-      if (req.count >= 50) priority = 'Critical';
-      else if (req.count >= 20) priority = 'Major';
+      // Use user-defined priority, fallback to count-based logic only if missing
+      let priority = req.priority;
+      if (!priority) {
+        priority = 'Minor';
+        if (req.count >= 50) priority = 'Critical';
+        else if (req.count >= 20) priority = 'Major';
+      }
+
+      let detailsString = '';
+      if (req.Animals && req.Animals.length > 0) {
+        const counts = {};
+        req.Animals.forEach(a => {
+           const type = a.animal_type || 'Unknown';
+           counts[type] = (counts[type] || 0) + (a.quantity || 1);
+        });
+        const typesStr = Object.entries(counts).map(([type, c]) => `${c} ${type}`).join(', ');
+        detailsString = `Move ${typesStr}: ${req.reason || 'No reason provided'}`;
+      } else {
+        detailsString = `Move ${req.count} ${req.animal_type}(s): ${req.reason || 'No reason provided'}`;
+      }
 
       // Map backend values to our filter structure
       const filterAnimal = req.animal_type?.toLowerCase() || 'unknown';
@@ -96,10 +112,21 @@ const Movements = () => {
       const filterType = req.type;
 
       // Origin and Dest
-      const originParts = [req.origin_district, req.origin_sector].filter(Boolean);
-      const destParts = [req.dest_district, req.dest_sector].filter(Boolean);
-      const origin = originParts.length > 0 ? originParts.join(', ') : (req.origin_id || 'Unknown');
-      const destination = destParts.length > 0 ? destParts.join(', ') : (req.destination_id || 'Unknown');
+      let origin = 'Unknown';
+      let destination = 'Unknown';
+      
+      if (req.type === 'SECTOR_TO_SECTOR') {
+        origin = req.origin_sector || req.origin_id || 'Unknown';
+        destination = req.dest_sector || req.destination_id || 'Unknown';
+      } else if (req.type === 'DISTRICT_TO_DISTRICT') {
+        origin = req.origin_district || req.origin_id || 'Unknown';
+        destination = req.dest_district || req.destination_id || 'Unknown';
+      } else {
+        const originParts = [req.origin_district, req.origin_sector].filter(Boolean);
+        const destParts = [req.dest_district, req.dest_sector].filter(Boolean);
+        origin = originParts.length > 0 ? originParts.join(', ') : (req.origin_id || 'Unknown');
+        destination = destParts.length > 0 ? destParts.join(', ') : (req.destination_id || 'Unknown');
+      }
 
       return {
         id: `MVT-${req.id.substring(0, 8).toUpperCase()}`, // Using first 8 chars of UUID for readability
@@ -107,9 +134,10 @@ const Movements = () => {
         type,
         filterType,
         filterStatus,
+        requestByTitle: origin,
         filterAnimal,
         route: `${origin} → ${destination}`,
-        title: `Move ${req.count} ${req.animal_type}s: ${req.reason || 'No reason provided'}`,
+        title: detailsString,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         priority,

@@ -65,7 +65,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                 checked={selected.length === movements.length && movements.length > 0}
               />
             </th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request ID</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request By</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
@@ -89,7 +89,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
                   {getTypeIcon(item.type)}
-                  <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.id}</span>
+                  <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
                 </div>
               </td>
               <td className="py-2 px-4">

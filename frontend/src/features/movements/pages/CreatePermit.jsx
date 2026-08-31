@@ -169,6 +169,7 @@ const CreatePermit = () => {
   ];
 
   const isColVisible = (idx) => {
+    if (user?.role === 'SARO' && (idx === 8 || idx === 12)) return false;
     if ([0,1,2,3,4,5,6,7].includes(idx)) return visibleGroups.owner;
     if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
     if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
@@ -421,13 +422,20 @@ const CreatePermit = () => {
 
   useEffect(() => {
     if (user) {
-      setMobileForm(prev => ({
-        ...prev,
-        origin_district: user.district_id || prev.origin_district,
-        origin_sector: user.sector_id || prev.origin_sector,
-      }));
+      setMobileForm(prev => {
+        const newDistrict = user.district_id || prev.origin_district;
+        const newSector = user.sector_id || prev.origin_sector;
+        if (prev.origin_district === newDistrict && prev.origin_sector === newSector) {
+           return prev;
+        }
+        return {
+          ...prev,
+          origin_district: newDistrict,
+          origin_sector: newSector,
+        };
+      });
     }
-  }, [user]);
+  }, [user?.district_id, user?.sector_id]);
 
   const handleMobileChange = (e) => {
     if (e.target.name === 'owner_id_number') {
@@ -534,46 +542,61 @@ const CreatePermit = () => {
     return provs.flatMap(p => getDistricts(p)).sort().map(d => ({ value: d, label: d }));
   }, []);
 
+  const destDistrictOptions = useMemo(() => {
+    return districtOptions.filter(d => d.value !== mobileForm.origin_district);
+  }, [districtOptions, mobileForm.origin_district]);
+
   const originSectorOptions = useMemo(() => {
-    if (!mobileForm.origin_district) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.origin_district;
+    if (!dist) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.origin_district));
-    return p ? getSectors(p, mobileForm.origin_district).sort().map(s => ({ value: s, label: s })) : [];
-  }, [mobileForm.origin_district]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    return p ? getSectors(p, dist).sort().map(s => ({ value: s, label: s })) : [];
+  }, [mobileForm.origin_district, user]);
 
   const destSectorOptions = useMemo(() => {
-    if (!mobileForm.dest_district) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.dest_district;
+    if (!dist) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.dest_district));
-    return p ? getSectors(p, mobileForm.dest_district).sort().map(s => ({ value: s, label: s })) : [];
-  }, [mobileForm.dest_district]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    let opts = p ? getSectors(p, dist).sort() : [];
+    if (user?.role === 'SARO' && mobileForm.origin_sector) {
+      opts = opts.filter(s => s !== mobileForm.origin_sector);
+    }
+    return opts.map(s => ({ value: s, label: s }));
+  }, [mobileForm.dest_district, mobileForm.origin_sector, user]);
+  
   const originCellOptions = useMemo(() => {
-    if (!mobileForm.origin_district || !mobileForm.origin_sector) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.origin_district;
+    if (!dist || !mobileForm.origin_sector) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.origin_district));
-    return p ? getCells(p, mobileForm.origin_district, mobileForm.origin_sector).sort().map(c => ({ value: c, label: c })) : [];
-  }, [mobileForm.origin_district, mobileForm.origin_sector]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    return p ? getCells(p, dist, mobileForm.origin_sector).sort().map(c => ({ value: c, label: c })) : [];
+  }, [mobileForm.origin_district, mobileForm.origin_sector, user]);
 
   const originVillageOptions = useMemo(() => {
-    if (!mobileForm.origin_district || !mobileForm.origin_sector || !mobileForm.origin_cell) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.origin_district;
+    if (!dist || !mobileForm.origin_sector || !mobileForm.origin_cell) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.origin_district));
-    return p ? getVillages(p, mobileForm.origin_district, mobileForm.origin_sector, mobileForm.origin_cell).sort().map(v => ({ value: v, label: v })) : [];
-  }, [mobileForm.origin_district, mobileForm.origin_sector, mobileForm.origin_cell]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    return p ? getVillages(p, dist, mobileForm.origin_sector, mobileForm.origin_cell).sort().map(v => ({ value: v, label: v })) : [];
+  }, [mobileForm.origin_district, mobileForm.origin_sector, mobileForm.origin_cell, user]);
 
   const destCellOptions = useMemo(() => {
-    if (!mobileForm.dest_district || !mobileForm.dest_sector) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.dest_district;
+    if (!dist || !mobileForm.dest_sector) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.dest_district));
-    return p ? getCells(p, mobileForm.dest_district, mobileForm.dest_sector).sort().map(c => ({ value: c, label: c })) : [];
-  }, [mobileForm.dest_district, mobileForm.dest_sector]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    return p ? getCells(p, dist, mobileForm.dest_sector).sort().map(c => ({ value: c, label: c })) : [];
+  }, [mobileForm.dest_district, mobileForm.dest_sector, user]);
 
   const destVillageOptions = useMemo(() => {
-    if (!mobileForm.dest_district || !mobileForm.dest_sector || !mobileForm.dest_cell) return [];
+    const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.dest_district;
+    if (!dist || !mobileForm.dest_sector || !mobileForm.dest_cell) return [];
     const provs = getProvinces();
-    let p = provs.find(p => getDistricts(p).includes(mobileForm.dest_district));
-    return p ? getVillages(p, mobileForm.dest_district, mobileForm.dest_sector, mobileForm.dest_cell).sort().map(v => ({ value: v, label: v })) : [];
-  }, [mobileForm.dest_district, mobileForm.dest_sector, mobileForm.dest_cell]);
+    let p = provs.find(p => getDistricts(p).includes(dist));
+    return p ? getVillages(p, dist, mobileForm.dest_sector, mobileForm.dest_cell).sort().map(v => ({ value: v, label: v })) : [];
+  }, [mobileForm.dest_district, mobileForm.dest_sector, mobileForm.dest_cell, user]);
   return (
     <>
       {/* ==================================================== */}
@@ -790,6 +813,7 @@ const CreatePermit = () => {
                                value={val}
                                onChange={(e) => {
                                  const newVal = e.target.value;
+                                 updateGridCell(originalIndex, cIdx, newVal);
                                  if (cIdx === 8 || cIdx === 12) {
                                     updateGridCell(originalIndex, cIdx + 1, '');
                                     updateGridCell(originalIndex, cIdx + 2, '');
@@ -820,19 +844,27 @@ const CreatePermit = () => {
                               <option value="">-- Hitamo --</option>
                               {(() => {
                                  let opts = [];
-                                 if (cIdx === 8 || cIdx === 12) {
+                                 if (cIdx === 8) {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
+                                 } else if (cIdx === 12) {
+                                    opts = getProvinces().flatMap(p => getDistricts(p)).sort();
+                                    const orig = row[8]?.trim();
+                                    if (orig) opts = opts.filter(d => d !== orig);
                                  } else if (cIdx === 9 || cIdx === 13) {
-                                    const dist = row[cIdx - 1]?.trim();
+                                    const dist = row[cIdx - 1]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist) opts = getSectors(prov, dist).sort();
+                                    if (cIdx === 13 && user?.role === 'SARO') {
+                                        const origSec = row[9]?.trim();
+                                        if (origSec) opts = opts.filter(s => s !== origSec);
+                                    }
                                  } else if (cIdx === 10 || cIdx === 14) {
-                                    const dist = row[cIdx - 2]?.trim();
+                                    const dist = row[cIdx - 2]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const sec = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist && sec) opts = getCells(prov, dist, sec).sort();
                                  } else if (cIdx === 11 || cIdx === 15) {
-                                    const dist = row[cIdx - 3]?.trim();
+                                    const dist = row[cIdx - 3]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const sec = row[cIdx - 2]?.trim();
                                     const cell = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
@@ -961,13 +993,15 @@ const CreatePermit = () => {
                    <div className="space-y-4">
                      <p className="font-medium text-gray-700">Origin (Aho Biva)</p>
                      <div className="space-y-4">
+                       {user?.role !== 'SARO' && (
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">District *</label>
                          <CustomSelect value={mobileForm.origin_district} onChange={(v) => handleMobileSelect('origin_district', v)} options={districtOptions} />
                        </div>
+                       )}
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Sector *</label>
-                         <CustomSelect value={mobileForm.origin_sector} onChange={(v) => handleMobileSelect('origin_sector', v)} options={originSectorOptions} disabled={!mobileForm.origin_district} />
+                         <CustomSelect value={mobileForm.origin_sector} onChange={(v) => handleMobileSelect('origin_sector', v)} options={originSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.origin_district} />
                        </div>
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Cell *</label>
@@ -983,13 +1017,15 @@ const CreatePermit = () => {
                    <div className="space-y-4 pt-4 border-t border-gray-100">
                      <p className="font-medium text-gray-700">Destination (Aho Bijya)</p>
                      <div className="space-y-4">
+                       {user?.role !== 'SARO' && (
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">District *</label>
-                         <CustomSelect value={mobileForm.dest_district} onChange={(v) => handleMobileSelect('dest_district', v)} options={districtOptions} />
+                         <CustomSelect value={mobileForm.dest_district} onChange={(v) => handleMobileSelect('dest_district', v)} options={destDistrictOptions} />
                        </div>
+                       )}
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Sector *</label>
-                         <CustomSelect value={mobileForm.dest_sector} onChange={(v) => handleMobileSelect('dest_sector', v)} options={destSectorOptions} disabled={!mobileForm.dest_district} />
+                         <CustomSelect value={mobileForm.dest_sector} onChange={(v) => handleMobileSelect('dest_sector', v)} options={destSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.dest_district} />
                        </div>
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Cell *</label>
