@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 
 @theme {
-  --font-sans: 'Lato', sans-serif;
+  --font-sans: 'Roboto', sans-serif;
   --color-primary: #10b981;
   --color-primary-dark: #059669;
 }
