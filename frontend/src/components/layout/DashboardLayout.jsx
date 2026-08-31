@@ -111,6 +111,11 @@ const DashboardLayout = () => {
         {/* Right: Icons & Avatar */}
         <div className="flex items-center gap-1.5 pr-1">
 
+          {/* Notification Icon */}
+          <button className="p-1.5 hover:bg-white/10 rounded-full transition text-gray-300">
+            <Bell className="w-5 h-5" />
+          </button>
+
           {/* Help Dropdown */}
           <div className="relative">
             <button

@@ -7,7 +7,7 @@ router.post('/login', loginUser);
 router.post('/register', protect, authorize('RAB'), registerUser);
 router.post('/forgotpassword', forgotPassword);
 router.post('/resetpassword', resetPassword);
-router.get('/users', protect, authorize('RAB'), getAllUsers);
+router.get('/users', protect, authorize('RAB', 'DARO'), getAllUsers);
 router.put('/users/:id', protect, authorize('RAB'), updateUser);
 router.delete('/users/:id', protect, authorize('RAB'), deleteUser);
 router.patch('/users/:id/status', protect, authorize('RAB'), toggleUserStatus);
