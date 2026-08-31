@@ -38,6 +38,13 @@ const PoliceRoute = ({ children }) => {
   return children;
 }
 
+const UserManagementRoute = ({ children }) => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.role !== 'RAB' && user?.role !== 'DARO') return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 const VetRoute = ({ children }) => {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -77,7 +84,7 @@ function App() {
           <Route index element={<Overview />} />
           <Route path="movements" element={<Movements />} />
           <Route path="movements/new" element={<CreatePermit />} />
-          <Route path="users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+          <Route path="users" element={<UserManagementRoute><UserManagement /></UserManagementRoute>} />
           <Route path="national-reports" element={<AdminRoute><NationalReports /></AdminRoute>} />
           <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
           <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />

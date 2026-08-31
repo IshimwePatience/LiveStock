@@ -38,7 +38,7 @@ const resetPassword = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await authService.getAllUsers();
+    const users = await authService.getAllUsers(req.user);
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });

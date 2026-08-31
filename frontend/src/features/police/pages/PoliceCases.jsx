@@ -214,10 +214,6 @@ const PoliceCases = () => {
          </button>
          
          <div className="flex-1"></div>
-         <button className="p-1.5 hover:bg-gray-100 rounded text-gray-400 relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-         </button>
       </div>
 
       {/* Dynamic Content Area based on Active Tab */}

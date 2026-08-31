@@ -131,9 +131,6 @@ const DashboardLayout = () => {
             )}
           </div>
 
-          <button className="p-1.5 hover:bg-white/10 rounded-full transition text-gray-300">
-            <Bell className="w-5 h-5" />
-          </button>
           <button className="p-1.5 hover:bg-white/10 rounded-full transition text-gray-300 mr-2">
             <MoreVertical className="w-5 h-5" />
           </button>
@@ -220,6 +217,11 @@ const DashboardLayout = () => {
                   <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
                     Movements
                   </Link>
+                  {user?.role === 'DARO' && (
+                    <Link to="/dashboard/users" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/users') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      SAROs
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

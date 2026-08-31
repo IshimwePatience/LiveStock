@@ -43,8 +43,18 @@ class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role, district_id: user.district_id, sector_id: user.sector_id };
   }
 
-  async getAllUsers() {
+  async getAllUsers(currentUser) {
+    let whereClause = {};
+
+    if (currentUser && currentUser.role === 'DARO') {
+      whereClause = {
+        role: 'SARO',
+        district_id: currentUser.district_id
+      };
+    }
+
     const users = await User.findAll({
+      where: whereClause,
       attributes: { exclude: ['password_hash', 'reset_token', 'reset_token_expires'] },
       order: [['createdAt', 'DESC']]
     });

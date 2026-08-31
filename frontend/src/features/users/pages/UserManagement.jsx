@@ -246,32 +246,38 @@ const UserManagement = () => {
     return getSectors(province, formData.district_id).sort().map(s => ({ value: s, label: s }));
   }, [formData.district_id]);
 
+  const userStr = localStorage.getItem('user');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isRAB = currentUser?.role === 'RAB';
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Top Breadcrumb/Title Area */}
       <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
         <div>
           <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-            System Settings / Security
+            {isRAB ? 'Overview / User Management' : 'Overview / Sector Vet Officers'}
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            User Management
+            {isRAB ? 'User Management' : 'SARO Accounts'}
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {filteredUsers.length}
             </span>
           </h1>
         </div>
-        <button
-          onClick={() => {
-            setIsEditMode(false);
-            setEditUserId(null);
-            setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
-        >
-          Create User
-        </button>
+        {isRAB && (
+          <button
+            onClick={() => {
+              setIsEditMode(false);
+              setEditUserId(null);
+              setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
+          >
+            Create User
+          </button>
+        )}
       </div>
 
       {/* Filters Toolbar */}
@@ -332,14 +338,14 @@ const UserManagement = () => {
       </div>
 
       {/* Table Area */}
-      <div className="flex-1 overflow-auto px-6 pt-4">
-        <table className="w-full border-collapse text-sm text-left border border-gray-200">
+      <div className="flex-1 overflow-auto px-6">
+        <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50/50">
-              <th className="p-3 w-10 border-r border-gray-100">
+            <tr className="border-y border-gray-200 bg-white">
+              <th className="py-2.5 px-4 w-10">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300"
+                  className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   onChange={toggleSelectAll}
                   checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
                 />
@@ -349,23 +355,23 @@ const UserManagement = () => {
               <th className="py-2.5 px-4 font-medium text-[13px] text-black">Role</th>
               <th className="py-2.5 px-4 font-medium text-[13px] text-black">Jurisdiction</th>
               <th className="py-2.5 px-4 font-medium text-[13px] text-black">Status</th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
+              {isRAB && <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {paginatedUsers.length === 0 ? (
               <tr>
-                <td colSpan="7" className="p-8 text-center text-gray-500">
+                <td colSpan={isRAB ? "7" : "6"} className="p-8 text-center text-gray-500">
                   No users found.
                 </td>
               </tr>
             ) : (
               paginatedUsers.map((user, idx) => (
-                <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50/50">
-                  <td className="p-3 border-r border-gray-100 text-center">
+                <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
+                  <td className="py-2 px-4">
                     <input
                       type="checkbox"
-                      className="rounded border-gray-300"
+                      className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                       checked={selectedUsers.includes(user.id)}
                       onChange={() => toggleSelect(user.id)}
                     />
@@ -386,41 +392,43 @@ const UserManagement = () => {
                         : (user.district_id || 'National (All)')}
                     </span>
                   </td>
-                  <td className="p-3 border-r border-gray-100">
+                  <td className="py-2 px-4">
                     <span className={`font-medium px-2 py-0.5 rounded text-xs ${user.status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                       {user.status || 'Active'}
                     </span>
                   </td>
-                  <td className="py-2 px-4 text-right relative">
-                    <button 
-                      onClick={() => setOpenActionDropdown(openActionDropdown === user.id ? null : user.id)}
-                      className="p-1 text-gray-500 hover:bg-gray-100 rounded"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {openActionDropdown === user.id && (
-                      <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                        <button 
-                          onClick={() => { handleEdit(user); setOpenActionDropdown(null); }}
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => { handleToggleStatus(user.id); setOpenActionDropdown(null); }}
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                        >
-                          {user.status === 'Inactive' ? 'Activate' : 'Deactivate'}
-                        </button>
-                        <button 
-                          onClick={() => { handleDelete(user.id); setOpenActionDropdown(null); }}
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  {isRAB && (
+                    <td className="py-2 px-4 text-right relative">
+                      <button 
+                        onClick={() => setOpenActionDropdown(openActionDropdown === user.id ? null : user.id)}
+                        className="p-1 text-gray-500 hover:bg-gray-100 rounded"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {openActionDropdown === user.id && (
+                        <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                          <button 
+                            onClick={() => { handleEdit(user); setOpenActionDropdown(null); }}
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => { handleToggleStatus(user.id); setOpenActionDropdown(null); }}
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                          >
+                            {user.status === 'Inactive' ? 'Activate' : 'Deactivate'}
+                          </button>
+                          <button 
+                            onClick={() => { handleDelete(user.id); setOpenActionDropdown(null); }}
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}
