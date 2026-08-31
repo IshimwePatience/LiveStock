@@ -78,109 +78,102 @@ const ForgotPassword = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex w-full max-w-7xl mx-auto">
-        {/* Form Container */}
-        <div className="w-full flex flex-col justify-center px-4 py-12 md:py-24">
-          <div className="w-full max-w-md mx-auto">
-            <h1 className="text-3xl font-medium text-green-700 mb-2">Reset Password</h1>
-            <p className="text-sm text-gray-500 mb-8">
-              {step === 1 ? "Enter your email to receive a 6-digit verification code." : `Enter the 6-digit code sent to ${email} and your new password.`}
+      <div className="flex-1 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-[400px]">
+          
+          <div className="text-center mb-8">
+            <h1 className="text-[28px] font-bold text-[#334155] mb-2">
+              Forgot password?
+            </h1>
+            <p className="text-[15px] text-[#64748b]">
+              {step === 1 
+                ? "Enter the email you signed up with. We'll send you a reset link." 
+                : `Enter the 6-digit code sent to ${email} and your new password.`}
             </p>
-
-            {step === 1 ? (
-              <form onSubmit={handleSendOtp} className="space-y-6">
-                {/* Email Field */}
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-900">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition">
-                    <div className="pl-3 text-gray-500">
-                      <User className="w-5 h-5" strokeWidth={1.5} />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
-                    />
-                  </div>
-                </div>
-
-                  <div className="flex justify-end pt-1">
-                    <Link to="/login" className="text-sm text-green-700 hover:underline">
-                      Back To Login
-                    </Link>
-                  </div>
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={forgotMutation.isPending}
-                      className="w-32 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-xl transition shadow-sm disabled:opacity-70"
-                    >
-                      {forgotMutation.isPending ? 'Sending...' : 'Send OTP'}
-                    </button>
-                  </div>
-              </form>
-            ) : (
-              <form onSubmit={handleResetPassword} className="space-y-6">
-                {/* OTP Field */}
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-900">
-                    6-Digit OTP <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition">
-                    <div className="pl-3 text-gray-500">
-                      <Hash className="w-5 h-5" strokeWidth={1.5} />
-                    </div>
-                    <input
-                      type="text"
-                      maxLength="6"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm tracking-widest"
-                    />
-                  </div>
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-900">
-                    New Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition">
-                    <div className="pl-3 text-gray-500">
-                      <Key className="w-5 h-5 transform -rotate-45" strokeWidth={1.5} />
-                    </div>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
-                    />
-                    <div className="pr-3 text-gray-400 cursor-pointer hover:text-gray-600">
-                      <EyeOff className="w-5 h-5" strokeWidth={1.5} />
-                    </div>
-                  </div>
-                </div>
-
-                  <div className="flex justify-end pt-1">
-                    <button type="button" onClick={() => setStep(1)} className="text-sm text-green-700 hover:underline">
-                      Cancel
-                    </button>
-                  </div>
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={resetMutation.isPending}
-                      className="w-40 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-xl transition shadow-sm disabled:opacity-70"
-                    >
-                      {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
-                    </button>
-                  </div>
-              </form>
-            )}
           </div>
+
+          {step === 1 ? (
+            <form onSubmit={handleSendOtp} className="space-y-5">
+              
+              <div className="space-y-1.5">
+                <label className="block text-[13px] font-bold text-[#64748b]">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={forgotMutation.isPending}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-md transition-colors disabled:opacity-70 text-[15px]"
+                >
+                  {forgotMutation.isPending ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </div>
+
+              <div className="text-center text-[14px] text-gray-500 mt-6">
+                Remember your password?{' '}
+                <Link to="/login" className="text-green-600 hover:underline font-medium">Sign in</Link>
+              </div>
+
+            </form>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              
+              <div className="space-y-1.5">
+                <label className="block text-[13px] font-bold text-[#64748b]">
+                  6-Digit OTP *
+                </label>
+                <input
+                  type="text"
+                  maxLength="6"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 tracking-widest focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[13px] font-bold text-[#64748b]">
+                  New Password *
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={resetMutation.isPending}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-md transition-colors disabled:opacity-70 text-[15px]"
+                >
+                  {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-md transition-colors text-[15px]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
         </div>
       </div>
     </div>

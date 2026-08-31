@@ -52,7 +52,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
-      
       {/* Top Thin Navbar */}
       <div className="w-full bg-gray-100 py-3 px-8 flex justify-between items-center text-sm text-gray-700">
         <div className="flex items-center gap-3">
@@ -65,77 +64,70 @@ const Login = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex w-full max-w-7xl mx-auto">
-        {/* Form Container */}
-        <div className="w-full flex flex-col justify-center px-4 py-12 md:py-24">
-          <div className="w-full max-w-md mx-auto">
-            <h1 className="text-3xl font-medium text-green-700 mb-8">Signin To Your Account</h1>
+      <div className="flex-1 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-[400px]">
+          
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-[28px] font-bold text-[#334155] leading-tight">
+              Sign in with Livestock<br />Tracking App
+            </h1>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label className="block text-[13px] font-bold text-[#64748b]">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                required
+              />
+            </div>
 
-              {/* Email Field */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Email <span className="text-red-500">*</span>
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-[13px] font-bold text-[#64748b]">
+                  Password
                 </label>
-                <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition">
-                  <div className="pl-3 text-gray-500">
-                    <User className="w-5 h-5" strokeWidth={1.5} />
-                  </div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Password <span className="text-red-500">*</span>
-                </label>
-                <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition">
-                  <div className="pl-3 text-gray-500">
-                    <Key className="w-5 h-5 transform -rotate-45" strokeWidth={1.5} />
-                  </div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
-                  />
-                  <div className="pr-3 text-gray-400 cursor-pointer hover:text-gray-600">
-                    <EyeOff className="w-5 h-5" strokeWidth={1.5} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-1">
-                <Link to="/forgot-password" className="text-sm text-green-700 hover:underline">
-                  Did You Forget Your Password ?
+                <Link to="/forgot-password" className="text-[13px] font-medium text-green-600 hover:underline">
+                  Forgot password?
                 </Link>
               </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                required
+              />
+            </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loginMutation.isPending}
-                  className="w-32 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-xl transition shadow-sm disabled:opacity-70"
-                >
-                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
-                </button>
+            {/* Submit Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loginMutation.isPending}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-md transition-colors disabled:opacity-70 text-[15px]"
+              >
+                {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+
+            {!cookiesAccepted && (
+              <div className="text-center text-xs text-gray-500 mt-6">
+                By continuing, you agree to our use of cookies for security.{' '}
+                <button type="button" onClick={handleAcceptCookies} className="text-green-600 hover:underline font-medium">Accept</button>
               </div>
+            )}
 
-              {!cookiesAccepted && (
-                <div className="pt-4 text-sm text-gray-600">
-                  We use cookies for security. <button onClick={handleAcceptCookies} className="text-green-700 hover:underline font-medium ml-1">Accept cookies</button>
-                </div>
-              )}
-
-            </form>
-          </div>
+          </form>
         </div>
       </div>
     </div>

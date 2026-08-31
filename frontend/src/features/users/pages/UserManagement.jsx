@@ -381,7 +381,9 @@ const UserManagement = () => {
                   </td>
                   <td className="py-2 px-4">
                     <span className="text-[13px] font-medium text-black">
-                      {user.district_id || user.sector_id || 'National (All)'}
+                      {user.sector_id 
+                        ? `${user.district_id} / ${user.sector_id}` 
+                        : (user.district_id || 'National (All)')}
                     </span>
                   </td>
                   <td className="p-3 border-r border-gray-100">
