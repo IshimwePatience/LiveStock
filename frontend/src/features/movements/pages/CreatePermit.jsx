@@ -61,6 +61,15 @@ const CreatePermit = () => {
   }, [gridData]);
 
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
+  const [selectionEnd, setSelectionEnd] = useState({ row: 0, col: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
+
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -118,6 +127,7 @@ const CreatePermit = () => {
         const nextRow = Math.min(row + 1, NUM_ROWS - 1);
         if (nextRow === 0 || gridData[nextRow - 1].some(c => c.trim() !== '')) {
           setSelectedCell({ row: nextRow, col });
+          setSelectionEnd({ row: nextRow, col });
         } else {
           toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
         }
@@ -125,15 +135,18 @@ const CreatePermit = () => {
       case 'ArrowUp':
         e.preventDefault();
         setSelectedCell({ row: Math.max(row - 1, 0), col });
+        setSelectionEnd({ row: Math.max(row - 1, 0), col });
         break;
       case 'ArrowRight':
       case 'Tab':
         e.preventDefault();
         setSelectedCell({ row, col: Math.min(col + 1, NUM_COLS - 1) });
+        setSelectionEnd({ row, col: Math.min(col + 1, NUM_COLS - 1) });
         break;
       case 'ArrowLeft':
         e.preventDefault();
         setSelectedCell({ row, col: Math.max(col - 1, 0) });
+        setSelectionEnd({ row, col: Math.max(col - 1, 0) });
         break;
       case 'Enter':
         e.preventDefault();
@@ -142,7 +155,39 @@ const CreatePermit = () => {
       case 'Backspace':
       case 'Delete':
         e.preventDefault();
-        if (!readOnly) updateGridCell(row, col, '');
+        if (selectedCell.row === 'ALL' && selectedCell.col === 'ALL') {
+          setGridData(Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill('')));
+        } else if (selectedCell.row === 'ALL') {
+          setGridData(prev => prev.map(r => {
+            const newR = [...r];
+            newR[col] = '';
+            return newR;
+          }));
+        } else if (selectedCell.col === 'ALL') {
+          setGridData(prev => {
+            const newData = [...prev];
+            newData[row] = Array(NUM_COLS).fill('');
+            return newData;
+          });
+        } else {
+          if (!readOnly && selectedCell.row === selectionEnd.row && selectedCell.col === selectionEnd.col) {
+            updateGridCell(row, col, '');
+          } else {
+            setGridData(prev => {
+              const newData = prev.map(r => [...r]);
+              const minR = Math.min(selectedCell.row, selectionEnd.row);
+              const maxR = Math.max(selectedCell.row, selectionEnd.row);
+              const minC = Math.min(selectedCell.col, selectionEnd.col);
+              const maxC = Math.max(selectedCell.col, selectionEnd.col);
+              for (let r = minR; r <= maxR; r++) {
+                 for (let c = minC; c <= maxC; c++) {
+                    if (c !== 3) newData[r][c] = '';
+                 }
+              }
+              return newData;
+            });
+          }
+        }
         break;
       default:
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !readOnly) {
@@ -156,6 +201,16 @@ const CreatePermit = () => {
     setGridData(prev => {
       const newData = [...prev];
       newData[r] = [...newData[r]];
+      
+      // AUTO-FILL LOGIC: If adding any Animal detail (cols 14-17) and the current row has no Owner Name, copy owner data from the row above
+      if (c >= 14 && c <= 17 && r > 0 && newData[r][0] === '' && value.toString().trim() !== '') {
+         const prevRow = newData[r - 1];
+         // Copy Owner, Reason, Date, Transport, Plate, and Locations (Cols 0 to 13)
+         for (let i = 0; i <= 13; i++) {
+            newData[r][i] = prevRow[i];
+         }
+      }
+
       newData[r][c] = value;
       
       const hasDefaults = newData[r][3] === new Date().toISOString().split('T')[0];
@@ -451,26 +506,46 @@ const CreatePermit = () => {
 
         {/* Sheets Formula Bar */}
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-gray-300 bg-white shadow-sm z-10">
-          <div className="w-12 text-center text-gray-500 font-medium border-r border-gray-300">
-            {COLUMNS[selectedCell.col].header}{selectedCell.row + 1}
+          <div className="w-12 text-center text-gray-500 font-medium border-r border-gray-300 truncate px-1">
+            {selectedCell.row === 'ALL' && selectedCell.col === 'ALL' ? 'ALL' :
+             selectedCell.row === 'ALL' ? COLUMNS[selectedCell.col]?.title :
+             selectedCell.col === 'ALL' ? `Row ${selectedCell.row + 1}` :
+             `${selectedCell.col}${selectedCell.row + 1}`}
           </div>
           <div className="text-gray-400 font-serif italic text-lg px-2">fx</div>
           <input 
             type="text" 
             className="flex-1 outline-none text-[13px] px-2"
-            value={gridData[selectedCell.row][selectedCell.col]}
-            onChange={(e) => updateGridCell(selectedCell.row, selectedCell.col, e.target.value)}
+            value={selectedCell.row === 'ALL' || selectedCell.col === 'ALL' ? '' : gridData[selectedCell.row][selectedCell.col]}
+            onChange={(e) => {
+              if (selectedCell.row !== 'ALL' && selectedCell.col !== 'ALL') {
+                 updateGridCell(selectedCell.row, selectedCell.col, e.target.value);
+              }
+            }}
           />
         </div>
 
         {/* Sheets Grid */}
-        <div className="flex-1 overflow-auto bg-[#F8F9FA] relative">
+        <div className="flex-1 overflow-auto bg-[#F8F9FA] relative select-none">
           <table className="border-collapse table-fixed bg-white" style={{ minWidth: 'max-content' }}>
             <thead className="sticky top-0 z-20 bg-[#F8F9FA] shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
               <tr>
-                <th className="w-12 border border-[#C0C0C0] bg-[#F8F9FA]"></th>
+                <th 
+                  className={`w-12 border border-[#C0C0C0] cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.row === 'ALL' && selectedCell.col === 'ALL' ? 'bg-[#E8F0FE]' : 'bg-[#F8F9FA]'}`}
+                  onClick={() => { setSelectedCell({ row: 'ALL', col: 'ALL' }); setSelectionEnd({ row: 'ALL', col: 'ALL' }); }}
+                  tabIndex={0}
+                  onKeyDown={(e) => handleCellKeyDown(e, 'ALL', 'ALL')}
+                ></th>
                 {COLUMNS.map((col, idx) => isColVisible(idx) ? (
-                  <th key={idx} className="border border-[#C0C0C0] font-medium text-gray-800 py-2 px-2 bg-[#F8F9FA] text-[12px] text-center truncate" style={{ width: col.width }}>
+                  <th 
+                    key={idx} 
+                    className={`border border-[#C0C0C0] font-medium text-gray-800 py-2 px-2 text-[12px] text-center truncate cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.row === 'ALL' && (selectedCell.col === idx || (selectedCell.col !== 'ALL' && idx >= Math.min(selectedCell.col, selectionEnd.col) && idx <= Math.max(selectedCell.col, selectionEnd.col))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA]'}`} 
+                    style={{ width: col.width }}
+                    onMouseDown={() => { setSelectedCell({ row: 'ALL', col: idx }); setSelectionEnd({ row: 'ALL', col: idx }); setIsDragging(true); }}
+                    onMouseEnter={() => { if(isDragging && selectedCell.row === 'ALL') setSelectionEnd({ row: 'ALL', col: idx }); }}
+                    tabIndex={0}
+                    onKeyDown={(e) => handleCellKeyDown(e, 'ALL', idx)}
+                  >
                     {col.title}
                   </th>
                 ) : null)}
@@ -486,25 +561,60 @@ const CreatePermit = () => {
                 })
                 .map(({ row, originalIndex }) => (
                 <tr key={originalIndex}>
-                  <td className="border border-[#C0C0C0] bg-[#F8F9FA] text-center text-gray-500 font-normal sticky left-0 z-10 w-12">
+                  <td 
+                    className={`border border-[#C0C0C0] text-center font-normal sticky left-0 z-10 w-12 cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.col === 'ALL' && (selectedCell.row === originalIndex || (selectedCell.row !== 'ALL' && originalIndex >= Math.min(selectedCell.row, selectionEnd.row) && originalIndex <= Math.max(selectedCell.row, selectionEnd.row))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA] text-gray-500'}`}
+                    onMouseDown={() => { setSelectedCell({ row: originalIndex, col: 'ALL' }); setSelectionEnd({ row: originalIndex, col: 'ALL' }); setIsDragging(true); }}
+                    onMouseEnter={() => { if(isDragging && selectedCell.col === 'ALL') setSelectionEnd({ row: originalIndex, col: 'ALL' }); }}
+                    tabIndex={0}
+                    onKeyDown={(e) => handleCellKeyDown(e, originalIndex, 'ALL')}
+                  >
                     {originalIndex + 1}
                   </td>
                   {row.map((val, cIdx) => {
                     if (!isColVisible(cIdx)) return null;
-                    const isSelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
+                    
+                    let isSelected = false;
+                    let isPrimarySelected = false;
+
+                    if (selectedCell.row === 'ALL' && selectedCell.col === 'ALL') {
+                      isSelected = true;
+                    } else if (selectedCell.row === 'ALL') {
+                      const minC = Math.min(selectedCell.col, selectionEnd.col);
+                      const maxC = Math.max(selectedCell.col, selectionEnd.col);
+                      isSelected = cIdx >= minC && cIdx <= maxC;
+                    } else if (selectedCell.col === 'ALL') {
+                      const minR = Math.min(selectedCell.row, selectionEnd.row);
+                      const maxR = Math.max(selectedCell.row, selectionEnd.row);
+                      isSelected = originalIndex >= minR && originalIndex <= maxR;
+                    } else {
+                      const minR = Math.min(selectedCell.row, selectionEnd.row);
+                      const maxR = Math.max(selectedCell.row, selectionEnd.row);
+                      const minC = Math.min(selectedCell.col, selectionEnd.col);
+                      const maxC = Math.max(selectedCell.col, selectionEnd.col);
+                      isSelected = originalIndex >= minR && originalIndex <= maxR && cIdx >= minC && cIdx <= maxC;
+                      isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
+                    }
+
                     const isLocationCol = [6, 7, 8, 9, 10, 11, 12, 13, 15].includes(cIdx);
                     
                     return (
                       <td 
                         key={cIdx} 
-                        onClick={() => {
+                        onMouseDown={() => {
                           if (originalIndex === 0 || gridData[originalIndex - 1].some((cell, idx) => ![3,6,7].includes(idx) && cell.trim() !== '')) {
-                            setSelectedCell({ row: originalIndex, col: cIdx })
+                            setSelectedCell({ row: originalIndex, col: cIdx });
+                            setSelectionEnd({ row: originalIndex, col: cIdx });
+                            setIsDragging(true);
                           } else {
-                            toast.error('Uzuza umurongo ubanza mbere yo gukomeza (Fill the previous row first).', { id: 'row-jump' });
+                            toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
                           }
                         }}
-                        className={`border border-[#E2E3E3] relative p-0 overflow-hidden ${isSelected ? 'outline outline-2 outline-[#1A73E8] z-10' : ''}`}
+                        onMouseEnter={() => {
+                          if (isDragging) {
+                            setSelectionEnd({ row: originalIndex, col: cIdx });
+                          }
+                        }}
+                        className={`border border-[#C0C0C0] relative h-[25px] overflow-visible text-[13px] text-gray-800 ${isSelected ? 'bg-[#E8F0FE]' : 'bg-white'} ${isPrimarySelected ? 'ring-2 ring-[#1A73E8] z-20' : ''}`}
                         style={{ width: COLUMNS[cIdx].width, height: '24px' }}
                       >
                         {isSelected && isEditing ? (
