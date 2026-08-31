@@ -1,18 +1,20 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from 'rwanda-locations';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
 const NUM_ROWS = 30;
-const NUM_COLS = 18;
+const NUM_COLS = 21;
 
 const COLUMNS = [
   { title: 'Amazina ya Nyir\'amatungo', width: 180, key: 'owner_name' },
   { title: 'Indangamuntu', width: 140, key: 'owner_id_number' },
+  { title: 'Nimero ya telephoni', width: 140, key: 'owner_phone' },
   { title: 'Impamvu y\'iyimuka', width: 150, key: 'reason' },
+  { title: 'Priority', width: 100, key: 'priority' },
   { title: 'Ifite agaciro kugeza (YYYY-MM-DD)', width: 160, key: 'valid_until' },
   { title: 'Uburyo bwo kugenda', width: 130, key: 'transport_type' },
   { title: 'Pulaki (Plate)', width: 120, key: 'plate_number' },
@@ -24,6 +26,7 @@ const COLUMNS = [
   { title: 'Umurenge (Bijya)', width: 140, key: 'dest_sector' },
   { title: 'Akagari (Bijya)', width: 130, key: 'dest_cell' },
   { title: 'Umudugudu (Bijya)', width: 130, key: 'dest_village' },
+  { title: 'Itungo (Type)', width: 120, key: 'animal_type' },
   { title: 'Nomero (Tag)', width: 120, key: 'tag_number' },
   { title: 'Igitsina (M/F)', width: 90, key: 'sex' },
   { title: 'Ubwoko (Breed)', width: 120, key: 'breed' },
@@ -41,24 +44,103 @@ const CreatePermit = () => {
   // ==========================
   // DESKTOP: SHEETS STATE
   // ==========================
+  const { id: editId } = useParams();
+
   const [gridData, setGridData] = useState(() => {
     const saved = localStorage.getItem('movementFormDraft');
-    if (saved) {
+    if (saved && !editId) {
       try { return JSON.parse(saved); } catch(e) {}
     }
     const today = new Date().toISOString().split('T')[0];
     const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
-    initial[0][3] = today;
+    initial[0][5] = today;
     if (user) {
-      initial[0][6] = user.district_id || '';
-      initial[0][7] = user.sector_id || '';
+      initial[0][8] = user.district_id || '';
+      initial[0][9] = user.sector_id || '';
     }
     return initial;
   });
 
+  const [lastSaved, setLastSaved] = useState(null);
+
   useEffect(() => {
-    localStorage.setItem('movementFormDraft', JSON.stringify(gridData));
-  }, [gridData]);
+    if (!editId) {
+      localStorage.setItem('movementFormDraft', JSON.stringify(gridData));
+      setLastSaved(new Date());
+    }
+  }, [gridData, editId]);
+
+  useEffect(() => {
+    if (editId) {
+      const fetchRequest = async () => {
+        try {
+          setLoading(true);
+          const res = await api.get(`/movement/${editId}`);
+          const data = res.data;
+          
+          // Populate mobile form
+          setMobileForm({
+            owner_name: data.owner_name || '', owner_id_number: data.owner_id_number || '',
+            owner_phone: data.owner_phone || '', priority: data.priority || '',
+            transport_type: data.transport_type || '', plate_number: data.plate_number || '',
+            origin_district: data.origin_district || '', origin_sector: data.origin_sector || '',
+            origin_cell: data.origin_cell || '', origin_village: data.origin_village || '',
+            dest_district: data.dest_district || '', dest_sector: data.dest_sector || '',
+            dest_cell: data.dest_cell || '', dest_village: data.dest_village || '',
+            valid_until: data.valid_until ? data.valid_until.split('T')[0] : today,
+            reason: data.reason || ''
+          });
+
+          // Populate mobile animals
+          if (data.Animals && data.Animals.length > 0) {
+            setMobileAnimals(data.Animals.map((a, i) => ({
+              id: Date.now() + i,
+              animal_type: a.animal_type || data.animal_type || 'COW',
+              tag_number: a.tag_number || '',
+              sex: a.sex || 'F',
+              breed: a.breed || '',
+              color: a.color || ''
+            })));
+          }
+
+          // Populate grid data
+          const newGrid = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
+          if (data.Animals && data.Animals.length > 0) {
+            data.Animals.forEach((a, r) => {
+              if (r >= NUM_ROWS) return;
+              newGrid[r][0] = data.owner_name || '';
+              newGrid[r][1] = data.owner_id_number || '';
+              newGrid[r][2] = data.owner_phone || '';
+              newGrid[r][3] = data.reason || '';
+              newGrid[r][4] = data.priority || '';
+              newGrid[r][5] = data.valid_until ? data.valid_until.split('T')[0] : '';
+              newGrid[r][6] = data.transport_type || '';
+              newGrid[r][7] = data.plate_number || '';
+              newGrid[r][8] = data.origin_district || '';
+              newGrid[r][9] = data.origin_sector || '';
+              newGrid[r][10] = data.origin_cell || '';
+              newGrid[r][11] = data.origin_village || '';
+              newGrid[r][12] = data.dest_district || '';
+              newGrid[r][13] = data.dest_sector || '';
+              newGrid[r][14] = data.dest_cell || '';
+              newGrid[r][15] = data.dest_village || '';
+              newGrid[r][16] = a.animal_type || data.animal_type || 'COW';
+              newGrid[r][17] = a.tag_number || '';
+              newGrid[r][18] = a.sex || 'F';
+              newGrid[r][19] = a.breed || '';
+              newGrid[r][20] = a.color || '';
+            });
+          }
+          setGridData(newGrid);
+        } catch (error) {
+          toast.error('Failed to load request for editing.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchRequest();
+    }
+  }, [editId]);
 
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
   const [selectionEnd, setSelectionEnd] = useState({ row: 0, col: 0 });
@@ -80,17 +162,17 @@ const CreatePermit = () => {
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
   const COLUMN_GROUPS = [
-    { id: 'owner', label: "Nyir'amatungo (Owner)", cols: [0, 1, 2, 3, 4, 5] },
-    { id: 'origin', label: 'Biva (Origin)', cols: [6, 7, 8, 9] },
-    { id: 'dest', label: 'Bijya (Destination)', cols: [10, 11, 12, 13] },
-    { id: 'animal', label: 'Amatungo (Animals)', cols: [14, 15, 16, 17] },
+    { id: 'owner', label: "Nyir'amatungo (Owner)", cols: [0, 1, 2, 3, 4, 5, 6, 7] },
+    { id: 'origin', label: 'Biva (Origin)', cols: [8, 9, 10, 11] },
+    { id: 'dest', label: 'Bijya (Destination)', cols: [12, 13, 14, 15] },
+    { id: 'animal', label: 'Amatungo (Animals)', cols: [16, 17, 18, 19, 20] },
   ];
 
   const isColVisible = (idx) => {
-    if ([0,1,2,3,4,5].includes(idx)) return visibleGroups.owner;
-    if ([6,7,8,9].includes(idx)) return visibleGroups.origin;
-    if ([10,11,12,13].includes(idx)) return visibleGroups.dest;
-    if ([14,15,16,17].includes(idx)) return visibleGroups.animal;
+    if ([0,1,2,3,4,5,6,7].includes(idx)) return visibleGroups.owner;
+    if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
+    if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
+    if ([16,17,18,19,20].includes(idx)) return visibleGroups.animal;
     return true;
   };
 
@@ -108,8 +190,9 @@ const CreatePermit = () => {
         e.preventDefault();
         setIsEditing(false);
         const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.trim() !== '')) {
+        if (nextRow === 0 || gridData[nextRow - 1].every(c => c.toString().trim() !== '')) {
           setSelectedCell({ row: nextRow, col });
+          setSelectionEnd({ row: nextRow, col });
         } else {
           toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
         }
@@ -125,7 +208,7 @@ const CreatePermit = () => {
       case 'ArrowDown':
         e.preventDefault();
         const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.trim() !== '')) {
+        if (nextRow === 0 || gridData[nextRow - 1].every(c => c.toString().trim() !== '')) {
           setSelectedCell({ row: nextRow, col });
           setSelectionEnd({ row: nextRow, col });
         } else {
@@ -198,28 +281,36 @@ const CreatePermit = () => {
   };
 
   const updateGridCell = (r, c, value) => {
+    if (c === 17 && value.toString().trim() !== '') {
+       const isDuplicate = gridData.some((row, rIdx) => rIdx !== r && row[17].toString().trim() === value.toString().trim());
+       if (isDuplicate) {
+          toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
+          return;
+       }
+    }
+
     setGridData(prev => {
       const newData = [...prev];
       newData[r] = [...newData[r]];
       
-      // AUTO-FILL LOGIC: If adding any Animal detail (cols 14-17) and the current row has no Owner Name, copy owner data from the row above
-      if (c >= 14 && c <= 17 && r > 0 && newData[r][0] === '' && value.toString().trim() !== '') {
+      // AUTO-FILL LOGIC: If adding any Animal detail (cols 16-20) and the current row has no Owner Name, copy owner data from the row above
+      if (c >= 16 && c <= 20 && r > 0 && newData[r][0] === '' && value.toString().trim() !== '') {
          const prevRow = newData[r - 1];
-         // Copy Owner, Reason, Date, Transport, Plate, and Locations (Cols 0 to 13)
-         for (let i = 0; i <= 13; i++) {
+         // Copy Owner, Phone, Reason, Priority, Date, Transport, Plate, and Locations (Cols 0 to 15)
+         for (let i = 0; i <= 15; i++) {
             newData[r][i] = prevRow[i];
          }
       }
 
       newData[r][c] = value;
       
-      const hasDefaults = newData[r][3] === new Date().toISOString().split('T')[0];
+      const hasDefaults = newData[r][5] === new Date().toISOString().split('T')[0];
       if (!hasDefaults && value.toString().trim() !== '') {
         const today = new Date().toISOString().split('T')[0];
-        newData[r][3] = today;
+        newData[r][5] = today;
         if (user) {
-          if (!newData[r][6]) newData[r][6] = user.district_id || '';
-          if (!newData[r][7]) newData[r][7] = user.sector_id || '';
+          if (!newData[r][8]) newData[r][8] = user.district_id || '';
+          if (!newData[r][9]) newData[r][9] = user.sector_id || '';
         }
       }
       return newData;
@@ -233,15 +324,19 @@ const CreatePermit = () => {
   }, [isEditing]);
 
   const handleSubmitSheets = async () => {
-    let validRows = gridData.filter(r => r[14].trim() !== ''); 
+    let validRows = gridData.filter(r => r[17].trim() !== ''); 
     if (validRows.length === 0) {
-      toast.error('Nta tungo ririmo. Uzuza Column O (Tag).');
+      toast.error('Nta tungo ririmo. Uzuza Column R (Tag).');
       return;
     }
     
     for (let i = 0; i < validRows.length; i++) {
-       if (validRows[i][1].trim().length !== 16) {
-          toast.error(`Indangamuntu (ID) ku murongo wa ${i + 1} igomba kuba imibare 16.`);
+       if (validRows[i][1].trim().length !== 16 || !/^\d+$/.test(validRows[i][1].trim())) {
+          toast.error(`Indangamuntu (ID) ku murongo wa ${i + 1} igomba kuba imibare 16 gusa.`);
+          return;
+       }
+       if (validRows[i][2].trim().length !== 10 || !/^\d+$/.test(validRows[i][2].trim())) {
+          toast.error(`Nimero ya telephoni ku murongo wa ${i + 1} igomba kuba imibare 10 gusa.`);
           return;
        }
     }
@@ -250,28 +345,31 @@ const CreatePermit = () => {
     const payload = {
       owner_name: firstRow[0],
       owner_id_number: firstRow[1],
-      reason: firstRow[2],
-      valid_until: firstRow[3],
-      transport_type: firstRow[4],
-      plate_number: firstRow[5],
-      origin_district: firstRow[6] || user?.district_id,
-      origin_sector: firstRow[7] || user?.sector_id,
-      origin_cell: firstRow[8],
-      origin_village: firstRow[9],
-      dest_district: firstRow[10],
-      dest_sector: firstRow[11],
-      dest_cell: firstRow[12],
-      dest_village: firstRow[13],
+      owner_phone: firstRow[2],
+      reason: firstRow[3],
+      priority: firstRow[4],
+      valid_until: firstRow[5],
+      transport_type: firstRow[6],
+      plate_number: firstRow[7],
+      origin_district: firstRow[8] || user?.district_id,
+      origin_sector: firstRow[9] || user?.sector_id,
+      origin_cell: firstRow[10],
+      origin_village: firstRow[11],
+      dest_district: firstRow[12],
+      dest_sector: firstRow[13],
+      dest_cell: firstRow[14],
+      dest_village: firstRow[15],
       type: requestType,
       origin_id: user?.sector_id || user?.district_id || user?.id,
-      destination_id: firstRow[11] || firstRow[10] || user?.id,
-      animal_type: 'COW',
+      destination_id: firstRow[13] || firstRow[12] || user?.id,
+      animal_type: firstRow[16] || 'COW',
       animals: validRows.map(r => ({
-        tag_number: r[14],
-        sex: r[15] || 'F',
+        animal_type: r[16] || 'COW',
+        tag_number: r[17],
+        sex: r[18] || 'F',
         quantity: 1, // Quantity column removed, default to 1 per tag
-        breed: r[16],
-        color: r[17]
+        breed: r[19],
+        color: r[20]
       }))
     };
     
@@ -279,17 +377,22 @@ const CreatePermit = () => {
 
     try {
       setLoading(true);
-      await api.post('/movement', payload);
+      if (editId) {
+        await api.put(`/movement/${editId}`, payload);
+        toast.success('Permit request updated successfully!');
+      } else {
+        await api.post('/movement', payload);
+        toast.success('Permit requests submitted successfully!');
+      }
       
-      toast.success('Permit requests submitted successfully!');
       localStorage.removeItem('movementFormDraft');
       
       const today = new Date().toISOString().split('T')[0];
       const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
-      initial[0][3] = today;
+      initial[0][5] = today;
       if (user) {
-        initial[0][6] = user.district_id || '';
-        initial[0][7] = user.sector_id || '';
+        initial[0][8] = user.district_id || '';
+        initial[0][9] = user.sector_id || '';
       }
       setGridData(initial);
       
@@ -306,14 +409,14 @@ const CreatePermit = () => {
   // ==========================
   const today = new Date().toISOString().split('T')[0];
   const [mobileForm, setMobileForm] = useState({
-    owner_name: '', owner_id_number: '', transport_type: '', plate_number: '',
+    owner_name: '', owner_id_number: '', owner_phone: '', priority: '', transport_type: '', plate_number: '',
     origin_district: '', origin_sector: '', origin_cell: '', origin_village: '',
     dest_district: '', dest_sector: '', dest_cell: '', dest_village: '',
-    valid_until: today, reason: '', animal_type: 'COW'
+    valid_until: today, reason: ''
   });
   
   const [mobileAnimals, setMobileAnimals] = useState([
-    { id: Date.now(), tag_number: '', sex: 'F', breed: '', color: '' }
+    { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }
   ]);
 
   useEffect(() => {
@@ -330,6 +433,9 @@ const CreatePermit = () => {
     if (e.target.name === 'owner_id_number') {
       const val = e.target.value.replace(/\D/g, '').slice(0, 16);
       setMobileForm({ ...mobileForm, [e.target.name]: val });
+    } else if (e.target.name === 'owner_phone') {
+      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+      setMobileForm({ ...mobileForm, [e.target.name]: val });
     } else {
       setMobileForm({ ...mobileForm, [e.target.name]: e.target.value });
     }
@@ -337,11 +443,41 @@ const CreatePermit = () => {
   const handleMobileSelect = (name, value) => setMobileForm({ ...mobileForm, [name]: value });
 
   const handleMobileAnimalChange = (id, field, value) => {
+    if (field === 'tag_number' && value.toString().trim() !== '') {
+       const isDuplicate = mobileAnimals.some(a => a.id !== id && a.tag_number.toString().trim() === value.toString().trim());
+       if (isDuplicate) {
+          toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
+          return;
+       }
+    }
     setMobileAnimals(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
   };
-  const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), tag_number: '', sex: 'F', quantity: 1, breed: '', color: '' }]);
+  const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }]);
   const removeMobileAnimal = (id) => {
     if(mobileAnimals.length > 1) setMobileAnimals(mobileAnimals.filter(a => a.id !== id));
+  };
+
+  const handleClearForm = () => {
+    localStorage.removeItem('movementFormDraft');
+    const today = new Date().toISOString().split('T')[0];
+    const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
+    initial[0][5] = today;
+    if (user) {
+      initial[0][8] = user.district_id || '';
+      initial[0][9] = user.sector_id || '';
+    }
+    setGridData(initial);
+    
+    setMobileForm({
+      owner_name: '', owner_id_number: '', owner_phone: '', priority: '',
+      transport_type: '', plate_number: '', origin_district: '', origin_sector: '',
+      origin_cell: '', origin_village: '', dest_district: '', dest_sector: '',
+      dest_cell: '', dest_village: '', valid_until: today, reason: ''
+    });
+    setMobileAnimals([
+      { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }
+    ]);
+    if (!editId) setLastSaved(null);
   };
 
   const handleSubmitForms = async (e) => {
@@ -354,8 +490,13 @@ const CreatePermit = () => {
         setLoading(false);
         return;
       }
-      if (mobileForm.owner_id_number.trim().length !== 16) {
-        toast.error('Indangamuntu (ID) igomba kuba imibare 16.');
+      if (mobileForm.owner_id_number.trim().length !== 16 || !/^\d+$/.test(mobileForm.owner_id_number.trim())) {
+        toast.error('Indangamuntu (ID) igomba kuba imibare 16 gusa.');
+        setLoading(false);
+        return;
+      }
+      if (mobileForm.owner_phone.trim().length !== 10 || !/^\d+$/.test(mobileForm.owner_phone.trim())) {
+        toast.error('Nimero ya telephoni igomba kuba imibare 10 gusa.');
         setLoading(false);
         return;
       }
@@ -367,10 +508,19 @@ const CreatePermit = () => {
         destination_id: mobileForm.dest_sector || mobileForm.dest_district || user?.id,
         animals: validAnimals.map(({id, ...rest}) => ({ ...rest, quantity: 1 }))
       };
-      await api.post('/movement', payload);
-      toast.success('Uruhushya rwoherejwe neza!');
-      setMobileAnimals([{ id: Date.now(), tag_number: '', sex: 'F', breed: '', color: '' }]);
-      setMobileForm(prev => ({ ...prev, owner_name: '', owner_id_number: '', plate_number: '' }));
+      if (editId) {
+        await api.put(`/movement/${editId}`, payload);
+        toast.success('Uruhushya rwavuguruwe neza!');
+      } else {
+        await api.post('/movement', payload);
+        toast.success('Uruhushya rwoherejwe neza!');
+      }
+      if (!editId) {
+        setMobileAnimals([{ id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }]);
+        setMobileForm(prev => ({ ...prev, owner_name: '', owner_id_number: '', owner_phone: '', plate_number: '' }));
+      } else {
+        navigate('/dashboard/movements');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit permit.');
     } finally {
@@ -435,7 +585,14 @@ const CreatePermit = () => {
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-medium text-gray-700 leading-tight">Uruhushya rwo Kwimura Amatungo</h1>
+                <h1 className="text-lg font-medium text-gray-700 leading-tight">
+                  {editId ? 'Vugurura Uruhushya (Update Permit)' : 'Saba Uruhushya (New Permit)'}
+                </h1>
+                {!editId && lastSaved && (
+                  <span className="text-xs text-gray-400 font-normal ml-2">
+                    Autosaved at {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -446,12 +603,20 @@ const CreatePermit = () => {
             >
               Cancel
             </a>
+            {!editId && (
+              <button 
+                onClick={handleClearForm}
+                className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              >
+                Clear draft
+              </button>
+            )}
             <button 
               onClick={handleSubmitSheets} 
               disabled={loading}
               className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
             >
-              {loading ? 'Submitting...' : 'Submit Records'}
+              {loading ? 'Submitting...' : (editId ? 'Update Record' : 'Submit Records')}
             </button>
           </div>
         </div>
@@ -595,13 +760,13 @@ const CreatePermit = () => {
                       isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
                     }
 
-                    const isLocationCol = [6, 7, 8, 9, 10, 11, 12, 13, 15].includes(cIdx);
+                    const isDropdownCol = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18].includes(cIdx);
                     
                     return (
                       <td 
                         key={cIdx} 
                         onMouseDown={() => {
-                          if (originalIndex === 0 || gridData[originalIndex - 1].some((cell, idx) => ![3,6,7].includes(idx) && cell.trim() !== '')) {
+                          if (originalIndex === 0 || gridData[originalIndex - 1].every(c => c.toString().trim() !== '')) {
                             setSelectedCell({ row: originalIndex, col: cIdx });
                             setSelectionEnd({ row: originalIndex, col: cIdx });
                             setIsDragging(true);
@@ -618,22 +783,21 @@ const CreatePermit = () => {
                         style={{ width: COLUMNS[cIdx].width, height: '24px' }}
                       >
                         {isSelected && isEditing ? (
-                          isLocationCol ? (
+                          isDropdownCol ? (
                             <select
                                ref={inputRef}
                                className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white border-0 text-gray-800"
                                value={val}
                                onChange={(e) => {
                                  const newVal = e.target.value;
-                                 updateGridCell(originalIndex, cIdx, newVal);
-                                 if (cIdx === 6 || cIdx === 10) {
+                                 if (cIdx === 8 || cIdx === 12) {
                                     updateGridCell(originalIndex, cIdx + 1, '');
                                     updateGridCell(originalIndex, cIdx + 2, '');
                                     updateGridCell(originalIndex, cIdx + 3, '');
-                                 } else if (cIdx === 7 || cIdx === 11) {
+                                 } else if (cIdx === 9 || cIdx === 13) {
                                     updateGridCell(originalIndex, cIdx + 2, '');
                                     updateGridCell(originalIndex, cIdx + 3, '');
-                                 } else if (cIdx === 8 || cIdx === 12) {
+                                 } else if (cIdx === 10 || cIdx === 14) {
                                     updateGridCell(originalIndex, cIdx + 3, '');
                                  }
                                }}
@@ -641,8 +805,8 @@ const CreatePermit = () => {
                                onKeyDown={(e) => {
                                   if (e.key === 'Enter' || e.key === 'Escape') {
                                      setIsEditing(false);
-                                     if (e.key === 'Enter') {
-                                        if (originalIndex + 1 < NUM_ROWS && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![3,6,7].includes(idx) && c.trim() !== ''))) {
+                                      if (e.key === 'Enter') {
+                                        if (originalIndex + 1 < NUM_ROWS && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![5,8,9].includes(idx) && c.trim() !== ''))) {
                                           setSelectedCell({ row: originalIndex + 1, col: cIdx });
                                         }
                                      }
@@ -656,25 +820,29 @@ const CreatePermit = () => {
                               <option value="">-- Hitamo --</option>
                               {(() => {
                                  let opts = [];
-                                 if (cIdx === 6 || cIdx === 10) {
+                                 if (cIdx === 8 || cIdx === 12) {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
-                                 } else if (cIdx === 7 || cIdx === 11) {
+                                 } else if (cIdx === 9 || cIdx === 13) {
                                     const dist = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist) opts = getSectors(prov, dist).sort();
-                                 } else if (cIdx === 8 || cIdx === 12) {
+                                 } else if (cIdx === 10 || cIdx === 14) {
                                     const dist = row[cIdx - 2]?.trim();
                                     const sec = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist && sec) opts = getCells(prov, dist, sec).sort();
-                                 } else if (cIdx === 9 || cIdx === 13) {
+                                 } else if (cIdx === 11 || cIdx === 15) {
                                     const dist = row[cIdx - 3]?.trim();
                                     const sec = row[cIdx - 2]?.trim();
                                     const cell = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist && sec && cell) opts = getVillages(prov, dist, sec, cell).sort();
-                                 } else if (cIdx === 15) {
+                                 } else if (cIdx === 18) {
                                     opts = ['M', 'F'];
+                                 } else if (cIdx === 16) {
+                                    opts = ['Inka (Cow)', 'Ihene (Goat)', 'Intama (Sheep)'];
+                                 } else if (cIdx === 4) {
+                                    opts = ['Minor', 'Urgency'];
                                  }
                                  return opts.map(o => <option key={o} value={o}>{o}</option>);
                               })()}
@@ -687,6 +855,7 @@ const CreatePermit = () => {
                               onChange={(e) => {
                                 let newVal = e.target.value;
                                 if (cIdx === 1) newVal = newVal.replace(/\D/g, '').slice(0, 16);
+                                if (cIdx === 2) newVal = newVal.replace(/\D/g, '').slice(0, 10);
                                 updateGridCell(originalIndex, cIdx, newVal);
                               }}
                               onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
@@ -701,10 +870,10 @@ const CreatePermit = () => {
                               if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
                             }}
                             onDoubleClick={() => {
-                              if (![3].includes(cIdx)) setIsEditing(true);
+                              if (![5].includes(cIdx)) setIsEditing(true);
                             }}
                           >
-                            {val ? val : (isLocationCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}
+                            {val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}
                           </div>
                         )}
                         {isSelected && (
@@ -730,8 +899,12 @@ const CreatePermit = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="h-2.5 w-full bg-[#673AB7]"></div>
             <div className="p-6">
-              <h1 className="text-3xl font-normal text-gray-900 mb-2">Uruhushya rwo Kwimura Amatungo</h1>
-              <p className="text-gray-600 mb-4 text-sm">Form for requesting livestock movement permits.</p>
+              <h1 className="text-3xl font-normal text-gray-900 mb-2">
+                {editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
+              </h1>
+              <p className="text-gray-600 mb-4 text-sm">
+                {editId ? 'Update an existing livestock movement permit.' : 'Form for requesting new livestock movement permits.'}
+              </p>
               
               <div className="flex items-center gap-2 text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2">
                 <span className="font-medium text-gray-700">{user?.email || 'user@example.com'}</span>
@@ -762,8 +935,16 @@ const CreatePermit = () => {
                   <input type="text" name="owner_id_number" value={mobileForm.owner_id_number} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
                 </FormCard>
 
+                <FormCard title="Nimero ya telephoni" required>
+                  <input type="text" name="owner_phone" value={mobileForm.owner_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                </FormCard>
+
                 <FormCard title="Impamvu y'iyimuka" required>
                   <input type="text" name="reason" required value={mobileForm.reason} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                </FormCard>
+
+                <FormCard title="Priority" required>
+                  <CustomSelect value={mobileForm.priority} onChange={(v) => handleMobileSelect('priority', v)} options={[{value: 'Minor', label: 'Minor'}, {value: 'Urgency', label: 'Urgency'}]} />
                 </FormCard>
 
                 <FormCard title="Uburyo bwo kugenda" required>
@@ -833,9 +1014,14 @@ const CreatePermit = () => {
                          </button>
                        )}
                        <div>
-                         <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
-                         <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
-                       </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Animal Type *</label>
+                          <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(animal.id, 'animal_type', v)} options={[{value: 'Inka (Cow)', label: 'Inka (Cow)'}, {value: 'Ihene (Goat)', label: 'Ihene (Goat)'}, {value: 'Intama (Sheep)', label: 'Intama (Sheep)'}]} />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
+                          <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
+                        </div></div>
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Sex</label>
                          <select value={animal.sex} onChange={(e) => handleMobileAnimalChange(animal.id, 'sex', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent">
@@ -870,10 +1056,10 @@ const CreatePermit = () => {
               disabled={loading}
               className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
             >
-              {loading ? 'Submitting...' : 'Submit'}
+              {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
             </button>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
+              <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
             </div>
           </div>
         </form>

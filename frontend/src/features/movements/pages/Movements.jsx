@@ -30,7 +30,7 @@ const getColorForInitials = (initials) => {
 
 const Movements = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'List';
+  const activeTab = searchParams.get('tab') || 'Requests';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const navigate = useNavigate();
@@ -74,7 +74,10 @@ const Movements = () => {
       if (req.type === 'DISTRICT_TO_DISTRICT') type = 'enhancement';
 
       // Assignee (Approver) & Reporter (Initiator)
-      const assigneeName = req.Approver ? req.Approver.name : 'Unassigned';
+      let assigneeName = req.Approver ? req.Approver.name : null;
+      if (!assigneeName) {
+         assigneeName = req.type === 'DISTRICT_TO_DISTRICT' ? 'National RAB' : 'District (DARO)';
+      }
       const assigneeInitials = getInitials(assigneeName);
       const assigneeColor = getColorForInitials(assigneeInitials);
 
@@ -92,6 +95,12 @@ const Movements = () => {
       const filterStatus = req.status === 'APPROVED' ? 'Closed' : 'Open';
       const filterType = req.type;
 
+      // Origin and Dest
+      const originParts = [req.origin_district, req.origin_sector].filter(Boolean);
+      const destParts = [req.dest_district, req.dest_sector].filter(Boolean);
+      const origin = originParts.length > 0 ? originParts.join(', ') : (req.origin_id || 'Unknown');
+      const destination = destParts.length > 0 ? destParts.join(', ') : (req.destination_id || 'Unknown');
+
       return {
         id: `MVT-${req.id.substring(0, 8).toUpperCase()}`, // Using first 8 chars of UUID for readability
         dbId: req.id,
@@ -99,11 +108,13 @@ const Movements = () => {
         filterType,
         filterStatus,
         filterAnimal,
+        route: `${origin} → ${destination}`,
         title: `Move ${req.count} ${req.animal_type}s: ${req.reason || 'No reason provided'}`,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         priority,
-        status: filterStatus
+        status: filterStatus,
+        rawStatus: req.status
       };
     });
   }, [rawMovements]);
@@ -159,7 +170,7 @@ const Movements = () => {
   const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
 
   const tabs = [
-    'List', 'Map View', 'History'
+    'Requests', 'History'
   ];
 
   return (
@@ -249,14 +260,11 @@ const Movements = () => {
 
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-         {activeTab === 'List' && (
-            <MovementsList movements={filteredMovements} isLoading={isLoading} isError={isError} />
-         )}
-         {activeTab === 'Map View' && (
-            <MovementsMap movements={filteredMovements} isLoading={isLoading} />
+         {activeTab === 'Requests' && (
+            <MovementsList movements={filteredMovements.filter(m => !['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
          {activeTab === 'History' && (
-            <MovementsHistory movements={filteredMovements} isLoading={isLoading} />
+            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
       </div>
     </div>

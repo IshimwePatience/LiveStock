@@ -83,7 +83,8 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<Overview />} />
           <Route path="movements" element={<Movements />} />
-          <Route path="movements/new" element={<CreatePermit />} />
+          <Route path="movements/new" element={<CreatePermit key="new" />} />
+          <Route path="movements/edit/:id" element={<CreatePermit key="edit" />} />
           <Route path="users" element={<UserManagementRoute><UserManagement /></UserManagementRoute>} />
           <Route path="national-reports" element={<AdminRoute><NationalReports /></AdminRoute>} />
           <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />

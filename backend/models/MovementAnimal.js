@@ -15,6 +15,10 @@ const MovementAnimal = sequelize.define('MovementAnimal', {
     type: DataTypes.STRING, 
     allowNull: true 
   },
+  animal_type: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   sex: { 
     type: DataTypes.STRING, 
     allowNull: true 

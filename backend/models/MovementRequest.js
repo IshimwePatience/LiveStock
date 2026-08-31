@@ -22,6 +22,8 @@ const MovementRequest = sequelize.define('MovementRequest', {
   // Permit Form Specific Fields
   owner_name: { type: DataTypes.STRING, allowNull: true },
   owner_id_number: { type: DataTypes.STRING, allowNull: true },
+  owner_phone: { type: DataTypes.STRING, allowNull: true },
+  priority: { type: DataTypes.STRING, allowNull: true },
   transport_type: { type: DataTypes.STRING, allowNull: true },
   plate_number: { type: DataTypes.STRING, allowNull: true },
   

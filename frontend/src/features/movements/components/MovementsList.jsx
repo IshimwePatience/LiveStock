@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical } from 'lucide-react';
 
 const MovementsList = ({ movements, isLoading, isError }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
+  const navigate = useNavigate();
+  
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
 
   const toggleSelectAll = (e) => {
     if (e.target.checked) setSelected(movements.map(m => m.id));
@@ -60,9 +65,11 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                 checked={selected.length === movements.length && movements.length > 0}
               />
             </th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black">Request & Details</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request ID</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-56">Route</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Priority</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Status</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
@@ -83,8 +90,10 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                 <div className="flex items-center gap-2">
                   {getTypeIcon(item.type)}
                   <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.id}</span>
-                  <span className="text-black truncate max-w-sm font-medium text-[13px]">{item.title}</span>
                 </div>
+              </td>
+              <td className="py-2 px-4">
+                <span className="text-black truncate max-w-sm block font-medium text-[13px]" title={item.title}>{item.title}</span>
               </td>
               <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
@@ -109,13 +118,24 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                 </div>
               </td>
               <td className="py-2 px-4">
+                <span className="text-gray-700 truncate max-w-[200px] block font-medium text-[12px]">{item.route}</span>
+              </td>
+              <td className="py-2 px-4">
                 <div className="flex items-center gap-1.5">
                   {getPriorityIcon(item.priority)}
                   <span className="text-black font-medium text-[13px]">{item.priority}</span>
                 </div>
               </td>
               <td className="py-2 px-4">
-                {item.status === 'Closed' ? (
+                {item.rawStatus === 'APPROVED' ? (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-green-200 bg-green-50 text-green-700 text-[11px] font-medium tracking-wide">
+                    Approved
+                  </div>
+                ) : item.rawStatus === 'REJECTED' ? (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-200 bg-red-50 text-red-700 text-[11px] font-medium tracking-wide">
+                    Rejected
+                  </div>
+                ) : item.status === 'Closed' ? (
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-black text-[11px] font-medium tracking-wide">
                     Closed <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
                   </div>
@@ -140,6 +160,14 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                     >
                       View Details
                     </button>
+                    {item.rawStatus === 'PENDING' && user?.role === 'DARO' && (
+                      <button 
+                        onClick={() => navigate(`/dashboard/movements/edit/${item.dbId}`)}
+                        className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                      >
+                        Edit
+                      </button>
+                    )}
                     <button 
                       onClick={() => setOpenActionDropdown(null)}
                       className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
@@ -154,7 +182,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
           
           {movements.length === 0 && (
             <tr>
-                <td colSpan="6" className="p-8 text-center text-gray-500">
+                <td colSpan="9" className="p-8 text-center text-gray-500">
                   No livestock movements found.
                 </td>
             </tr>

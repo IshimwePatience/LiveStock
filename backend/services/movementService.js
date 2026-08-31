@@ -13,7 +13,7 @@ class MovementService {
   async createRequest(user, data) {
     const { 
       type, origin_id, destination_id, animal_type, count, reason,
-      owner_name, owner_id_number, transport_type, plate_number,
+      owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
       valid_until, animals 
@@ -41,6 +41,8 @@ class MovementService {
       status: 'PENDING',
       owner_name,
       owner_id_number,
+      owner_phone,
+      priority,
       transport_type,
       plate_number,
       origin_district,
@@ -57,6 +59,35 @@ class MovementService {
     }, {
       include: [{ model: MovementAnimal, as: 'Animals' }]
     });
+
+    return request;
+  }
+
+  async updateRequest(user, requestId, data) {
+    const request = await MovementRequest.findByPk(requestId);
+    if (!request) throw new Error('Request not found');
+    if (request.status !== 'PENDING') throw new Error('Can only edit pending requests');
+    if (request.initiator_id !== user.id) throw new Error('Only the initiator can edit this request');
+
+    const { 
+      reason, owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
+      origin_district, origin_sector, origin_cell, origin_village,
+      dest_district, dest_sector, dest_cell, dest_village,
+      valid_until, animals, count 
+    } = data;
+
+    await request.update({
+      reason, owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
+      origin_district, origin_sector, origin_cell, origin_village,
+      dest_district, dest_sector, dest_cell, dest_village,
+      valid_until, count
+    });
+
+    if (animals) {
+      await MovementAnimal.destroy({ where: { movement_request_id: request.id } });
+      const newAnimals = animals.map(a => ({ ...a, movement_request_id: request.id }));
+      await MovementAnimal.bulkCreate(newAnimals);
+    }
 
     return request;
   }
@@ -103,6 +134,18 @@ class MovementService {
     );
 
     return { request, trip };
+  }
+
+  async getRequestById(user, requestId) {
+    const request = await MovementRequest.findByPk(requestId, {
+      include: [
+        { model: User, as: 'Initiator', attributes: ['name', 'email'] },
+        { model: User, as: 'Approver', attributes: ['name', 'email'] },
+        { model: MovementAnimal, as: 'Animals' }
+      ]
+    });
+    if (!request) throw new Error('Request not found');
+    return request;
   }
 }
 
