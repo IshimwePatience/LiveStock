@@ -32,7 +32,10 @@ const DashboardLayout = () => {
     navigate('/login');
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/dashboard') return location.pathname === '/dashboard';
+    return location.pathname.startsWith(path);
+  };
 
   const getInitials = (name) => {
     if (!name) return 'SA';

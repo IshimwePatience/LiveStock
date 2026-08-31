@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
@@ -47,7 +47,17 @@ const CreatePermit = () => {
   const [gridData, setGridData] = useState(initialGrid);
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const searchInputRef = useRef(null);
   const inputRef = useRef(null);
+
+  const handleSearchIconClick = () => {
+    setIsSearchExpanded(true);
+    setTimeout(() => {
+      if (searchInputRef.current) searchInputRef.current.focus();
+    }, 10);
+  };
 
   // Initialize first row with defaults
   useEffect(() => {
@@ -288,12 +298,12 @@ const CreatePermit = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/dashboard/movements')} 
+            <a 
+              href="/dashboard/movements"
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
             >
               Cancel
-            </button>
+            </a>
             <button 
               onClick={handleSubmitSheets} 
               disabled={loading}
@@ -306,8 +316,22 @@ const CreatePermit = () => {
 
         {/* Sheets Toolbar */}
         <div className="flex items-center gap-4 px-4 py-1.5 border-b border-gray-300 bg-[#F5F9FF]">
-          <div className="flex items-center gap-2 pr-4">
-            <Search className="w-4 h-4 text-gray-600" />
+          <div className="flex items-center gap-2 pr-4 bg-transparent relative">
+            <Search 
+              className="w-4 h-4 text-gray-600 cursor-pointer" 
+              onClick={handleSearchIconClick} 
+            />
+            <input 
+              ref={searchInputRef}
+              type="text" 
+              placeholder="Search records..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onBlur={() => {
+                if (!searchTerm) setIsSearchExpanded(false);
+              }}
+              className={`bg-transparent border-none outline-none text-[13px] text-gray-700 placeholder-gray-400 transition-all duration-300 ease-in-out ${isSearchExpanded || searchTerm ? 'w-48 px-2 opacity-100' : 'w-0 px-0 opacity-0'}`}
+            />
           </div>
         </div>
 
@@ -339,17 +363,24 @@ const CreatePermit = () => {
               </tr>
             </thead>
             <tbody>
-              {gridData.map((row, rIdx) => (
-                <tr key={rIdx}>
+              {gridData.map((row, rIdx) => ({ row, originalIndex: rIdx }))
+                .filter(({ row }) => {
+                  if (!searchTerm) return true;
+                  const term = searchTerm.toLowerCase();
+                  if (row.every(cell => !cell)) return false; // Hide empty rows if searching
+                  return row.some(cell => cell && cell.toLowerCase().includes(term));
+                })
+                .map(({ row, originalIndex }) => (
+                <tr key={originalIndex}>
                   <td className="border border-[#C0C0C0] bg-[#F8F9FA] text-center text-gray-500 font-normal sticky left-0 z-10 w-12">
-                    {rIdx + 1}
+                    {originalIndex + 1}
                   </td>
                   {row.map((val, cIdx) => {
-                    const isSelected = selectedCell.row === rIdx && selectedCell.col === cIdx;
+                    const isSelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
                     return (
                       <td 
                         key={cIdx} 
-                        onClick={() => setSelectedCell({ row: rIdx, col: cIdx })}
+                        onClick={() => setSelectedCell({ row: originalIndex, col: cIdx })}
                         className={`border border-[#E2E3E3] relative p-0 overflow-hidden ${isSelected ? 'outline outline-2 outline-[#1A73E8] z-10' : ''}`}
                         style={{ width: COLUMNS[cIdx].width, height: '24px' }}
                       >
@@ -358,8 +389,8 @@ const CreatePermit = () => {
                             ref={inputRef}
                             className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white"
                             value={val}
-                            onChange={(e) => updateGridCell(rIdx, cIdx, e.target.value)}
-                            onKeyDown={(e) => handleCellKeyDown(e, rIdx, cIdx)}
+                            onChange={(e) => updateGridCell(originalIndex, cIdx, e.target.value)}
+                            onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
                             onBlur={() => setIsEditing(false)}
                           />
                         ) : (
@@ -367,7 +398,7 @@ const CreatePermit = () => {
                             className="w-full h-full px-1.5 truncate flex items-center cursor-cell"
                             tabIndex={0}
                             onKeyDown={(e) => {
-                              if (isSelected) handleCellKeyDown(e, rIdx, cIdx);
+                              if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
                             }}
                             onDoubleClick={() => setIsEditing(true)}
                           >
