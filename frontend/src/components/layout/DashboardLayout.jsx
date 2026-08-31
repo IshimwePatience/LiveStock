@@ -12,6 +12,15 @@ const DashboardLayout = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+
+  const getJurisdictionLabel = () => {
+    if (!user) return 'Loading...';
+    if (user.role === 'RAB') return 'National (HQ)';
+    if (user.role === 'POLICE') return 'National Police';
+    if (user.role === 'DARO' || user.role === 'SARO') return user.district_id ? `${user.district_id} District` : 'Unknown District';
+    return 'Livestock App';
+  };
 
   // Sidebar toggles
   const [editorsChoiceOpen, setEditorsChoiceOpen] = useState(true);
@@ -57,10 +66,30 @@ const DashboardLayout = () => {
           </div>
 
           {/* Project Selector (Google Cloud Style) */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full border border-gray-600 hover:bg-white/5 cursor-pointer transition">
-            <Hexagon className="w-4 h-4 text-gray-400 fill-gray-500" />
-            <span className="text-sm font-medium text-gray-200">Kigali-HQ</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
+          <div className="relative">
+            <div 
+              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+              className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full border border-gray-600 hover:bg-white/5 cursor-pointer transition"
+            >
+              <Hexagon className="w-4 h-4 text-gray-400 fill-gray-500" />
+              <span className="text-sm font-medium text-gray-200">{getJurisdictionLabel()}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
+            </div>
+            
+            {isProjectDropdownOpen && (
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50 text-gray-800">
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Jurisdiction</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{getJurisdictionLabel()}</p>
+                </div>
+                {user?.role === 'SARO' && (
+                  <div className="px-4 py-2 border-t border-gray-100 bg-green-50/50">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sector</p>
+                    <p className="text-sm font-medium text-green-700 mt-1">{user.sector_id ? `${user.sector_id} Sector` : 'No Sector Assigned'}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
