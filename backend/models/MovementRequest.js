@@ -18,6 +18,28 @@ const MovementRequest = sequelize.define('MovementRequest', {
   animal_type: { type: DataTypes.STRING, allowNull: false },
   count: { type: DataTypes.INTEGER, allowNull: false },
   reason: { type: DataTypes.STRING, allowNull: true },
+
+  // Permit Form Specific Fields
+  owner_name: { type: DataTypes.STRING, allowNull: true },
+  owner_id_number: { type: DataTypes.STRING, allowNull: true },
+  transport_type: { type: DataTypes.STRING, allowNull: true },
+  plate_number: { type: DataTypes.STRING, allowNull: true },
+  
+  // Origin String Chain
+  origin_district: { type: DataTypes.STRING, allowNull: true },
+  origin_sector: { type: DataTypes.STRING, allowNull: true },
+  origin_cell: { type: DataTypes.STRING, allowNull: true },
+  origin_village: { type: DataTypes.STRING, allowNull: true },
+  
+  // Destination String Chain
+  dest_district: { type: DataTypes.STRING, allowNull: true },
+  dest_sector: { type: DataTypes.STRING, allowNull: true },
+  dest_cell: { type: DataTypes.STRING, allowNull: true },
+  dest_village: { type: DataTypes.STRING, allowNull: true },
+  
+  // Permit Tracking
+  permit_number: { type: DataTypes.STRING, allowNull: true, unique: true },
+  valid_until: { type: DataTypes.DATE, allowNull: true },
 });
 
 module.exports = MovementRequest;

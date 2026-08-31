@@ -9,6 +9,7 @@ const VetRecord = require('./VetRecord');
 const Case = require('./Case');
 const NotificationLog = require('./NotificationLog');
 const Animal = require('./Animal');
+const MovementAnimal = require('./MovementAnimal');
 const { sequelize } = require('../config/db');
 
 // --- Relationships ---
@@ -28,6 +29,10 @@ User.hasMany(MovementRequest, { foreignKey: 'initiator_id', as: 'InitiatedReques
 MovementRequest.belongsTo(User, { foreignKey: 'initiator_id', as: 'Initiator' });
 User.hasMany(MovementRequest, { foreignKey: 'approver_id', as: 'ApprovedRequests' });
 MovementRequest.belongsTo(User, { foreignKey: 'approver_id', as: 'Approver' });
+
+// Movement Animals
+MovementRequest.hasMany(MovementAnimal, { foreignKey: 'movement_request_id', as: 'Animals' });
+MovementAnimal.belongsTo(MovementRequest, { foreignKey: 'movement_request_id' });
 
 // Trips
 MovementRequest.hasOne(Trip, { foreignKey: 'request_id' });
@@ -67,6 +72,7 @@ module.exports = {
   District,
   Sector,
   MovementRequest,
+  MovementAnimal,
   Trip,
   GPSLog,
   OTP,

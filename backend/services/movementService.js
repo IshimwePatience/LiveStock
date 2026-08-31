@@ -1,4 +1,4 @@
-const { MovementRequest, User, Trip } = require('../models');
+const { MovementRequest, MovementAnimal, User, Trip } = require('../models');
 const notificationService = require('./notificationService');
 
 class MovementService {
@@ -11,7 +11,13 @@ class MovementService {
   }
 
   async createRequest(user, data) {
-    const { type, origin_id, destination_id, animal_type, count, reason } = data;
+    const { 
+      type, origin_id, destination_id, animal_type, count, reason,
+      owner_name, owner_id_number, transport_type, plate_number,
+      origin_district, origin_sector, origin_cell, origin_village,
+      dest_district, dest_sector, dest_cell, dest_village,
+      valid_until, animals 
+    } = data;
     
     if (type === 'SECTOR_TO_SECTOR' && user.role !== 'SARO') {
       throw new Error('Only SARO can initiate sector-to-sector requests');
@@ -19,6 +25,10 @@ class MovementService {
     if (type === 'DISTRICT_TO_DISTRICT' && user.role !== 'DARO') {
       throw new Error('Only DARO can initiate district-to-district requests');
     }
+
+    const timestamp = new Date().getTime().toString().slice(-6);
+    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const permit_number = `B${new Date().getFullYear().toString().slice(-2)}${timestamp}${randomChars}`;
 
     const request = await MovementRequest.create({
       type,
@@ -28,7 +38,24 @@ class MovementService {
       animal_type,
       count,
       reason,
-      status: 'PENDING'
+      status: 'PENDING',
+      owner_name,
+      owner_id_number,
+      transport_type,
+      plate_number,
+      origin_district,
+      origin_sector,
+      origin_cell,
+      origin_village,
+      dest_district,
+      dest_sector,
+      dest_cell,
+      dest_village,
+      permit_number,
+      valid_until,
+      Animals: animals || []
+    }, {
+      include: [{ model: MovementAnimal, as: 'Animals' }]
     });
 
     return request;
