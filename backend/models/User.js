@@ -10,8 +10,8 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('RAB', 'DARO', 'SARO', 'POLICE'), 
     allowNull: false 
   },
-  district_id: { type: DataTypes.UUID, allowNull: true },
-  sector_id: { type: DataTypes.UUID, allowNull: true },
+  district_id: { type: DataTypes.STRING, allowNull: true },
+  sector_id: { type: DataTypes.STRING, allowNull: true },
   reset_token: { type: DataTypes.STRING, allowNull: true },
   reset_token_expires: { type: DataTypes.DATE, allowNull: true },
   status: { type: DataTypes.STRING, defaultValue: 'Active' },

@@ -18,11 +18,11 @@ const { sequelize } = require('../config/db');
 District.hasMany(Sector, { foreignKey: 'district_id' });
 Sector.belongsTo(District, { foreignKey: 'district_id' });
 
-// Users
-District.hasMany(User, { foreignKey: 'district_id' });
-User.belongsTo(District, { foreignKey: 'district_id' });
-Sector.hasMany(User, { foreignKey: 'sector_id' });
-User.belongsTo(Sector, { foreignKey: 'sector_id' });
+// Users (district_id and sector_id are stored as strings)
+// District.hasMany(User, { foreignKey: 'district_id' });
+// User.belongsTo(District, { foreignKey: 'district_id' });
+// Sector.hasMany(User, { foreignKey: 'sector_id' });
+// User.belongsTo(Sector, { foreignKey: 'sector_id' });
 
 // Movement Requests
 User.hasMany(MovementRequest, { foreignKey: 'initiator_id', as: 'InitiatedRequests' });
@@ -62,9 +62,9 @@ Case.belongsTo(Trip, { foreignKey: 'trip_id' });
 User.hasMany(NotificationLog, { foreignKey: 'user_id' });
 NotificationLog.belongsTo(User, { foreignKey: 'user_id' });
 
-// Animals
-Sector.hasMany(Animal, { foreignKey: 'sector_id' });
-Animal.belongsTo(Sector, { foreignKey: 'sector_id' });
+// Animals (sector_id is stored as string)
+// Sector.hasMany(Animal, { foreignKey: 'sector_id' });
+// Animal.belongsTo(Sector, { foreignKey: 'sector_id' });
 
 module.exports = {
   sequelize,

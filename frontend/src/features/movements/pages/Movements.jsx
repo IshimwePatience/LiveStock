@@ -7,8 +7,7 @@ import FilterDropdown from '../../../components/ui/FilterDropdown';
 import MovementsList from '../components/MovementsList';
 import MovementsMap from '../components/MovementsMap';
 import MovementsHistory from '../components/MovementsHistory';
-import CreatePermitModal from '../components/CreatePermitModal';
-import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 // Helper to generate initials from name
 const getInitials = (name) => {
@@ -34,8 +33,7 @@ const Movements = () => {
   const activeTab = searchParams.get('tab') || 'List';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -181,10 +179,10 @@ const Movements = () => {
         </div>
         {canCreateRequest && (
           <button 
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => navigate('/dashboard/movements/new')}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg> Saba Uruhushya
+             Saba Uruhushya
           </button>
         )}
       </div>
@@ -265,15 +263,6 @@ const Movements = () => {
             <MovementsHistory movements={filteredMovements} isLoading={isLoading} />
          )}
       </div>
-
-      <CreatePermitModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-        onSuccess={() => {
-           setIsCreateModalOpen(false);
-           queryClient.invalidateQueries({ queryKey: ['movements'] });
-        }} 
-      />
     </div>
   );
 };

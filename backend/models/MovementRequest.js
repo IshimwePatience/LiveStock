@@ -9,8 +9,8 @@ const MovementRequest = sequelize.define('MovementRequest', {
   },
   initiator_id: { type: DataTypes.UUID, allowNull: false },
   approver_id: { type: DataTypes.UUID, allowNull: true },
-  origin_id: { type: DataTypes.UUID, allowNull: false }, // Could be Sector ID or District ID based on type
-  destination_id: { type: DataTypes.UUID, allowNull: false },
+  origin_id: { type: DataTypes.STRING, allowNull: false }, // Could be Sector ID or District ID based on type
+  destination_id: { type: DataTypes.STRING, allowNull: false },
   status: { 
     type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED', 'ACTIVE', 'COMPLETED'), 
     defaultValue: 'PENDING' 

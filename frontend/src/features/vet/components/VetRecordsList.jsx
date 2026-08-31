@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, ChevronDown, Syringe, Clipboard, ArrowUp } from 'lucide-react';
+import { User, ChevronDown, Syringe, Clipboard, ArrowUp, MoreVertical } from 'lucide-react';
 
 const VetRecordsList = ({ records, isLoading, isError }) => {
   const [selected, setSelected] = useState([]);
+  const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
   const toggleSelectAll = (e) => {
     if (e.target.checked) setSelected(records.map(m => m.id));
@@ -41,66 +42,91 @@ const VetRecordsList = ({ records, isLoading, isError }) => {
 
   return (
     <div className="flex flex-col h-full px-6">
-      <table className="w-full border-collapse text-sm text-left border border-gray-200">
+      <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-gray-200 bg-gray-50/50">
-            <th className="p-2 w-10 border-r border-gray-100">
+          <tr className="border-y border-gray-200 bg-white">
+            <th className="py-2.5 px-4 w-10">
               <input 
                 type="checkbox" 
-                className="rounded border-gray-300"
+                className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                 onChange={toggleSelectAll}
                 checked={selected.length === records.length && records.length > 0}
               />
             </th>
-            <th className="p-2 font-semibold text-gray-600 border-r border-gray-100">Record ID & Details</th>
-            <th className="p-2 font-semibold text-gray-600 border-r border-gray-100 w-48">Veterinarian</th>
-            <th className="p-2 font-semibold text-gray-600 border-r border-gray-100 w-48">Animal Type</th>
-            <th className="p-2 font-semibold text-gray-600 border-r border-gray-100 w-32">Diagnosis</th>
-            <th className="p-2 font-semibold text-gray-600 w-32">Date</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black">Record ID & Details</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Veterinarian</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Animal Type</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Diagnosis</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Date</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
           </tr>
         </thead>
         <tbody>
           {records.map((item) => (
-            <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50/50">
-              <td className="p-2 border-r border-gray-100">
+            <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
+              <td className="py-2 px-4">
                 <input 
                   type="checkbox" 
-                  className="rounded border-gray-300"
+                  className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   checked={selected.includes(item.id)}
                   onChange={() => toggleSelect(item.id)}
                 />
               </td>
-              <td className="p-2 border-r border-gray-100">
+              <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
                   {getTypeIcon(item.type)}
-                  <span className="text-green-600 hover:underline cursor-pointer font-medium">{item.id}</span>
-                  <span className="text-gray-700 truncate max-w-sm">{item.treatment_details || 'Routine checkup'}</span>
+                  <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.id}</span>
+                  <span className="text-black truncate max-w-sm font-medium text-[13px]">{item.treatment_details || 'Routine checkup'}</span>
                 </div>
               </td>
-              <td className="p-2 border-r border-gray-100">
+              <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
                   {item.vet.initials === 'U' ? (
                       <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                         <User className="w-3.5 h-3.5" />
                       </div>
                   ) : (
-                      <div className={`w-6 h-6 rounded-full ${item.vet.color} flex items-center justify-center text-white text-xs font-bold`}>
+                      <div className={`w-6 h-6 rounded-full ${item.vet.color} flex items-center justify-center text-white text-[10px] font-bold`}>
                         {item.vet.initials}
                       </div>
                   )}
-                  <span className="text-gray-700 truncate max-w-[120px]">{item.vet.name}</span>
+                  <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.vet.name}</span>
                 </div>
               </td>
-              <td className="p-2 border-r border-gray-100">
-                <div className="flex items-center gap-2 text-gray-700">
+              <td className="py-2 px-4">
+                <div className="flex items-center gap-2 text-black font-medium text-[13px]">
                   {item.animalType}
                 </div>
               </td>
-              <td className="p-2 border-r border-gray-100">
-                <span className="text-gray-700">{item.diagnosis || '-'}</span>
+              <td className="py-2 px-4">
+                <span className="text-black font-medium text-[13px]">{item.diagnosis || '-'}</span>
               </td>
-              <td className="p-2">
-                <span className="text-gray-600">{new Date(item.date).toLocaleDateString()}</span>
+              <td className="py-2 px-4">
+                <span className="text-black font-medium text-[13px]">{new Date(item.date).toLocaleDateString()}</span>
+              </td>
+              <td className="py-2 px-4 text-right relative">
+                <button 
+                  onClick={() => setOpenActionDropdown(openActionDropdown === item.id ? null : item.id)}
+                  className="p-1 text-gray-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {openActionDropdown === item.id && (
+                  <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                    <button 
+                      onClick={() => setOpenActionDropdown(null)}
+                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                    >
+                      View Record
+                    </button>
+                    <button 
+                      onClick={() => setOpenActionDropdown(null)}
+                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                    >
+                      Edit Record
+                    </button>
+                  </div>
+                )}
               </td>
             </tr>
           ))}

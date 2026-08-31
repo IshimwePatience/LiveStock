@@ -57,7 +57,7 @@ const Login = () => {
       <div className="w-full bg-gray-100 py-3 px-8 flex justify-between items-center text-sm text-gray-700">
         <div className="flex items-center gap-3">
           <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
-          <span className="font-medium">LivestockTrackingSystem - Secure administrative access</span>
+          <span className="text-[17px] font-medium text-gray-800 tracking-wide">Livestock app</span>
         </div>
         <div className="flex items-center gap-1 cursor-pointer hover:text-green-700 text-green-700">
           <Globe className="w-5 h-5" />
@@ -66,20 +66,8 @@ const Login = () => {
       </div>
 
       <div className="flex-1 flex w-full max-w-7xl mx-auto">
-        {/* Left Side (Illustration & Text) */}
-        <div className="hidden lg:flex w-1/2 flex-col justify-center px-12 py-8 relative">
-           
-           <img src={loginImage} alt="Security Illustration" className="w-[85%] mix-blend-multiply object-contain mx-auto" />
-
-           <div className="mt-8 space-y-4">
-              <h2 className="text-2xl font-medium text-gray-500 leading-snug">
-                Access To Manage <span className="text-green-700 font-bold">Movement Processing</span> To Help <span className="text-green-700 font-bold">Security Monitor</span> More
-              </h2>
-           </div>
-        </div>
-
-        {/* Right Side (Form) */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-center px-12 lg:px-24">
+        {/* Form Container */}
+        <div className="w-full flex flex-col justify-center px-4 py-12 md:py-24">
           <div className="w-full max-w-md mx-auto">
             <h1 className="text-3xl font-medium text-green-700 mb-8">Signin To Your Account</h1>
 
@@ -98,8 +86,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm placeholder-gray-400"
-                    placeholder="email@example.com"
+                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
                   />
                 </div>
               </div>
@@ -117,8 +104,7 @@ const Login = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm placeholder-gray-400"
-                    placeholder="••••••••••"
+                    className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
                   />
                   <div className="pr-3 text-gray-400 cursor-pointer hover:text-gray-600">
                     <EyeOff className="w-5 h-5" strokeWidth={1.5} />

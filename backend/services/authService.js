@@ -40,7 +40,7 @@ class AuthService {
       sector_id: sector_id || null,
     });
     
-    return { id: user.id, name: user.name, email: user.email, role: user.role };
+    return { id: user.id, name: user.name, email: user.email, role: user.role, district_id: user.district_id, sector_id: user.sector_id };
   }
 
   async getAllUsers() {
@@ -65,7 +65,7 @@ class AuthService {
     }
 
     await user.update(updateData);
-    return { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status };
+    return { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status, district_id: user.district_id, sector_id: user.sector_id };
   }
 
   async deleteUser(id, currentUserId) {

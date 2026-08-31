@@ -70,7 +70,7 @@ const ForgotPassword = () => {
       <div className="w-full bg-gray-100 py-3 px-8 flex justify-between items-center text-sm text-gray-700">
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
           <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
-          <span className="font-medium">LivestockTrackingSystem - Secure administrative access</span>
+          <span className="text-[17px] font-medium text-gray-800 tracking-wide">Livestock app</span>
         </Link>
         <div className="flex items-center gap-1 cursor-pointer hover:text-green-700 text-green-700">
           <Globe className="w-5 h-5" />
@@ -79,18 +79,8 @@ const ForgotPassword = () => {
       </div>
 
       <div className="flex-1 flex w-full max-w-7xl mx-auto">
-        {/* Left Side (Illustration & Text) */}
-        <div className="hidden lg:flex w-1/2 flex-col justify-center px-12 py-8 relative">
-           <img src={loginImage} alt="Security Illustration" className="w-[85%] mix-blend-multiply object-contain mx-auto" />
-           <div className="mt-8 space-y-4">
-              <h2 className="text-2xl font-medium text-gray-500 leading-snug">
-                Securely Reset Your <span className="text-green-700 font-bold">Access Credentials</span> To Continue Monitoring
-              </h2>
-           </div>
-        </div>
-
-        {/* Right Side (Form) */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-center px-12 lg:px-24">
+        {/* Form Container */}
+        <div className="w-full flex flex-col justify-center px-4 py-12 md:py-24">
           <div className="w-full max-w-md mx-auto">
             <h1 className="text-3xl font-medium text-green-700 mb-2">Reset Password</h1>
             <p className="text-sm text-gray-500 mb-8">
@@ -112,24 +102,25 @@ const ForgotPassword = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm placeholder-gray-400"
-                      placeholder="email@example.com"
+                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
-                  <Link to="/login" className="text-sm text-gray-500 hover:text-gray-800 transition">
-                    Back to login
-                  </Link>
-                  <button
-                    type="submit"
-                    disabled={forgotMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 px-6 rounded-xl transition shadow-sm disabled:opacity-70"
-                  >
-                    {forgotMutation.isPending ? 'Sending...' : 'Send OTP'}
-                  </button>
-                </div>
+                  <div className="flex justify-end pt-1">
+                    <Link to="/login" className="text-sm text-green-700 hover:underline">
+                      Back To Login
+                    </Link>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={forgotMutation.isPending}
+                      className="w-32 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-xl transition shadow-sm disabled:opacity-70"
+                    >
+                      {forgotMutation.isPending ? 'Sending...' : 'Send OTP'}
+                    </button>
+                  </div>
               </form>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-6">
@@ -147,8 +138,7 @@ const ForgotPassword = () => {
                       maxLength="6"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm placeholder-gray-400 tracking-widest"
-                      placeholder="123456"
+                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm tracking-widest"
                     />
                   </div>
                 </div>
@@ -166,8 +156,7 @@ const ForgotPassword = () => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm placeholder-gray-400"
-                      placeholder="••••••••••"
+                      className="w-full bg-transparent px-3 py-2.5 outline-none text-gray-700 text-sm"
                     />
                     <div className="pr-3 text-gray-400 cursor-pointer hover:text-gray-600">
                       <EyeOff className="w-5 h-5" strokeWidth={1.5} />
@@ -175,18 +164,20 @@ const ForgotPassword = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
-                  <button type="button" onClick={() => setStep(1)} className="text-sm text-gray-500 hover:text-gray-800 transition">
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={resetMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 px-6 rounded-xl transition shadow-sm disabled:opacity-70"
-                  >
-                    {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
-                  </button>
-                </div>
+                  <div className="flex justify-end pt-1">
+                    <button type="button" onClick={() => setStep(1)} className="text-sm text-green-700 hover:underline">
+                      Cancel
+                    </button>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={resetMutation.isPending}
+                      className="w-40 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-xl transition shadow-sm disabled:opacity-70"
+                    >
+                      {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
+                    </button>
+                  </div>
               </form>
             )}
           </div>

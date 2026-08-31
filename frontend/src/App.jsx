@@ -7,6 +7,7 @@ import ForgotPassword from './features/auth/pages/ForgotPassword'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './features/dashboard/pages/Overview'
 import Movements from './features/movements/pages/Movements';
+import CreatePermit from './features/movements/pages/CreatePermit';
 import UserManagement from './features/users/pages/UserManagement';
 import NationalReports from './features/analytics/pages/NationalReports';
 import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
@@ -23,10 +24,31 @@ const ProtectedRoute = ({ children }) => {
   return children;
 }
 
+const AdminRoute = ({ children }) => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
+const PoliceRoute = ({ children }) => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.role !== 'POLICE' && user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
+const VetRoute = ({ children }) => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.role !== 'DARO' && user?.role !== 'SARO' && user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 function App() {
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -47,19 +69,20 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      
-      {/* Protected Dashboard Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-        <Route index element={<Overview />} />
-        <Route path="movements" element={<Movements />} />
-        <Route path="users" element={<UserManagement />} />
-        <Route path="national-reports" element={<NationalReports />} />
-        <Route path="performance-audit" element={<PerformanceAudit />} />
-        <Route path="cases" element={<PoliceCases />} />
-        <Route path="vet-records" element={<VetRecords />} />
-      </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route index element={<Overview />} />
+          <Route path="movements" element={<Movements />} />
+          <Route path="movements/new" element={<CreatePermit />} />
+          <Route path="users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+          <Route path="national-reports" element={<AdminRoute><NationalReports /></AdminRoute>} />
+          <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
+          <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />
+          <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
+        </Route>
       </Routes>
     </>
   )
