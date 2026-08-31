@@ -31,7 +31,7 @@ const CustomSelect = ({ value, onChange, options }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 max-h-60 overflow-y-auto">
           {options.map((option) => {
             const isSelected = option.value === value;
             return (

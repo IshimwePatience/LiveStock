@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Users, UserPlus, Search, Edit2, Trash2, Power } from 'lucide-react';
 import api from '../../../lib/api';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
+import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 import CustomSelect from '../../../components/ui/CustomSelect';
 import Pagination from '../../../components/ui/Pagination';
@@ -23,6 +24,7 @@ const UserManagement = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const itemsPerPage = 10;
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +60,44 @@ const UserManagement = () => {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'district_id') {
+        updated.sector_id = ''; // Reset sector when district changes
+      }
+      return updated;
+    });
+  };
+
+  const toggleSelectAll = (e) => {
+    if (e.target.checked) setSelectedUsers(filteredUsers.map(u => u.id));
+    else setSelectedUsers([]);
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedUsers(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getColorForInitials = (initials) => {
+    if (initials === 'U') return 'bg-gray-400';
+    const colors = ['bg-blue-600', 'bg-orange-500', 'bg-green-600', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
+    let hash = 0;
+    for (let i = 0; i < initials.length; i++) {
+      hash = initials.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
   };
 
   const handleRoleChange = (value) => {
@@ -176,6 +216,40 @@ const UserManagement = () => {
     { value: 'RAB', label: 'RAB (National Admin)' },
   ];
 
+  const uniqueUsers = useMemo(() => {
+     return filteredUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        initials: getInitials(u.name),
+        color: getColorForInitials(getInitials(u.name))
+     }));
+  }, [filteredUsers]);
+
+  const displayUsers = uniqueUsers.slice(0, 3);
+  const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
+
+  const districtOptions = useMemo(() => {
+    const provs = getProvinces();
+    const dists = provs.flatMap(p => getDistricts(p));
+    return dists.sort().map(d => ({ value: d, label: d }));
+  }, []);
+
+  const sectorOptions = useMemo(() => {
+    if (!formData.district_id) return [];
+    const provs = getProvinces();
+    // Find province for the selected district
+    let province = null;
+    for (const p of provs) {
+       if (getDistricts(p).includes(formData.district_id)) {
+           province = p;
+           break;
+       }
+    }
+    if (!province) return [];
+    
+    return getSectors(province, formData.district_id).sort().map(s => ({ value: s, label: s }));
+  }, [formData.district_id]);
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Top Breadcrumb/Title Area */}
@@ -205,34 +279,60 @@ const UserManagement = () => {
       </div>
 
       {/* Filters Toolbar */}
-      <div className="px-6 py-3 flex items-center gap-3 border-b border-gray-100 bg-gray-50/30">
+      <div className="px-6 py-3 flex items-center gap-3 border-b border-gray-100">
          <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search users..." 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-600"
+              placeholder="Search users" 
+              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
             />
          </div>
-         <FilterDropdown 
-           selectedFilters={selectedFilters} 
-           onFilterChange={handleFilterChange} 
-           categories={['Role', 'Status']}
-           optionsMap={{
-             'Role': [
-               { id: 'RAB', title: 'RAB', subtitle: 'National Admin' },
-               { id: 'DARO', title: 'DARO', subtitle: 'District Vet' },
-               { id: 'SARO', title: 'SARO', subtitle: 'Sector Vet' },
-               { id: 'POLICE', title: 'Police', subtitle: 'Law Enforcement' }
-             ],
-             'Status': [
-               { id: 'Active', title: 'Active', subtitle: '' },
-               { id: 'Inactive', title: 'Inactive', subtitle: '' }
-             ]
-           }}
-         />
+
+         <div className="flex -space-x-2 ml-4">
+            {displayUsers.map((user, idx) => (
+              <div 
+                key={idx} 
+                title={user.name}
+                className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
+              >
+                {user.initials}
+              </div>
+            ))}
+            {extraUsersCount > 0 && (
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
+                +{extraUsersCount}
+              </div>
+            )}
+            {uniqueUsers.length === 0 && (
+              <div className="text-xs text-gray-400 pl-4 font-medium italic">No active users in current filter</div>
+            )}
+         </div>
+
+         <div className="ml-4 relative z-50">
+           <FilterDropdown 
+             selectedFilters={selectedFilters} 
+             onFilterChange={handleFilterChange} 
+             categories={['Role', 'Status']}
+             optionsMap={{
+               'Role': [
+                 { id: 'RAB', title: 'RAB', subtitle: 'National Admin' },
+                 { id: 'DARO', title: 'DARO', subtitle: 'District Vet' },
+                 { id: 'SARO', title: 'SARO', subtitle: 'Sector Vet' },
+                 { id: 'POLICE', title: 'Police', subtitle: 'Law Enforcement' }
+               ],
+               'Status': [
+                 { id: 'Active', title: 'Active', subtitle: '' },
+                 { id: 'Inactive', title: 'Inactive', subtitle: '' }
+               ]
+             }}
+           />
+         </div>
+         <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
+         </button>
       </div>
 
       {/* Table Area */}
@@ -240,7 +340,14 @@ const UserManagement = () => {
         <table className="w-full border-collapse text-sm text-left border border-gray-200">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50/50">
-              <th className="p-3 font-semibold text-gray-600 border-r border-gray-100 w-16">No.</th>
+              <th className="p-3 w-10 border-r border-gray-100">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300"
+                  onChange={toggleSelectAll}
+                  checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
+                />
+              </th>
               <th className="p-3 font-semibold text-gray-600 border-r border-gray-100">Name</th>
               <th className="p-3 font-semibold text-gray-600 border-r border-gray-100">Email</th>
               <th className="p-3 font-semibold text-gray-600 border-r border-gray-100">Role</th>
@@ -253,13 +360,20 @@ const UserManagement = () => {
             {paginatedUsers.length === 0 ? (
               <tr>
                 <td colSpan="7" className="p-8 text-center text-gray-500">
-                  No users found matching current filters.
+                  No users found.
                 </td>
               </tr>
             ) : (
               paginatedUsers.map((user, idx) => (
                 <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50/50">
-                  <td className="p-3 border-r border-gray-100 text-gray-500">{idx + 1}</td>
+                  <td className="p-3 border-r border-gray-100 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={() => toggleSelect(user.id)}
+                    />
+                  </td>
                   <td className="p-3 border-r border-gray-100">
                     <p className="font-medium text-gray-800">{user.name}</p>
                   </td>
@@ -344,20 +458,32 @@ const UserManagement = () => {
                    {/* Jurisdiction Fields based on Role */}
                    {formData.role === 'DARO' && (
                      <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-gray-700">Assigned District ID <span className="text-red-500">*</span></label>
-                        <input type="text" name="district_id" required value={formData.district_id} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
+                        <label className="text-sm font-semibold text-gray-700">Assigned District <span className="text-red-500">*</span></label>
+                        <CustomSelect 
+                           value={formData.district_id} 
+                           onChange={(val) => handleSelectChange('district_id', val)} 
+                           options={districtOptions} 
+                        />
                      </div>
                    )}
 
                    {formData.role === 'SARO' && (
                      <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-1.5">
-                          <label className="text-sm font-semibold text-gray-700">District ID <span className="text-red-500">*</span></label>
-                          <input type="text" name="district_id" required value={formData.district_id} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
+                          <label className="text-sm font-semibold text-gray-700">District <span className="text-red-500">*</span></label>
+                          <CustomSelect 
+                             value={formData.district_id} 
+                             onChange={(val) => handleSelectChange('district_id', val)} 
+                             options={districtOptions} 
+                          />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-sm font-semibold text-gray-700">Sector ID <span className="text-red-500">*</span></label>
-                          <input type="text" name="sector_id" required value={formData.sector_id} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
+                          <label className="text-sm font-semibold text-gray-700">Sector <span className="text-red-500">*</span></label>
+                          <CustomSelect 
+                             value={formData.sector_id} 
+                             onChange={(val) => handleSelectChange('sector_id', val)} 
+                             options={sectorOptions} 
+                          />
                        </div>
                      </div>
                    )}
