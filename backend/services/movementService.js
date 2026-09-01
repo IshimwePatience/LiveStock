@@ -131,6 +131,7 @@ class MovementService {
 
     const crypto = require('crypto');
     const driverToken = crypto.randomBytes(16).toString('hex');
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     const trip = await Trip.create({
       request_id: request.id,
@@ -139,14 +140,17 @@ class MovementService {
       driver_phone: request.driver_phone,
       driver_national_id: request.driver_nid,
       plate_number: request.plate_number,
-      driver_token: driverToken
+      driver_token: driverToken,
+      otp: otp
     });
 
     // Notify Initiator and Approver
     const trackingLink = `/dashboard/gps?plate=${request.plate_number}`;
+    const driverLink = `/driver/trip/${driverToken}`;
+    
     await notificationService.notifyUser(
       request.initiator_id, 
-      `Your movement request has been approved. Track your car: ${trackingLink}`, 
+      `Your movement request has been approved. Share this tracking link with the driver: ${driverLink} . Track your car here: ${trackingLink}`, 
       'APPROVAL'
     );
     await notificationService.notifyUser(
@@ -154,6 +158,22 @@ class MovementService {
       `You approved a movement request. Track the car: ${trackingLink}`, 
       'APPROVAL'
     );
+
+    // Notify Destination users about the OTP
+    let destUsers = [];
+    if (request.type === 'DISTRICT_TO_DISTRICT') {
+      destUsers = await User.findAll({ where: { role: 'DARO', district_id: request.dest_district } });
+    } else if (request.type === 'SECTOR_TO_SECTOR') {
+      destUsers = await User.findAll({ where: { role: 'SARO', sector_id: request.dest_sector } });
+    }
+
+    for (const destUser of destUsers) {
+      await notificationService.notifyUser(
+        destUser.id,
+        `A livestock trip is heading to your jurisdiction. The arrival confirmation OTP is: ${otp}`,
+        'SYSTEM'
+      );
+    }
 
     // In a real system, send SMS to the driver here
     if (request.driver_phone) {
@@ -175,11 +195,8 @@ class MovementService {
     if (user.role !== 'DARO' && user.role !== 'RAB') {
       throw new Error('Only authorized officers can confirm arrival');
     }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
     
     request.Trip.status = 'ARRIVED';
-    request.Trip.otp = otp;
     await request.Trip.save();
 
     return request.Trip;

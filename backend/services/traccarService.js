@@ -24,11 +24,18 @@ class TraccarService {
         }]
       });
 
-      // 2. Filter trips based on RBAC (RAB sees all, DARO sees only their district origin)
+      // 2. Filter trips based on RBAC (RAB sees all, DARO/SARO sees origin/dest, Initiator sees it)
       const allowedPlateNumbers = new Set();
       activeTrips.forEach(trip => {
         const req = trip.MovementRequest;
-        if (user.role === 'RAB' || (user.role === 'DARO' && req.origin_id === user.district_id)) {
+        
+        const isOriginDistrict = user.role === 'DARO' && req.origin_district === user.district_id;
+        const isDestDistrict = user.role === 'DARO' && req.dest_district === user.district_id;
+        const isOriginSector = user.role === 'SARO' && req.origin_sector === user.sector_id;
+        const isDestSector = user.role === 'SARO' && req.dest_sector === user.sector_id;
+        const isInitiator = req.initiator_id === user.id;
+
+        if (user.role === 'RAB' || isOriginDistrict || isDestDistrict || isOriginSector || isDestSector || isInitiator) {
           if (trip.plate_number) {
             allowedPlateNumbers.add(trip.plate_number.toUpperCase());
           }
