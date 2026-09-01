@@ -20,19 +20,23 @@ connectDB();
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const movementRoutes = require('./routes/movementRoutes');
+const traccarRoutes = require('./routes/traccarRoutes');
 const otpRoutes = require('./routes/otpRoutes');
 const vetRoutes = require('./routes/vetRoutes');
 const caseRoutes = require('./routes/caseRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const gpsRoutes = require('./routes/gpsRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movement', movementRoutes);
+app.use('/api/traccar', traccarRoutes);
 app.use('/api/otp', otpRoutes);
 app.use('/api/vet', vetRoutes);
 app.use('/api/cases', caseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/gps', gpsRoutes);
+app.use('/api/driver', driverRoutes);
 
 // Socket.io for Real-time
 const socketService = require('./services/socketService');

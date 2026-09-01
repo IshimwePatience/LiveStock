@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest, revertRequest } = require('../controllers/movementController');
+const { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest, revertRequest, arriveTrip } = require('../controllers/movementController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.route('/')
@@ -19,5 +19,8 @@ router.route('/:id/reject')
 
 router.route('/:id/revert')
   .put(protect, authorize('DARO', 'RAB'), revertRequest);
+
+router.route('/:id/arrive')
+  .post(protect, authorize('DARO', 'RAB'), arriveTrip);
 
 module.exports = router;

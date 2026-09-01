@@ -32,4 +32,8 @@ api.interceptors.response.use(
   }
 );
 
+export const getUserStats = () => api.get('/users/stats');
+
+export const getTraccarLocations = () => api.get('/traccar/locations');
+
 export default api;

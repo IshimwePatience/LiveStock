@@ -217,7 +217,9 @@ const DashboardLayout = () => {
                     <Link to="/dashboard/vet-records" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/vet-records') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>Veterinary Records</Link>
                   )}
                   {(user?.role === 'DARO' || user?.role === 'SARO' || user?.role === 'RAB') && (
-                    <div className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-r-full cursor-pointer">GPS Tracking</div>
+                    <Link to="/dashboard/gps" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/gps') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      GPS Tracking
+                    </Link>
                   )}
                   <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
                     Movements

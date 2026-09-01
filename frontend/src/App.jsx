@@ -13,6 +13,8 @@ import NationalReports from './features/analytics/pages/NationalReports';
 import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
 import PoliceCases from './features/police/pages/PoliceCases';
 import VetRecords from './features/vet/pages/VetRecords';
+import TrackingMap from './features/gps/pages/TrackingMap';
+import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
 
 // Simple Auth Guard component
@@ -78,6 +80,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/driver/trip/:token" element={<DriverTripPage />} />
 
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -90,6 +93,7 @@ function App() {
           <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
           <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
+          <Route path="gps" element={<TrackingMap />} />
         </Route>
       </Routes>
     </>

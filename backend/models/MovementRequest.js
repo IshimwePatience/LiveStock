@@ -43,6 +43,11 @@ const MovementRequest = sequelize.define('MovementRequest', {
   // Permit Tracking
   permit_number: { type: DataTypes.STRING, allowNull: true, unique: true },
   valid_until: { type: DataTypes.DATE, allowNull: true },
+
+  // Driver Information
+  driver_name: { type: DataTypes.STRING, allowNull: true },
+  driver_phone: { type: DataTypes.STRING, allowNull: true },
+  driver_nid: { type: DataTypes.STRING, allowNull: true },
 });
 
 module.exports = MovementRequest;

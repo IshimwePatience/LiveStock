@@ -4,12 +4,16 @@ import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical, CheckCircle, X
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
+import AssignDriverModal from './AssignDriverModal';
+import ConfirmArrivalModal from './ConfirmArrivalModal';
 
 const MovementsList = ({ movements, isLoading, isError }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
   const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
+  const [assignModal, setAssignModal] = useState({ isOpen: false, requestId: null });
+  const [confirmArrivalModal, setConfirmArrivalModal] = useState({ isOpen: false, request: null });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
@@ -27,7 +31,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
     );
   };
 
-  const handleApprove = async (id) => {
+  const handleApproveClick = async (id) => {
     try {
       await api.put(`/movement/${id}/approve`);
       toast.success('Request approved successfully');
@@ -121,7 +125,8 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               />
             </th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request By</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Farmer</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Farmer</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Driver</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
@@ -150,6 +155,18 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               </td>
               <td className="py-2 px-4">
                 <span className="text-gray-700 truncate max-w-[150px] block font-medium text-[13px]" title={item.farmerName}>{item.farmerName}</span>
+              </td>
+              <td className="py-2 px-4">
+                {item.driverName && item.driverName !== 'Unknown' ? (
+                  <span 
+                    className="text-black truncate max-w-[200px] block font-medium text-[13px]" 
+                    title={`${item.driverName}, ${item.plateNumber}, ${item.driverPhone}`}
+                  >
+                    {item.driverName}, {item.plateNumber}, {item.driverPhone}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-[12px] italic whitespace-nowrap">Not Assigned</span>
+                )}
               </td>
               <td className="py-2 px-4">
                 <span className="text-black truncate max-w-sm block font-medium text-[13px]" title={item.title}>{item.title}</span>
@@ -205,6 +222,14 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                       </div>
                       {openStatusDropdown === item.id && (
                         <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                          {item.tripStatus === 'ACTIVE' && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setConfirmArrivalModal({ isOpen: true, request: item }); setOpenStatusDropdown(null); }} 
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-medium hover:bg-green-50 transition-colors"
+                            >
+                              Mark Arrived
+                            </button>
+                          )}
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
@@ -258,6 +283,13 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                       </span>
                     </div>
                   )
+                ) : item.rawStatus === 'COMPLETED' ? (
+                  <div className="inline-flex flex-col text-black font-medium p-1">
+                    <span className="text-[11px] tracking-wide text-green-700">Completed</span>
+                    <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                       {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
                 ) : item.status === 'Closed' ? (
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
                     Closed
@@ -276,7 +308,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                     {openStatusDropdown === item.id && (
                       <div className="absolute right-0 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleApprove(item.dbId); }} 
+                          onClick={(e) => { e.stopPropagation(); handleApproveClick(item.dbId); }} 
                           className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
                         >
                           Approve
@@ -380,6 +412,13 @@ const MovementsList = ({ movements, isLoading, isError }) => {
           </div>
         </div>
       )}
+      <ConfirmArrivalModal 
+        isOpen={confirmArrivalModal.isOpen} 
+        request={confirmArrivalModal.request}
+        onClose={() => setConfirmArrivalModal({ isOpen: false, request: null })}
+        onConfirmSuccess={() => queryClient.invalidateQueries(['movements'])}
+      />
+
     </div>
   );
 };

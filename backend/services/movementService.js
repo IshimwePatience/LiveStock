@@ -16,7 +16,8 @@ class MovementService {
       owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
-      valid_until, animals 
+      valid_until, animals,
+      driver_name, driver_phone, driver_nid
     } = data;
     
     if (type === 'SECTOR_TO_SECTOR' && user.role !== 'SARO') {
@@ -55,6 +56,9 @@ class MovementService {
       dest_village,
       permit_number,
       valid_until,
+      driver_name,
+      driver_phone,
+      driver_nid,
       Animals: animals || []
     }, {
       include: [{ model: MovementAnimal, as: 'Animals' }]
@@ -73,14 +77,16 @@ class MovementService {
       reason, owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
-      valid_until, animals, count 
+      valid_until, animals, count,
+      driver_name, driver_phone, driver_nid
     } = data;
 
     await request.update({
       reason, owner_name, owner_id_number, owner_phone, priority, transport_type, plate_number,
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
-      valid_until, count
+      valid_until, count,
+      driver_name, driver_phone, driver_nid
     });
 
     if (animals) {
@@ -100,7 +106,8 @@ class MovementService {
       include: [
         { model: User, as: 'Initiator', attributes: ['name', 'email'] },
         { model: User, as: 'Approver', attributes: ['name', 'email'] },
-        { model: MovementAnimal, as: 'Animals' }
+        { model: MovementAnimal, as: 'Animals' },
+        { model: Trip }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -122,9 +129,17 @@ class MovementService {
     request.approver_id = user.id;
     await request.save();
 
+    const crypto = require('crypto');
+    const driverToken = crypto.randomBytes(16).toString('hex');
+
     const trip = await Trip.create({
       request_id: request.id,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      driver_name: request.driver_name,
+      driver_phone: request.driver_phone,
+      driver_national_id: request.driver_nid,
+      plate_number: request.plate_number,
+      driver_token: driverToken
     });
 
     // Notify Initiator
@@ -134,7 +149,34 @@ class MovementService {
       'APPROVAL'
     );
 
+    // In a real system, send SMS to the driver here
+    if (request.driver_phone) {
+      console.log(`[SMS MOCK] To: ${request.driver_phone}, Message: You have been assigned a trip. Open this link to share GPS and see OTP: https://yourdomain.com/driver/trip/${driverToken}`);
+    }
+
     return { request, trip };
+  }
+
+  async arriveTrip(user, requestId) {
+    const request = await MovementRequest.findByPk(requestId, {
+      include: [{ model: Trip }]
+    });
+    if (!request) throw new Error('Request not found');
+    if (!request.Trip) throw new Error('Trip not found');
+    if (request.Trip.status !== 'ACTIVE') throw new Error('Trip is not active');
+
+    // Only destination officer can confirm arrival. Simplification for now: DARO or RAB.
+    if (user.role !== 'DARO' && user.role !== 'RAB') {
+      throw new Error('Only authorized officers can confirm arrival');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+    
+    request.Trip.status = 'ARRIVED';
+    request.Trip.otp = otp;
+    await request.Trip.save();
+
+    return request.Trip;
   }
 
   async rejectRequest(user, requestId, reason) {
@@ -196,7 +238,8 @@ class MovementService {
       include: [
         { model: User, as: 'Initiator', attributes: ['name', 'email'] },
         { model: User, as: 'Approver', attributes: ['name', 'email'] },
-        { model: MovementAnimal, as: 'Animals' }
+        { model: MovementAnimal, as: 'Animals' },
+        { model: Trip }
       ]
     });
     if (!request) throw new Error('Request not found');

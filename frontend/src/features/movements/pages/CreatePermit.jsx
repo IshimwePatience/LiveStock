@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
 const NUM_ROWS = 30;
-const NUM_COLS = 21;
+const NUM_COLS = 24;
 
 const COLUMNS = [
   { title: 'Amazina ya Nyir\'amatungo', width: 180, key: 'owner_name' },
@@ -31,6 +31,9 @@ const COLUMNS = [
   { title: 'Igitsina (M/F)', width: 90, key: 'sex' },
   { title: 'Ubwoko (Breed)', width: 120, key: 'breed' },
   { title: 'Ibara (Color)', width: 120, key: 'color' },
+  { title: 'Amazina y\'Umushoferi', width: 160, key: 'driver_name' },
+  { title: 'Telephoni y\'Umushoferi', width: 150, key: 'driver_phone' },
+  { title: 'Indangamuntu y\'Umushoferi', width: 150, key: 'driver_nid' },
 ];
 
 const CreatePermit = () => {
@@ -49,7 +52,15 @@ const CreatePermit = () => {
   const [gridData, setGridData] = useState(() => {
     const saved = localStorage.getItem('movementFormDraft');
     if (saved && !editId) {
-      try { return JSON.parse(saved); } catch(e) {}
+      try { 
+        const parsed = JSON.parse(saved);
+        // Ensure old drafts have the new columns
+        return parsed.map(row => {
+          const newRow = [...row];
+          while (newRow.length < NUM_COLS) newRow.push('');
+          return newRow;
+        });
+      } catch(e) {}
     }
     const today = new Date().toISOString().split('T')[0];
     const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
@@ -83,6 +94,7 @@ const CreatePermit = () => {
             owner_name: data.owner_name || '', owner_id_number: data.owner_id_number || '',
             owner_phone: data.owner_phone || '', priority: data.priority || '',
             transport_type: data.transport_type || '', plate_number: data.plate_number || '',
+            driver_name: data.driver_name || '', driver_phone: data.driver_phone || '', driver_nid: data.driver_nid || '',
             origin_district: data.origin_district || '', origin_sector: data.origin_sector || '',
             origin_cell: data.origin_cell || '', origin_village: data.origin_village || '',
             dest_district: data.dest_district || '', dest_sector: data.dest_sector || '',
@@ -129,6 +141,9 @@ const CreatePermit = () => {
               newGrid[r][18] = a.sex || 'F';
               newGrid[r][19] = a.breed || '';
               newGrid[r][20] = a.color || '';
+              newGrid[r][21] = data.driver_name || '';
+              newGrid[r][22] = data.driver_phone || '';
+              newGrid[r][23] = data.driver_nid || '';
             });
           }
           setGridData(newGrid);
@@ -166,6 +181,7 @@ const CreatePermit = () => {
     { id: 'origin', label: 'Biva (Origin)', cols: [8, 9, 10, 11] },
     { id: 'dest', label: 'Bijya (Destination)', cols: [12, 13, 14, 15] },
     { id: 'animal', label: 'Amatungo (Animals)', cols: [16, 17, 18, 19, 20] },
+    { id: 'driver', label: 'Umushoferi (Driver)', cols: [21, 22, 23] },
   ];
 
   const isColVisible = (idx) => {
@@ -174,6 +190,7 @@ const CreatePermit = () => {
     if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
     if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
     if ([16,17,18,19,20].includes(idx)) return visibleGroups.animal;
+    if ([21,22,23].includes(idx)) return visibleGroups.driver ?? true;
     return true;
   };
 
@@ -364,6 +381,9 @@ const CreatePermit = () => {
       origin_id: user?.sector_id || user?.district_id || user?.id,
       destination_id: firstRow[13] || firstRow[12] || user?.id,
       animal_type: firstRow[16] || 'COW',
+      driver_name: firstRow[21],
+      driver_phone: firstRow[22],
+      driver_nid: firstRow[23],
       animals: validRows.map(r => ({
         animal_type: r[16] || 'COW',
         tag_number: r[17],
@@ -411,6 +431,7 @@ const CreatePermit = () => {
   const today = new Date().toISOString().split('T')[0];
   const [mobileForm, setMobileForm] = useState({
     owner_name: '', owner_id_number: '', owner_phone: '', priority: '', transport_type: '', plate_number: '',
+    driver_name: '', driver_phone: '', driver_nid: '',
     origin_district: '', origin_sector: '', origin_cell: '', origin_village: '',
     dest_district: '', dest_sector: '', dest_cell: '', dest_village: '',
     valid_until: today, reason: ''
@@ -438,10 +459,10 @@ const CreatePermit = () => {
   }, [user?.district_id, user?.sector_id]);
 
   const handleMobileChange = (e) => {
-    if (e.target.name === 'owner_id_number') {
+    if (e.target.name === 'owner_id_number' || e.target.name === 'driver_nid') {
       const val = e.target.value.replace(/\D/g, '').slice(0, 16);
       setMobileForm({ ...mobileForm, [e.target.name]: val });
-    } else if (e.target.name === 'owner_phone') {
+    } else if (e.target.name === 'owner_phone' || e.target.name === 'driver_phone') {
       const val = e.target.value.replace(/\D/g, '').slice(0, 10);
       setMobileForm({ ...mobileForm, [e.target.name]: val });
     } else {
@@ -478,7 +499,8 @@ const CreatePermit = () => {
     
     setMobileForm({
       owner_name: '', owner_id_number: '', owner_phone: '', priority: '',
-      transport_type: '', plate_number: '', origin_district: '', origin_sector: '',
+      transport_type: '', plate_number: '', driver_name: '', driver_phone: '', driver_nid: '',
+      origin_district: '', origin_sector: '',
       origin_cell: '', origin_village: '', dest_district: '', dest_sector: '',
       dest_cell: '', dest_village: '', valid_until: today, reason: ''
     });
@@ -505,6 +527,16 @@ const CreatePermit = () => {
       }
       if (mobileForm.owner_phone.trim().length !== 10 || !/^\d+$/.test(mobileForm.owner_phone.trim())) {
         toast.error('Nimero ya telephoni igomba kuba imibare 10 gusa.');
+        setLoading(false);
+        return;
+      }
+      if (mobileForm.driver_nid.trim().length !== 16 || !/^\d+$/.test(mobileForm.driver_nid.trim())) {
+        toast.error('Indangamuntu (ID) y\'umushoferi igomba kuba imibare 16 gusa.');
+        setLoading(false);
+        return;
+      }
+      if (mobileForm.driver_phone.trim().length !== 10 || !/^\d+$/.test(mobileForm.driver_phone.trim())) {
+        toast.error('Nimero ya telephoni y\'umushoferi igomba kuba imibare 10 gusa.');
         setLoading(false);
         return;
       }
@@ -848,8 +880,8 @@ const CreatePermit = () => {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
                                  } else if (cIdx === 12) {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
-                                    const orig = row[8]?.trim();
-                                    if (orig) opts = opts.filter(d => d !== orig);
+                                    const originDist = gridData[originalIndex][8];
+                                    if (originDist) opts = opts.filter(d => d !== originDist);
                                  } else if (cIdx === 9 || cIdx === 13) {
                                     const dist = row[cIdx - 1]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
@@ -981,6 +1013,22 @@ const CreatePermit = () => {
 
                 <FormCard title="Uburyo bwo kugenda" required>
                   <input type="text" name="transport_type" required value={mobileForm.transport_type} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                </FormCard>
+
+                <FormCard title="Pulaki (Plate)" required>
+                  <input type="text" name="plate_number" required value={mobileForm.plate_number} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                </FormCard>
+
+                <FormCard title="Amazina y'Umushoferi" required>
+                  <input type="text" name="driver_name" required value={mobileForm.driver_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                </FormCard>
+
+                <FormCard title="Telephoni y'Umushoferi" required>
+                  <input type="text" name="driver_phone" required value={mobileForm.driver_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                </FormCard>
+
+                <FormCard title="Indangamuntu y'Umushoferi" required>
+                  <input type="text" name="driver_nid" required value={mobileForm.driver_nid} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
                 </FormCard>
 
                 <FormCard title="Ifite agaciro kugeza" required>

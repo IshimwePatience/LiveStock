@@ -108,7 +108,7 @@ const Movements = () => {
 
       // Map backend values to our filter structure
       const filterAnimal = req.animal_type?.toLowerCase() || 'unknown';
-      const filterStatus = req.status === 'APPROVED' ? 'Closed' : 'Open';
+      const filterStatus = (req.status === 'APPROVED' || req.status === 'COMPLETED') ? 'Closed' : 'Open';
       const filterType = req.type;
 
       // Origin and Dest
@@ -145,7 +145,13 @@ const Movements = () => {
         priority,
         status: filterStatus,
         rawStatus: req.status,
-        updatedAt: req.updatedAt
+        updatedAt: req.updatedAt,
+        tripStatus: req.Trip?.status || null,
+        tripId: req.Trip?.id || null,
+        driverToken: req.Trip?.driver_token || null,
+        driverName: req.Trip?.driver_name || req.driver_name || 'Unknown',
+        driverPhone: req.Trip?.driver_phone || req.driver_phone || 'Unknown',
+        plateNumber: req.Trip?.plate_number || req.plate_number || 'Unknown',
       };
     });
   }, [rawMovements]);

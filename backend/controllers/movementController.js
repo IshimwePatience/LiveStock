@@ -45,6 +45,15 @@ const approveRequest = async (req, res) => {
   }
 };
 
+const arriveTrip = async (req, res) => {
+  try {
+    const trip = await movementService.arriveTrip(req.user, req.params.id);
+    res.json(trip);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 const rejectRequest = async (req, res) => {
   try {
     const result = await movementService.rejectRequest(req.user, req.params.id, req.body.reason);
@@ -63,4 +72,13 @@ const revertRequest = async (req, res) => {
   }
 };
 
-module.exports = { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest, revertRequest };
+module.exports = {
+  createRequest,
+  updateRequest,
+  getRequests,
+  getRequestById,
+  approveRequest,
+  rejectRequest,
+  revertRequest,
+  arriveTrip
+};
