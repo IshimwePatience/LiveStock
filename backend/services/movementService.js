@@ -142,10 +142,16 @@ class MovementService {
       driver_token: driverToken
     });
 
-    // Notify Initiator
+    // Notify Initiator and Approver
+    const trackingLink = `/dashboard/gps?plate=${request.plate_number}`;
     await notificationService.notifyUser(
       request.initiator_id, 
-      `Your movement request for ${request.animal_type} has been approved.`, 
+      `Your movement request has been approved. Track your car: ${trackingLink}`, 
+      'APPROVAL'
+    );
+    await notificationService.notifyUser(
+      user.id, 
+      `You approved a movement request. Track the car: ${trackingLink}`, 
       'APPROVAL'
     );
 

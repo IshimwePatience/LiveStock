@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, toast } from 'react-hot-toast'
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Landing from './pages/Landing'
 import Login from './features/auth/pages/Login'
@@ -16,13 +17,13 @@ import VetRecords from './features/vet/pages/VetRecords';
 import TrackingMap from './features/gps/pages/TrackingMap';
 import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
+import { io } from 'socket.io-client';
 
 // Simple Auth Guard component
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (!userStr) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -55,6 +56,40 @@ const VetRoute = ({ children }) => {
 }
 
 function App() {
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+    
+    const socket = io('http://localhost:5000');
+    socket.on('connect', () => {
+      socket.emit('joinRoom', `user_${user.id}`);
+    });
+    
+    socket.on('notification', (data) => {
+      toast.success(
+        (t) => (
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold text-sm">New Update</span>
+            <span className="text-xs">{data.message.split('/dashboard/gps')[0]}</span>
+            {data.message.includes('/dashboard/gps') && (
+              <a 
+                href={data.message.substring(data.message.indexOf('/dashboard/gps'))}
+                className="text-white underline font-medium mt-1 text-xs"
+                onClick={() => toast.dismiss(t.id)}
+              >
+                Track Live on Map →
+              </a>
+            )}
+          </div>
+        ),
+        { duration: 10000 } // Keep toast up for 10s
+      );
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
   return (
     <>
       <Toaster

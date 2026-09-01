@@ -34,6 +34,9 @@ api.interceptors.response.use(
 
 export const getUserStats = () => api.get('/users/stats');
 
+// Traccar Endpoints
 export const getTraccarLocations = () => api.get('/traccar/locations');
+export const getTraccarRoute = (deviceId, from, to) => 
+  api.get(`/traccar/route/${deviceId}?from=${from}&to=${to}`);
 
 export default api;
