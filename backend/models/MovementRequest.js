@@ -18,6 +18,7 @@ const MovementRequest = sequelize.define('MovementRequest', {
   animal_type: { type: DataTypes.STRING, allowNull: false },
   count: { type: DataTypes.INTEGER, allowNull: false },
   reason: { type: DataTypes.STRING, allowNull: true },
+  reject_reason: { type: DataTypes.STRING, allowNull: true },
 
   // Permit Form Specific Fields
   owner_name: { type: DataTypes.STRING, allowNull: true },

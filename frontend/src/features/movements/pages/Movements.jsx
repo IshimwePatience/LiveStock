@@ -132,10 +132,12 @@ const Movements = () => {
         id: `MVT-${req.id.substring(0, 8).toUpperCase()}`, // Using first 8 chars of UUID for readability
         dbId: req.id,
         type,
+        rawType: req.type,
         filterType,
         filterStatus,
         requestByTitle: origin,
         filterAnimal,
+        farmerName: req.owner_name || 'Unknown Farmer',
         route: `${origin} → ${destination}`,
         title: detailsString,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },

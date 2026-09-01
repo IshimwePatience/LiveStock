@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical } from 'lucide-react';
+import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '../../../lib/api';
+import toast from 'react-hot-toast';
 
 const MovementsList = ({ movements, isLoading, isError }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
+  const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -19,6 +25,44 @@ const MovementsList = ({ movements, isLoading, isError }) => {
     setSelected(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await api.put(`/movement/${id}/approve`);
+      toast.success('Request approved successfully');
+      setOpenStatusDropdown(null);
+      queryClient.invalidateQueries(['movements']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error approving request');
+    }
+  };
+
+  const handleRejectClick = (id) => {
+    setRejectModal({ isOpen: true, requestId: id, reason: '' });
+    setOpenStatusDropdown(null);
+  };
+
+  const submitReject = async () => {
+    if (!rejectModal.reason.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+    try {
+      await api.put(`/movement/${rejectModal.requestId}/reject`, { reason: rejectModal.reason });
+      toast.success('Request rejected successfully');
+      setRejectModal({ isOpen: false, requestId: null, reason: '' });
+      queryClient.invalidateQueries(['movements']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error rejecting request');
+    }
+  };
+
+  const isApprover = (user, item) => {
+    if (!user) return false;
+    if (item.rawType === 'SECTOR_TO_SECTOR' && user.role === 'DARO') return true;
+    if (item.rawType === 'DISTRICT_TO_DISTRICT' && user.role === 'RAB') return true;
+    return false;
   };
 
   const getTypeIcon = (type) => {
@@ -66,6 +110,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               />
             </th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request By</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Farmer</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
@@ -91,6 +136,9 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                   {getTypeIcon(item.type)}
                   <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
                 </div>
+              </td>
+              <td className="py-2 px-4">
+                <span className="text-gray-700 truncate max-w-[150px] block font-medium text-[13px]" title={item.farmerName}>{item.farmerName}</span>
               </td>
               <td className="py-2 px-4">
                 <span className="text-black truncate max-w-sm block font-medium text-[13px]" title={item.title}>{item.title}</span>
@@ -128,20 +176,48 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               </td>
               <td className="py-2 px-4">
                 {item.rawStatus === 'APPROVED' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-green-200 bg-green-50 text-green-700 text-[11px] font-medium tracking-wide">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
                     Approved
                   </div>
                 ) : item.rawStatus === 'REJECTED' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-200 bg-red-50 text-red-700 text-[11px] font-medium tracking-wide">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
                     Rejected
                   </div>
                 ) : item.status === 'Closed' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-black text-[11px] font-medium tracking-wide">
-                    Closed <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
+                    Closed
+                  </div>
+                ) : isApprover(user, item) ? (
+                  <div className="relative">
+                    <div 
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium hover:bg-gray-100 cursor-pointer tracking-wide"
+                    >
+                      Pending <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                    </div>
+                    {openStatusDropdown === item.id && (
+                      <div className="absolute right-0 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleApprove(item.dbId); }} 
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleRejectClick(item.dbId); }} 
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 bg-white text-black text-[11px] font-medium hover:bg-gray-50 cursor-pointer tracking-wide">
-                    Open <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
+                    Pending
                   </div>
                 )}
               </td>
@@ -192,14 +268,43 @@ const MovementsList = ({ movements, isLoading, isError }) => {
 
       {/* Footer actions */}
       <div className="py-4 flex justify-between text-sm text-gray-500 items-center mt-auto">
-          <button className="flex items-center gap-1 hover:text-gray-800 font-medium">
-            <span className="text-lg leading-none">+</span> Create
-          </button>
+          <div></div>
           <div className="flex items-center gap-2">
             {movements.length} of <span className="text-green-600">1000+</span> 
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           </div>
       </div>
+
+      {/* Reject Reason Modal */}
+      {rejectModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Movement Request</h3>
+            <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this request. This will be sent to the initiator.</p>
+            <textarea
+              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+              rows="4"
+              placeholder="Enter rejection reason..."
+              value={rejectModal.reason}
+              onChange={(e) => setRejectModal(prev => ({ ...prev, reason: e.target.value }))}
+            ></textarea>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setRejectModal({ isOpen: false, requestId: null, reason: '' })}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitReject}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+              >
+                Reject Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -137,6 +137,33 @@ class MovementService {
     return { request, trip };
   }
 
+  async rejectRequest(user, requestId, reason) {
+    const request = await MovementRequest.findByPk(requestId);
+    if (!request) throw new Error('Request not found');
+    if (request.status !== 'PENDING') throw new Error('Request already processed');
+
+    if (request.type === 'SECTOR_TO_SECTOR' && user.role !== 'DARO') {
+      throw new Error('Only DARO can reject sector-to-sector');
+    }
+    if (request.type === 'DISTRICT_TO_DISTRICT' && user.role !== 'RAB') {
+      throw new Error('Only RAB can reject district-to-district');
+    }
+
+    request.status = 'REJECTED';
+    request.approver_id = user.id;
+    request.reject_reason = reason;
+    await request.save();
+
+    // Notify Initiator
+    await notificationService.notifyUser(
+      request.initiator_id, 
+      `Your movement request for ${request.animal_type} has been rejected. Reason: ${reason}`, 
+      'REJECTION'
+    );
+
+    return request;
+  }
+
   async getRequestById(user, requestId) {
     const request = await MovementRequest.findByPk(requestId, {
       include: [

@@ -45,4 +45,13 @@ const approveRequest = async (req, res) => {
   }
 };
 
-module.exports = { createRequest, updateRequest, getRequests, getRequestById, approveRequest };
+const rejectRequest = async (req, res) => {
+  try {
+    const result = await movementService.rejectRequest(req.user, req.params.id, req.body.reason);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest };
