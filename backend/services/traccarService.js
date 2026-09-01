@@ -43,24 +43,22 @@ class TraccarService {
       // Map device IDs to positions, filtering by allowed plate numbers
       const deviceMap = {};
       devices.forEach(device => {
-        if (allowedPlateNumbers.has(device.name.toUpperCase()) || user.role === 'RAB') {
-            if(allowedPlateNumbers.has(device.name.toUpperCase())){
-                // Find matching trip for this device
-                const trip = activeTrips.find(t => t.plate_number?.toUpperCase() === device.name.toUpperCase());
-                const req = trip?.MovementRequest;
-                
-                deviceMap[device.id] = {
-                  id: device.id,
-                  name: device.name,
-                  phone: device.phone,
-                  status: device.status,
-                  lastUpdate: device.lastUpdate,
-                  route: req ? {
-                    origin: `${req.origin_sector}, ${req.origin_district}`,
-                    destination: `${req.dest_sector}, ${req.dest_district}`
-                  } : null
-                };
-            }
+        if (user.role === 'RAB' || allowedPlateNumbers.has(device.name.toUpperCase())) {
+            // Find matching trip for this device
+            const trip = activeTrips.find(t => t.plate_number?.toUpperCase() === device.name.toUpperCase());
+            const req = trip?.MovementRequest;
+            
+            deviceMap[device.id] = {
+              id: device.id,
+              name: device.name,
+              phone: device.phone,
+              status: device.status,
+              lastUpdate: device.lastUpdate,
+              route: req ? {
+                origin: `${req.origin_sector}, ${req.origin_district}`,
+                destination: `${req.dest_sector}, ${req.dest_district}`
+              } : null
+            };
         }
       });
 

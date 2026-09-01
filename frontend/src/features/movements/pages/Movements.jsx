@@ -230,7 +230,7 @@ const Movements = () => {
             onClick={() => navigate('/dashboard/movements/new')}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
-             Saba Uruhushya
+             New permission
           </button>
         )}
       </div>

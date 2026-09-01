@@ -42,6 +42,29 @@ const getCustomIcon = (category) => {
   });
 };
 
+// Component to reverse geocode lat/lon to a readable address
+const GeocodedAddress = ({ lat, lon }) => {
+  const [address, setAddress] = useState("Loading exact location...");
+  
+  useEffect(() => {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.display_name) {
+          // Extract a concise address
+          const parts = data.display_name.split(', ');
+          const shortAddress = parts.slice(0, 3).join(', ');
+          setAddress(shortAddress);
+        } else {
+          setAddress("Address not found");
+        }
+      })
+      .catch(() => setAddress("Address not found"));
+  }, [lat, lon]);
+
+  return <span>{address}</span>;
+};
+
 // Custom Icon for trucks
 const truckIcon = new L.Icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/713/713311.png',
@@ -446,10 +469,10 @@ const TrackingMap = () => {
 
       {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS PANEL) ----------------- */}
       <div 
-        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
+        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
       >
         {selectedDevice ? (
-          <div className="h-full flex flex-col overflow-y-auto no-scrollbar pb-32">
+          <div className="flex flex-col pb-32">
 
             {/* Search Header when open (Google Maps style) */}
             <div className="px-4 py-3 flex items-center gap-3">
@@ -487,9 +510,6 @@ const TrackingMap = () => {
                 className="flex flex-col items-center gap-2 cursor-pointer group"
                 onClick={() => {
                   if (selectedDevice) {
-                    // This triggers the MapCenterer again by un-setting and setting it, or just re-centering.
-                    // A simple way is to just let MapCenterer handle it, but to re-trigger we could use a state. 
-                    // For now, if they click Nearby, we can just pan using the selectedDevice coordinates.
                     window.dispatchEvent(new CustomEvent('map-recenter', { detail: selectedDevice }));
                   }
                 }}
@@ -513,34 +533,58 @@ const TrackingMap = () => {
             </div>
 
             {/* Contact & Details Info (Google Maps Style List) */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 cursor-pointer">
-                <MapPin className="w-5 h-5 text-gray-500" />
-                <span className="text-[14px] text-gray-700">{selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
-              </div>
-
-              <div className="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 cursor-pointer">
-                <div className="w-5 flex justify-center text-gray-500"><div className="w-4 h-4 rounded-full border-[2px] border-current flex items-center justify-center"><div className="w-1.5 h-1.5 bg-current rounded-full" /></div></div>
-                <span className="text-[14px] text-gray-700">{(selectedDevice.speed * 1.852).toFixed(1)} km/h • {selectedDevice.course}°</span>
-              </div>
-
-              {selectedDevice.devicePhone && (
-                <div className="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 cursor-pointer">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <span className="text-[14px] text-[#1a73e8] hover:underline">{selectedDevice.devicePhone}</span>
+            <div className="p-4 flex flex-col gap-5">
+                {/* Location */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900 leading-tight">
+                      <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
+                    </span>
+                    <span className="text-xs text-gray-500 mt-0.5">Coordinates: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
+                  </div>
                 </div>
-              )}
 
-              <div className="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 cursor-pointer">
-                <Clock className="w-5 h-5 text-gray-500" />
-                <span className="text-[14px] text-gray-700">{new Date(selectedDevice.lastUpdate).toLocaleString()}</span>
-              </div>
+                {/* Speed and Status */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
+                      </span>
+                      <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {selectedDevice.status}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 mt-0.5">
+                      Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
+                    </span>
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 cursor-pointer">
-                <Navigation className="w-5 h-5 text-gray-500" />
-                <span className="text-[14px] text-[#1a73e8] hover:underline">Claim this vehicle</span>
+                {selectedDevice.devicePhone && (
+                  <div className="flex items-center gap-4 text-sm text-gray-700">
+                    <Phone className="w-5 h-5 text-gray-500" />
+                    <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4 text-sm text-gray-700">
+                  <Clock className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">Last updated</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(selectedDevice.lastUpdate).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2">
+                  <CornerUpRight className="w-5 h-5" />
+                  <span>Claim this vehicle</span>
+                </div>
               </div>
-            </div>
 
           </div>
         ) : (
