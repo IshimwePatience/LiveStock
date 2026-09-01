@@ -27,6 +27,7 @@ const caseRoutes = require('./routes/caseRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const gpsRoutes = require('./routes/gpsRoutes');
 const driverRoutes = require('./routes/driverRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movement', movementRoutes);
@@ -37,6 +38,7 @@ app.use('/api/cases', caseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/gps', gpsRoutes);
 app.use('/api/driver', driverRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Socket.io for Real-time
 const socketService = require('./services/socketService');

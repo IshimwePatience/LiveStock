@@ -15,6 +15,8 @@ import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
 import PoliceCases from './features/police/pages/PoliceCases';
 import VetRecords from './features/vet/pages/VetRecords';
 import TrackingMap from './features/gps/pages/TrackingMap';
+
+import Notifications from './features/notifications/pages/Notifications';
 import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
 import { io } from 'socket.io-client';
@@ -120,6 +122,8 @@ function App() {
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<Overview />} />
+
+          <Route path="notifications" element={<Notifications />} />
           <Route path="movements" element={<Movements />} />
           <Route path="movements/new" element={<CreatePermit key="new" />} />
           <Route path="movements/edit/:id" element={<CreatePermit key="edit" />} />

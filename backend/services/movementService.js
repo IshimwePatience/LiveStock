@@ -150,7 +150,7 @@ class MovementService {
     
     await notificationService.notifyUser(
       request.initiator_id, 
-      `Your movement request has been approved. Share this tracking link with the driver: ${driverLink} . Track your car here: ${trackingLink}`, 
+      `Your movement request has been approved. Share this tracking link with the driver: ${driverLink} . The Arrival Confirmation OTP is: ${otp} . Track your car here: ${trackingLink}`, 
       'APPROVAL'
     );
     await notificationService.notifyUser(
