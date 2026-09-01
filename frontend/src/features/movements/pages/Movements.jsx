@@ -144,7 +144,8 @@ const Movements = () => {
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         priority,
         status: filterStatus,
-        rawStatus: req.status
+        rawStatus: req.status,
+        updatedAt: req.updatedAt
       };
     });
   }, [rawMovements]);

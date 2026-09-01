@@ -54,4 +54,13 @@ const rejectRequest = async (req, res) => {
   }
 };
 
-module.exports = { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest };
+const revertRequest = async (req, res) => {
+  try {
+    const result = await movementService.revertRequest(req.user, req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { createRequest, updateRequest, getRequests, getRequestById, approveRequest, rejectRequest, revertRequest };

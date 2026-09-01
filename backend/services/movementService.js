@@ -164,6 +164,33 @@ class MovementService {
     return request;
   }
 
+  async revertRequest(user, requestId) {
+    const request = await MovementRequest.findByPk(requestId);
+    if (!request) throw new Error('Request not found');
+    
+    if (request.type === 'SECTOR_TO_SECTOR' && user.role !== 'DARO') {
+      throw new Error('Only DARO can revert sector-to-sector');
+    }
+    if (request.type === 'DISTRICT_TO_DISTRICT' && user.role !== 'RAB') {
+      throw new Error('Only RAB can revert district-to-district');
+    }
+
+    if (!['APPROVED', 'REJECTED'].includes(request.status)) {
+      throw new Error('Can only revert approved or rejected requests');
+    }
+
+    if (request.status === 'APPROVED') {
+       await Trip.destroy({ where: { request_id: request.id } });
+    }
+
+    request.status = 'PENDING';
+    request.approver_id = null;
+    request.reject_reason = null;
+    await request.save();
+
+    return request;
+  }
+
   async getRequestById(user, requestId) {
     const request = await MovementRequest.findByPk(requestId, {
       include: [

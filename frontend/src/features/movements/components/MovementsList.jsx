@@ -58,6 +58,17 @@ const MovementsList = ({ movements, isLoading, isError }) => {
     }
   };
 
+  const handleRevert = async (id) => {
+    try {
+      await api.put(`/movement/${id}/revert`);
+      toast.success('Request reverted to pending');
+      setOpenStatusDropdown(null);
+      queryClient.invalidateQueries(['movements']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error reverting request');
+    }
+  };
+
   const isApprover = (user, item) => {
     if (!user) return false;
     if (item.rawType === 'SECTOR_TO_SECTOR' && user.role === 'DARO') return true;
@@ -176,13 +187,77 @@ const MovementsList = ({ movements, isLoading, isError }) => {
               </td>
               <td className="py-2 px-4">
                 {item.rawStatus === 'APPROVED' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
-                    Approved
-                  </div>
+                  isApprover(user, item) ? (
+                    <div className="relative">
+                      <div 
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                        }}
+                        className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
+                      >
+                        <div className="flex items-center text-[11px] tracking-wide">
+                          Approved <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {openStatusDropdown === item.id && (
+                        <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            Revert to Pending
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="inline-flex flex-col text-black font-medium p-1">
+                      <span className="text-[11px] tracking-wide">Approved</span>
+                      <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  )
                 ) : item.rawStatus === 'REJECTED' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
-                    Rejected
-                  </div>
+                  isApprover(user, item) ? (
+                    <div className="relative">
+                      <div 
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                        }}
+                        className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
+                      >
+                        <div className="flex items-center text-[11px] tracking-wide">
+                          Rejected <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {openStatusDropdown === item.id && (
+                        <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            Revert to Pending
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="inline-flex flex-col text-black font-medium p-1">
+                      <span className="text-[11px] tracking-wide">Rejected</span>
+                      <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  )
                 ) : item.status === 'Closed' ? (
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
                     Closed
