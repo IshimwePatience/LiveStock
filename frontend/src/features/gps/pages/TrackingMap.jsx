@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { getTraccarLocations, getTraccarRoute } from '../../../lib/api';
@@ -7,7 +7,7 @@ import {
   Search, X, Menu, Navigation, MapPin,
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
-  Cross, Banknote, Layers
+  Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -22,7 +22,7 @@ L.Icon.Default.mergeOptions({
 // Custom Icon for Search Results (POIs) using DivIcon
 const getCustomIcon = (category) => {
   let iconHtml = '';
-  
+
   if (category === 'Restaurants') {
     iconHtml = `<div style="background-color: #ea4335; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg></div>`;
   } else if (category === 'Hotels') {
@@ -44,25 +44,77 @@ const getCustomIcon = (category) => {
 
 // Component to reverse geocode lat/lon to a readable address
 const GeocodedAddress = ({ lat, lon }) => {
-  const [address, setAddress] = useState("Loading exact location...");
-  
+  const [locationDetails, setLocationDetails] = useState({
+    loading: true,
+    main: "",
+    sub: "",
+    admin: ""
+  });
+
   useEffect(() => {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.display_name) {
-          // Extract a concise address
-          const parts = data.display_name.split(', ');
-          const shortAddress = parts.slice(0, 3).join(', ');
-          setAddress(shortAddress);
+        if (data && data.address) {
+          const addr = data.address;
+
+          // Find nearest landmark or amenity
+          const nearestLandmark = addr.amenity || addr.building || addr.shop || addr.office || addr.tourism || addr.leisure || addr.historic || null;
+          // Find road/street
+          const street = addr.road || addr.street || addr.path || addr.pedestrian || null;
+
+          let main = null;
+          if (nearestLandmark && street) {
+            main = `${nearestLandmark} (near ${street})`;
+          } else if (nearestLandmark) {
+            main = nearestLandmark;
+          } else if (street) {
+            main = street;
+          } else if (addr.neighbourhood || addr.village || addr.suburb || addr.city_district) {
+            main = addr.neighbourhood || addr.village || addr.suburb || addr.city_district;
+          }
+
+          if (!main) {
+            main = data.display_name ? data.display_name.split(',')[0] : "Unknown Location";
+          }
+
+          // Sub-area (village, cell, sector equivalent in Rwanda)
+          const subParts = [];
+          if (addr.neighbourhood && main !== addr.neighbourhood) subParts.push(addr.neighbourhood);
+          if (addr.village && main !== addr.village) subParts.push(addr.village);
+          if (addr.suburb && main !== addr.suburb) subParts.push(addr.suburb);
+          if (addr.city_district && main !== addr.city_district) subParts.push(addr.city_district);
+          // Deduplicate
+          const uniqueSub = [...new Set(subParts)].join(', ');
+
+          // Administrative area (District, Province)
+          const adminParts = [];
+          if (addr.city || addr.town || addr.county) adminParts.push(addr.city || addr.town || addr.county);
+          if (addr.state) adminParts.push(addr.state);
+          const uniqueAdmin = [...new Set(adminParts)].join(', ');
+
+          setLocationDetails({
+            loading: false,
+            main: main,
+            sub: uniqueSub || (data.display_name ? data.display_name.split(',')[1]?.trim() : ''),
+            admin: uniqueAdmin
+          });
         } else {
-          setAddress("Address not found");
+          setLocationDetails({ loading: false, main: "Address not found", sub: "", admin: "" });
         }
       })
-      .catch(() => setAddress("Address not found"));
+      .catch(() => setLocationDetails({ loading: false, main: "Address not found", sub: "", admin: "" }));
   }, [lat, lon]);
 
-  return <span>{address}</span>;
+  if (locationDetails.loading) return <span className="font-medium text-gray-900 leading-tight">Loading exact location...</span>;
+
+  return (
+    <div className="flex flex-col">
+      <span className="font-medium text-gray-900 leading-tight text-[15px]">{locationDetails.main}</span>
+      {locationDetails.sub && <span className="text-[13px] text-gray-700 mt-0.5">{locationDetails.sub}</span>}
+      {locationDetails.admin && <span className="text-[12px] text-gray-500 mt-0.5">{locationDetails.admin}{locationDetails.admin.toLowerCase().includes('rwanda') ? '' : ', Rwanda'}</span>}
+    </div>
+  );
 };
 
 // Custom Icon for trucks
@@ -138,37 +190,37 @@ const SearchResultCenterer = ({ selectedSearchResult }) => {
 // Component to handle global search and POI fetching
 const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
   const map = useMap();
-  
+
   useEffect(() => {
     if (!searchQuery) {
       onResults([]);
       setIsSearching(false);
       return;
     }
-    
+
     setIsSearching(true);
-    
+
     const bounds = map.getBounds();
     const viewbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
-    
+
     const categories = ['Restaurants', 'Hotels', 'Transit', 'Parking', 'Pharmacies', 'ATMs'];
     let queryUrl = '';
-    
+
     if (categories.includes(searchQuery)) {
-       // Enforce bounded search within the current map view for local POIs
-       queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&viewbox=${viewbox}&bounded=1&limit=20`;
+      // Enforce bounded search within the current map view for local POIs
+      queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&viewbox=${viewbox}&bounded=1&limit=20`;
     } else {
-       // Global search heavily biased to Rwanda and neighboring countries
-       queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=rw,cd,ug,bi,tz&limit=10`;
+      // Global search heavily biased to Rwanda and neighboring countries
+      queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=rw,cd,ug,bi,tz&limit=10`;
     }
-    
+
     fetch(queryUrl, { headers: { 'Accept-Language': 'en' } })
       .then(res => res.json())
       .then(data => {
         onResults(data || []);
         setIsSearching(false);
         if (data && data.length > 0) {
-           map.flyTo([data[0].lat, data[0].lon], categories.includes(searchQuery) ? map.getZoom() : 12, { animate: true, duration: 1.5 });
+          map.flyTo([data[0].lat, data[0].lon], categories.includes(searchQuery) ? map.getZoom() : 12, { animate: true, duration: 1.5 });
         }
       })
       .catch(err => {
@@ -197,7 +249,7 @@ const TrackingMap = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
-  
+
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSatellite, setIsSatellite] = useState(true);
@@ -301,16 +353,16 @@ const TrackingMap = () => {
 
           {/* Search Result Markers */}
           {searchResults.map((res, idx) => (
-             <Marker 
-               key={`search-${idx}`}
-               position={[res.lat, res.lon]}
-               icon={getCustomIcon(activeSearchQuery)}
-             >
-               <Popup className="custom-popup">
-                 <div className="font-medium text-gray-900">{res.display_name.split(',')[0]}</div>
-                 <div className="text-xs text-gray-500 mt-1">{res.display_name}</div>
-               </Popup>
-             </Marker>
+            <Marker
+              key={`search-${idx}`}
+              position={[res.lat, res.lon]}
+              icon={getCustomIcon(activeSearchQuery)}
+            >
+              <Popup className="custom-popup">
+                <div className="font-medium text-gray-900">{res.display_name.split(',')[0]}</div>
+                <div className="text-xs text-gray-500 mt-1">{res.display_name}</div>
+              </Popup>
+            </Marker>
           ))}
 
           {filteredLocations && filteredLocations.map((loc) => (
@@ -363,12 +415,12 @@ const TrackingMap = () => {
       {/* ----------------- FLOATING PILLS (TOP RIGHT) ----------------- */}
       <div className="absolute top-[28px] left-[430px] z-[400] flex">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
-           <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
-           <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
-           <button onClick={() => handleFilterClick('Transit')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Train className="w-4 h-4 text-gray-500" /> Transit</button>
-           <button onClick={() => handleFilterClick('Parking')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CircleParking className="w-4 h-4 text-gray-500" /> Parking</button>
-           <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
-           <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
+          <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
+          <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
+          <button onClick={() => handleFilterClick('Transit')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Train className="w-4 h-4 text-gray-500" /> Transit</button>
+          <button onClick={() => handleFilterClick('Parking')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CircleParking className="w-4 h-4 text-gray-500" /> Parking</button>
+          <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
+          <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
         </div>
       </div>
 
@@ -433,15 +485,15 @@ const TrackingMap = () => {
       </div>
 
       {/* ----------------- SEARCH RESULTS SIDEBAR ----------------- */}
-      <div 
+      <div
         className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
       >
         <div className="h-[100px] flex-shrink-0 border-b border-gray-200" /> {/* Spacer for search bar */}
-        
+
         <div className="flex-1 overflow-y-auto no-scrollbar">
           <div className="p-4">
             <h2 className="text-[20px] font-normal text-gray-900 mb-4">Results for "{activeSearchQuery}"</h2>
-            
+
             {isSearching ? (
               <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
@@ -452,8 +504,8 @@ const TrackingMap = () => {
             ) : (
               <div className="flex flex-col gap-4">
                 {searchResults.map((res, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     onClick={() => setSelectedSearchResult(res)}
                     className="flex flex-col border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                   >
@@ -468,7 +520,7 @@ const TrackingMap = () => {
       </div>
 
       {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS PANEL) ----------------- */}
-      <div 
+      <div
         className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
       >
         {selectedDevice ? (
@@ -534,57 +586,84 @@ const TrackingMap = () => {
 
             {/* Contact & Details Info (Google Maps Style List) */}
             <div className="p-4 flex flex-col gap-5">
-                {/* Location */}
-                <div className="flex items-start gap-4 text-sm text-gray-700">
-                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-900 leading-tight">
-                      <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
-                    </span>
-                    <span className="text-xs text-gray-500 mt-0.5">Coordinates: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
-                  </div>
-                </div>
-
-                {/* Speed and Status */}
-                <div className="flex items-start gap-4 text-sm text-gray-700">
-                  <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">
-                        {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
-                      </span>
-                      <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {selectedDevice.status}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-500 mt-0.5">
-                      Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
-                    </span>
-                  </div>
-                </div>
-
-                {selectedDevice.devicePhone && (
-                  <div className="flex items-center gap-4 text-sm text-gray-700">
-                    <Phone className="w-5 h-5 text-gray-500" />
-                    <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-gray-700">
-                  <Clock className="w-5 h-5 text-gray-500" />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-900">Last updated</span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(selectedDevice.lastUpdate).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2">
-                  <CornerUpRight className="w-5 h-5" />
-                  <span>Claim this vehicle</span>
+              {/* Location */}
+              <div className="flex items-start gap-4 text-sm text-gray-700">
+                <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                <div className="flex flex-col flex-1">
+                  <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
+                  <span className="text-[10px] text-gray-400 mt-1.5 uppercase tracking-wider font-bold">GPS: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
                 </div>
               </div>
+
+              {/* Speed and Status */}
+              <div className="flex items-start gap-4 text-sm text-gray-700">
+                <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">
+                      {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
+                    </span>
+                    <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${
+                      selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
+                      selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {selectedDevice.status === 'unknown' ? 'STANDBY' : selectedDevice.status}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 mt-0.5">
+                    Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
+                  </span>
+                </div>
+              </div>
+
+              {selectedDevice.devicePhone && (
+                <div className="flex items-center gap-4 text-sm text-gray-700">
+                  <Phone className="w-5 h-5 text-gray-500" />
+                  <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
+                </div>
+              )}
+
+              {/* Route Information */}
+              <div className="flex items-start gap-4 text-sm text-gray-700">
+                <Route className="w-5 h-5 text-gray-500 mt-0.5" />
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900">Current Trip</span>
+                  {selectedDevice.route ? (
+                    <div className="flex flex-col mt-0.5">
+                      <div className="flex items-center gap-1.5 text-[13px] text-gray-800 font-semibold">
+                        <span>{selectedDevice.route.originDistrict}</span>
+                        <ArrowRight className="w-3 h-3 text-gray-400" />
+                        <span>{selectedDevice.route.destDistrict}</span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 mt-0.5">
+                        {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
+                      </span>
+                      <span className="text-[11px] text-gray-500 mt-0.5">
+                        Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500 mt-0.5">No active livestock permit assigned</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm text-gray-700">
+                <Clock className="w-5 h-5 text-gray-500" />
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900">Last updated</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(selectedDevice.lastUpdate).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2">
+                <CornerUpRight className="w-5 h-5" />
+                <span>Claim this vehicle</span>
+              </div>
+            </div>
 
           </div>
         ) : (

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { Trip, MovementRequest } = require('../models');
+const { Trip, MovementRequest, User } = require('../models');
 
 class TraccarService {
   constructor() {
@@ -18,7 +18,10 @@ class TraccarService {
       // 1. Get all active trips
       const activeTrips = await Trip.findAll({
         where: { status: 'ACTIVE' },
-        include: [{ model: MovementRequest }]
+        include: [{ 
+          model: MovementRequest,
+          include: [{ model: User, as: 'Initiator' }]
+        }]
       });
 
       // 2. Filter trips based on RBAC (RAB sees all, DARO sees only their district origin)
@@ -55,8 +58,11 @@ class TraccarService {
               status: device.status,
               lastUpdate: device.lastUpdate,
               route: req ? {
-                origin: `${req.origin_sector}, ${req.origin_district}`,
-                destination: `${req.dest_sector}, ${req.dest_district}`
+                originDistrict: req.origin_district,
+                originSector: req.origin_sector,
+                destDistrict: req.dest_district,
+                destSector: req.dest_sector,
+                initiator: req.Initiator ? req.Initiator.name : 'Unknown'
               } : null
             };
         }
