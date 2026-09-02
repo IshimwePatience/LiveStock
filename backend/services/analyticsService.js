@@ -27,9 +27,18 @@ class AnalyticsService {
       };
     }
 
-    const created = await MovementRequest.count({
+    const districtToDistrict = await MovementRequest.count({
       where: {
         ...whereClause,
+        type: 'DISTRICT_TO_DISTRICT',
+        createdAt: { [Op.gte]: sevenDaysAgo }
+      }
+    });
+
+    const sectorToSector = await MovementRequest.count({
+      where: {
+        ...whereClause,
+        type: 'SECTOR_TO_SECTOR',
         createdAt: { [Op.gte]: sevenDaysAgo }
       }
     });
@@ -42,13 +51,6 @@ class AnalyticsService {
       }
     });
 
-    const updated = await MovementRequest.count({
-      where: {
-        ...whereClause,
-        updatedAt: { [Op.gte]: sevenDaysAgo }
-      }
-    });
-
     const dueSoon = await MovementRequest.count({
       where: {
         ...whereClause,
@@ -57,7 +59,7 @@ class AnalyticsService {
       }
     });
 
-    return { created, completed, updated, dueSoon };
+    return { districtToDistrict, sectorToSector, completed, dueSoon };
   }
 
   async getDashboardStats(user) {

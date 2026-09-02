@@ -19,8 +19,16 @@ const DashboardLayout = () => {
     if (!user) return 'Loading...';
     if (user.role === 'RAB') return 'National (HQ)';
     if (user.role === 'POLICE') return 'National Police';
-    if (user.role === 'DARO' || user.role === 'SARO') return user.district_id ? `${user.district_id} District` : 'Unknown District';
+    if (user.role === 'SARO') return user.sector_id ? `${user.sector_id} Sector` : 'Unknown Sector';
+    if (user.role === 'DARO') return user.district_id ? `${user.district_id} District` : 'Unknown District';
     return 'Livestock App';
+  };
+
+  const getDistrictLabel = () => {
+    if (!user) return 'Loading...';
+    if (user.role === 'RAB') return 'National (HQ)';
+    if (user.role === 'POLICE') return 'National Police';
+    return user.district_id ? `${user.district_id} District` : 'Unknown District';
   };
 
   // Sidebar toggles
@@ -83,8 +91,8 @@ const DashboardLayout = () => {
             {isProjectDropdownOpen && (
               <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50 text-gray-800">
                 <div className="px-4 py-2">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Jurisdiction</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{getJurisdictionLabel()}</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{user?.role === 'SARO' || user?.role === 'DARO' ? 'District' : 'Current Jurisdiction'}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{getDistrictLabel()}</p>
                 </div>
                 {user?.role === 'SARO' && (
                   <div className="px-4 py-2 border-t border-gray-100 bg-green-50/50">
