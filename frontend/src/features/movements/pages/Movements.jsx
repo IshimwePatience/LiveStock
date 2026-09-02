@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
@@ -138,7 +138,7 @@ const Movements = () => {
         requestByTitle: origin,
         filterAnimal,
         farmerName: req.owner_name || 'Unknown Farmer',
-        route: `${origin} â†’ ${destination}`,
+        route: `${origin} → ${destination}`,
         title: detailsString,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },

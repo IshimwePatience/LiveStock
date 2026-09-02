@@ -636,7 +636,7 @@ const TrackingMap = () => {
                         <span>{selectedDevice.route.destDistrict}</span>
                       </div>
                       <span className="text-[11px] text-gray-500 mt-0.5">
-                        {selectedDevice.route.originSector} âž” {selectedDevice.route.destSector}
+                        {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
                       </span>
                       <span className="text-[11px] text-gray-500 mt-0.5">
                         Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>

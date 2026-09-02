@@ -81,7 +81,7 @@ function App() {
                 className="text-white underline font-medium mt-1 text-xs"
                 onClick={() => toast.dismiss(t.id)}
               >
-                Track Live on Map â†’
+                Track Live on Map →
               </a>
             )}
           </div>

@@ -254,20 +254,20 @@ const Overview = () => {
             <h4 className="font-bold text-gray-800 text-xs mb-3">Yesterday</h4>
             
             <div className="flex gap-3 mb-5">
-              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">ML</div>
+              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">DN</div>
               <div>
                 <div className="text-gray-700 leading-tight">
-                  <span className="text-green-600 hover:underline cursor-pointer font-medium">Marie-JosÃ©e Leblanc</span> created <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-red-500 text-xs">â˜€</span> <span className="text-green-600 hover:underline cursor-pointer">MOBILE-5126: removing mod/wiki:createpage capa bility is not considered in Moodle mobile app</span> <span className="border border-gray-200 text-[10px] uppercase px-1 rounded bg-gray-50 text-gray-500">Open</span></span>
+                  <span className="text-blue-600 hover:underline cursor-pointer font-medium">Dr. Niyonzima</span> approved <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-green-500 text-xs">✓</span> <span className="text-blue-600 hover:underline cursor-pointer">PERMIT-0932: District Movement for 5 Cows</span> <span className="border border-green-200 text-[10px] uppercase px-1 rounded bg-green-50 text-green-700">Approved</span></span>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">about 18 hours ago</div>
               </div>
             </div>
 
             <div className="flex gap-3 mb-5">
-              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">DP</div>
+              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">MJ</div>
               <div>
                 <div className="text-gray-700 leading-tight">
-                  <span className="text-green-600 hover:underline cursor-pointer font-medium">Dani Palou</span> updated field "status" on <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-green-500 text-xs">+</span> <span className="text-green-600 hover:underline cursor-pointer">MOBILE-5080: Display multiple markers feedback for students in the app</span> <span className="border border-blue-200 text-[10px] px-1 rounded bg-blue-50 text-blue-700">Waiting for testing</span></span>
+                  <span className="text-blue-600 hover:underline cursor-pointer font-medium">Mugisha Jean</span> updated field "status" on <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-orange-500 text-xs">!</span> <span className="text-blue-600 hover:underline cursor-pointer">VET-RECORDS: Vaccination campaign summary</span> <span className="border border-orange-200 text-[10px] uppercase px-1 rounded bg-orange-50 text-orange-700">Pending Review</span></span>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">1 day ago</div>
               </div>
@@ -330,7 +330,7 @@ const Overview = () => {
              </div>
              <div className="flex items-center">
                 <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-red-500 text-sm leading-none">â˜€</span> Bug
+                  <span className="text-red-500 text-sm leading-none">⚠️</span> Bug
                 </div>
                 <div className="flex-1 h-5 bg-gray-200 flex">
                    <div className="h-full bg-[#8c929d] w-[26%] flex items-center px-2 text-xs text-white font-medium">26%</div>
@@ -354,7 +354,7 @@ const Overview = () => {
              </div>
              <div className="flex items-center">
                 <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-purple-500 text-lg leading-none">âš¡</span> Epic
+                  <span className="text-purple-500 text-lg leading-none">⚡</span> Epic
                 </div>
                 <div className="flex-1 h-5 bg-gray-200 flex">
                    <div className="h-full bg-[#8c929d] w-[1%]"></div>
@@ -437,7 +437,7 @@ const Overview = () => {
              
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
+                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4255 Support TinyMCE as the Rich Text Editor of the app</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">
@@ -448,7 +448,7 @@ const Overview = () => {
              
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
+                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4968 Mobile app customisation improvements</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">
@@ -458,7 +458,7 @@ const Overview = () => {
 
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
+                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4878 Fix Moodle app behat flaky failures</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">
