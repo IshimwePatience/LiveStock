@@ -7,4 +7,6 @@ router.route('/')
   .post(protect, authorize('SARO'), addRecord)
   .get(protect, getRecords);
 
+router.post('/bulk', protect, authorize('SARO'), addRecord);
+
 module.exports = router;

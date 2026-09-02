@@ -49,8 +49,8 @@ OTP.belongsTo(Trip, { foreignKey: 'trip_id' });
 // Vet Records
 Trip.hasMany(VetRecord, { foreignKey: 'trip_id' });
 VetRecord.belongsTo(Trip, { foreignKey: 'trip_id' });
-User.hasMany(VetRecord, { foreignKey: 'saro_id' });
-VetRecord.belongsTo(User, { foreignKey: 'saro_id' });
+User.hasMany(VetRecord, { foreignKey: 'saro_id', as: 'VeterinaryRecords' });
+VetRecord.belongsTo(User, { foreignKey: 'saro_id', as: 'Veterinarian' });
 
 // Cases
 User.hasMany(Case, { foreignKey: 'reporter_id' });

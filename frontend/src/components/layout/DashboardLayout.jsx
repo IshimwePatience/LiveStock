@@ -218,7 +218,7 @@ const DashboardLayout = () => {
               {editorsChoiceOpen && (
                 <div className="pl-12 pr-4 space-y-1">
                   {(user?.role === 'DARO' || user?.role === 'SARO' || user?.role === 'RAB') && (
-                    <Link to="/dashboard/vet-records" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/vet-records') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>Veterinary Records</Link>
+                    <Link to="/dashboard/vet-records" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/vet-records') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>Vaccination & Medication</Link>
                   )}
                   {(user?.role === 'DARO' || user?.role === 'SARO' || user?.role === 'RAB') && (
                     <Link to="/dashboard/gps" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/gps') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>

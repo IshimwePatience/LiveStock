@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster, toast } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -14,6 +14,7 @@ import NationalReports from './features/analytics/pages/NationalReports';
 import PerformanceAudit from './features/analytics/pages/PerformanceAudit';
 import PoliceCases from './features/police/pages/PoliceCases';
 import VetRecords from './features/vet/pages/VetRecords';
+import CreateVetRecord from './features/vet/pages/CreateVetRecord';
 import TrackingMap from './features/gps/pages/TrackingMap';
 
 import Notifications from './features/notifications/pages/Notifications';
@@ -132,6 +133,7 @@ function App() {
           <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
           <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
+          <Route path="vet-records/create" element={<VetRoute><CreateVetRecord /></VetRoute>} />
           <Route path="gps" element={<TrackingMap />} />
         </Route>
       </Routes>

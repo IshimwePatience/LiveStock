@@ -1,7 +1,8 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { User, ChevronDown, Syringe, Clipboard, ArrowUp, MoreVertical } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const VetRecordsList = ({ records, isLoading, isError }) => {
+const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
@@ -134,7 +135,7 @@ const VetRecordsList = ({ records, isLoading, isError }) => {
           {records.length === 0 && (
             <tr>
                 <td colSpan="6" className="p-8 text-center text-gray-500">
-                  No veterinary records found.
+                  No vaccination or medication records found.
                 </td>
             </tr>
           )}
@@ -142,10 +143,7 @@ const VetRecordsList = ({ records, isLoading, isError }) => {
       </table>
 
       {/* Footer actions */}
-      <div className="py-4 flex justify-between text-sm text-gray-500 items-center mt-auto">
-          <button className="flex items-center gap-1 hover:text-gray-800 font-medium">
-            <span className="text-lg leading-none">+</span> Add Record
-          </button>
+      <div className="py-4 flex justify-end text-sm text-gray-500 items-center mt-auto">
           <div className="flex items-center gap-2">
             {records.length} of <span className="text-green-600">{records.length}</span> 
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>

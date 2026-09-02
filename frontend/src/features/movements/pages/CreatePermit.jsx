@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
 const NUM_ROWS = 30;
-const NUM_COLS = 24;
+const NUM_COLS = 26;
 
 const COLUMNS = [
   { title: 'Amazina ya Nyir\'amatungo', width: 180, key: 'owner_name' },
@@ -31,6 +31,8 @@ const COLUMNS = [
   { title: 'Igitsina (M/F)', width: 90, key: 'sex' },
   { title: 'Ubwoko (Breed)', width: 120, key: 'breed' },
   { title: 'Ibara (Color)', width: 120, key: 'color' },
+  { title: 'Inkingo (Vaccines)', width: 150, key: 'vaccines' },
+  { title: 'Imiti (Medication)', width: 150, key: 'medication' },
   { title: 'Amazina y\'Umushoferi', width: 160, key: 'driver_name' },
   { title: 'Telephoni y\'Umushoferi', width: 150, key: 'driver_phone' },
   { title: 'Indangamuntu y\'Umushoferi', width: 150, key: 'driver_nid' },
@@ -180,8 +182,8 @@ const CreatePermit = () => {
     { id: 'owner', label: "Nyir'amatungo (Owner)", cols: [0, 1, 2, 3, 4, 5, 6, 7] },
     { id: 'origin', label: 'Biva (Origin)', cols: [8, 9, 10, 11] },
     { id: 'dest', label: 'Bijya (Destination)', cols: [12, 13, 14, 15] },
-    { id: 'animal', label: 'Amatungo (Animals)', cols: [16, 17, 18, 19, 20] },
-    { id: 'driver', label: 'Umushoferi (Driver)', cols: [21, 22, 23] },
+    { id: 'animal', label: 'Amatungo (Animals & Medical)', cols: [16, 17, 18, 19, 20, 21, 22] },
+    { id: 'driver', label: 'Umushoferi (Driver)', cols: [23, 24, 25] },
   ];
 
   const isColVisible = (idx) => {
@@ -189,8 +191,8 @@ const CreatePermit = () => {
     if ([0,1,2,3,4,5,6,7].includes(idx)) return visibleGroups.owner;
     if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
     if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
-    if ([16,17,18,19,20].includes(idx)) return visibleGroups.animal;
-    if ([21,22,23].includes(idx)) return visibleGroups.driver ?? true;
+    if ([16,17,18,19,20,21,22].includes(idx)) return visibleGroups.animal;
+    if ([23,24,25].includes(idx)) return visibleGroups.driver ?? true;
     return true;
   };
 
@@ -381,16 +383,18 @@ const CreatePermit = () => {
       origin_id: user?.sector_id || user?.district_id || user?.id,
       destination_id: firstRow[13] || firstRow[12] || user?.id,
       animal_type: firstRow[16] || 'COW',
-      driver_name: firstRow[21],
-      driver_phone: firstRow[22],
-      driver_nid: firstRow[23],
+      driver_name: firstRow[23],
+      driver_phone: firstRow[24],
+      driver_nid: firstRow[25],
       animals: validRows.map(r => ({
         animal_type: r[16] || 'COW',
         tag_number: r[17],
         sex: r[18] || 'F',
         quantity: 1, // Quantity column removed, default to 1 per tag
         breed: r[19],
-        color: r[20]
+        color: r[20],
+        vaccines: r[21],
+        medication: r[22]
       }))
     };
     

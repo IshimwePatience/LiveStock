@@ -12,26 +12,37 @@ class VetService {
       throw new Error('Only SARO can record veterinary treatments');
     }
     
-    // We should ensure the animal belongs to the SARO's sector, but for simplicity:
+    // Support bulk creation for home vaccinations
+    if (data.records && Array.isArray(data.records)) {
+      const recordsToCreate = data.records.map(r => ({
+        ...r,
+        saro_id: user.id,
+        district: r.district || user.district_id,
+        sector: r.sector || user.sector_id
+      }));
+      return await VetRecord.bulkCreate(recordsToCreate);
+    }
+
+    // Legacy single creation support
     const record = await VetRecord.create({
-      animal_tag: data.animal_tag,
-      antibiotics: data.antibiotics,
-      vaccines: data.vaccines,
-      saro_id: user.id,
-      trip_id: data.trip_id // Trip is required
+      ...data,
+      saro_id: user.id
     });
 
     return record;
   }
 
   async getRecords(user) {
-    // In a fully normalized DB with Animal model linked to VetRecord, we would filter by Animal.sector_id.
-    // For now, since VetRecord is mostly flat, we allow DARO/RAB to see all, and SARO to see their own entries.
-    const filter = user.role === 'SARO' ? { saro_id: user.id } : {};
+    let filter = {};
+    if (user.role === 'SARO') {
+      filter = { saro_id: user.id };
+    } else if (user.role === 'DARO') {
+      filter = { district: user.district_id };
+    }
 
     return await VetRecord.findAll({
       where: filter,
-      include: [{ model: User, attributes: ['name', 'role'] }],
+      include: [{ model: User, as: 'Veterinarian', attributes: ['name', 'role'] }],
       order: [['createdAt', 'DESC']]
     });
   }

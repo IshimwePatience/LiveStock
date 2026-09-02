@@ -1,8 +1,9 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import { Search, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
 import VetRecordsList from '../components/VetRecordsList';
 
@@ -27,9 +28,11 @@ const getColorForInitials = (initials) => {
 
 const VetRecords = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'List';
+  const activeTab = searchParams.get('tab') || 'Vaccination';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
 
   const setActiveTab = (tab) => {
     setSearchParams({ tab });
@@ -120,7 +123,7 @@ const VetRecords = () => {
   const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
 
   const tabs = [
-    'List', 'History'
+    'Vaccination', 'Medication'
   ];
 
   return (
@@ -132,11 +135,21 @@ const VetRecords = () => {
             Overview / Livestock Tracking app
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            Veterinary Records 
+            Vaccination & Medication 
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {filteredRecords.length}
             </span>
           </h1>
+        </div>
+        <div>
+          {user?.role === 'SARO' && (
+            <Link 
+              to={`/dashboard/vet-records/create?type=${activeTab?.toLowerCase()}`}
+              className="bg-[#0052cc] hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span> Add {activeTab}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -191,7 +204,20 @@ const VetRecords = () => {
          </div>
 
          <div className="ml-4 relative z-50">
-           <FilterDropdown selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
+           <FilterDropdown 
+             selectedFilters={selectedFilters} 
+             onFilterChange={handleFilterChange} 
+             categories={['Animal']}
+             optionsMap={{
+               'Animal': [
+                 { id: 'COW', title: 'Cattle', subtitle: 'Cows, bulls, calves' },
+                 { id: 'GOAT', title: 'Goats', subtitle: '' },
+                 { id: 'SHEEP', title: 'Sheep', subtitle: '' },
+                 { id: 'PIG', title: 'Pigs', subtitle: '' },
+                 { id: 'DOG', title: 'Dogs', subtitle: '' }
+               ]
+             }}
+           />
          </div>
          <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
@@ -202,12 +228,16 @@ const VetRecords = () => {
 
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-         {activeTab === 'List' && (
-            <VetRecordsList records={filteredRecords} isLoading={isLoading} isError={isError} />
-         )}
-         {activeTab === 'History' && (
-            <div className="p-8 text-center text-gray-500">History view is not available for vet records yet.</div>
-         )}
+         <VetRecordsList 
+            records={filteredRecords.filter(r => 
+              activeTab === 'Vaccination' 
+                ? r.type === 'VACCINATION' || !r.type // fallback if type not set
+                : r.type === 'MEDICATION'
+            )} 
+            isLoading={isLoading} 
+            isError={isError} 
+            activeTab={activeTab}
+         />
       </div>
     </div>
   );
