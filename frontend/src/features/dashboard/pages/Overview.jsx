@@ -1,11 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../../lib/api';
 import { 
   Info, CheckCircle2, Edit2, CheckSquare, Calendar, Maximize2, 
   ArrowUp, ArrowDown, ListFilter, User, ChevronDown
 } from 'lucide-react';
 
 import FilterDropdown from '../../../components/ui/FilterDropdown';
+
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const parts = name.split(' ');
+  if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getColorForInitials = (initials) => {
+  if (initials === 'U') return 'bg-gray-400';
+  const colors = ['bg-blue-600', 'bg-orange-500', 'bg-[#0052cc]', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
+  let hash = 0;
+  for (let i = 0; i < initials.length; i++) {
+    hash = initials.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
 
 const Overview = () => {
   const navigate = useNavigate();
@@ -38,8 +57,39 @@ const Overview = () => {
     roleLinkHref = "/dashboard/users";
   }
 
+  const { data: systemUsers } = useQuery({
+    queryKey: ['system-users'],
+    queryFn: async () => {
+      const res = await api.get('/auth/users');
+      return res.data;
+    }
+  });
+
+  const uniqueUsers = useMemo(() => {
+    if (!systemUsers) return [];
+    let filtered = [];
+    if (user?.role === 'RAB' || user?.role === 'Super Admin') {
+      filtered = systemUsers;
+    } else if (user?.role === 'DARO') {
+      filtered = systemUsers.filter(u => u.role === 'SARO' && u.district_id === user.district_id);
+    }
+    
+    return filtered.map(u => ({
+      name: u.name,
+      initials: getInitials(u.name),
+      color: getColorForInitials(getInitials(u.name))
+    }));
+  }, [systemUsers, user]);
+
+  const displayUsers = uniqueUsers.slice(0, 5);
+  const extraUsersCount = Math.max(0, uniqueUsers.length - 5);
+
   return (
     <div className="flex flex-col h-full bg-white text-gray-800 p-6 overflow-x-hidden">
+      
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Home</h1>
+      </div>
       
       {/* Banner */}
       {isBannerVisible && (
@@ -60,15 +110,34 @@ const Overview = () => {
 
       {/* Filters Toolbar */}
       <div className="flex items-center gap-3 mb-6 relative z-50">
-         <div className="flex -space-x-2">
-            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 z-40 border border-white"><User className="w-4 h-4"/></div>
-            <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold z-30 border border-white">IP</div>
-            <div className="w-7 h-7 rounded-full bg-blue-800 flex items-center justify-center text-white text-[10px] font-bold z-20 border border-white">AG</div>
-            <div className="w-7 h-7 rounded-full bg-orange-400 flex items-center justify-center text-white text-[10px] font-bold z-10 border border-white">AG</div>
-            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-bold z-0 border border-white">AM</div>
-            <div className="w-7 h-7 rounded-full bg-teal-500 flex items-center justify-center text-white text-[10px] font-bold z-0 border border-white">AL</div>
-            <span className="text-sm text-gray-500 ml-3 pl-2">+27</span>
-         </div>
+         {user?.role !== 'SARO' && (
+           <div className="flex -space-x-2">
+              <div 
+                className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-2 border-white relative"
+                style={{ zIndex: 40 }}
+              >
+                <User className="w-4 h-4"/>
+              </div>
+              {displayUsers.map((u, idx) => (
+                <div 
+                  key={idx} 
+                  title={u.name}
+                  className={`w-7 h-7 rounded-full ${u.color} flex items-center justify-center text-white text-[10px] font-bold border-2 border-white relative`}
+                  style={{ zIndex: 30 - idx }}
+                >
+                  {u.initials}
+                </div>
+              ))}
+              {extraUsersCount > 0 && (
+                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 text-[11px] font-medium border-2 border-white relative z-0">
+                  +{extraUsersCount}
+                </div>
+              )}
+              {uniqueUsers.length === 0 && (
+                <div className="text-xs text-gray-400 pl-4 pt-1 font-medium italic">No active users</div>
+              )}
+           </div>
+         )}
          <div className="ml-2">
            <FilterDropdown />
          </div>

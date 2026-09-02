@@ -62,7 +62,7 @@ const VetRecords = () => {
   const records = useMemo(() => {
     if (!rawRecords) return [];
     return rawRecords.map(req => {
-      
+
       const vetName = req.User ? req.User.name : 'Unknown Vet';
       const vetInitials = getInitials(vetName);
       const vetColor = getColorForInitials(vetInitials);
@@ -88,21 +88,21 @@ const VetRecords = () => {
     // 1. Text Search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(m => 
-         (m.treatment_details && m.treatment_details.toLowerCase().includes(query)) || 
-         m.id.toLowerCase().includes(query) || 
-         m.vet.name.toLowerCase().includes(query) || 
-         m.animalType.toLowerCase().includes(query)
+      result = result.filter(m =>
+        (m.treatment_details && m.treatment_details.toLowerCase().includes(query)) ||
+        m.id.toLowerCase().includes(query) ||
+        m.vet.name.toLowerCase().includes(query) ||
+        m.animalType.toLowerCase().includes(query)
       );
     }
 
     // 2. Checkbox Filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
-       result = result.filter(m => {
-          if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
-          return true;
-       });
+      result = result.filter(m => {
+        if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
+        return true;
+      });
     }
 
     return result;
@@ -112,9 +112,9 @@ const VetRecords = () => {
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     filteredRecords.forEach(m => {
-       if (m.vet.name !== 'Unknown Vet' && !userMap.has(m.vet.name)) {
-          userMap.set(m.vet.name, m.vet);
-       }
+      if (m.vet.name !== 'Unknown Vet' && !userMap.has(m.vet.name)) {
+        userMap.set(m.vet.name, m.vet);
+      }
     });
     return Array.from(userMap.values());
   }, [filteredRecords]);
@@ -135,7 +135,7 @@ const VetRecords = () => {
             Overview / Vaccination & Medication
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            Vaccination & Medication 
+            Vaccination & Medication
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {filteredRecords.length}
             </span>
@@ -143,7 +143,7 @@ const VetRecords = () => {
         </div>
         <div>
           {user?.role === 'SARO' && (
-            <Link 
+            <Link
               to={`/dashboard/vet-records/create?type=${activeTab?.toLowerCase()}`}
               className="bg-[#0052cc] hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
             >
@@ -156,14 +156,13 @@ const VetRecords = () => {
       {/* Tabs / Toolbar */}
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
         {tabs.map(tab => (
-          <button 
+          <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${
-              activeTab === tab 
-                ? 'text-green-600 font-medium border-b-2 border-green-600' 
-                : 'hover:text-gray-900'
-            }`}
+            className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
+              ? 'text-green-600 font-medium border-b-2 border-green-600'
+              : 'hover:text-gray-900'
+              }`}
           >
             {tab}
           </button>
@@ -172,72 +171,72 @@ const VetRecords = () => {
 
       {/* Filters Toolbar */}
       <div className="px-6 py-3 flex items-center gap-3">
-         <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search records" 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
-            />
-         </div>
-         
-         <div className="flex -space-x-2 ml-4">
-            {displayUsers.map((user, idx) => (
-              <div 
-                key={idx} 
-                title={user.name}
-                className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
-              >
-                {user.initials}
-              </div>
-            ))}
-            {extraUsersCount > 0 && (
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
-                +{extraUsersCount}
-              </div>
-            )}
-            {uniqueUsers.length === 0 && (
-              <div className="text-xs text-gray-400 pl-4 font-medium italic">No active vets in current filter</div>
-            )}
-         </div>
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search records"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
+          />
+        </div>
 
-         <div className="ml-4 relative z-50">
-           <FilterDropdown 
-             selectedFilters={selectedFilters} 
-             onFilterChange={handleFilterChange} 
-             categories={['Animal']}
-             optionsMap={{
-               'Animal': [
-                 { id: 'COW', title: 'Cattle', subtitle: 'Cows, bulls, calves' },
-                 { id: 'GOAT', title: 'Goats', subtitle: '' },
-                 { id: 'SHEEP', title: 'Sheep', subtitle: '' },
-                 { id: 'PIG', title: 'Pigs', subtitle: '' },
-                 { id: 'DOG', title: 'Dogs', subtitle: '' }
-               ]
-             }}
-           />
-         </div>
-         <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
-         </button>
-         
-         <div className="flex-1"></div>
+        <div className="flex -space-x-2 ml-4">
+          {displayUsers.map((user, idx) => (
+            <div
+              key={idx}
+              title={user.name}
+              className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
+            >
+              {user.initials}
+            </div>
+          ))}
+          {extraUsersCount > 0 && (
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
+              +{extraUsersCount}
+            </div>
+          )}
+          {uniqueUsers.length === 0 && (
+            <div className="text-xs text-gray-400 pl-4 font-medium italic">No active vets in current filter</div>
+          )}
+        </div>
+
+        <div className="ml-4 relative z-50">
+          <FilterDropdown
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            categories={['Animal']}
+            optionsMap={{
+              'Animal': [
+                { id: 'COW', title: 'Cattle', subtitle: 'Cows, bulls, calves' },
+                { id: 'GOAT', title: 'Goats', subtitle: '' },
+                { id: 'SHEEP', title: 'Sheep', subtitle: '' },
+                { id: 'PIG', title: 'Pigs', subtitle: '' },
+                { id: 'DOG', title: 'Dogs', subtitle: '' }
+              ]
+            }}
+          />
+        </div>
+        <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
+        </button>
+
+        <div className="flex-1"></div>
       </div>
 
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-         <VetRecordsList 
-            records={filteredRecords.filter(r => 
-              activeTab === 'Vaccination' 
-                ? r.type === 'VACCINATION' || !r.type // fallback if type not set
-                : r.type === 'MEDICATION'
-            )} 
-            isLoading={isLoading} 
-            isError={isError} 
-            activeTab={activeTab}
-         />
+        <VetRecordsList
+          records={filteredRecords.filter(r =>
+            activeTab === 'Vaccination'
+              ? r.type === 'VACCINATION' || !r.type // fallback if type not set
+              : r.type === 'MEDICATION'
+          )}
+          isLoading={isLoading}
+          isError={isError}
+          activeTab={activeTab}
+        />
       </div>
     </div>
   );
