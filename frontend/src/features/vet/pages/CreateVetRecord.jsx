@@ -74,7 +74,7 @@ const CreateVetRecord = () => {
         const home = homesMap[homeKey];
         let animal = home.animals.find(a => a.animal_type === r.animal_type);
         if (!animal) {
-          animal = { id: Date.now() + Math.random(), animal_type: r.animal_type || 'COW', vaccines: [], doses: {} };
+          animal = { id: Date.now() + Math.random(), animal_type: r.animal_type || 'COW', ear_tag: r.animal_tag || '', vaccines: [], doses: {} };
           home.animals.push(animal);
         }
         
@@ -99,7 +99,7 @@ const CreateVetRecord = () => {
       id: Date.now(),
       owner_name: '', owner_phone: '', owner_nid: '',
       district: user?.district_id || '', sector: user?.sector_id || '', cell: '', village: '',
-      animals: [{ id: Date.now() + 1, animal_type: 'COW', vaccines: [], doses: {} }]
+      animals: [{ id: Date.now() + 1, animal_type: 'COW', ear_tag: '', vaccines: [], doses: {} }]
     }];
   });
 
@@ -164,7 +164,7 @@ const CreateVetRecord = () => {
   const addAnimalToHome = (homeId) => {
     setHomes(prev => prev.map(h => {
       if (h.id !== homeId) return h;
-      return { ...h, animals: [...h.animals, { id: Date.now(), animal_type: 'COW', vaccines: [], doses: {} }] };
+      return { ...h, animals: [...h.animals, { id: Date.now(), animal_type: 'COW', ear_tag: '', vaccines: [], doses: {} }] };
     }));
   };
 
@@ -230,7 +230,7 @@ const CreateVetRecord = () => {
             cell: h.cell,
             village: h.village,
             animal_type: a.animal_type,
-            animal_tag: a.id.toString(),
+            animal_tag: a.ear_tag || '',
             vaccines: vaccine,
             dose_given: doseInfo.given,
             damaged_dose: doseInfo.damaged,
@@ -348,7 +348,20 @@ const CreateVetRecord = () => {
                     <div className="text-base text-gray-800">Animal Type <span className="text-red-500">*</span></div>
                     <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(home.id, animal.id, 'animal_type', v)} options={[{value: 'COW', label: 'COW'}, {value: 'SHEEP', label: 'SHEEP'}, {value: 'GOAT', label: 'GOAT'}, {value: 'PIG', label: 'PIG'}, {value: 'DOG', label: 'DOG'}]} />
                   </div>
-                  
+
+                  <div className="space-y-2">
+                    <div className="text-base text-gray-800">Ear Tag (Animal ID) <span className="text-red-500">*</span></div>
+                    <input
+                      type="text"
+                      required
+                      value={animal.ear_tag || ''}
+                      onChange={(e) => handleMobileAnimalChange(home.id, animal.id, 'ear_tag', e.target.value)}
+                      className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors"
+                      placeholder="e.g. RW-BUG-2024-001"
+                      disabled={isView}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <div className="text-base text-gray-800">{recordType === 'VACCINATION' ? 'Vaccines' : 'Medication'} <span className="text-red-500">*</span></div>
                     <CustomMultiSelect 

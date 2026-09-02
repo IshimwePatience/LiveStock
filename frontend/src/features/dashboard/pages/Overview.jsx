@@ -66,11 +66,14 @@ const Overview = () => {
   });
 
   const { data: statsData } = useQuery({
-    queryKey: ['overview-stats'],
+    queryKey: ['overview-stats', user?.id, user?.role, user?.sector_id, user?.district_id],
     queryFn: async () => {
       const res = await api.get('/analytics/overview-stats');
       return res.data;
-    }
+    },
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const uniqueUsers = useMemo(() => {
@@ -204,39 +207,35 @@ const Overview = () => {
           <p className="text-sm text-gray-500 mb-6">Get a snapshot of the status of your work items. <span className="text-[#0052cc] hover:underline cursor-pointer">View all work items</span></p>
           
           <div className="flex-1 flex items-center">
-             {/* Donut Chart (SVG Mock) */}
+             {/* Donut Chart */}
              <div className="relative w-48 h-48 flex-shrink-0">
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                 {/* Open: 614 (~93%) - Light Blue */}
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray="233 251" />
-                 {/* Others - small slivers */}
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8b5cf6" strokeWidth="16" strokeDasharray="10 251" strokeDashoffset="-234" />
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray="5 251" strokeDashoffset="-245" />
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#2563eb" strokeWidth="16" strokeDasharray="2 251" strokeDashoffset="-250" />
+                 {/* Approved - Light Blue */}
+                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
+                 {/* Pending - Orange */}
+                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
+                 {/* Active - Green */}
+                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                 <span className="text-3xl font-black text-gray-900">657</span>
-                 <span className="text-xs text-gray-500">Total work item...</span>
+                 <span className="text-3xl font-black text-gray-900">{statsData?.statusOverview?.total || 0}</span>
+                 <span className="text-xs text-gray-500">Total Permits</span>
                </div>
              </div>
 
              {/* Legend */}
              <div className="ml-8 flex-1 overflow-y-auto max-h-[200px] text-xs text-gray-600 space-y-3 pr-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 bg-blue-600 mt-0.5"></div>
-                  <div>Waiting for integration review: 1</div>
+                  <div className="w-3 h-3 bg-[#f97316] mt-0.5"></div>
+                  <div>Pending Approval: {statsData?.statusOverview?.pending || 0}</div>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-3 h-3 bg-[#26b3d4] mt-0.5"></div>
-                  <div>Open: 614</div>
+                  <div>Approved: {statsData?.statusOverview?.approved || 0}</div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 bg-orange-500 mt-0.5"></div>
-                  <div>Development in progress: 6</div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 bg-green-500 mt-0.5"></div>
-                  <div>Integration review in progress: 1</div>
+                  <div className="w-3 h-3 bg-[#22c55e] mt-0.5"></div>
+                  <div>Active Trips: {statsData?.statusOverview?.active || 0}</div>
                 </div>
              </div>
           </div>
@@ -251,68 +250,87 @@ const Overview = () => {
           <p className="text-sm text-gray-500 mb-4">Stay up to date with what's happening across the space.</p>
           
           <div className="flex-1 overflow-y-auto text-sm pr-2">
-            <h4 className="font-bold text-gray-800 text-xs mb-3">Yesterday</h4>
+            <h4 className="font-bold text-gray-800 text-xs mb-3">Recently Updated Permits</h4>
             
-            <div className="flex gap-3 mb-5">
-              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">DN</div>
-              <div>
-                <div className="text-gray-700 leading-tight">
-                  <span className="text-blue-600 hover:underline cursor-pointer font-medium">Dr. Niyonzima</span> approved <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-green-500 text-xs">✓</span> <span className="text-blue-600 hover:underline cursor-pointer">PERMIT-0932: District Movement for 5 Cows</span> <span className="border border-green-200 text-[10px] uppercase px-1 rounded bg-green-50 text-green-700">Approved</span></span>
+            {statsData?.recentActivity?.length > 0 ? (
+              statsData.recentActivity.map((activity) => (
+                <div key={activity.id} className="flex gap-3 mb-5">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${getColorForInitials(getInitials(activity.owner_name))}`}>
+                    {getInitials(activity.owner_name)}
+                  </div>
+                  <div>
+                    <div className="text-gray-700 leading-tight">
+                      <span className="text-blue-600 hover:underline cursor-pointer font-medium">{activity.owner_name || 'System'}</span> 
+                      {' '}updated status to{' '}
+                      <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white">
+                        <span className="text-blue-600 hover:underline cursor-pointer">{activity.permit_number}</span> 
+                        <span className={`border text-[10px] uppercase px-1 rounded ${activity.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                          {activity.status}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">{new Date(activity.updatedAt).toLocaleString()}</div>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 mt-1">about 18 hours ago</div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mb-5">
-              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">MJ</div>
-              <div>
-                <div className="text-gray-700 leading-tight">
-                  <span className="text-blue-600 hover:underline cursor-pointer font-medium">Mugisha Jean</span> updated field "status" on <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-orange-500 text-xs">!</span> <span className="text-blue-600 hover:underline cursor-pointer">VET-RECORDS: Vaccination campaign summary</span> <span className="border border-orange-200 text-[10px] uppercase px-1 rounded bg-orange-50 text-orange-700">Pending Review</span></span>
-                </div>
-                <div className="text-xs text-gray-400 mt-1">1 day ago</div>
-              </div>
-            </div>
+              ))
+            ) : (
+              <p className="text-xs text-gray-400">No recent activity to show.</p>
+            )}
           </div>
         </div>
 
-        {/* Widget 3: Priority breakdown */}
+        {/* Widget 3: Priority breakdown -> Animal Type Breakdown */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Priority breakdown</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a holistic view of how work is being prioritized. <span className="text-green-600 hover:underline cursor-pointer">How to manage priorities for spaces</span></p>
+          <h3 className="font-bold text-gray-900">Animal Breakdown</h3>
+          <p className="text-sm text-gray-500 mb-6">Get a holistic view of the livestock moving in your area. <span className="text-green-600 hover:underline cursor-pointer">Manage animal types</span></p>
           
           <div className="flex-1 flex flex-col justify-end relative mt-4">
              {/* Y-axis lines & labels */}
              <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8">
-               <div className="flex items-center gap-2"><span className="w-6 text-right">600</span><div className="h-px bg-gray-100 flex-1"></div></div>
-               <div className="flex items-center gap-2"><span className="w-6 text-right">400</span><div className="h-px bg-gray-100 flex-1"></div></div>
-               <div className="flex items-center gap-2"><span className="w-6 text-right">200</span><div className="h-px bg-gray-100 flex-1"></div></div>
+               <div className="flex items-center gap-2"><span className="w-6 text-right">Max</span><div className="h-px bg-gray-100 flex-1"></div></div>
+               <div className="flex items-center gap-2"><span className="w-6 text-right">High</span><div className="h-px bg-gray-100 flex-1"></div></div>
+               <div className="flex items-center gap-2"><span className="w-6 text-right">Med</span><div className="h-px bg-gray-100 flex-1"></div></div>
                <div className="flex items-center gap-2"><span className="w-6 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
              </div>
              
-             {/* Bars (mocked height) */}
+             {/* Bars (Dynamic height) */}
              <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
-                <div className="w-12 bg-gray-400 h-[1%]"></div>
-                <div className="w-12 bg-gray-400 h-[2%]"></div>
-                <div className="w-12 bg-gray-400 h-[8%]"></div>
-                <div className="w-12 bg-[#8c929d] h-[95%]"></div>
-                <div className="w-12 bg-gray-400 h-[1%]"></div>
+                {(() => {
+                  const animalDist = statsData?.animalDistribution || {};
+                  const cowCount = animalDist['COW'] || animalDist['Cow'] || animalDist['Inka (Cow)'] || 0;
+                  const goatCount = animalDist['Ihene (Goat)'] || animalDist['Goat'] || animalDist['GOAT'] || 0;
+                  const sheepCount = animalDist['Intama (Sheep)'] || animalDist['Sheep'] || 0;
+                  const pigCount = animalDist['Ingurube (Pig)'] || animalDist['Pig'] || 0;
+                  const poultryCount = animalDist['Inkoko (Chicken)'] || animalDist['Chicken'] || 0;
+                  const maxAnimalCount = Math.max(cowCount, goatCount, sheepCount, pigCount, poultryCount, 1);
+                  
+                  return (
+                    <>
+                      <div className="w-12 bg-[#8c929d]" style={{ height: `${Math.max(1, (cowCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (goatCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (sheepCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div className="w-12 bg-[#8c929d]" style={{ height: `${Math.max(1, (pigCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (poultryCount / maxAnimalCount) * 100)}%` }}></div>
+                    </>
+                  );
+                })()}
              </div>
 
              {/* X-axis legends */}
              <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                <div className="flex items-center gap-1"><span className="w-3 h-1 bg-red-500"></span> Blocker</div>
-                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> Critical</div>
-                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-orange-500" /> Major</div>
-                <div className="flex items-center gap-1"><ChevronDown className="w-3 h-3 text-blue-500" /> Minor</div>
-                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Trivial</div>
+                <div className="flex items-center gap-1"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
+                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> Goats</div>
+                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-orange-500" /> Sheep</div>
+                <div className="flex items-center gap-1"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
+                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
              </div>
           </div>
         </div>
 
-        {/* Widget 4: Types of work */}
+        {/* Widget 4: Types of work -> Transport Types */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Types of work</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a breakdown of work items by their types. <span className="text-green-600 hover:underline cursor-pointer">View all items</span></p>
+          <h3 className="font-bold text-gray-900">Transport Methods</h3>
+          <p className="text-sm text-gray-500 mb-6">Get a breakdown of permits by transport type. <span className="text-green-600 hover:underline cursor-pointer">View all logistics</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
             <div className="w-32">Type</div>
@@ -320,153 +338,127 @@ const Overview = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-             <div className="flex items-center">
-                <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <ArrowUp className="w-4 h-4 text-green-500" /> Improvement
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[60%] flex items-center px-2 text-xs text-white font-medium">60%</div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-red-500 text-sm leading-none">⚠️</span> Bug
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[26%] flex items-center px-2 text-xs text-white font-medium">26%</div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-green-500 text-lg leading-none">+</span> New Feature
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[10%]"></div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <CheckSquare className="w-4 h-4 text-blue-500" /> Task
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[2%]"></div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-purple-500 text-lg leading-none">⚡</span> Epic
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[1%]"></div>
-                </div>
-             </div>
+             {(() => {
+                const transportDist = statsData?.transportDistribution || {};
+                const totalTransport = Object.values(transportDist).reduce((a, b) => a + b, 0) || 1;
+                const transportsSorted = Object.entries(transportDist).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                
+                const icons = [
+                  <ArrowUp className="w-4 h-4 text-green-500" />,
+                  <span className="text-red-500 text-sm leading-none">⚠️</span>,
+                  <span className="text-green-500 text-lg leading-none">+</span>,
+                  <CheckSquare className="w-4 h-4 text-blue-500" />,
+                  <span className="text-purple-500 text-sm leading-none">⚡</span>
+                ];
+
+                if (transportsSorted.length === 0) {
+                  return <p className="text-xs text-gray-400">No transport data available.</p>;
+                }
+
+                return transportsSorted.map(([type, count], index) => {
+                  const pct = Math.round((count / totalTransport) * 100);
+                  return (
+                    <div key={type} className="flex items-center">
+                       <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate" title={type}>
+                         {icons[index % icons.length]} {type}
+                       </div>
+                       <div className="flex-1 h-5 bg-gray-200 flex">
+                          <div className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} flex items-center px-2 text-xs text-white font-medium overflow-hidden`} style={{ width: `${Math.max(1, pct)}%` }}>
+                            {pct}%
+                          </div>
+                       </div>
+                    </div>
+                  );
+                });
+             })()}
           </div>
         </div>
 
-        {/* Widget 5: Team workload */}
+        {/* Widget 5: Team workload -> District Activity */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Team workload</h3>
-          <p className="text-sm text-gray-500 mb-6">Monitor the capacity of your team. <span className="text-green-600 hover:underline cursor-pointer">Reassign work items to get the right balance</span></p>
+          <h3 className="font-bold text-gray-900">Regional Workload</h3>
+          <p className="text-sm text-gray-500 mb-6">Monitor the vaccination capacity by region. <span className="text-green-600 hover:underline cursor-pointer">Reassign staff to get the right balance</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-            <div className="w-40">Assignee</div>
+            <div className="w-40">Region</div>
             <div>Work distribution</div>
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-             <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-sm text-gray-700">
-                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><User className="w-3.5 h-3.5"/></div>
-                  Unassigned
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[81%] flex items-center px-2 text-xs text-white font-medium">81%</div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">DP</div>
-                  Dani Palou
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[8%]"></div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
-                  <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold">PF</div>
-                  Pau Ferrer
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[6%]"></div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-bold">JL</div>
-                  Juan Leyva
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[4%]"></div>
-                </div>
-             </div>
-             <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
-                  <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-white text-[10px] font-bold">AS</div>
-                  Alfonso Salces
-                </div>
-                <div className="flex-1 h-5 bg-gray-200 flex">
-                   <div className="h-full bg-[#8c929d] w-[1%]"></div>
-                </div>
-             </div>
+             {(() => {
+                const distVets = statsData?.districtVaccination || {};
+                const totalVets = Object.values(distVets).reduce((a, b) => a + b, 0) || 1;
+                const sortedVets = Object.entries(distVets).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                
+                if (sortedVets.length === 0) {
+                  return <p className="text-xs text-gray-400">No regional data available.</p>;
+                }
+
+                return sortedVets.map(([region, count], index) => {
+                  const pct = Math.round((count / totalVets) * 100);
+                  const colors = ['bg-blue-600', 'bg-orange-500', 'bg-teal-500', 'bg-purple-500', 'bg-pink-500'];
+                  return (
+                    <div key={region} className="flex items-center">
+                       <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
+                         <div className={`w-6 h-6 rounded-full ${colors[index % colors.length]} flex items-center justify-center text-white text-[10px] font-bold`}>
+                           {region.substring(0, 2).toUpperCase()}
+                         </div>
+                         {region}
+                       </div>
+                       <div className="flex-1 h-5 bg-gray-200 flex">
+                          <div className="h-full bg-[#8c929d] flex items-center px-2 text-xs text-white font-medium overflow-hidden" style={{ width: `${Math.max(1, pct)}%` }}>
+                            {pct > 5 ? `${pct}%` : ''}
+                          </div>
+                       </div>
+                    </div>
+                  );
+                });
+             })()}
           </div>
         </div>
 
-        {/* Widget 6: Epic progress */}
+        {/* Widget 6: Epic progress -> Vaccine Usage */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Epic progress</h3>
-          <p className="text-sm text-gray-500 mb-3">See how your epics are progressing at a glance. <span className="text-green-600 hover:underline cursor-pointer">View all epics</span></p>
+          <h3 className="font-bold text-gray-900">Vaccine Usage</h3>
+          <p className="text-sm text-gray-500 mb-3">See how your vaccines and medications are progressing at a glance. <span className="text-green-600 hover:underline cursor-pointer">View inventory</span></p>
           
           <div className="flex items-center gap-4 text-xs text-gray-500 mb-4 px-2">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#65a30d]"></div> Done</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-blue-500"></div> In progress</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#8c929d]"></div> To do</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#65a30d]"></div> Given</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-400"></div> Damaged</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#8c929d]"></div> Undocumented</div>
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-5 px-2 pr-4">
-             
-             <div>
-               <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
-                  <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4255 Support TinyMCE as the Rich Text Editor of the app</span>
-               </div>
-               <div className="h-5 w-full bg-gray-100 flex">
-                  <div className="h-full bg-[#65a30d] w-[19%] flex items-center px-1.5 text-white text-xs font-medium">19%</div>
-                  <div className="h-full bg-[#8c929d] w-[81%] flex items-center px-1.5 text-white text-xs font-medium">81%</div>
-               </div>
-             </div>
-             
-             <div>
-               <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
-                  <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4968 Mobile app customisation improvements</span>
-               </div>
-               <div className="h-5 w-full bg-gray-100 flex">
-                  <div className="h-full bg-[#65a30d] w-[100%] flex items-center px-1.5 text-white text-xs font-medium">100%</div>
-               </div>
-             </div>
+             {(() => {
+                const vaccines = statsData?.vaccineUsage || [];
+                
+                if (vaccines.length === 0) {
+                  return <p className="text-xs text-gray-400">No vaccine usage data available.</p>;
+                }
 
-             <div>
-               <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
-                  <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4878 Fix Moodle app behat flaky failures</span>
-               </div>
-               <div className="h-5 w-full bg-gray-100 flex">
-                  <div className="h-full bg-[#65a30d] w-[13%] flex items-center px-1.5 text-white text-xs font-medium overflow-hidden">13%</div>
-                  <div className="h-full bg-[#8c929d] w-[87%] flex items-center px-1.5 text-white text-xs font-medium">88%</div>
-               </div>
-             </div>
-
+                return vaccines.slice(0, 5).map((vac, index) => {
+                  const total = (vac.given + vac.damaged) || 1;
+                  const givenPct = Math.round((vac.given / total) * 100);
+                  const damagedPct = Math.round((vac.damaged / total) * 100);
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
+                         <span className="text-purple-500 text-sm leading-none">⚡</span> 
+                         <span className="text-gray-900 hover:underline cursor-pointer truncate">VACCINE: {vac.name}</span>
+                      </div>
+                      <div className="h-5 w-full bg-gray-100 flex">
+                         <div className="h-full bg-[#65a30d] flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, givenPct)}%` }}>
+                           {givenPct > 5 ? `${givenPct}%` : ''}
+                         </div>
+                         <div className="h-full bg-red-400 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, damagedPct)}%` }}>
+                           {damagedPct > 5 ? `${damagedPct}%` : ''}
+                         </div>
+                      </div>
+                    </div>
+                  );
+                });
+             })()}
           </div>
         </div>
 

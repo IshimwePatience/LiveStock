@@ -24,6 +24,13 @@ class VetService {
         district: r.district || user.district_id,
         sector: r.sector || user.sector_id
       }));
+
+      // Validate all records have animal_tag
+      const missing = recordsToCreate.filter(r => !r.animal_tag || r.animal_tag.trim() === '');
+      if (missing.length > 0) {
+        throw new Error(`Ear Tag is required for all animals. Missing for: ${missing.map(r => r.animal_type || 'unknown animal').join(', ')}`);
+      }
+
       return await VetRecord.bulkCreate(recordsToCreate);
     }
 

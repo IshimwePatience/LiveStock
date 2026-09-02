@@ -5,7 +5,7 @@ const VetRecord = sequelize.define('VetRecord', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   
   // Existing fields (make optional to support both flows)
-  animal_tag: { type: DataTypes.STRING, allowNull: true },
+  animal_tag: { type: DataTypes.STRING, allowNull: false },
   trip_id: { type: DataTypes.UUID, allowNull: true },
   type: { type: DataTypes.STRING, allowNull: true, defaultValue: 'VACCINATION' },
   
