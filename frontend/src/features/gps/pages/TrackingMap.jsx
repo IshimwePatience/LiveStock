@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -603,11 +603,10 @@ const TrackingMap = () => {
                     <span className="font-medium text-gray-900">
                       {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
                     </span>
-                    <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${
-                      selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
-                      selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
+                    <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
+                        selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-600'
+                      }`}>
                       {selectedDevice.status === 'unknown' ? 'STANDBY' : selectedDevice.status}
                     </span>
                   </div>

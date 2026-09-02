@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { User, ChevronDown, Syringe, Clipboard, ArrowUp, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../../../lib/api';
+import toast from 'react-hot-toast';
 
-const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
+const VetRecordsList = ({ records, isLoading, isError, activeTab, user }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
@@ -54,10 +56,17 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
                 checked={selected.length === records.length && records.length > 0}
               />
             </th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black">Record ID & Details</th>
+            {user?.role === 'RAB' && (
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">District</th>
+            )}
+            {(user?.role === 'DARO' || user?.role === 'RAB') && (
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Sector</th>
+            )}
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Veterinarian</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Animal Type</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Diagnosis</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Home</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Animals</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black">Vaccines Used</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-24">Doses</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Date</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
           </tr>
@@ -73,13 +82,16 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
                   onChange={() => toggleSelect(item.id)}
                 />
               </td>
-              <td className="py-2 px-4">
-                <div className="flex items-center gap-2">
-                  {getTypeIcon(item.type)}
-                  <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.id}</span>
-                  <span className="text-black truncate max-w-sm font-medium text-[13px]">{item.treatment_details || 'Routine checkup'}</span>
-                </div>
-              </td>
+              {user?.role === 'RAB' && (
+                <td className="py-2 px-4">
+                  <span className="text-black font-medium text-[13px]">{item.district}</span>
+                </td>
+              )}
+              {(user?.role === 'DARO' || user?.role === 'RAB') && (
+                <td className="py-2 px-4">
+                  <span className="text-black font-medium text-[13px]">{item.sector}</span>
+                </td>
+              )}
               <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
                   {item.vet.initials === 'U' ? (
@@ -95,12 +107,16 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
                 </div>
               </td>
               <td className="py-2 px-4">
-                <div className="flex items-center gap-2 text-black font-medium text-[13px]">
-                  {item.animalType}
-                </div>
+                <span className="text-black font-medium text-[13px]">{item.home}</span>
               </td>
               <td className="py-2 px-4">
-                <span className="text-black font-medium text-[13px]">{item.diagnosis || '-'}</span>
+                <span className="text-black font-medium text-[13px]">{item.animals_vaccinated}</span>
+              </td>
+              <td className="py-2 px-4">
+                <span className="text-black font-medium text-[13px] truncate max-w-[200px] block" title={item.vaccines_used}>{item.vaccines_used}</span>
+              </td>
+              <td className="py-2 px-4">
+                <span className="text-black font-medium text-[13px]">{item.doses}</span>
               </td>
               <td className="py-2 px-4">
                 <span className="text-black font-medium text-[13px]">{new Date(item.date).toLocaleDateString()}</span>
@@ -114,18 +130,44 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab }) => {
                 </button>
                 {openActionDropdown === item.id && (
                   <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                    <button 
-                      onClick={() => setOpenActionDropdown(null)}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                    >
-                      View Record
-                    </button>
-                    <button 
-                      onClick={() => setOpenActionDropdown(null)}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                    >
-                      Edit Record
-                    </button>
+                    {(user?.role === 'DARO' || user?.role === 'RAB') ? (
+                      <Link 
+                        to={`/dashboard/vet-records/create?type=${item.type.toLowerCase()}&view=true`}
+                        state={{ rawRecords: item.rawRecords }}
+                        onClick={() => setOpenActionDropdown(null)}
+                        className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors block"
+                      >
+                        View Details
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to={`/dashboard/vet-records/create?type=${item.type.toLowerCase()}&edit=true`}
+                          state={{ rawRecords: item.rawRecords }}
+                          onClick={() => setOpenActionDropdown(null)}
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors block"
+                        >
+                          Edit Record
+                        </Link>
+                        <button 
+                          onClick={async () => {
+                            if(window.confirm('Are you sure you want to delete this record?')) {
+                              try {
+                                await api.post('/vet/bulk', { records: [], deleteIds: item.rawRecords.map(r => r.id) });
+                                toast.success('Record deleted successfully');
+                                window.location.reload();
+                              } catch(err) {
+                                toast.error('Failed to delete record');
+                              }
+                            }
+                            setOpenActionDropdown(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </td>

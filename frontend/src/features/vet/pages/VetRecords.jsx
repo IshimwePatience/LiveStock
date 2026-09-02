@@ -61,24 +61,69 @@ const VetRecords = () => {
   // Transform backend data to match the layout
   const records = useMemo(() => {
     if (!rawRecords) return [];
-    return rawRecords.map(req => {
 
-      const vetName = req.User ? req.User.name : 'Unknown Vet';
+    const grouped = {};
+    rawRecords.forEach(req => {
+      const timeKey = new Date(req.createdAt).getTime().toString();
+      if (!grouped[timeKey]) grouped[timeKey] = [];
+      grouped[timeKey].push(req);
+    });
+
+    return Object.entries(grouped).map(([timeKey, group]) => {
+      const firstReq = group[0];
+      const vetName = firstReq.Veterinarian ? firstReq.Veterinarian.name : 'Unknown Vet';
       const vetInitials = getInitials(vetName);
       const vetColor = getColorForInitials(vetInitials);
 
+      const animalCounts = {};
+      const uniqueAnimals = new Set();
+      const vaccinesUsed = new Set();
+      let totalDoses = 0;
+
+      group.forEach(req => {
+        const type = req.animal_type || 'Unknown';
+        const tag = req.animal_tag;
+        
+        if (tag) {
+           const typeTag = `${type}-${tag}`;
+           if (!uniqueAnimals.has(typeTag)) {
+             uniqueAnimals.add(typeTag);
+             animalCounts[type] = (animalCounts[type] || 0) + 1;
+           }
+        } else {
+           // fallback for older records: assume 1 animal per type to prevent 4x overcounting
+           const fallbackTag = `${type}-legacy`;
+           if (!uniqueAnimals.has(fallbackTag)) {
+             uniqueAnimals.add(fallbackTag);
+             animalCounts[type] = (animalCounts[type] || 0) + 1;
+           }
+        }
+
+        if (req.vaccines) vaccinesUsed.add(req.vaccines);
+        if (req.dose_given) totalDoses += parseInt(req.dose_given);
+      });
+
+      const animalTypeStr = Object.entries(animalCounts).map(([type, count]) => `${count} ${type}`).join(', ');
+      const vaccinesStr = Array.from(vaccinesUsed).join(', ');
+      
+      const typeStr = firstReq.type || 'VACCINATION';
+
       return {
-        id: `VET-${req.id.substring(0, 8).toUpperCase()}`,
-        dbId: req.id,
-        type: req.vaccines ? 'VACCINATION' : 'TREATMENT',
-        filterType: req.vaccines ? 'VACCINATION' : 'TREATMENT',
-        treatment_details: req.antibiotics || req.vaccines || 'Routine checkup',
+        id: `VET-${firstReq.id.substring(0, 8).toUpperCase()}`,
+        groupId: timeKey,
+        rawRecords: group,
+        type: typeStr,
+        filterType: typeStr,
+        home: firstReq.owner_name || firstReq.owner_phone || 'Unknown Home',
+        district: firstReq.district || '-',
+        sector: firstReq.sector || '-',
         vet: { name: vetName, initials: vetInitials, color: vetColor },
-        animalType: req.animal_tag || 'Unknown',
-        diagnosis: '-',
-        date: req.createdAt
+        animals_vaccinated: animalTypeStr || '0',
+        vaccines_used: vaccinesStr || '-',
+        doses: totalDoses,
+        date: firstReq.createdAt
       };
-    });
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [rawRecords]);
 
   // Apply Search Filter & Checkbox Filters
@@ -236,6 +281,7 @@ const VetRecords = () => {
           isLoading={isLoading}
           isError={isError}
           activeTab={activeTab}
+          user={user}
         />
       </div>
     </div>

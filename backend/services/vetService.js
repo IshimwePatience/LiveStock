@@ -14,6 +14,10 @@ class VetService {
     
     // Support bulk creation for home vaccinations
     if (data.records && Array.isArray(data.records)) {
+      if (data.deleteIds && Array.isArray(data.deleteIds) && data.deleteIds.length > 0) {
+        await VetRecord.destroy({ where: { id: data.deleteIds, saro_id: user.id } });
+      }
+
       const recordsToCreate = data.records.map(r => ({
         ...r,
         saro_id: user.id,
