@@ -29,13 +29,17 @@ class TraccarService {
       activeTrips.forEach(trip => {
         const req = trip.MovementRequest;
         
-        const isOriginDistrict = user.role === 'DARO' && req.origin_district === user.district_id;
-        const isDestDistrict = user.role === 'DARO' && req.dest_district === user.district_id;
-        const isOriginSector = user.role === 'SARO' && req.origin_sector === user.sector_id;
-        const isDestSector = user.role === 'SARO' && req.dest_sector === user.sector_id;
         const isInitiator = req.initiator_id === user.id;
+        const isApprover = req.approver_id === user.id;
+        
+        let isReceiver = false;
+        if (req.type === 'DISTRICT_TO_DISTRICT') {
+           isReceiver = user.role === 'DARO' && user.district_id && req.dest_district === user.district_id;
+        } else if (req.type === 'SECTOR_TO_SECTOR') {
+           isReceiver = user.role === 'SARO' && user.sector_id && req.dest_sector === user.sector_id;
+        }
 
-        if (user.role === 'RAB' || isOriginDistrict || isDestDistrict || isOriginSector || isDestSector || isInitiator) {
+        if (user.role === 'RAB' || isInitiator || isApprover || isReceiver) {
           if (trip.plate_number) {
             allowedPlateNumbers.add(trip.plate_number.toUpperCase());
           }
