@@ -1,6 +1,65 @@
 const { MovementRequest, Trip, Case, VetRecord, sequelize } = require('../models');
 
 class AnalyticsService {
+  async getOverviewStats(user) {
+    const { Op } = require('sequelize');
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+    let whereClause = {};
+    if (user.role === 'SARO') {
+      whereClause = {
+        [Op.or]: [
+          { origin_sector: user.sector_id },
+          { dest_sector: user.sector_id }
+        ]
+      };
+    } else if (user.role === 'DARO') {
+      whereClause = {
+        [Op.or]: [
+          { origin_district: user.district_id },
+          { dest_district: user.district_id }
+        ]
+      };
+    }
+
+    const created = await MovementRequest.count({
+      where: {
+        ...whereClause,
+        createdAt: { [Op.gte]: sevenDaysAgo }
+      }
+    });
+
+    const completed = await MovementRequest.count({
+      where: {
+        ...whereClause,
+        status: 'COMPLETED',
+        updatedAt: { [Op.gte]: sevenDaysAgo }
+      }
+    });
+
+    const updated = await MovementRequest.count({
+      where: {
+        ...whereClause,
+        updatedAt: { [Op.gte]: sevenDaysAgo }
+      }
+    });
+
+    const dueSoon = await MovementRequest.count({
+      where: {
+        ...whereClause,
+        status: { [Op.in]: ['APPROVED', 'ACTIVE'] },
+        valid_until: { [Op.between]: [new Date(), sevenDaysFromNow] }
+      }
+    });
+
+    return { created, completed, updated, dueSoon };
+  }
+
   async getDashboardStats(user) {
     if (user.role !== 'RAB') {
       throw new Error('Only RAB can access the national dashboard');

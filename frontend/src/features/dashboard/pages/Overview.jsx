@@ -65,6 +65,14 @@ const Overview = () => {
     }
   });
 
+  const { data: statsData } = useQuery({
+    queryKey: ['overview-stats'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/overview-stats');
+      return res.data;
+    }
+  });
+
   const uniqueUsers = useMemo(() => {
     if (!systemUsers) return [];
     let filtered = [];
@@ -150,7 +158,7 @@ const Overview = () => {
              <CheckCircle2 className="w-5 h-5 text-gray-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">0</span> completed</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.completed || 0}</span> completed</div>
              <div className="text-xs text-gray-500">in the last 7 days</div>
            </div>
         </div>
@@ -160,7 +168,7 @@ const Overview = () => {
              <Edit2 className="w-5 h-5 text-gray-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">26</span> updated</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.updated || 0}</span> updated</div>
              <div className="text-xs text-gray-500">in the last 7 days</div>
            </div>
         </div>
@@ -170,7 +178,7 @@ const Overview = () => {
              <CheckSquare className="w-5 h-5 text-gray-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">2</span> created</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.created || 0}</span> created</div>
              <div className="text-xs text-gray-500">in the last 7 days</div>
            </div>
         </div>
@@ -180,7 +188,7 @@ const Overview = () => {
              <Calendar className="w-5 h-5 text-gray-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">0</span> due soon</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.dueSoon || 0}</span> due soon</div>
              <div className="text-xs text-gray-500">in the next 7 days</div>
            </div>
         </div>
