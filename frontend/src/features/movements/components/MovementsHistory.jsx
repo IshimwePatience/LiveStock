@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FileText, CheckCircle, Clock, User, ArrowRight } from 'lucide-react';
 
 const MovementsHistory = ({ movements, isLoading }) => {
@@ -105,3 +105,4 @@ const MovementsHistory = ({ movements, isLoading }) => {
 };
 
 export default MovementsHistory;
+

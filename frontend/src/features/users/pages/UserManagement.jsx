@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { Users, UserPlus, Search, Edit2, Trash2, Power, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
@@ -92,7 +92,7 @@ const UserManagement = () => {
 
   const getColorForInitials = (initials) => {
     if (initials === 'U') return 'bg-gray-400';
-    const colors = ['bg-blue-600', 'bg-orange-500', 'bg-green-600', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
+    const colors = ['bg-blue-600', 'bg-orange-500', 'bg-[#0052cc]', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
     let hash = 0;
     for (let i = 0; i < initials.length; i++) {
       hash = initials.charCodeAt(i) + ((hash << 5) - hash);
@@ -273,7 +273,7 @@ const UserManagement = () => {
               setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
             Create User
           </button>
@@ -517,7 +517,7 @@ const UserManagement = () => {
 
                 <div className="pt-4 pb-6 flex justify-end gap-3 mt-2">
                   <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Cancel</button>
-                  <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition disabled:opacity-50">
+                  <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-[#0052cc] hover:bg-[#0047b3] rounded transition disabled:opacity-50">
                     {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Create')}
                   </button>
                 </div>

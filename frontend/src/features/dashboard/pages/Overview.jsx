@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Info, CheckCircle2, Edit2, CheckSquare, Calendar, Maximize2, 
   ArrowUp, ArrowDown, ListFilter, User, ChevronDown
@@ -7,39 +8,55 @@ import {
 import FilterDropdown from '../../../components/ui/FilterDropdown';
 
 const Overview = () => {
+  const navigate = useNavigate();
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
+  
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const firstName = user?.name ? user.name.split(' ')[0] : 'User';
+  
+  const hour = new Date().getHours();
+  let greeting = 'Good evening';
+  if (hour < 12) greeting = 'Good morning';
+  else if (hour < 18) greeting = 'Good afternoon';
+
+  let roleMessage = "Here's what's happening in your workspace today. Check out the latest reports.";
+  let roleLinkText = "View Reports";
+  let roleLinkHref = "/dashboard/reports";
+  
+  if (user?.role === 'SARO') {
+    roleMessage = "You have new sector-level permit requests waiting for review. Ensure all local livestock movements are compliant.";
+    roleLinkText = "Review Permits";
+    roleLinkHref = "/dashboard/movements";
+  } else if (user?.role === 'DARO') {
+    roleMessage = "Review cross-district movement permits and monitor district-level outbreaks.";
+    roleLinkText = "District Overview";
+    roleLinkHref = "/dashboard/movements";
+  } else if (user?.role === 'admin' || user?.role === 'SuperAdmin') {
+    roleMessage = "System health is optimal. Monitor global livestock tracking statistics and user activities.";
+    roleLinkText = "Go to Admin Panel";
+    roleLinkHref = "/dashboard/users";
+  }
+
   return (
     <div className="flex flex-col h-full bg-white text-gray-800 p-6 overflow-x-hidden">
       
       {/* Banner */}
-      <div className="bg-[#eff4fe] rounded-lg p-5 flex justify-between items-center mb-6 border border-blue-100">
-        <div className="flex gap-4">
-           <Info className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-           <div>
-             <h3 className="font-bold text-gray-900 mb-1">Customize your Reports view to suit your space.</h3>
-             <p className="text-sm text-gray-600 mb-2">Head to the Reports tab to easily customize charts and widgets for a dashboard tailored to your space.</p>
-             <div className="flex items-center gap-4 text-sm text-green-600 font-medium">
-               <span className="cursor-pointer hover:underline">Take me to Reports</span>
-               <span className="cursor-pointer hover:underline">Dismiss</span>
+      {isBannerVisible && (
+        <div className="bg-[#eff4fe] rounded-lg p-5 flex justify-between items-center mb-6 border border-blue-100">
+          <div className="flex gap-4">
+             <Info className="w-5 h-5 text-[#0052cc] shrink-0 mt-0.5" />
+             <div>
+               <h3 className="font-bold text-gray-900 mb-1">{greeting}, {firstName}!</h3>
+               <p className="text-sm text-gray-600 mb-2">{roleMessage}</p>
+               <div className="flex items-center gap-4 text-sm text-[#0052cc] font-medium">
+                 <span className="cursor-pointer hover:underline" onClick={() => navigate(roleLinkHref)}>{roleLinkText}</span>
+                 <span className="cursor-pointer hover:underline" onClick={() => setIsBannerVisible(false)}>Dismiss</span>
+               </div>
              </div>
-           </div>
+          </div>
         </div>
-        <div className="hidden md:flex gap-2">
-           {/* Mock Illustration graphic */}
-           <div className="flex gap-1 relative">
-             <div className="w-20 h-16 bg-white rounded shadow-sm border border-gray-200 flex items-end p-2 gap-1 rotate-[-2deg]">
-                <div className="w-3 bg-orange-400 h-2/3"></div>
-                <div className="w-3 bg-purple-500 h-full"></div>
-                <div className="w-3 bg-green-500 h-1/2"></div>
-             </div>
-             <div className="w-20 h-16 bg-white rounded shadow-sm border border-gray-200 flex items-center justify-center opacity-50 z-0">
-                <span className="text-gray-300 font-bold text-xl">+</span>
-             </div>
-             <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-xl shadow-lg border border-gray-100 flex items-center justify-center rotate-12 z-10">
-                <div className="w-6 h-6 rounded-full border-4 border-blue-600 border-t-green-500 border-r-green-500"></div>
-             </div>
-           </div>
-        </div>
-      </div>
+      )}
 
       {/* Filters Toolbar */}
       <div className="flex items-center gap-3 mb-6 relative z-50">
@@ -106,7 +123,7 @@ const Overview = () => {
         {/* Widget 1: Status Overview */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Status overview</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a snapshot of the status of your work items. <span className="text-green-600 hover:underline cursor-pointer">View all work items</span></p>
+          <p className="text-sm text-gray-500 mb-6">Get a snapshot of the status of your work items. <span className="text-[#0052cc] hover:underline cursor-pointer">View all work items</span></p>
           
           <div className="flex-1 flex items-center">
              {/* Donut Chart (SVG Mock) */}
@@ -162,7 +179,7 @@ const Overview = () => {
               <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">ML</div>
               <div>
                 <div className="text-gray-700 leading-tight">
-                  <span className="text-green-600 hover:underline cursor-pointer font-medium">Marie-Josée Leblanc</span> created <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-red-500 text-xs">☀</span> <span className="text-green-600 hover:underline cursor-pointer">MOBILE-5126: removing mod/wiki:createpage capa bility is not considered in Moodle mobile app</span> <span className="border border-gray-200 text-[10px] uppercase px-1 rounded bg-gray-50 text-gray-500">Open</span></span>
+                  <span className="text-green-600 hover:underline cursor-pointer font-medium">Marie-JosÃ©e Leblanc</span> created <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white"><span className="text-red-500 text-xs">â˜€</span> <span className="text-green-600 hover:underline cursor-pointer">MOBILE-5126: removing mod/wiki:createpage capa bility is not considered in Moodle mobile app</span> <span className="border border-gray-200 text-[10px] uppercase px-1 rounded bg-gray-50 text-gray-500">Open</span></span>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">about 18 hours ago</div>
               </div>
@@ -235,7 +252,7 @@ const Overview = () => {
              </div>
              <div className="flex items-center">
                 <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-red-500 text-sm leading-none">☀</span> Bug
+                  <span className="text-red-500 text-sm leading-none">â˜€</span> Bug
                 </div>
                 <div className="flex-1 h-5 bg-gray-200 flex">
                    <div className="h-full bg-[#8c929d] w-[26%] flex items-center px-2 text-xs text-white font-medium">26%</div>
@@ -259,7 +276,7 @@ const Overview = () => {
              </div>
              <div className="flex items-center">
                 <div className="w-32 flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-purple-500 text-lg leading-none">⚡</span> Epic
+                  <span className="text-purple-500 text-lg leading-none">âš¡</span> Epic
                 </div>
                 <div className="flex-1 h-5 bg-gray-200 flex">
                    <div className="h-full bg-[#8c929d] w-[1%]"></div>
@@ -342,7 +359,7 @@ const Overview = () => {
              
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
+                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4255 Support TinyMCE as the Rich Text Editor of the app</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">
@@ -353,7 +370,7 @@ const Overview = () => {
              
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
+                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4968 Mobile app customisation improvements</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">
@@ -363,7 +380,7 @@ const Overview = () => {
 
              <div>
                <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                  <span className="text-purple-500 text-sm leading-none">⚡</span> 
+                  <span className="text-purple-500 text-sm leading-none">âš¡</span> 
                   <span className="text-gray-900 hover:underline cursor-pointer truncate">MOBILE-4878 Fix Moodle app behat flaky failures</span>
                </div>
                <div className="h-5 w-full bg-gray-100 flex">

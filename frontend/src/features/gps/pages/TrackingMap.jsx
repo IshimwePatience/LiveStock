@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -637,7 +637,7 @@ const TrackingMap = () => {
                         <span>{selectedDevice.route.destDistrict}</span>
                       </div>
                       <span className="text-[11px] text-gray-500 mt-0.5">
-                        {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
+                        {selectedDevice.route.originSector} âž” {selectedDevice.route.destSector}
                       </span>
                       <span className="text-[11px] text-gray-500 mt-0.5">
                         Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>
@@ -678,3 +678,4 @@ const TrackingMap = () => {
 };
 
 export default TrackingMap;
+

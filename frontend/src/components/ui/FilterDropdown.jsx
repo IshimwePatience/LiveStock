@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ListFilter, Search, Plus, ChevronDown } from 'lucide-react';
 
 const FilterDropdown = ({ 
@@ -78,7 +78,7 @@ const FilterDropdown = ({
           isOpen || hasActiveFilters ? 'bg-green-50 text-green-700 border-green-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
         }`}
       >
-        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-green-600 text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
+        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#0052cc] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
       </button>
 
       {/* Popover Menu */}

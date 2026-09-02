@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { User, ChevronDown, AlertTriangle, FileText, ArrowUp, MoreVertical } from 'lucide-react';
 
 const PoliceCasesList = ({ cases, isLoading, isError }) => {

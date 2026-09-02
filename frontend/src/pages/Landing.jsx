@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe } from 'lucide-react';
 import logo from '../assets/images/RAB_Logo2.png';
@@ -118,7 +118,7 @@ const Landing = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition shadow-sm">
+          <Link to="/login" className="bg-[#0052cc] hover:bg-[#0047b3] text-white font-medium py-2 px-6 rounded-lg transition shadow-sm">
             Login now
           </Link>
           <a href="#" className="bg-gray-50 hover:bg-gray-100 text-gray-600 font-medium py-2 px-6 rounded-lg transition shadow-sm hidden md:block border border-gray-200">
@@ -182,7 +182,7 @@ const Landing = () => {
          </div>
       </section>
 
-      <section className="w-full bg-green-600 relative pb-20 px-8 z-10 -mt-24">
+      <section className="w-full bg-[#0052cc] relative pb-20 px-8 z-10 -mt-24">
          <div className="max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
             
             {/* Card 1 */}
@@ -324,7 +324,7 @@ const Landing = () => {
                   placeholder="Enter official email" 
                   className="flex-1 px-4 py-2 outline-none text-gray-700 bg-transparent"
                 />
-                <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-full transition">
+                <button className="bg-[#0052cc] hover:bg-[#0047b3] text-white font-medium py-2 px-6 rounded-full transition">
                   Subscribe
                 </button>
               </div>
@@ -384,3 +384,4 @@ const Landing = () => {
 };
 
 export default Landing;
+

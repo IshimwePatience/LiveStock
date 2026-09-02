@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Flag, Check, Info, AlertTriangle, Hexagon } from 'lucide-react';
 import api from '../../../lib/api';
 
@@ -117,7 +117,7 @@ const Notifications = () => {
                    <Flag className="w-32 h-32 stroke-1 fill-blue-500" />
                 </div>
                 <p className="text-[15px] text-gray-700 font-medium text-center leading-relaxed">
-                  You have no notifications from<br/>the last 30 days.
+                  You have no notifications
                 </p>
               </div>
             ) : (
@@ -148,7 +148,7 @@ const Notifications = () => {
 
           {/* Sticky footer hint */}
           <div className="mt-12 py-4 border border-gray-200 rounded-lg bg-white flex justify-between items-center px-6">
-            <p className="text-sm text-gray-600">Press <kbd className="font-sans px-1.5 py-0.5 bg-gray-100 rounded border border-gray-300 text-xs">↓</kbd> <kbd className="font-sans px-1.5 py-0.5 bg-gray-100 rounded border border-gray-300 text-xs">↑</kbd> to move through notifications.</p>
+            <p className="text-sm text-gray-600">Press <kbd className="font-sans px-1.5 py-0.5 bg-gray-100 rounded border border-gray-300 text-xs">â†“</kbd> <kbd className="font-sans px-1.5 py-0.5 bg-gray-100 rounded border border-gray-300 text-xs">â†‘</kbd> to move through notifications.</p>
             <button className="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded px-3 py-1.5 hover:bg-gray-50 transition">See all shortcuts</button>
           </div>
         </div>

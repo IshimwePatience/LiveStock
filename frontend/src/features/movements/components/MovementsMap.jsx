@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { MapPin, Navigation, Compass, Crosshair } from 'lucide-react';
 
 const MovementsMap = ({ movements, isLoading }) => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
@@ -17,7 +17,7 @@ const getInitials = (name) => {
 // Helper to assign consistent colors based on initials
 const getColorForInitials = (initials) => {
   if (initials === 'U') return 'bg-gray-400';
-  const colors = ['bg-blue-600', 'bg-orange-500', 'bg-green-600', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
+  const colors = ['bg-blue-600', 'bg-orange-500', 'bg-[#0052cc]', 'bg-purple-600', 'bg-teal-600', 'bg-pink-600', 'bg-slate-700'];
   let hash = 0;
   for (let i = 0; i < initials.length; i++) {
     hash = initials.charCodeAt(i) + ((hash << 5) - hash);

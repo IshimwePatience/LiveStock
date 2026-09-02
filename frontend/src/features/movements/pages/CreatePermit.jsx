@@ -815,7 +815,7 @@ const CreatePermit = () => {
                       isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
                     }
 
-                    const isDropdownCol = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18].includes(cIdx);
+                    const isDropdownCol = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18].includes(cIdx);
                     
                     return (
                       <td 
@@ -907,6 +907,8 @@ const CreatePermit = () => {
                                     opts = ['Inka (Cow)', 'Ihene (Goat)', 'Intama (Sheep)'];
                                  } else if (cIdx === 4) {
                                     opts = ['Minor', 'Urgency'];
+                                 } else if (cIdx === 7) {
+                                    opts = ['RAB 195F'];
                                  }
                                  return opts.map(o => <option key={o} value={o}>{o}</option>);
                               })()}
@@ -1016,7 +1018,7 @@ const CreatePermit = () => {
                 </FormCard>
 
                 <FormCard title="Pulaki (Plate)" required>
-                  <input type="text" name="plate_number" required value={mobileForm.plate_number} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                  <CustomSelect value={mobileForm.plate_number} onChange={(v) => handleMobileSelect('plate_number', v)} options={[{value: 'RAB 195F', label: 'RAB 195F'}]} />
                 </FormCard>
 
                 <FormCard title="Amazina y'Umushoferi" required>

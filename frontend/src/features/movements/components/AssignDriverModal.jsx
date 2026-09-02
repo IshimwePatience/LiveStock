@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
@@ -52,7 +52,7 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
                 required
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="e.g. John Doe"
               />
             </div>
@@ -64,7 +64,7 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
                 required
                 value={formData.phone}
                 onChange={e => setFormData({...formData, phone: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="e.g. +250780000000"
               />
             </div>
@@ -76,7 +76,7 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
                 required
                 value={formData.national_id}
                 onChange={e => setFormData({...formData, national_id: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="16 digits"
               />
             </div>
@@ -88,7 +88,7 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
                 required
                 value={formData.plate_number}
                 onChange={e => setFormData({...formData, plate_number: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm uppercase"
                 placeholder="e.g. RAB 123 A"
               />
             </div>
@@ -98,14 +98,14 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
             <button 
               type="button" 
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc]"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0052cc] border border-transparent rounded-md hover:bg-[#0047b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc] disabled:opacity-50"
             >
               {submitting ? 'Approving...' : 'Approve Request'}
             </button>

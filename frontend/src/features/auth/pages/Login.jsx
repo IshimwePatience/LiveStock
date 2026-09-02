@@ -51,60 +51,56 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans flex flex-col">
+    <div className="min-h-screen font-sans flex flex-col relative overflow-hidden bg-white">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{ backgroundImage: `url(${loginImage})`, backgroundPosition: 'center bottom', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}
+      ></div>
       {/* Top Thin Navbar */}
-      <div className="w-full bg-gray-100 py-3 px-8 flex justify-between items-center text-sm text-gray-700">
+      <div className="w-full bg-white py-3 px-8 flex justify-between items-center text-sm text-gray-700 relative z-10">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
-          <span className="text-[17px] font-medium text-gray-800 tracking-wide">Livestock app</span>
+          <img src={logo} alt="RAB Logo" className="h-10 object-contain" />
+          <span className="text-[17px] font-semibold text-gray-800 tracking-wide">Livestock app</span>
         </div>
         <div className="flex items-center gap-1 cursor-pointer hover:text-green-700 text-green-700">
-          <Globe className="w-5 h-5" />
-          <span className="font-medium">EN ▾</span>
+          <Globe className="w-4 h-4" />
+          <span className="font-medium text-xs">EN ▾</span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center items-center p-4">
-        <div className="w-full max-w-[400px]">
-          
+      <div className="flex-1 flex flex-col justify-center items-center p-4 relative z-10 mt-[-5vh]">
+        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
+
           {/* Title */}
           <div className="text-center mb-8">
-            <h1 className="text-[28px] font-bold text-[#334155] leading-tight">
+            <h1 className="text-[20px] font-bold text-[#172b4d] leading-tight">
               Sign in with Livestock<br />Tracking App
             </h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            
+          <form onSubmit={handleSubmit} className="space-y-4">
+
             {/* Email Field */}
-            <div className="space-y-1.5">
-              <label className="block text-[13px] font-bold text-[#64748b]">
-                Email
-              </label>
+            <div className="space-y-1">
               <input
                 type="email"
                 value={email}
+                placeholder="Enter email"
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-medium placeholder-gray-500 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
                 required
               />
             </div>
 
             {/* Password Field */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-[13px] font-bold text-[#64748b]">
-                  Password
-                </label>
-                <Link to="/forgot-password" className="text-[13px] font-medium text-green-600 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+            <div className="space-y-1">
               <input
                 type="password"
                 value={password}
+                placeholder="Enter password"
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f1f5f9] border border-[#cbd5e1] rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-medium placeholder-gray-500 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
                 required
               />
             </div>
@@ -114,18 +110,29 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-md transition-colors disabled:opacity-70 text-[15px]"
+                className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
               >
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
 
-            {!cookiesAccepted && (
-              <div className="text-center text-xs text-gray-500 mt-6">
-                By continuing, you agree to our use of cookies for security.{' '}
-                <button type="button" onClick={handleAcceptCookies} className="text-green-600 hover:underline font-medium">Accept</button>
+            <div className="text-center mt-6">
+              <a href="#" className="text-[#0052cc] hover:underline text-[14px] font-medium">Can't log in?</a>
+              <span className="mx-2 text-gray-300">•</span>
+              <Link to="/forgot-password" className="text-[#0052cc] hover:underline text-[14px] font-medium">Forgot password?</Link>
+            </div>
+
+            <div className="border-t border-gray-200 mt-6 pt-6 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2 opacity-50 grayscale">
+                <img src={logo} alt="RAB Logo" className="h-5 object-contain" />
+                <span className="text-[12px] font-bold text-[#172b4d] tracking-widest uppercase">RAB System</span>
               </div>
-            )}
+              <div className="text-[11px] text-[#5e6c84]">
+                <a href="#" className="hover:underline">Privacy Policy</a>
+                <span className="mx-1">•</span>
+                <a href="#" className="hover:underline">User Notice</a>
+              </div>
+            </div>
 
           </form>
         </div>
@@ -135,3 +142,4 @@ const Login = () => {
 };
 
 export default Login;
+

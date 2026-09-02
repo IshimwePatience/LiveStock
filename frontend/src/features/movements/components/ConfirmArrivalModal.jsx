@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
@@ -61,14 +61,14 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                 <button 
                   type="button" 
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc]"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleConfirm}
                   disabled={submitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#0052cc] border border-transparent rounded-md hover:bg-[#0047b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc] disabled:opacity-50"
                 >
                   {submitting ? 'Confirming...' : 'Verify & Generate OTP'}
                 </button>
@@ -89,7 +89,7 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
 
               <button 
                 onClick={onClose}
-                className="w-full px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="w-full px-4 py-3 text-sm font-medium text-white bg-[#0052cc] border border-transparent rounded-md hover:bg-[#0047b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc]"
               >
                 Close
               </button>

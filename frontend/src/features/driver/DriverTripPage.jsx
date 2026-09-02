@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { MapPin, Navigation, CheckCircle, AlertTriangle } from 'lucide-react';
+import rabLogo from '../../assets/images/RAB_Logo2.png';
 
 const DriverTripPage = () => {
   const { token } = useParams();
@@ -10,8 +11,6 @@ const DriverTripPage = () => {
   const [error, setError] = useState('');
   const [otp, setOtp] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [tracking, setTracking] = useState(false);
-  const [location, setLocation] = useState(null);
 
   useEffect(() => {
     fetchTrip();
@@ -25,48 +24,6 @@ const DriverTripPage = () => {
       setError(err.response?.data?.message || 'Invalid or expired link');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const startTracking = () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      return;
-    }
-
-    setTracking(true);
-    
-    // Initial position
-    navigator.geolocation.getCurrentPosition(
-      updateLocation,
-      (err) => {
-        setTracking(false);
-        setError('Please allow location access to track your trip.');
-      },
-      { enableHighAccuracy: true }
-    );
-
-    // Watch position
-    const watchId = navigator.geolocation.watchPosition(
-      updateLocation,
-      (err) => console.error(err),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
-  };
-
-  const updateLocation = async (pos) => {
-    const { latitude, longitude } = pos.coords;
-    setLocation({ lat: latitude, lng: longitude });
-
-    try {
-      await axios.post(`http://localhost:5000/api/driver/${token}/location`, {
-        lat: latitude,
-        lng: longitude
-      });
-    } catch (err) {
-      console.error('Error updating location:', err);
     }
   };
 
@@ -110,31 +67,28 @@ const DriverTripPage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b border-gray-100 p-4 sticky top-0 z-10">
-        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <Navigation className="w-5 h-5 text-green-600" />
-          Livestock Transit Driver
-        </h1>
-      </div>
+    <div className="flex flex-col min-h-screen bg-white font-sans">
+      <header className="bg-white h-16 flex items-center justify-center px-6 shrink-0 border-b border-gray-100 sticky top-0 z-50">
+        <img src={rabLogo} alt="RAB Logo" className="h-10 w-auto object-contain" />
+      </header>
 
       <div className="p-4 flex-1 flex flex-col max-w-md mx-auto w-full">
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Trip Details</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Driver Name</span>
-              <span className="font-medium text-gray-900">{trip.driver_name || 'N/A'}</span>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 mt-4">
+          <h2 className="text-[15px] font-semibold text-gray-900 mb-4">Trip Details</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+              <span className="text-sm font-medium text-gray-500">Driver Name</span>
+              <span className="text-[15px] font-semibold text-gray-900">{trip.driver_name || 'N/A'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Plate Number</span>
-              <span className="font-medium text-gray-900">{trip.plate_number || 'N/A'}</span>
+            <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+              <span className="text-sm font-medium text-gray-500">Plate Number</span>
+              <span className="text-[15px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">{trip.plate_number || 'N/A'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Status</span>
-              <span className={`font-medium px-2 py-0.5 rounded text-xs ${
-                trip.status === 'ACTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Status</span>
+              <span className={`font-semibold px-3 py-1 rounded-full text-xs ${
+                trip.status === 'ACTIVE' ? 'bg-[#ebf2ff] text-[#0052cc]' : 'bg-amber-100 text-amber-700'
               }`}>
                 {trip.status}
               </span>
@@ -143,36 +97,14 @@ const DriverTripPage = () => {
         </div>
 
         {trip.status === 'ACTIVE' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4 text-center">
-            <MapPin className="w-12 h-12 text-blue-500 mx-auto mb-3 opacity-80" />
-            <h3 className="font-semibold text-gray-900 mb-1">Live GPS Tracking</h3>
-            <p className="text-xs text-gray-500 mb-4">
-              Keep this page open while driving so the destination officer can track your arrival.
-            </p>
-            
-            {!tracking ? (
-              <button 
-                onClick={startTracking}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Navigation className="w-4 h-4" />
-                Start Sharing Location
-              </button>
-            ) : (
-              <div className="w-full bg-green-50 border border-green-200 text-green-700 font-medium py-3 rounded-lg flex items-center justify-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                Sharing Location...
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6 flex-1 flex flex-col justify-center items-center text-center">
+             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Navigation className="w-8 h-8 text-blue-600" />
               </div>
-            )}
-            
-            {location && (
-              <p className="text-[10px] text-gray-400 mt-3 font-mono">
-                {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Trip in Progress</h2>
+              <p className="text-sm text-gray-600 px-4">
+                Drive safely to the destination. The vehicle is being tracked via the onboard GPS. Once you arrive, the destination officer will provide you with an OTP.
               </p>
-            )}
           </div>
         )}
 
@@ -187,7 +119,7 @@ const DriverTripPage = () => {
                 The destination officer is verifying your identity. Once verified, they will issue an OTP.
               </p>
             </div>
-            
+
             <form onSubmit={handleSubmitOTP} className="mt-2">
               <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
                 Enter the OTP given by the officer
@@ -197,14 +129,14 @@ const DriverTripPage = () => {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="e.g. 123456"
-                className="block w-full text-center text-2xl tracking-widest font-mono border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 p-4 mb-4"
+                className="block w-full text-center text-2xl tracking-widest font-mono border-gray-300 rounded-lg shadow-sm focus:ring-[#0052cc] focus:border-green-500 p-4 mb-4"
                 maxLength={6}
                 required
               />
               <button
                 type="submit"
                 disabled={submitting || otp.length < 4}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+                className="w-full bg-[#0052cc] hover:bg-[#0047b3] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
               >
                 {submitting ? 'Verifying...' : 'Complete Trip'}
               </button>

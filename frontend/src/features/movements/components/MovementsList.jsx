@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -389,7 +389,7 @@ const MovementsList = ({ movements, isLoading, isError }) => {
             <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Movement Request</h3>
             <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this request. This will be sent to the initiator.</p>
             <textarea
-              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] mb-4"
               rows="4"
               placeholder="Enter rejection reason..."
               value={rejectModal.reason}

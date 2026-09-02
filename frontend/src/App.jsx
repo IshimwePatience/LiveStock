@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+﻿import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster, toast } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -80,7 +80,7 @@ function App() {
                 className="text-white underline font-medium mt-1 text-xs"
                 onClick={() => toast.dismiss(t.id)}
               >
-                Track Live on Map →
+                Track Live on Map â†’
               </a>
             )}
           </div>
