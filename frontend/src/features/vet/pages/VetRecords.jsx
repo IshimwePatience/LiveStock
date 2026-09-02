@@ -132,7 +132,7 @@ const VetRecords = () => {
       <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
         <div>
           <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-            Overview / Livestock Tracking app
+            Overview / Vaccination & Medication
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             Vaccination & Medication 

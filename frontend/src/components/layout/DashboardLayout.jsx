@@ -187,10 +187,6 @@ const DashboardLayout = () => {
               Overview
             </Link>
 
-            <Link to="/dashboard/notifications" className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 mt-2 ${isActive('/dashboard/notifications') ? 'bg-[#e9f2ff] text-[#0052cc]' : 'text-gray-700 hover:bg-gray-100'}`}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-              Notifications
-            </Link>
 
             {(user?.role === 'POLICE' || user?.role === 'RAB') && (
               <Link to="/dashboard/cases" className={`px-6 py-2.5 text-sm flex items-center gap-4 rounded-r-full mr-4 mt-2 ${isActive('/dashboard/cases') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
@@ -266,7 +262,18 @@ const DashboardLayout = () => {
                     </div>
                   )}
                 </div>
+              </>
+            )}
 
+            <div className="mt-4 space-y-1">
+              <Link to="/dashboard/notifications" className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 mt-2 ${isActive('/dashboard/notifications') ? 'bg-[#e9f2ff] text-[#0052cc]' : 'text-gray-700 hover:bg-gray-100'}`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                Notifications
+              </Link>
+            </div>
+
+            {user?.role === 'RAB' && (
+              <>
                 <div className="mt-4 space-y-1">
                   <div className="flex items-center gap-3 px-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer">
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h2a2 2 0 011 1v2m-6 0h6"></path></svg>
