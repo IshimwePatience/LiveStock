@@ -426,25 +426,38 @@ const Geofencing = () => {
                   <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
                     Rule Type <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex-1 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
+                  <div className="flex-1 flex items-center gap-6">
+                    <label
                       onClick={() => setRuleType('ALLOWED')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center transition ${
-                        ruleType === 'ALLOWED' ? 'bg-emerald-50 border-[#10b981] text-[#10b981] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className="flex items-center gap-2.5 cursor-pointer select-none text-[13.5px] font-normal text-gray-800"
                     >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                        ruleType === 'ALLOWED' ? 'bg-[#0052cc] text-white' : 'border-2 border-gray-500 bg-white'
+                      }`}>
+                        {ruleType === 'ALLOWED' && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
                       Green (Allowed Route)
-                    </button>
-                    <button
-                      type="button"
+                    </label>
+
+                    <label
                       onClick={() => setRuleType('FORBIDDEN')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center transition ${
-                        ruleType === 'FORBIDDEN' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className="flex items-center gap-2.5 cursor-pointer select-none text-[13.5px] font-normal text-gray-800"
                     >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                        ruleType === 'FORBIDDEN' ? 'bg-[#0052cc] text-white' : 'border-2 border-gray-500 bg-white'
+                      }`}>
+                        {ruleType === 'FORBIDDEN' && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
                       Blue (Forbidden Zone)
-                    </button>
+                    </label>
                   </div>
                 </div>
 
@@ -453,25 +466,38 @@ const Geofencing = () => {
                   <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
                     Boundary Scope <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex-1 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
+                  <div className="flex-1 flex items-center gap-6">
+                    <label
                       onClick={() => setZoneType('DISTRICT')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-medium text-center transition ${
-                        zoneType === 'DISTRICT' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className="flex items-center gap-2.5 cursor-pointer select-none text-[13.5px] font-normal text-gray-800"
                     >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                        zoneType === 'DISTRICT' ? 'bg-[#0052cc] text-white' : 'border-2 border-gray-500 bg-white'
+                      }`}>
+                        {zoneType === 'DISTRICT' && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
                       District Level
-                    </button>
-                    <button
-                      type="button"
+                    </label>
+
+                    <label
                       onClick={() => setZoneType('SECTOR')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-medium text-center transition ${
-                        zoneType === 'SECTOR' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className="flex items-center gap-2.5 cursor-pointer select-none text-[13.5px] font-normal text-gray-800"
                     >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                        zoneType === 'SECTOR' ? 'bg-[#0052cc] text-white' : 'border-2 border-gray-500 bg-white'
+                      }`}>
+                        {zoneType === 'SECTOR' && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
                       Sector Level
-                    </button>
+                    </label>
                   </div>
                 </div>
 
