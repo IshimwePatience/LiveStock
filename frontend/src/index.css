@@ -23,10 +23,14 @@ html {
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
+/* Custom Leaflet Geofence Popup Override */
+.custom-geofence-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 1rem !important;
+}
+.custom-geofence-popup .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: inherit !important;
 }

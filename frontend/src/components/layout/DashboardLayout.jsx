@@ -63,7 +63,7 @@ const DashboardLayout = () => {
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-800">
 
       {/* Top Header — Google Drive style */}
-      <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-50 text-gray-800">
+      <header className="h-16 bg-[#f8fafd] border-b border-gray-200/80 flex items-center justify-between px-4 sticky top-0 z-50 text-gray-800">
 
         {/* Left: Menu & Logo */}
         <div className="flex items-center gap-2 min-w-[220px]">
@@ -247,6 +247,10 @@ const DashboardLayout = () => {
                   <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
                     Movements
                   </Link>
+                  <Link to="/dashboard/geofencing" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/geofencing') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                    Geo-Fencing
+                  </Link>
+
                   {user?.role === 'DARO' && (
                     <Link to="/dashboard/users" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/users') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
                       SAROs
@@ -258,9 +262,9 @@ const DashboardLayout = () => {
 
             {user?.role === 'RAB' && (
               <>
-                <div className="px-6 py-2.5 text-sm text-gray-700 flex items-center gap-4 hover:bg-gray-100 rounded-r-full mr-4 cursor-pointer mt-4">
-                  <span className="font-bold text-gray-500 text-lg ml-0.5">G</span> Geo-Fencing
-                </div>
+                <Link to="/dashboard/geofencing" className={`px-6 py-2.5 text-sm flex items-center gap-4 rounded-r-full mr-4 mt-2 ${isActive('/dashboard/geofencing') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                  <span className={`font-bold text-lg ml-0.5 ${isActive('/dashboard/geofencing') ? 'text-[#0052cc]' : 'text-gray-500'}`}>G</span> Geo-Fencing
+                </Link>
 
                 <div className="mt-4">
                   <div

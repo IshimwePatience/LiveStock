@@ -16,6 +16,7 @@ import PoliceCases from './features/police/pages/PoliceCases';
 import VetRecords from './features/vet/pages/VetRecords';
 import CreateVetRecord from './features/vet/pages/CreateVetRecord';
 import TrackingMap from './features/gps/pages/TrackingMap';
+import Geofencing from './features/geofencing/pages/Geofencing';
 
 import Notifications from './features/notifications/pages/Notifications';
 import DriverTripPage from './features/driver/DriverTripPage';
@@ -136,6 +137,8 @@ function App() {
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
           <Route path="vet-records/create" element={<VetRoute><CreateVetRecord /></VetRoute>} />
           <Route path="gps" element={<TrackingMap />} />
+          <Route path="geofencing" element={<Geofencing />} />
+
         </Route>
       </Routes>
     </>

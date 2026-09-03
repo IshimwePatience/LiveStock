@@ -66,6 +66,8 @@ NotificationLog.belongsTo(User, { foreignKey: 'user_id' });
 // Sector.hasMany(Animal, { foreignKey: 'sector_id' });
 // Animal.belongsTo(Sector, { foreignKey: 'sector_id' });
 
+const Geofence = require('./Geofence');
+
 module.exports = {
   sequelize,
   User,
@@ -79,5 +81,7 @@ module.exports = {
   VetRecord,
   Case,
   NotificationLog,
-  Animal
+  Animal,
+  Geofence
 };
+
