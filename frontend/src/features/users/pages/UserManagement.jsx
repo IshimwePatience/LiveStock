@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Users, UserPlus, Search, Edit2, Trash2, Power, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
@@ -387,8 +387,8 @@ const UserManagement = () => {
                   </td>
                   <td className="py-2 px-4">
                     <span className="text-[13px] font-medium text-black">
-                      {user.sector_id 
-                        ? `${user.district_id} / ${user.sector_id}` 
+                      {user.sector_id
+                        ? `${user.district_id} / ${user.sector_id}`
                         : (user.district_id || 'National (All)')}
                     </span>
                   </td>
@@ -399,7 +399,7 @@ const UserManagement = () => {
                   </td>
                   {isRAB && (
                     <td className="py-2 px-4 text-right relative">
-                      <button 
+                      <button
                         onClick={() => setOpenActionDropdown(openActionDropdown === user.id ? null : user.id)}
                         className="p-1 text-gray-500 hover:bg-gray-100 rounded"
                       >
@@ -407,19 +407,19 @@ const UserManagement = () => {
                       </button>
                       {openActionDropdown === user.id && (
                         <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                          <button 
+                          <button
                             onClick={() => { handleEdit(user); setOpenActionDropdown(null); }}
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             onClick={() => { handleToggleStatus(user.id); setOpenActionDropdown(null); }}
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                           >
                             {user.status === 'Inactive' ? 'Activate' : 'Deactivate'}
                           </button>
-                          <button 
+                          <button
                             onClick={() => { handleDelete(user.id); setOpenActionDropdown(null); }}
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                           >
@@ -439,90 +439,154 @@ const UserManagement = () => {
       {/* Pagination */}
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
-      {/* CREATE USER MODAL */}
+      {/* CREATE / EDIT USER MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 z-[100] flex items-center justify-center backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg rounded-lg shadow-2xl flex flex-col animate-in fade-in zoom-in duration-200 max-h-[95vh] overflow-y-auto">
-
-            <div className="px-6 pt-6 pb-2">
-              <h2 className="text-xl font-semibold text-gray-900">{isEditMode ? 'Edit user' : 'Create user'}</h2>
-              <p className="text-sm text-gray-500 mt-1">Required fields are marked with an asterisk <span className="text-red-500">*</span></p>
+        <div className="fixed inset-0 bg-black/30 z-[100] flex items-center justify-center backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-[520px] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200"
+            style={{ background: '#f0f4f9' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <h2 className="text-[17px] font-semibold text-gray-900">
+                {isEditMode ? 'Edit user' : 'Create user'}
+              </h2>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition text-gray-500"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
 
-            <div className="px-6 py-2">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-gray-700">Name <span className="text-red-500">*</span></label>
-                  <input type="text" name="name" required value={formData.name} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
-                </div>
+            {/* Body */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-0">
+              <div className="px-6 pb-2 flex flex-col gap-0">
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-gray-700">Email Address <span className="text-red-500">*</span></label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-gray-700">Password {isEditMode ? '' : <span className="text-red-500">*</span>}</label>
-                  <input type="password" name="password" required={!isEditMode} value={formData.password} onChange={handleInputChange} placeholder={isEditMode ? "Leave blank to keep current" : ""} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-gray-700">System Role <span className="text-red-500">*</span></label>
-                  <CustomSelect
-                    value={formData.role}
-                    onChange={handleRoleChange}
-                    options={roleOptions}
+                {/* Name */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text" name="name" required value={formData.name}
+                    onChange={handleInputChange}
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
                   />
                 </div>
 
-                {/* Jurisdiction Fields based on Role */}
-                {formData.role === 'DARO' && (
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-gray-700">Assigned District <span className="text-red-500">*</span></label>
+                {/* Email */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email" name="email" required value={formData.email}
+                    onChange={handleInputChange}
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Password {!isEditMode && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="password" name="password" required={!isEditMode} value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder={isEditMode ? 'Leave blank to keep current' : ''}
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                  />
+                </div>
+
+                {/* System Role */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    System Role <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1">
                     <CustomSelect
-                      value={formData.district_id}
-                      onChange={(val) => handleSelectChange('district_id', val)}
-                      options={districtOptions}
+                      value={formData.role}
+                      onChange={handleRoleChange}
+                      options={roleOptions}
                     />
                   </div>
-                )}
+                </div>
 
-                {formData.role === 'SARO' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-gray-700">District <span className="text-red-500">*</span></label>
+                {/* Assigned District (DARO / POLICE) */}
+                {(formData.role === 'DARO' || formData.role === 'POLICE') && (
+                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                      District <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex-1">
                       <CustomSelect
                         value={formData.district_id}
                         onChange={(val) => handleSelectChange('district_id', val)}
                         options={districtOptions}
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-gray-700">Sector <span className="text-red-500">*</span></label>
-                      <CustomSelect
-                        value={formData.sector_id}
-                        onChange={(val) => handleSelectChange('sector_id', val)}
-                        options={sectorOptions}
-                      />
-                    </div>
                   </div>
                 )}
 
-                {formData.role === 'POLICE' && (
-                  <p className="text-xs text-gray-500 italic">Police accounts operate nationally.</p>
-                )}
-                {formData.role === 'RAB' && (
-                  <p className="text-xs text-orange-600 italic">Super-admin account.</p>
+                {/* District + Sector (SARO) */}
+                {formData.role === 'SARO' && (
+                  <>
+                    <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                      <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                        District <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex-1">
+                        <CustomSelect
+                          value={formData.district_id}
+                          onChange={(val) => handleSelectChange('district_id', val)}
+                          options={districtOptions}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                      <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                        Sector <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex-1">
+                        <CustomSelect
+                          value={formData.sector_id}
+                          onChange={(val) => handleSelectChange('sector_id', val)}
+                          options={sectorOptions}
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
 
-                <div className="pt-4 pb-6 flex justify-end gap-3 mt-2">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Cancel</button>
-                  <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-[#0052cc] hover:bg-[#0047b3] rounded transition disabled:opacity-50">
-                    {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Create')}
-                  </button>
-                </div>
-              </form>
-            </div>
+                {formData.role === 'RAB' && (
+                  <div className="flex items-center min-h-[48px]">
+                    <span className="w-36 shrink-0" />
+                    <p className="text-xs text-orange-600 italic">Super-admin account — national scope.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 mt-1 bg-[#f0f4f9]">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-5 py-2 text-sm font-medium text-[#0052cc] hover:bg-blue-50 rounded-full transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full transition disabled:opacity-50"
+                >
+                  {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Create')}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
