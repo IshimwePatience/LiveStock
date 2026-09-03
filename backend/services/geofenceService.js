@@ -1,8 +1,8 @@
 const { Geofence, Case, Trip, MovementRequest, User } = require('../models');
-const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default || require('@turf/boolean-point-in-polygon');
-const { point } = require('@turf/helpers');
+const turf = require('@turf/turf');
 const fs = require('fs');
 const path = require('path');
+
 
 // Cache converted GeoJSON features for fast lookup
 let districtGeoJSON = null;
@@ -107,15 +107,16 @@ class GeofenceService {
 
     if (relevantFences.length === 0) return null;
 
-    const pt = point([parseFloat(lon), parseFloat(lat)]);
+    const pt = turf.point([parseFloat(lon), parseFloat(lat)]);
 
     for (const fence of relevantFences) {
       if (!fence.geometry) continue;
 
       let isInside = false;
       try {
-        isInside = booleanPointInPolygon(pt, fence.geometry);
+        isInside = turf.booleanPointInPolygon(pt, fence.geometry);
       } catch (err) {
+
         console.error('Turf point-in-polygon error:', err.message);
         continue;
       }
