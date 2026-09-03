@@ -48,6 +48,12 @@ const MovementRequest = sequelize.define('MovementRequest', {
   driver_name: { type: DataTypes.STRING, allowNull: true },
   driver_phone: { type: DataTypes.STRING, allowNull: true },
   driver_nid: { type: DataTypes.STRING, allowNull: true },
+
+  // Buyer Information (Person or Company)
+  buyer_type: { type: DataTypes.STRING, allowNull: true },
+  buyer_name: { type: DataTypes.STRING, allowNull: true },
+  buyer_phone: { type: DataTypes.STRING, allowNull: true },
+  buyer_id_tin: { type: DataTypes.STRING, allowNull: true },
 });
 
 module.exports = MovementRequest;

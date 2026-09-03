@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
 const NUM_ROWS = 30;
-const NUM_COLS = 26;
+const NUM_COLS = 30;
 
 const COLUMNS = [
   { title: 'Amazina ya Nyir\'amatungo', width: 180, key: 'owner_name' },
@@ -33,9 +33,13 @@ const COLUMNS = [
   { title: 'Ibara (Color)', width: 120, key: 'color' },
   { title: 'Inkingo (Vaccines)', width: 150, key: 'vaccines' },
   { title: 'Imiti (Medication)', width: 150, key: 'medication' },
-  { title: 'Amazina y\'Umushoferi', width: 160, key: 'driver_name' },
-  { title: 'Telephoni y\'Umushoferi', width: 150, key: 'driver_phone' },
-  { title: 'Indangamuntu y\'Umushoferi', width: 150, key: 'driver_nid' },
+  { title: 'Amazina y\'Utwara Amatungo', width: 180, key: 'driver_name' },
+  { title: 'Telephoni y\'Utwara Amatungo', width: 170, key: 'driver_phone' },
+  { title: 'Indangamuntu y\'Utwara Amatungo', width: 180, key: 'driver_nid' },
+  { title: 'Ubwoko bw\'Umuguzi', width: 160, key: 'buyer_type' },
+  { title: 'Amazina / Isociete y\'Umuguzi', width: 200, key: 'buyer_name' },
+  { title: 'Telephoni y\'Umuguzi', width: 150, key: 'buyer_phone' },
+  { title: 'Indangamuntu / TIN y\'Umuguzi', width: 180, key: 'buyer_id_tin' },
 ];
 
 const CreatePermit = () => {
@@ -210,7 +214,8 @@ const CreatePermit = () => {
     { id: 'origin', label: 'Biva (Origin)', cols: [8, 9, 10, 11] },
     { id: 'dest', label: 'Bijya (Destination)', cols: [12, 13, 14, 15] },
     { id: 'animal', label: 'Amatungo (Animals & Medical)', cols: [16, 17, 18, 19, 20, 21, 22] },
-    { id: 'driver', label: 'Umushoferi (Driver)', cols: [23, 24, 25] },
+    { id: 'driver', label: 'Utwara Amatungo (Transporter)', cols: [23, 24, 25] },
+    { id: 'buyer', label: 'Umuguzi (Buyer / Company)', cols: [26, 27, 28, 29] },
   ];
 
   const isColVisible = (idx) => {
@@ -220,6 +225,7 @@ const CreatePermit = () => {
     if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
     if ([16,17,18,19,20,21,22].includes(idx)) return visibleGroups.animal;
     if ([23,24,25].includes(idx)) return visibleGroups.driver ?? true;
+    if ([26,27,28,29].includes(idx)) return visibleGroups.buyer ?? true;
     return true;
   };
 
@@ -417,6 +423,10 @@ const CreatePermit = () => {
       driver_name: firstRow[23],
       driver_phone: firstRow[24],
       driver_nid: firstRow[25],
+      buyer_type: firstRow[26] || 'Person',
+      buyer_name: firstRow[27],
+      buyer_phone: firstRow[28],
+      buyer_id_tin: firstRow[29],
       animals: validRows.map(r => ({
         animal_type: r[16] || 'COW',
         tag_number: r[17],
@@ -869,7 +879,7 @@ const CreatePermit = () => {
                       isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
                     }
 
-                    const isDropdownCol = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18].includes(cIdx);
+                    const isDropdownCol = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 26].includes(cIdx);
                     
                     return (
                       <td 
@@ -963,6 +973,8 @@ const CreatePermit = () => {
                                     opts = ['Minor', 'Urgency'];
                                  } else if (cIdx === 7) {
                                     opts = ['RAB 195F'];
+                                 } else if (cIdx === 26) {
+                                    opts = ['Person (Umuntu)', 'Company (Isociete)'];
                                  }
                                  return opts.map(o => <option key={o} value={o}>{o}</option>);
                               })()}
@@ -1095,17 +1107,51 @@ const CreatePermit = () => {
                   <CustomSelect value={mobileForm.plate_number} onChange={(v) => handleMobileSelect('plate_number', v)} options={[{value: 'RAB 195F', label: 'RAB 195F'}]} />
                 </FormCard>
 
-                <FormCard title="Amazina y'Umushoferi" required>
+                <FormCard title="Amazina y'Utwara Amatungo" required>
                   <input type="text" name="driver_name" required value={mobileForm.driver_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
                 </FormCard>
 
-                <FormCard title="Telephoni y'Umushoferi" required>
+                <FormCard title="Telephoni y'Utwara Amatungo" required>
                   <input type="text" name="driver_phone" required value={mobileForm.driver_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
                 </FormCard>
 
-                <FormCard title="Indangamuntu y'Umushoferi" required>
+                <FormCard title="Indangamuntu y'Utwara Amatungo" required>
                   <input type="text" name="driver_nid" required value={mobileForm.driver_nid} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
                 </FormCard>
+
+                <FormCard title="Ubwoko bw'Umuguzi (Buyer Type)" required>
+                  <CustomSelect
+                    value={mobileForm.buyer_type || 'Person (Umuntu)'}
+                    onChange={(v) => handleMobileSelect('buyer_type', v)}
+                    options={[{value: 'Person (Umuntu)', label: 'Person (Umuntu)'}, {value: 'Company (Isociete)', label: 'Company (Isociete)'}]}
+                  />
+                </FormCard>
+
+                {mobileForm.buyer_type === 'Company (Isociete)' ? (
+                  <>
+                    <FormCard title="Izina ry'Isociete y'Umuguzi" required>
+                      <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Izina ry'Isociete" />
+                    </FormCard>
+                    <FormCard title="Nimero ya Telephoni y'Isociete" required>
+                      <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                    </FormCard>
+                    <FormCard title="TIN Number y'Isociete" required>
+                      <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="TIN Number" />
+                    </FormCard>
+                  </>
+                ) : (
+                  <>
+                    <FormCard title="Amazina y'Umuguzi" required>
+                      <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umuguzi" />
+                    </FormCard>
+                    <FormCard title="Telephoni y'Umuguzi" required>
+                      <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                    </FormCard>
+                    <FormCard title="Indangamuntu y'Umuguzi" required>
+                      <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                    </FormCard>
+                  </>
+                )}
 
                 <FormCard title="Ifite agaciro kugeza" required>
                   <input type="date" name="valid_until" readOnly value={mobileForm.valid_until} className="w-full border-b border-gray-300 py-1 outline-none bg-gray-50 text-gray-500 cursor-not-allowed" />
