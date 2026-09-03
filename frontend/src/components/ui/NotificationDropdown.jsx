@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Info, AlertTriangle, PlaySquare, Hexagon, MoreVertical, ExternalLink, Flag } from 'lucide-react';
 import api from '../../lib/api';
-import { io } from 'socket.io-client';
+import { connectSocket } from '../../lib/socket';
 
 const NotificationDropdown = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const NotificationDropdown = () => {
     if (!token) return;
 
     // Use same domain as backend (usually proxy handles it, or explicit URL)
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+    const socket = connectSocket({
       auth: { token }
     });
 

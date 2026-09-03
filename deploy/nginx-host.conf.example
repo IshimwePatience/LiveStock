@@ -1,0 +1,32 @@
+# Host nginx — SSL termination in front of Docker
+# Copy to: /etc/nginx/sites-available/livestock-app
+# Then: sudo ln -s /etc/nginx/sites-available/livestock-app /etc/nginx/sites-enabled/
+#       sudo nginx -t && sudo systemctl reload nginx
+
+server {
+    listen 80;
+    server_name your-domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+
+    # Point these to your certificate-fe files on the server
+    ssl_certificate     /home/pazzo/certificate-fe/fullchain.pem;
+    ssl_certificate_key /home/pazzo/certificate-fe/privkey.pem;
+
+    client_max_body_size 20M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

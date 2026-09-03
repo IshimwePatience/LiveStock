@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../lib/api';
 import { MapPin, Navigation, CheckCircle, AlertTriangle } from 'lucide-react';
 import rabLogo from '../../assets/images/RAB_Logo2.png';
 
@@ -18,7 +18,7 @@ const DriverTripPage = () => {
 
   const fetchTrip = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/driver/${token}`);
+      const res = await api.get(`/driver/${token}`);
       setTrip(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid or expired link');
@@ -33,7 +33,7 @@ const DriverTripPage = () => {
 
     try {
       setSubmitting(true);
-      await axios.post(`http://localhost:5000/api/driver/${token}/otp`, { otp });
+      await api.post(`/driver/${token}/otp`, { otp });
       setTrip({ ...trip, status: 'CONFIRMED' });
     } catch (err) {
       alert(err.response?.data?.message || 'Error confirming OTP');

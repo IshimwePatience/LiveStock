@@ -20,7 +20,7 @@ import TrackingMap from './features/gps/pages/TrackingMap';
 import Notifications from './features/notifications/pages/Notifications';
 import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
-import { io } from 'socket.io-client';
+import { connectSocket } from './lib/socket';
 
 // Simple Auth Guard component
 const ProtectedRoute = ({ children }) => {
@@ -64,7 +64,7 @@ function App() {
     if (!userStr) return;
     const user = JSON.parse(userStr);
     
-    const socket = io('http://localhost:5000');
+    const socket = connectSocket();
     socket.on('connect', () => {
       socket.emit('joinRoom', `user_${user.id}`);
     });
