@@ -6,9 +6,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { 
-  ShieldAlert, ShieldCheck, Plus, Trash2, MapPin, 
+  ShieldAlert, ShieldCheck, Plus, Trash2, MapPin, X,
   Truck, CheckCircle, AlertTriangle, Search, Filter, Eye, RefreshCw, Briefcase, Clock, User
 } from 'lucide-react';
+import CustomSelect from '../../../components/ui/CustomSelect';
+import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 // Sample active drivers for map display
 const SAMPLE_DRIVERS = [
@@ -111,31 +113,27 @@ const Geofencing = () => {
     return Array.from(plates);
   }, [movements]);
 
-  // Extract list of Rwanda districts from GeoJSON
-  const districtsList = useMemo(() => {
-    if (!districtGeoJSONData || !districtGeoJSONData.features) return [];
-    return districtGeoJSONData.features.map(f => {
-      const p = f.properties || {};
-      return p.NAME_2 || p.District || p.name || p.ADM2_EN;
-    }).filter(Boolean).sort();
-  }, [districtGeoJSONData]);
+  // Extract list of Rwanda districts
+  const districtOptions = useMemo(() => {
+    const provs = getProvinces();
+    const dists = provs.flatMap(p => getDistricts(p));
+    return dists.sort().map(d => ({ value: d, label: d }));
+  }, []);
 
   // Extract list of Rwanda sectors for selected district
-  const sectorsList = useMemo(() => {
-    if (!sectorGeoJSONData || !sectorGeoJSONData.features) return [];
-    let features = sectorGeoJSONData.features;
-    if (selectedDistrict) {
-      features = features.filter(f => {
-        const p = f.properties || {};
-        const dist = p.NAME_2 || p.District || p.ADM2_EN || '';
-        return dist.toLowerCase().trim() === selectedDistrict.toLowerCase().trim();
-      });
+  const sectorOptions = useMemo(() => {
+    if (!selectedDistrict) return [];
+    const provs = getProvinces();
+    let prov = null;
+    for (const p of provs) {
+      if (getDistricts(p).includes(selectedDistrict)) {
+        prov = p;
+        break;
+      }
     }
-    return features.map(f => {
-      const p = f.properties || {};
-      return p.NAME_3 || p.Sector || p.name || p.ADM3_EN;
-    }).filter(Boolean).sort();
-  }, [sectorGeoJSONData, selectedDistrict]);
+    if (!prov) return [];
+    return getSectors(prov, selectedDistrict).sort().map(s => ({ value: s, label: s }));
+  }, [selectedDistrict]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -207,7 +205,7 @@ const Geofencing = () => {
   return (
     <div className="flex flex-col h-full bg-slate-50 font-sans">
       {/* Top Header Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
+      <div className="bg-[#f8fafd] border-b border-gray-200/80 px-6 py-4 flex items-center justify-between shadow-sm z-20">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[#0052cc] font-black text-xl tracking-wider">G</span>
@@ -219,14 +217,14 @@ const Geofencing = () => {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-5 py-2.5 rounded-full font-medium text-sm transition flex items-center gap-2 shadow-md hover:shadow-lg"
+          className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-5 py-2 rounded-full font-medium text-sm transition flex items-center gap-2 shadow-sm"
         >
           <Plus className="w-4 h-4" /> Add Geofence Zone
         </button>
       </div>
 
       {/* Main Content Split: Map & Right Panel */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         
         {/* Map Container */}
         <div className="flex-1 relative bg-[#e5eef4]">
@@ -236,10 +234,10 @@ const Geofencing = () => {
             style={{ width: '100%', height: '100%' }}
             zoomControl={false}
           >
-            {/* Soft Vector Carto Map Tile */}
+            {/* Standard Clean OpenStreetMap Tiles (NO API KEY WATERMARK) */}
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
 
             {/* Base District Boundaries (Dashed teal lines) */}
@@ -344,7 +342,6 @@ const Geofencing = () => {
             {/* Circular Avatar Driver Markers on Map */}
             {SAMPLE_DRIVERS.map(driver => {
               const isAllowed = driver.rule === 'ALLOWED';
-              const isBlue = !isAllowed;
               
               return (
                 <Marker
@@ -353,7 +350,7 @@ const Geofencing = () => {
                   icon={createAvatarIcon(driver.name, driver.avatar, driver.rule)}
                 >
                   <Popup className="custom-geofence-popup" closeButton={false}>
-                    {/* Exact Card UI from user screenshot with Blue / Green outline */}
+                    {/* Card UI matching uploaded design (Blue / Green outline) */}
                     <div className={`w-[270px] bg-white rounded-2xl p-4 shadow-2xl border-2 ${
                       isAllowed ? 'border-[#10b981]' : 'border-[#0052cc]'
                     }`}>
@@ -439,7 +436,7 @@ const Geofencing = () => {
 
         {/* Right Rules Control Panel */}
         <div className="w-96 bg-white border-l border-gray-200 flex flex-col h-full shadow-lg z-10">
-          <div className="p-4 border-b border-gray-100 bg-slate-50 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 bg-[#f8fafd] flex items-center justify-between">
             <h2 className="font-bold text-gray-900 text-sm flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#0052cc]" /> Active Zones ({geofences.length})
             </h2>
@@ -518,143 +515,172 @@ const Geofencing = () => {
         </div>
       </div>
 
-      {/* Modal: Create Geofence Zone */}
+      {/* Modal: Create Geofence Zone — Google Drive Advanced Search Modal Style */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Set Geofence Boundary</h2>
-            <p className="text-xs text-gray-500 mb-4">Define green permitted routes or blue forbidden areas in Rwanda.</p>
-
-            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200/80 bg-[#f8fafd] flex justify-between items-center">
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Zone Rule Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRuleType('ALLOWED')}
-                    className={`py-2 px-3 rounded-xl border-2 font-medium flex items-center justify-center gap-1.5 transition ${
-                      ruleType === 'ALLOWED' ? 'bg-emerald-50 border-[#10b981] text-emerald-800 font-bold' : 'border-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Green (Allowed Route)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRuleType('FORBIDDEN')}
-                    className={`py-2 px-3 rounded-xl border-2 font-medium flex items-center justify-center gap-1.5 transition ${
-                      ruleType === 'FORBIDDEN' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <ShieldAlert className="w-4 h-4 text-[#0052cc]" /> Blue (Forbidden Zone)
-                  </button>
-                </div>
+                <h2 className="text-lg font-bold text-gray-900">Set Geofence Boundary</h2>
+                <p className="text-xs text-gray-500">Configure green permitted routes or blue forbidden areas in Rwanda.</p>
               </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200/60 text-gray-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Geofence Scope</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setZoneType('DISTRICT')}
-                    className={`py-1.5 px-3 rounded-xl border-2 font-medium text-center ${
-                      zoneType === 'DISTRICT' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-200 text-gray-600'
-                    }`}
-                  >
-                    District Level
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoneType('SECTOR')}
-                    className={`py-1.5 px-3 rounded-xl border-2 font-medium text-center ${
-                      zoneType === 'SECTOR' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-200 text-gray-600'
-                    }`}
-                  >
-                    Sector Level
-                  </button>
+            {/* Modal Form Body */}
+            <form onSubmit={handleCreateSubmit} className="flex flex-col gap-0">
+              <div className="px-6 py-4 flex flex-col gap-0 bg-white">
+
+                {/* Zone Rule Type */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Rule Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRuleType('ALLOWED')}
+                      className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                        ruleType === 'ALLOWED' 
+                          ? 'bg-emerald-50 border-[#10b981] text-[#10b981] font-bold' 
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ShieldCheck className="w-4 h-4 text-[#10b981]" /> Green (Allowed Route)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRuleType('FORBIDDEN')}
+                      className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                        ruleType === 'FORBIDDEN' 
+                          ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' 
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ShieldAlert className="w-4 h-4 text-[#0052cc]" /> Blue (Forbidden Zone)
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {zoneType === 'DISTRICT' && (
-                <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Select District (Akarere)</label>
-                  <select
-                    value={selectedDistrict}
-                    onChange={(e) => setSelectedDistrict(e.target.value)}
-                    className="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:border-[#0052cc]"
-                    required
-                  >
-                    <option value="">-- Hitamo Akarere --</option>
-                    {districtsList.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
+                {/* Boundary Scope */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Boundary Scope <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setZoneType('DISTRICT')}
+                      className={`py-2 px-3 rounded-full border text-xs font-medium text-center ${
+                        zoneType === 'DISTRICT' 
+                          ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' 
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      District Level
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoneType('SECTOR')}
+                      className={`py-2 px-3 rounded-full border text-xs font-medium text-center ${
+                        zoneType === 'SECTOR' 
+                          ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' 
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Sector Level
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              {zoneType === 'SECTOR' && (
-                <>
-                  <div>
-                    <label className="block font-semibold text-gray-700 mb-1">Filter by District</label>
-                    <select
+                {/* Select District */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    District <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1">
+                    <CustomSelect
                       value={selectedDistrict}
-                      onChange={(e) => setSelectedDistrict(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:border-[#0052cc] mb-2"
-                    >
-                      <option value="">-- All Districts --</option>
-                      {districtsList.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
+                      onChange={(val) => setSelectedDistrict(val)}
+                      options={districtOptions}
+                      placeholder="-- Select District (Akarere) --"
+                    />
                   </div>
-                  <div>
-                    <label className="block font-semibold text-gray-700 mb-1">Select Sector (Umurenge)</label>
-                    <select
-                      value={selectedSector}
-                      onChange={(e) => setSelectedSector(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:border-[#0052cc]"
-                      required
-                    >
-                      <option value="">-- Hitamo Umurenge --</option>
-                      {sectorsList.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                </>
-              )}
+                </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Target Vehicle (Plate)</label>
-                <select
-                  value={targetVehicle}
-                  onChange={(e) => setTargetVehicle(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:border-[#0052cc]"
-                >
-                  <option value="ALL">Apply to All Vehicles</option>
-                  {vehiclePlates.map(p => <option key={p} value={p}>Vehicle {p}</option>)}
-                  <option value="RAB 195F">Vehicle RAB 195F</option>
-                  <option value="RAD 452B">Vehicle RAD 452B</option>
-                  <option value="RAE 102C">Vehicle RAE 102C</option>
-                </select>
+                {/* Select Sector (If Sector Level) */}
+                {zoneType === 'SECTOR' && (
+                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
+                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                      Sector <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex-1">
+                      <CustomSelect
+                        value={selectedSector}
+                        onChange={(val) => setSelectedSector(val)}
+                        options={sectorOptions}
+                        placeholder="-- Select Sector (Umurenge) --"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Target Vehicle */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Target Vehicle
+                  </label>
+                  <div className="flex-1">
+                    <CustomSelect
+                      value={targetVehicle}
+                      onChange={(val) => setTargetVehicle(val)}
+                      options={[
+                        { value: 'ALL', label: 'Apply to All Vehicles' },
+                        ...vehiclePlates.map(p => ({ value: p, label: `Vehicle ${p}` })),
+                        { value: 'RAB 195F', label: 'Vehicle RAB 195F' },
+                        { value: 'RAD 452B', label: 'Vehicle RAD 452B' },
+                        { value: 'RAE 102C', label: 'Vehicle RAE 102C' }
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                {/* Custom Name */}
+                <div className="flex items-center min-h-[56px] py-2">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Custom Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bugesera Livestock Safe Corridor"
+                    value={zoneName}
+                    onChange={(e) => setZoneName(e.target.value)}
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                  />
+                </div>
+
               </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Custom Name (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Bugesera Livestock Corridor"
-                  value={zoneName}
-                  onChange={(e) => setZoneName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:border-[#0052cc]"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+              {/* Modal Footer */}
+              <div className="px-6 py-4 border-t border-gray-200/80 bg-[#f8fafd] flex justify-between items-center">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-full font-medium text-gray-600 hover:bg-gray-100 transition"
+                  className="px-5 py-2 text-sm font-medium text-[#001d35] bg-[#c2e7ff] hover:bg-[#a8d4ff] rounded-full transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-6 py-2 rounded-full font-medium shadow-md transition"
+                  className="px-6 py-2 text-sm font-medium text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full shadow-sm transition-colors"
                 >
                   {createMutation.isPending ? 'Saving...' : 'Activate Geofence'}
                 </button>
