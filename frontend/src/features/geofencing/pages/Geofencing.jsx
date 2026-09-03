@@ -381,8 +381,7 @@ const Geofencing = () => {
 
                     <div className="ml-4 flex items-center gap-3 text-[12px] text-gray-400 mt-0.5">
                       <span><Truck className="w-3 h-3 inline mr-1" />{fence.vehicle_plate || 'All Vehicles'}</span>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${isAllowed ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-[#0052cc]'}`}>
-                        {isAllowed ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${isAllowed ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-[#0052cc]'}`}>
                         {isAllowed ? 'ALLOWED' : 'FORBIDDEN'}
                       </span>
                     </div>
