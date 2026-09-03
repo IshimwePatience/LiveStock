@@ -8,13 +8,13 @@ import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
 
 const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
   const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
   const [assignModal, setAssignModal] = useState({ isOpen: false, requestId: null });
   const [confirmArrivalModal, setConfirmArrivalModal] = useState({ isOpen: false, request: null });
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   const userStr = localStorage.getItem('user');
@@ -150,7 +150,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
               <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
                   {getTypeIcon(item.type)}
-                  <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
+                  <span onClick={() => navigate(`/dashboard/movements/view/${item.dbId}`)} className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
                 </div>
               </td>
               <td className="py-2 px-4">
@@ -346,7 +346,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                       </button>
                     )}
                     <button 
-                      onClick={() => setOpenActionDropdown(null)}
+                      onClick={() => { navigate(`/dashboard/movements/view/${item.dbId}`); setOpenActionDropdown(null); }}
                       className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                     >
                       View Details

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from 'rwanda-locations';
-import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search } from 'lucide-react';
+import { useNavigate, Link, useParams, useLocation, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -40,9 +40,14 @@ const COLUMNS = [
 
 const CreatePermit = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const requestType = user?.role === 'DARO' ? 'DISTRICT_TO_DISTRICT' : 'SECTOR_TO_SECTOR';
+
+  const { id: editId } = useParams();
+  const isViewMode = location.pathname.includes('/view/') || searchParams.get('mode') === 'view';
 
   const [loading, setLoading] = useState(false);
   // tag -> { vaccinated, antibioticActive, daysRemaining, antibiotic, withdrawalEnd }
@@ -61,7 +66,6 @@ const CreatePermit = () => {
   // ==========================
   // DESKTOP: SHEETS STATE
   // ==========================
-  const { id: editId } = useParams();
 
   const [gridData, setGridData] = useState(() => {
     const saved = localStorage.getItem('movementFormDraft');
@@ -227,6 +231,7 @@ const CreatePermit = () => {
   };
 
   const handleCellKeyDown = (e, row, col) => {
+    if (isViewMode) return;
     const readOnly = [3].includes(col); // Only Date is read-only
     if (isEditing) {
       if (e.key === 'Enter') {
@@ -324,6 +329,7 @@ const CreatePermit = () => {
   };
 
   const updateGridCell = (r, c, value) => {
+    if (isViewMode) return;
     if (c === 17 && value.toString().trim() !== '') {
        const isDuplicate = gridData.some((row, rIdx) => rIdx !== r && row[17].toString().trim() === value.toString().trim());
        if (isDuplicate) {
@@ -672,10 +678,15 @@ const CreatePermit = () => {
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-medium text-gray-700 leading-tight">
-                  {editId ? 'Vugurura Uruhushya (Update Permit)' : 'Saba Uruhushya (New Permit)'}
+                <h1 className="text-lg font-medium text-gray-700 leading-tight flex items-center gap-2">
+                  {isViewMode ? 'Reba Uruhushya (View Permit)' : editId ? 'Vugurura Uruhushya (Update Permit)' : 'Saba Uruhushya (New Permit)'}
+                  {isViewMode && (
+                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" /> READ-ONLY
+                    </span>
+                  )}
                 </h1>
-                {!editId && lastSaved && (
+                {!editId && !isViewMode && lastSaved && (
                   <span className="text-xs text-gray-400 font-normal ml-2">
                     Autosaved at {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </span>
@@ -684,27 +695,38 @@ const CreatePermit = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a 
-              href="/dashboard/movements"
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              Cancel
-            </a>
-            {!editId && (
+            {isViewMode ? (
               <button 
-                onClick={handleClearForm}
-                className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                onClick={() => navigate('/dashboard/movements')} 
+                className="bg-[#0052cc] text-white hover:bg-[#0047b3] px-6 py-2 rounded-full font-medium transition-colors"
               >
-                Clear draft
+                Back to Movements
               </button>
+            ) : (
+              <>
+                <a 
+                  href="/dashboard/movements"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  Cancel
+                </a>
+                {!editId && (
+                  <button 
+                    onClick={handleClearForm}
+                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    Clear draft
+                  </button>
+                )}
+                <button 
+                  onClick={handleSubmitSheets} 
+                  disabled={loading}
+                  className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
+                >
+                  {loading ? 'Submitting...' : (editId ? 'Update Record' : 'Submit Records')}
+                </button>
+              </>
             )}
-            <button 
-              onClick={handleSubmitSheets} 
-              disabled={loading}
-              className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
-            >
-              {loading ? 'Submitting...' : (editId ? 'Update Record' : 'Submit Records')}
-            </button>
           </div>
         </div>
 
@@ -968,7 +990,7 @@ const CreatePermit = () => {
                               if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
                             }}
                             onDoubleClick={() => {
-                              if (![5].includes(cIdx)) setIsEditing(true);
+                              if (!isViewMode && ![5].includes(cIdx)) setIsEditing(true);
                             }}
                           >
                             <span className="truncate">{val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}</span>
@@ -1005,17 +1027,23 @@ const CreatePermit = () => {
       {/* MOBILE VIEW (GOOGLE FORMS CLONE)                     */}
       {/* ==================================================== */}
       <div className="md:hidden min-h-screen bg-[#F0EBF8] text-[14px] text-black">
-        <form onSubmit={handleSubmitForms} className="max-w-3xl mx-auto p-4 space-y-4">
+        <form onSubmit={isViewMode ? (e) => e.preventDefault() : handleSubmitForms} className="max-w-3xl mx-auto p-4 space-y-4">
+          <fieldset disabled={isViewMode} style={{ all: 'unset', display: 'contents' }}>
           
           {/* Form Header Card */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="h-2.5 w-full bg-[#673AB7]"></div>
             <div className="p-6">
-              <h1 className="text-3xl font-normal text-gray-900 mb-2">
-                {editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
+              <h1 className="text-3xl font-normal text-gray-900 mb-2 flex items-center gap-3">
+                {isViewMode ? 'Reba Uruhushya' : editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
+                {isViewMode && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full border border-blue-200">
+                    <Eye className="w-3 h-3" /> READ-ONLY
+                  </span>
+                )}
               </h1>
               <p className="text-gray-600 mb-4 text-sm">
-                {editId ? 'Update an existing livestock movement permit.' : 'Form for requesting new livestock movement permits.'}
+                {isViewMode ? 'Viewing permit details. No changes can be made.' : editId ? 'Update an existing livestock movement permit.' : 'Form for requesting new livestock movement permits.'}
               </p>
               
               <div className="flex items-center gap-2 text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2">
@@ -1192,9 +1220,11 @@ const CreatePermit = () => {
                        </div>
                      </div>
                    ))}
-                   <button type="button" onClick={addMobileAnimal} className="text-[#673AB7] text-sm font-medium hover:bg-purple-50 px-3 py-1.5 rounded transition">
-                     + Add another animal
-                   </button>
+                    {!isViewMode && (
+                      <button type="button" onClick={addMobileAnimal} className="text-[#673AB7] text-sm font-medium hover:bg-purple-50 px-3 py-1.5 rounded transition">
+                        + Add another animal
+                      </button>
+                    )}
                 </div>
 
               </>
@@ -1203,17 +1233,30 @@ const CreatePermit = () => {
 
           {/* Submit Actions */}
           <div className="flex items-center justify-between pt-4 pb-12">
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
-            >
-              {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
-            </button>
-            <div className="flex items-center gap-4">
-              <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
-            </div>
+            {isViewMode ? (
+              <button 
+                type="button"
+                onClick={() => navigate('/dashboard/movements')}
+                className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-6 py-2 rounded font-medium shadow-sm transition"
+              >
+                Back to Movements
+              </button>
+            ) : (
+              <>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
+                >
+                  {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
+                </button>
+                <div className="flex items-center gap-4">
+                  <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
+                </div>
+              </>
+            )}
           </div>
+          </fieldset>
         </form>
       </div>
     </>

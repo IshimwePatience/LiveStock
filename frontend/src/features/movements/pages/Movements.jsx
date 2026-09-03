@@ -249,9 +249,12 @@ const Movements = () => {
   const displayUsers = uniqueUsers.slice(0, 3);
   const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
 
-  const tabs = [
-    'Requests', 'Incoming (Destination)', 'History'
-  ];
+  const tabs = useMemo(() => {
+    if (user?.role === 'RAB') {
+      return ['Requests', 'History'];
+    }
+    return ['Requests', 'Incoming (Destination)', 'History'];
+  }, [user?.role]);
 
   return (
     <div className="flex flex-col h-full bg-white">
