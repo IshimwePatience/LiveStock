@@ -12,11 +12,11 @@ const Geofence = sequelize.define('Geofence', {
     allowNull: false
   },
   rule_type: {
-    type: DataTypes.ENUM('ALLOWED', 'FORBIDDEN'),
+    type: DataTypes.STRING,
     defaultValue: 'ALLOWED'
   },
   zone_type: {
-    type: DataTypes.ENUM('DISTRICT', 'SECTOR', 'CUSTOM_POLYGON'),
+    type: DataTypes.STRING,
     defaultValue: 'DISTRICT'
   },
   district_name: {

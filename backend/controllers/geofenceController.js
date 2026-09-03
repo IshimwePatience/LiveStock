@@ -1,7 +1,9 @@
 const geofenceService = require('../services/geofenceService');
+const Geofence = require('../models/Geofence');
 
 exports.getGeofences = async (req, res) => {
   try {
+    await Geofence.sync();
     const fences = await geofenceService.getAllGeofences();
     res.json(fences);
   } catch (error) {
@@ -11,6 +13,7 @@ exports.getGeofences = async (req, res) => {
 
 exports.createGeofence = async (req, res) => {
   try {
+    await Geofence.sync();
     const fence = await geofenceService.createGeofence({
       ...req.body,
       created_by: req.user ? req.user.id : null

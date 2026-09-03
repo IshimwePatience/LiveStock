@@ -243,41 +243,6 @@ const Geofencing = () => {
               </GeoJSON>
             );
           })}
-
-          {/* Circular Avatar Driver Markers */}
-          {SAMPLE_DRIVERS.map(driver => (
-            <Marker
-              key={driver.id}
-              position={[driver.lat, driver.lon]}
-              icon={createAvatarIcon(driver.name, driver.avatar, driver.rule)}
-            >
-              <Popup className="custom-geofence-popup" closeButton={false}>
-                <div className={`w-[270px] bg-white rounded-2xl p-4 shadow-2xl border-2 ${driver.rule === 'ALLOWED' ? 'border-[#10b981]' : 'border-[#0052cc]'}`}>
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <img src={driver.avatar} alt={driver.name} className={`w-10 h-10 rounded-full object-cover border-2 ${driver.rule === 'ALLOWED' ? 'border-[#10b981]' : 'border-[#0052cc]'}`} />
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-sm leading-tight">{driver.name}</h4>
-                        <span className="text-[11px] text-gray-500 font-medium">{driver.plate}</span>
-                      </div>
-                    </div>
-                    <button onClick={() => toast.success(`Activity logged for ${driver.name}`)} className={`px-3 py-1 rounded-full text-xs font-semibold border shrink-0 ${driver.rule === 'ALLOWED' ? 'border-[#10b981] text-[#10b981] hover:bg-emerald-50' : 'border-[#0052cc] text-[#0052cc] hover:bg-blue-50'}`}>
-                      Log activity
-                    </button>
-                  </div>
-                  <div className="space-y-2 text-xs border-t border-gray-100 pt-2.5 text-gray-700">
-                    <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400 shrink-0" /><span className="truncate">{driver.district} District, Rwanda</span></div>
-                    <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-400 shrink-0" /><span>Zone: <strong>{driver.geofence}</strong></span></div>
-                    <div className="flex items-center gap-2"><ShieldCheck className={`w-4 h-4 shrink-0 ${driver.rule === 'ALLOWED' ? 'text-[#10b981]' : 'text-[#0052cc]'}`} /><span>Status: <strong>{driver.status}</strong></span></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 border-t border-gray-100 mt-3 pt-2.5 text-[11px]">
-                    <div><span className="font-bold text-gray-900 block text-xs">Car</span><span className="text-gray-500">{driver.plate}</span></div>
-                    <div className="text-right"><span className="font-bold text-gray-900 block text-xs">{driver.lastSeen}</span><span className="text-gray-500">Last seen</span></div>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
         </MapContainer>
       </div>
 
