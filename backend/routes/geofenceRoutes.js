@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const geofenceController = require('../controllers/geofenceController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/auth');
 
 router.get('/', protect, geofenceController.getGeofences);
 router.post('/', protect, geofenceController.createGeofence);
