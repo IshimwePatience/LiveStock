@@ -7,6 +7,7 @@
     "dev": "nodemon server.js",
     "seed": "node seeders/seedAdmin.js",
     "import-data": "node seeders/importData.js",
+    "replace-name": "node seeders/replaceName.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
