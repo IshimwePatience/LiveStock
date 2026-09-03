@@ -39,8 +39,12 @@ async function importData() {
     }
 
     if (data.VetRecord && data.VetRecord.length > 0) {
-      await VetRecord.bulkCreate(data.VetRecord, { ignoreDuplicates: true });
-      console.log(`Imported ${data.VetRecord.length} VetRecords.`);
+      const cleanedVetRecords = data.VetRecord.map(v => ({
+        ...v,
+        animal_tag: v.animal_tag || 'N/A'
+      }));
+      await VetRecord.bulkCreate(cleanedVetRecords, { ignoreDuplicates: true });
+      console.log(`Imported ${cleanedVetRecords.length} VetRecords.`);
     }
 
     if (data.Case && data.Case.length > 0) {
