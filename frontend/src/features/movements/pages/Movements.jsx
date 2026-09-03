@@ -320,13 +320,13 @@ const Movements = () => {
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
          {activeTab === 'Requests' && (
-            <MovementsList movements={filteredMovements.filter(m => !isIncoming(m) && !['COMPLETED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => !['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
          {activeTab === 'Incoming (Destination)' && (
-            <MovementsList movements={filteredMovements.filter(m => isIncoming(m) || (user?.role === 'RAB' && !['COMPLETED', 'REJECTED'].includes(m.rawStatus)))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
+            <MovementsList movements={filteredMovements.filter(m => isIncoming(m))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
          )}
          {activeTab === 'History' && (
-            <MovementsList movements={filteredMovements.filter(m => ['COMPLETED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
       </div>
 
