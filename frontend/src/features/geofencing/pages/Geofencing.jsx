@@ -465,20 +465,20 @@ const Geofencing = () => {
                     <button
                       type="button"
                       onClick={() => setRuleType('ALLOWED')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center transition ${
                         ruleType === 'ALLOWED' ? 'bg-emerald-50 border-[#10b981] text-[#10b981] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#10b981]" /> Green (Allowed Route)
+                      Green (Allowed Route)
                     </button>
                     <button
                       type="button"
                       onClick={() => setRuleType('FORBIDDEN')}
-                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center transition ${
                         ruleType === 'FORBIDDEN' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      <ShieldAlert className="w-3.5 h-3.5 text-[#0052cc]" /> Blue (Forbidden Zone)
+                      Blue (Forbidden Zone)
                     </button>
                   </div>
                 </div>
