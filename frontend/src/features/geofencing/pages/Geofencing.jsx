@@ -308,17 +308,6 @@ const Geofencing = () => {
           <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
             <Search className="w-5 h-5" />
           </button>
-          <div className="h-6 w-px bg-gray-200 mx-1"></div>
-          {/* Add Zone Blue Button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="p-2 hover:bg-blue-50 rounded-full transition-colors text-blue-600 flex items-center justify-center"
-            title="Add Geofence Zone"
-          >
-            <div className="w-6 h-6 rounded-md bg-[#0052cc] text-white flex items-center justify-center">
-              <Plus className="w-4 h-4" />
-            </div>
-          </button>
         </div>
       </div>
 
@@ -327,21 +316,15 @@ const Geofencing = () => {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
           <button
             onClick={() => setActiveFilterPill(activeFilterPill === 'ALLOWED' ? null : 'ALLOWED')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium whitespace-nowrap transition-colors ${activeFilterPill === 'ALLOWED' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            className={`px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium whitespace-nowrap transition-colors ${activeFilterPill === 'ALLOWED' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
           >
-            <ShieldCheck className="w-4 h-4" /> Allowed Zones
+            Allowed Zones
           </button>
           <button
             onClick={() => setActiveFilterPill(activeFilterPill === 'FORBIDDEN' ? null : 'FORBIDDEN')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium whitespace-nowrap transition-colors ${activeFilterPill === 'FORBIDDEN' ? 'bg-[#0052cc] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            className={`px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium whitespace-nowrap transition-colors ${activeFilterPill === 'FORBIDDEN' ? 'bg-[#0052cc] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
           >
-            <ShieldAlert className="w-4 h-4" /> Forbidden Zones
-          </button>
-          <button
-            onClick={() => queryClient.invalidateQueries(['geofences'])}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"
-          >
-            <RefreshCw className="w-4 h-4 text-gray-500" /> Refresh
+            Forbidden Zones
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -392,9 +375,7 @@ const Geofencing = () => {
         <div className="flex-1 overflow-y-auto no-scrollbar">
           {filteredFences.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">
-              <ShieldCheck className="w-10 h-10 mx-auto mb-3 text-gray-200" />
-              No geofence zones found.{' '}
-              <button onClick={() => setIsModalOpen(true)} className="text-[#0052cc] underline">Add one</button>
+              No geofence zones found.
             </div>
           ) : (
             <div className="flex flex-col">
@@ -447,88 +428,123 @@ const Geofencing = () => {
           )}
         </div>
 
-        {/* Sidebar Footer: Add Zone */}
-        <div className="border-t border-gray-100 p-4 bg-[#f8fafd]">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full py-2.5 bg-[#0052cc] hover:bg-[#0047b3] text-white text-sm font-medium rounded-full flex items-center justify-center gap-2 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Add Geofence Zone
-          </button>
-        </div>
+
       </div>
 
-      {/* ===================== MODAL: CREATE GEOFENCE (GOOGLE DRIVE STYLE) ===================== */}
+      {/* ===================== MODAL: SET GEOFENCE BOUNDARY (MATCHES CREATE USER DESIGN) ===================== */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden">
-
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-200/80 bg-[#f8fafd] flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Set Geofence Boundary</h2>
-                <p className="text-xs text-gray-500">Configure green permitted routes or blue forbidden areas in Rwanda.</p>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200/60 text-gray-500 transition-colors">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 bg-black/30 z-[1000] flex items-center justify-center backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-[520px] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200"
+            style={{ background: '#f0f4f9' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <h2 className="text-[17px] font-semibold text-gray-900">
+                Set Geofence Boundary
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition text-gray-500"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
-            {/* Modal Form */}
+            {/* Body */}
             <form onSubmit={handleCreateSubmit} className="flex flex-col gap-0">
-              <div className="px-6 py-4 flex flex-col gap-0 bg-white">
+              <div className="px-6 pb-2 flex flex-col gap-0">
 
                 {/* Rule Type */}
-                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">Rule Type <span className="text-red-500">*</span></label>
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Rule Type <span className="text-red-500">*</span>
+                  </label>
                   <div className="flex-1 grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setRuleType('ALLOWED')}
-                      className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${ruleType === 'ALLOWED' ? 'bg-emerald-50 border-[#10b981] text-[#10b981] font-bold' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
-                      <ShieldCheck className="w-4 h-4 text-[#10b981]" /> Green (Allowed Route)
+                    <button
+                      type="button"
+                      onClick={() => setRuleType('ALLOWED')}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                        ruleType === 'ALLOWED' ? 'bg-emerald-50 border-[#10b981] text-[#10b981] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#10b981]" /> Green (Allowed Route)
                     </button>
-                    <button type="button" onClick={() => setRuleType('FORBIDDEN')}
-                      className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${ruleType === 'FORBIDDEN' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
-                      <ShieldAlert className="w-4 h-4 text-[#0052cc]" /> Blue (Forbidden Zone)
+                    <button
+                      type="button"
+                      onClick={() => setRuleType('FORBIDDEN')}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                        ruleType === 'FORBIDDEN' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#0052cc]" /> Blue (Forbidden Zone)
                     </button>
                   </div>
                 </div>
 
                 {/* Boundary Scope */}
-                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">Boundary Scope <span className="text-red-500">*</span></label>
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Boundary Scope <span className="text-red-500">*</span>
+                  </label>
                   <div className="flex-1 grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setZoneType('DISTRICT')}
-                      className={`py-2 px-3 rounded-full border text-xs font-medium text-center ${zoneType === 'DISTRICT' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                    <button
+                      type="button"
+                      onClick={() => setZoneType('DISTRICT')}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-medium text-center transition ${
+                        zoneType === 'DISTRICT' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
                       District Level
                     </button>
-                    <button type="button" onClick={() => setZoneType('SECTOR')}
-                      className={`py-2 px-3 rounded-full border text-xs font-medium text-center ${zoneType === 'SECTOR' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                    <button
+                      type="button"
+                      onClick={() => setZoneType('SECTOR')}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-medium text-center transition ${
+                        zoneType === 'SECTOR' ? 'bg-blue-50 border-[#0052cc] text-[#0052cc] font-bold' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
                       Sector Level
                     </button>
                   </div>
                 </div>
 
-                {/* Select District */}
-                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">District <span className="text-red-500">*</span></label>
+                {/* District */}
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    District <span className="text-red-500">*</span>
+                  </label>
                   <div className="flex-1">
-                    <CustomSelect value={selectedDistrict} onChange={(val) => setSelectedDistrict(val)} options={districtOptions} placeholder="-- Select District (Akarere) --" />
+                    <CustomSelect
+                      value={selectedDistrict}
+                      onChange={(val) => setSelectedDistrict(val)}
+                      options={districtOptions}
+                    />
                   </div>
                 </div>
 
-                {/* Select Sector */}
+                {/* Sector */}
                 {zoneType === 'SECTOR' && (
-                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
-                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">Sector <span className="text-red-500">*</span></label>
+                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                      Sector <span className="text-red-500">*</span>
+                    </label>
                     <div className="flex-1">
-                      <CustomSelect value={selectedSector} onChange={(val) => setSelectedSector(val)} options={sectorOptions} placeholder="-- Select Sector (Umurenge) --" />
+                      <CustomSelect
+                        value={selectedSector}
+                        onChange={(val) => setSelectedSector(val)}
+                        options={sectorOptions}
+                      />
                     </div>
                   </div>
                 )}
 
                 {/* Target Vehicle */}
-                <div className="flex items-center min-h-[56px] border-b border-gray-200/80 py-2">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">Target Vehicle</label>
+                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Target Vehicle
+                  </label>
                   <div className="flex-1">
                     <CustomSelect
                       value={targetVehicle}
@@ -545,8 +561,10 @@ const Geofencing = () => {
                 </div>
 
                 {/* Custom Name */}
-                <div className="flex items-center min-h-[56px] py-2">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">Custom Name</label>
+                <div className="flex items-center min-h-[56px]">
+                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                    Custom Name
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g. Bugesera Livestock Safe Corridor"
@@ -557,15 +575,21 @@ const Geofencing = () => {
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-gray-200/80 bg-[#f8fafd] flex justify-between items-center">
-                <button type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 text-sm font-medium text-[#001d35] bg-[#c2e7ff] hover:bg-[#a8d4ff] rounded-full transition-colors">
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 mt-1 bg-[#f0f4f9]">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2 text-sm font-medium text-[#0052cc] hover:bg-blue-50 rounded-full transition"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={createMutation.isPending}
-                  className="px-6 py-2 text-sm font-medium text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full shadow-sm transition-colors">
-                  {createMutation.isPending ? 'Saving...' : 'Activate Geofence'}
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full transition disabled:opacity-50"
+                >
+                  {createMutation.isPending ? 'Activating...' : 'Activate Geofence'}
                 </button>
               </div>
             </form>
