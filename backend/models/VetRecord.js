@@ -29,7 +29,8 @@ const VetRecord = sequelize.define('VetRecord', {
   vaccines: { type: DataTypes.STRING, allowNull: true },
   dose_given: { type: DataTypes.INTEGER, allowNull: true },
   damaged_dose: { type: DataTypes.INTEGER, allowNull: true },
-  withdrawal_period_end: { type: DataTypes.DATE, allowNull: true },
+  date_given: { type: DataTypes.DATEONLY, allowNull: true },
+  withdrawal_period_end: { type: DataTypes.DATEONLY, allowNull: true },
 });
 
 module.exports = VetRecord;

@@ -74,7 +74,7 @@ const CreateVetRecord = () => {
         const home = homesMap[homeKey];
         let animal = home.animals.find(a => a.animal_type === r.animal_type);
         if (!animal) {
-          animal = { id: Date.now() + Math.random(), animal_type: r.animal_type || 'COW', ear_tag: r.animal_tag || '', vaccines: [], doses: {} };
+          animal = { id: Date.now() + Math.random(), animal_type: r.animal_type || 'COW', ear_tag: r.animal_tag || '', date_given: r.date_given || '', withdrawal_period_end: r.withdrawal_period_end || '', vaccines: [], doses: {} };
           home.animals.push(animal);
         }
         
@@ -99,7 +99,7 @@ const CreateVetRecord = () => {
       id: Date.now(),
       owner_name: '', owner_phone: '', owner_nid: '',
       district: user?.district_id || '', sector: user?.sector_id || '', cell: '', village: '',
-      animals: [{ id: Date.now() + 1, animal_type: 'COW', ear_tag: '', vaccines: [], doses: {} }]
+      animals: [{ id: Date.now() + 1, animal_type: 'COW', ear_tag: '', date_given: new Date().toISOString().split('T')[0], withdrawal_period_end: '', vaccines: [], doses: {} }]
     }];
   });
 
@@ -164,7 +164,7 @@ const CreateVetRecord = () => {
   const addAnimalToHome = (homeId) => {
     setHomes(prev => prev.map(h => {
       if (h.id !== homeId) return h;
-      return { ...h, animals: [...h.animals, { id: Date.now(), animal_type: 'COW', ear_tag: '', vaccines: [], doses: {} }] };
+      return { ...h, animals: [...h.animals, { id: Date.now(), animal_type: 'COW', ear_tag: '', date_given: new Date().toISOString().split('T')[0], withdrawal_period_end: '', vaccines: [], doses: {} }] };
     }));
   };
 
@@ -173,7 +173,7 @@ const CreateVetRecord = () => {
       id: Date.now(),
       owner_name: '', owner_phone: '', owner_nid: '',
       district: user?.district_id || '', sector: user?.sector_id || '', cell: '', village: '',
-      animals: [{ id: Date.now() + 1, animal_type: 'COW', vaccines: [], doses: {} }]
+      animals: [{ id: Date.now() + 1, animal_type: 'COW', ear_tag: '', date_given: new Date().toISOString().split('T')[0], withdrawal_period_end: '', vaccines: [], doses: {} }]
     }]);
   };
 
@@ -183,7 +183,7 @@ const CreateVetRecord = () => {
       id: Date.now(),
       owner_name: '', owner_phone: '', owner_nid: '',
       district: user?.district_id || '', sector: user?.sector_id || '', cell: '', village: '',
-      animals: [{ id: Date.now() + 1, animal_type: 'COW', vaccines: [], doses: {} }]
+      animals: [{ id: Date.now() + 1, animal_type: 'COW', ear_tag: '', date_given: new Date().toISOString().split('T')[0], withdrawal_period_end: '', vaccines: [], doses: {} }]
     }]);
     toast.success('Form cleared');
   };
@@ -234,6 +234,8 @@ const CreateVetRecord = () => {
             vaccines: vaccine,
             dose_given: doseInfo.given,
             damaged_dose: doseInfo.damaged,
+            date_given: recordType === 'MEDICATION' ? (a.date_given || new Date().toISOString().split('T')[0]) : null,
+            withdrawal_period_end: recordType === 'MEDICATION' ? (a.withdrawal_period_end || null) : null,
             type: recordType
           });
         });
@@ -362,8 +364,38 @@ const CreateVetRecord = () => {
                     />
                   </div>
 
+                  {/* Medication-only: date antibiotic given + withdrawal period */}
+                  {recordType === 'MEDICATION' && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="text-base text-gray-800">Date Antibiotic Given <span className="text-red-500">*</span></div>
+                        <input
+                          type="date"
+                          value={animal.date_given || new Date().toISOString().split('T')[0]}
+                          readOnly
+                          disabled
+                          className="w-full border-b border-gray-200 py-1 outline-none bg-transparent text-gray-500 cursor-not-allowed"
+                        />
+                        <div className="text-xs text-gray-400">Auto-filled — today's date</div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-base text-gray-800">Withdrawal Period Ends <span className="text-red-500">*</span></div>
+                        <input
+                          type="date"
+                          required
+                          value={animal.withdrawal_period_end || ''}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={(e) => handleMobileAnimalChange(home.id, animal.id, 'withdrawal_period_end', e.target.value)}
+                          className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors"
+                          disabled={isView}
+                        />
+                        <div className="text-xs text-gray-400">Date antibiotic clears from animal's body</div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
-                    <div className="text-base text-gray-800">{recordType === 'VACCINATION' ? 'Vaccines' : 'Medication'} <span className="text-red-500">*</span></div>
+                    <div className="text-base text-gray-800">{recordType === 'VACCINATION' ? 'Vaccines' : 'Antibiotic'} <span className="text-red-500">*</span></div>
                     <CustomMultiSelect 
                       value={Array.isArray(animal.vaccines) ? animal.vaccines : []} 
                       onChange={(v) => handleMobileAnimalChange(home.id, animal.id, 'vaccines', v)} 
@@ -377,13 +409,18 @@ const CreateVetRecord = () => {
                         { value: 'Anthrax', label: 'Anthrax' },
                         { value: 'Blackquarter', label: 'Blackquarter' },
                       ] : [
-                        { value: 'Dewormer', label: 'Dewormer' },
-                        { value: 'Trypanosomiasis', label: 'Trypanosomiasis Treatment' },
-                        { value: 'East Coast Fever', label: 'East Coast Fever Treatment' },
-                        { value: 'Antibiotics', label: 'General Antibiotics' },
-                        { value: 'Vitamins', label: 'Vitamins/Supplements' }
+                        { value: 'Penicillin', label: 'Penicillin' },
+                        { value: 'Oxytetracycline', label: 'Oxytetracycline (OTC)' },
+                        { value: 'Amoxicillin', label: 'Amoxicillin' },
+                        { value: 'Enrofloxacin', label: 'Enrofloxacin' },
+                        { value: 'Tylosin', label: 'Tylosin' },
+                        { value: 'Sulphonamide', label: 'Sulphonamide' },
+                        { value: 'Streptomycin', label: 'Streptomycin' },
+                        { value: 'Chlortetracycline', label: 'Chlortetracycline' },
+                        { value: 'Doxycycline', label: 'Doxycycline' },
+                        { value: 'Florfenicol', label: 'Florfenicol' },
                       ]} 
-                      placeholder="Select vaccines..."
+                      placeholder={recordType === 'VACCINATION' ? 'Select vaccines...' : 'Select antibiotic...'}
                     />
                   </div>
                   
