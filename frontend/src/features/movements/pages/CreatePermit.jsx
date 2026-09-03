@@ -681,8 +681,8 @@ const CreatePermit = () => {
                 <h1 className="text-lg font-medium text-gray-700 leading-tight flex items-center gap-2">
                   {isViewMode ? 'Reba Uruhushya (View Permit)' : editId ? 'Vugurura Uruhushya (Update Permit)' : 'Saba Uruhushya (New Permit)'}
                   {isViewMode && (
-                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" /> READ-ONLY
+                    <span className="text-xs text-gray-500 font-normal flex items-center gap-1 ml-1">
+                      <Eye className="w-3.5 h-3.5" /> (Read-only)
                     </span>
                   )}
                 </h1>
@@ -698,7 +698,7 @@ const CreatePermit = () => {
             {isViewMode ? (
               <button 
                 onClick={() => navigate('/dashboard/movements')} 
-                className="bg-[#0052cc] text-white hover:bg-[#0047b3] px-6 py-2 rounded-full font-medium transition-colors"
+                className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors"
               >
                 Back to Movements
               </button>
@@ -1037,8 +1037,8 @@ const CreatePermit = () => {
               <h1 className="text-3xl font-normal text-gray-900 mb-2 flex items-center gap-3">
                 {isViewMode ? 'Reba Uruhushya' : editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
                 {isViewMode && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full border border-blue-200">
-                    <Eye className="w-3 h-3" /> READ-ONLY
+                  <span className="text-xs text-gray-500 font-normal flex items-center gap-1">
+                    <Eye className="w-3.5 h-3.5" /> (Read-only)
                   </span>
                 )}
               </h1>
@@ -1237,7 +1237,7 @@ const CreatePermit = () => {
               <button 
                 type="button"
                 onClick={() => navigate('/dashboard/movements')}
-                className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-6 py-2 rounded font-medium shadow-sm transition"
+                className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors"
               >
                 Back to Movements
               </button>
