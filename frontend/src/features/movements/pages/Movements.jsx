@@ -198,15 +198,16 @@ const Movements = () => {
   // Helper to check if movement is incoming to current user's jurisdiction
   const isIncoming = (m) => {
     if (!user) return false;
+    // An incoming permit is one going TO the user's jurisdiction, initiated by someone else
     if (user.role === 'DARO' && user.district_id) {
-      const userDist = user.district_id.toLowerCase();
-      return (m.destDistrict && m.destDistrict.toLowerCase() === userDist) || 
-             (m.destinationId && m.destinationId.toLowerCase() === userDist);
+      const userDist = user.district_id.toLowerCase().trim();
+      const dest = (m.destDistrict || m.destinationId || '').toLowerCase().trim();
+      return dest === userDist;
     }
     if (user.role === 'SARO' && user.sector_id) {
-      const userSec = user.sector_id.toLowerCase();
-      return (m.destSector && m.destSector.toLowerCase() === userSec) || 
-             (m.destinationId && m.destinationId.toLowerCase() === userSec);
+      const userSec = user.sector_id.toLowerCase().trim();
+      const dest = (m.destSector || m.destinationId || '').toLowerCase().trim();
+      return dest === userSec;
     }
     return false;
   };
@@ -320,13 +321,13 @@ const Movements = () => {
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
          {activeTab === 'Requests' && (
-            <MovementsList movements={filteredMovements.filter(m => !['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => !isIncoming(m) && !['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
          {activeTab === 'Incoming (Destination)' && (
             <MovementsList movements={filteredMovements.filter(m => isIncoming(m))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
          )}
          {activeTab === 'History' && (
-            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
       </div>
 
