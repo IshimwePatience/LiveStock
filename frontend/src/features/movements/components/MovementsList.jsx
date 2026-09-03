@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ChevronDown, Bug, FileText, ArrowUp, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
 
-const MovementsList = ({ movements, isLoading, isError }) => {
+const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
   const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
@@ -337,6 +337,14 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                 </button>
                 {openActionDropdown === item.id && (
                   <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                    {(item.rawStatus === 'APPROVED' || item.tripStatus === 'ACTIVE') && (
+                      <button 
+                        onClick={() => { setConfirmArrivalModal({ isOpen: true, request: item }); setOpenActionDropdown(null); }}
+                        className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-semibold hover:bg-green-50 transition-colors"
+                      >
+                        Confirm Arrival (OTP)
+                      </button>
+                    )}
                     <button 
                       onClick={() => setOpenActionDropdown(null)}
                       className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
@@ -351,12 +359,6 @@ const MovementsList = ({ movements, isLoading, isError }) => {
                         Edit
                       </button>
                     )}
-                    <button 
-                      onClick={() => setOpenActionDropdown(null)}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                    >
-                      Process
-                    </button>
                   </div>
                 )}
               </td>

@@ -5,8 +5,29 @@ class MovementService {
   
   // Data Access Rule Implementation
   _buildScopeFilter(user) {
-    if (user.role === 'SARO') return { origin_id: user.sector_id };
-    if (user.role === 'DARO') return { origin_id: user.district_id };
+    const { Op } = require('sequelize');
+    if (user.role === 'SARO' && user.sector_id) {
+      return {
+        [Op.or]: [
+          { origin_sector: user.sector_id },
+          { dest_sector: user.sector_id },
+          { origin_id: user.sector_id },
+          { destination_id: user.sector_id },
+          { initiator_id: user.id }
+        ]
+      };
+    }
+    if (user.role === 'DARO' && user.district_id) {
+      return {
+        [Op.or]: [
+          { origin_district: user.district_id },
+          { dest_district: user.district_id },
+          { origin_id: user.district_id },
+          { destination_id: user.district_id },
+          { initiator_id: user.id }
+        ]
+      };
+    }
     return {}; // RAB sees all
   }
 
@@ -183,21 +204,33 @@ class MovementService {
     return { request, trip };
   }
 
-  async arriveTrip(user, requestId) {
+  async arriveTrip(user, requestId, otp) {
     const request = await MovementRequest.findByPk(requestId, {
       include: [{ model: Trip }]
     });
     if (!request) throw new Error('Request not found');
     if (!request.Trip) throw new Error('Trip not found');
-    if (request.Trip.status !== 'ACTIVE') throw new Error('Trip is not active');
+    if (request.Trip.status !== 'ACTIVE' && request.Trip.status !== 'IN_PROGRESS') throw new Error('Trip is not active');
 
-    // Only destination officer can confirm arrival. Simplification for now: DARO or RAB.
-    if (user.role !== 'DARO' && user.role !== 'RAB') {
+    if (user.role !== 'DARO' && user.role !== 'SARO' && user.role !== 'RAB') {
       throw new Error('Only authorized officers can confirm arrival');
+    }
+
+    if (otp && request.Trip.otp && String(request.Trip.otp).trim() !== String(otp).trim()) {
+      throw new Error('Invalid OTP code. Please check the driver\'s OTP and try again.');
     }
     
     request.Trip.status = 'ARRIVED';
     await request.Trip.save();
+
+    request.status = 'COMPLETED';
+    await request.save();
+
+    await notificationService.notifyUser(
+      request.initiator_id,
+      `Movement Permit ${request.permit_number} has arrived at destination (${request.dest_district || request.destination_id}).`,
+      'SYSTEM'
+    );
 
     return request.Trip;
   }

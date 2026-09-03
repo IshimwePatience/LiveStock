@@ -131,6 +131,7 @@ const Movements = () => {
       return {
         id: `MVT-${req.id.substring(0, 8).toUpperCase()}`, // Using first 8 chars of UUID for readability
         dbId: req.id,
+        permitNumber: req.permit_number || `MVT-${req.id.substring(0, 8).toUpperCase()}`,
         type,
         rawType: req.type,
         filterType,
@@ -139,6 +140,11 @@ const Movements = () => {
         filterAnimal,
         farmerName: req.owner_name || 'Unknown Farmer',
         route: `${origin} → ${destination}`,
+        destDistrict: req.dest_district || req.destination_id,
+        destSector: req.dest_sector || req.destination_id,
+        destinationId: req.destination_id,
+        originDistrict: req.origin_district || req.origin_id,
+        originSector: req.origin_sector || req.origin_id,
         title: detailsString,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
@@ -189,6 +195,22 @@ const Movements = () => {
     return result;
   }, [movements, searchQuery, selectedFilters]);
 
+  // Helper to check if movement is incoming to current user's jurisdiction
+  const isIncoming = (m) => {
+    if (!user) return false;
+    if (user.role === 'DARO' && user.district_id) {
+      const userDist = user.district_id.toLowerCase();
+      return (m.destDistrict && m.destDistrict.toLowerCase() === userDist) || 
+             (m.destinationId && m.destinationId.toLowerCase() === userDist);
+    }
+    if (user.role === 'SARO' && user.sector_id) {
+      const userSec = user.sector_id.toLowerCase();
+      return (m.destSector && m.destSector.toLowerCase() === userSec) || 
+             (m.destinationId && m.destinationId.toLowerCase() === userSec);
+    }
+    return false;
+  };
+
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
@@ -207,7 +229,7 @@ const Movements = () => {
   const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
 
   const tabs = [
-    'Requests', 'History'
+    'Requests', 'Incoming (Destination)', 'History'
   ];
 
   return (
@@ -298,12 +320,16 @@ const Movements = () => {
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
          {activeTab === 'Requests' && (
-            <MovementsList movements={filteredMovements.filter(m => !['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => !isIncoming(m) && !['COMPLETED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+         )}
+         {activeTab === 'Incoming (Destination)' && (
+            <MovementsList movements={filteredMovements.filter(m => isIncoming(m) || (user?.role === 'RAB' && !['COMPLETED', 'REJECTED'].includes(m.rawStatus)))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
          )}
          {activeTab === 'History' && (
-            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => ['COMPLETED', 'REJECTED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
       </div>
+
     </div>
   );
 };
