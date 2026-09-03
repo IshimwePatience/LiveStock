@@ -145,6 +145,7 @@ const Movements = () => {
         destinationId: req.destination_id,
         originDistrict: req.origin_district || req.origin_id,
         originSector: req.origin_sector || req.origin_id,
+        initiatorId: req.initiator_id,
         title: detailsString,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
@@ -198,18 +199,37 @@ const Movements = () => {
   // Helper to check if movement is incoming to current user's jurisdiction
   const isIncoming = (m) => {
     if (!user) return false;
-    // An incoming permit is one going TO the user's jurisdiction, initiated by someone else
+    if (user.role === 'RAB') return false;
     if (user.role === 'DARO' && user.district_id) {
       const userDist = user.district_id.toLowerCase().trim();
       const dest = (m.destDistrict || m.destinationId || '').toLowerCase().trim();
-      return dest === userDist;
+      const orig = (m.originDistrict || '').toLowerCase().trim();
+      return dest === userDist && orig !== userDist;
     }
     if (user.role === 'SARO' && user.sector_id) {
       const userSec = user.sector_id.toLowerCase().trim();
       const dest = (m.destSector || m.destinationId || '').toLowerCase().trim();
-      return dest === userSec;
+      const orig = (m.originSector || '').toLowerCase().trim();
+      return dest === userSec && orig !== userSec;
     }
     return false;
+  };
+
+  // Helper to check if movement originated from current user's jurisdiction or was created by user
+  const isOutgoing = (m) => {
+    if (!user) return true;
+    if (user.role === 'RAB') return true;
+    if (user.role === 'DARO' && user.district_id) {
+      const userDist = user.district_id.toLowerCase().trim();
+      const orig = (m.originDistrict || '').toLowerCase().trim();
+      return orig === userDist || (m.initiatorId && m.initiatorId === user.id);
+    }
+    if (user.role === 'SARO' && user.sector_id) {
+      const userSec = user.sector_id.toLowerCase().trim();
+      const orig = (m.originSector || '').toLowerCase().trim();
+      return orig === userSec || (m.initiatorId && m.initiatorId === user.id);
+    }
+    return true;
   };
 
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars
@@ -321,13 +341,13 @@ const Movements = () => {
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
          {activeTab === 'Requests' && (
-            <MovementsList movements={filteredMovements.filter(m => !isIncoming(m) && !['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING')} isLoading={isLoading} isError={isError} />
          )}
          {activeTab === 'Incoming (Destination)' && (
             <MovementsList movements={filteredMovements.filter(m => isIncoming(m))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
          )}
          {activeTab === 'History' && (
-            <MovementsList movements={filteredMovements.filter(m => ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+            <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
          )}
       </div>
 
