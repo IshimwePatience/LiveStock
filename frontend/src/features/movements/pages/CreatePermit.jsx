@@ -45,6 +45,18 @@ const CreatePermit = () => {
   const requestType = user?.role === 'DARO' ? 'DISTRICT_TO_DISTRICT' : 'SECTOR_TO_SECTOR';
 
   const [loading, setLoading] = useState(false);
+  // tag -> { vaccinated, antibioticActive, daysRemaining, antibiotic, withdrawalEnd }
+  const [tagStatuses, setTagStatuses] = useState({});
+
+  const fetchTagStatus = async (tag) => {
+    if (!tag || tag.trim() === '') return;
+    try {
+      const res = await api.get(`/vet/check-tag/${encodeURIComponent(tag.trim())}`);
+      setTagStatuses(prev => ({ ...prev, [tag.trim()]: res.data }));
+    } catch (e) {
+      // silently ignore
+    }
+  };
 
   // ==========================
   // DESKTOP: SHEETS STATE
@@ -143,12 +155,23 @@ const CreatePermit = () => {
               newGrid[r][18] = a.sex || 'F';
               newGrid[r][19] = a.breed || '';
               newGrid[r][20] = a.color || '';
-              newGrid[r][21] = data.driver_name || '';
-              newGrid[r][22] = data.driver_phone || '';
-              newGrid[r][23] = data.driver_nid || '';
+              newGrid[r][21] = a.vaccines || '';
+              newGrid[r][22] = a.medication || '';
+              newGrid[r][23] = data.driver_name || '';
+              newGrid[r][24] = data.driver_phone || '';
+              newGrid[r][25] = data.driver_nid || '';
             });
           }
           setGridData(newGrid);
+
+          // Fetch vet statuses for all pre-loaded tags
+          if (data.Animals && data.Animals.length > 0) {
+            data.Animals.forEach(a => {
+              if (a.tag_number && a.tag_number.trim() !== '') {
+                fetchTagStatus(a.tag_number.trim());
+              }
+            });
+          }
         } catch (error) {
           toast.error('Failed to load request for editing.');
         } finally {
@@ -307,6 +330,8 @@ const CreatePermit = () => {
           toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
           return;
        }
+       // Check vet status for this tag
+       fetchTagStatus(value.toString().trim());
     }
 
     setGridData(prev => {
@@ -484,6 +509,9 @@ const CreatePermit = () => {
        }
     }
     setMobileAnimals(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+    if (field === 'tag_number' && value.toString().trim() !== '') {
+      fetchTagStatus(value.toString().trim());
+    }
   };
   const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }]);
   const removeMobileAnimal = (id) => {
@@ -933,8 +961,8 @@ const CreatePermit = () => {
                             />
                           )
                         ) : (
-                          <div 
-                            className="w-full h-full px-1.5 truncate flex items-center cursor-cell"
+                          <div
+                            className="w-full h-full px-1.5 flex items-center cursor-cell gap-1 overflow-visible"
                             tabIndex={0}
                             onKeyDown={(e) => {
                               if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
@@ -943,7 +971,21 @@ const CreatePermit = () => {
                               if (![5].includes(cIdx)) setIsEditing(true);
                             }}
                           >
-                            {val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}
+                            <span className="truncate">{val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}</span>
+                            {cIdx === 17 && val && (() => {
+                              const status = tagStatuses[val.trim()];
+                              if (!status || !status.found) return null;
+                              return (
+                                <span className="flex gap-0.5 shrink-0">
+                                  {status.vaccinated && (
+                                    <span title="Vaccinated" className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-300">✓ VAX</span>
+                                  )}
+                                  {status.antibioticActive && (
+                                    <span title={`Antibiotic: ${status.daysRemaining}d left`} className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-300">⚠ {status.daysRemaining}d</span>
+                                  )}
+                                </span>
+                              );
+                            })()}
                           </div>
                         )}
                         {isSelected && (
@@ -1109,9 +1151,29 @@ const CreatePermit = () => {
                           <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(animal.id, 'animal_type', v)} options={[{value: 'Inka (Cow)', label: 'Inka (Cow)'}, {value: 'Ihene (Goat)', label: 'Ihene (Goat)'}, {value: 'Intama (Sheep)', label: 'Intama (Sheep)'}]} />
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
-                          <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
-                        </div></div>
+                           <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
+                           <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
+                           {/* Vet status badges */}
+                           {animal.tag_number && (() => {
+                             const status = tagStatuses[animal.tag_number.trim()];
+                             if (!status || !status.found) return null;
+                             return (
+                               <div className="mt-2 flex flex-wrap gap-2">
+                                 {status.vaccinated && (
+                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+                                     ✓ Vaccinated
+                                   </span>
+                                 )}
+                                 {status.antibioticActive && (
+                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
+                                     ⚠ Antibiotic active — {status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''} remaining
+                                   </span>
+                                 )}
+                               </div>
+                             );
+                           })()}
+                         </div>
+                       </div>
                        <div>
                          <label className="block text-sm text-gray-600 mb-1">Sex</label>
                          <select value={animal.sex} onChange={(e) => handleMobileAnimalChange(animal.id, 'sex', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent">

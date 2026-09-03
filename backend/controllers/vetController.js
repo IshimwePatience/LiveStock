@@ -18,4 +18,13 @@ const getRecords = async (req, res) => {
   }
 };
 
-module.exports = { addRecord, getRecords };
+const checkTag = async (req, res) => {
+  try {
+    const result = await vetService.checkTag(req.params.tag);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { addRecord, getRecords, checkTag };

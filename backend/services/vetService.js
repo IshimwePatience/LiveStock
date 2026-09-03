@@ -57,6 +57,43 @@ class VetService {
       order: [['createdAt', 'DESC']]
     });
   }
+  async checkTag(tag) {
+    const { Op } = require('sequelize');
+    const records = await VetRecord.findAll({
+      where: { animal_tag: tag },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (!records || records.length === 0) {
+      return { found: false, vaccinated: false, antibioticActive: false, daysRemaining: 0 };
+    }
+
+    // Check vaccination — any VACCINATION record means vaccinated
+    const vaccinated = records.some(r => r.type === 'VACCINATION');
+
+    // Check antibiotic withdrawal — find the latest MEDICATION with withdrawal_period_end still in future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const activeAntibiotic = records
+      .filter(r => r.type === 'MEDICATION' && r.withdrawal_period_end)
+      .map(r => ({ ...r.toJSON(), endDate: new Date(r.withdrawal_period_end) }))
+      .filter(r => r.endDate >= today)
+      .sort((a, b) => b.endDate - a.endDate)[0];
+
+    const antibioticActive = !!activeAntibiotic;
+    const daysRemaining = activeAntibiotic
+      ? Math.ceil((activeAntibiotic.endDate - today) / (1000 * 60 * 60 * 24))
+      : 0;
+
+    return {
+      found: true,
+      vaccinated,
+      antibioticActive,
+      daysRemaining,
+      antibiotic: activeAntibiotic?.vaccines || null,
+      withdrawalEnd: activeAntibiotic?.withdrawal_period_end || null
+    };
+  }
 }
 
 module.exports = new VetService();
