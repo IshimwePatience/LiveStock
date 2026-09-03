@@ -29,7 +29,7 @@ const getDistrictBoundary = (districtName) => {
   if (!districtGeoJSON || !districtGeoJSON.features) return null;
   const match = districtGeoJSON.features.find(f => {
     const props = f.properties || {};
-    const name = props.NAME_2 || props.District || props.name || props.ADM2_EN || '';
+    const name = props.district || props.District || props.NAME_2 || props.name || props.ADM2_EN || '';
     return name.toString().toLowerCase().trim() === districtName.toString().toLowerCase().trim();
   });
   return match || null;
@@ -39,7 +39,7 @@ const getSectorBoundary = (sectorName) => {
   if (!sectorGeoJSON || !sectorGeoJSON.features) return null;
   const match = sectorGeoJSON.features.find(f => {
     const props = f.properties || {};
-    const name = props.NAME_3 || props.Sector || props.name || props.ADM3_EN || '';
+    const name = props.sector || props.Sector || props.NAME_3 || props.name || props.ADM3_EN || '';
     return name.toString().toLowerCase().trim() === sectorName.toString().toLowerCase().trim();
   });
   return match || null;
@@ -47,7 +47,28 @@ const getSectorBoundary = (sectorName) => {
 
 class GeofenceService {
   async getAllGeofences() {
-    return await Geofence.findAll({ order: [['createdAt', 'DESC']] });
+    const fences = await Geofence.findAll({ order: [['createdAt', 'DESC']] });
+
+    // Auto-repair any geofences stored with null geometry
+    for (const fence of fences) {
+      if (!fence.geometry) {
+        if (fence.zone_type === 'DISTRICT' && fence.district_name) {
+          const feat = getDistrictBoundary(fence.district_name);
+          if (feat && feat.geometry) {
+            fence.geometry = feat.geometry;
+            await fence.save();
+          }
+        } else if (fence.zone_type === 'SECTOR' && fence.sector_name) {
+          const feat = getSectorBoundary(fence.sector_name);
+          if (feat && feat.geometry) {
+            fence.geometry = feat.geometry;
+            await fence.save();
+          }
+        }
+      }
+    }
+
+    return fences;
   }
 
   async createGeofence(data) {
