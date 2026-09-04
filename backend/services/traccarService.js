@@ -18,6 +18,9 @@ class TraccarService {
 
   async getLocations(user) {
     try {
+      const isNationalPolice = user.role === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
+      const isNationalUser = user.role === 'RAB' || isNationalPolice;
+
       // 1. Get all active trips
       const activeTrips = await Trip.findAll({
         where: { status: 'ACTIVE' },
@@ -27,10 +30,11 @@ class TraccarService {
         }]
       });
 
-      // 2. Filter trips based on RBAC (RAB sees all, DARO/SARO sees origin/dest, Initiator sees it)
+      // 2. Filter trips based on RBAC (RAB & National Police sees all, DARO/SARO sees origin/dest, District Police sees district)
       const allowedPlateNumbers = new Set();
       activeTrips.forEach(trip => {
         const req = trip.MovementRequest;
+        if (!req) return;
         
         const isInitiator = req.initiator_id === user.id;
         const isApprover = req.approver_id === user.id;
@@ -42,7 +46,10 @@ class TraccarService {
            isReceiver = user.role === 'SARO' && user.sector_id && req.dest_sector === user.sector_id;
         }
 
-        if (user.role === 'RAB' || isInitiator || isApprover || isReceiver) {
+        const isDistrictPolice = user.role === 'POLICE' && user.district_id && user.district_id !== 'NATIONAL' && 
+          (req.origin_district === user.district_id || req.dest_district === user.district_id);
+
+        if (isNationalUser || isInitiator || isApprover || isReceiver || isDistrictPolice) {
           if (trip.plate_number) {
             allowedPlateNumbers.add(trip.plate_number.toUpperCase());
           }
@@ -60,7 +67,7 @@ class TraccarService {
       // Map device IDs to positions, filtering by allowed plate numbers
       const deviceMap = {};
       devices.forEach(device => {
-        if (user.role === 'RAB' || allowedPlateNumbers.has(device.name.toUpperCase())) {
+        if (isNationalUser || allowedPlateNumbers.has(device.name.toUpperCase())) {
             // Find matching trip for this device
             const trip = activeTrips.find(t => t.plate_number?.toUpperCase() === device.name.toUpperCase());
             const req = trip?.MovementRequest;
