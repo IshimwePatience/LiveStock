@@ -23,6 +23,42 @@ import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api';
 import { connectSocket } from './lib/socket';
 
+const DEFAULT_ROLE_PERMISSIONS = {
+  RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
+  DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
+  SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
+  POLICE: ['cases', 'gps', 'notifications']
+};
+
+// Ordered list: first match for a permission wins
+const PERM_ROUTES = [
+  { perm: 'overview',          path: '/dashboard/overview' },
+  { perm: 'cases',             path: '/dashboard/cases' },
+  { perm: 'gps',               path: '/dashboard/gps' },
+  { perm: 'movements',         path: '/dashboard/movements' },
+  { perm: 'geofencing',        path: '/dashboard/geofencing' },
+  { perm: 'national_reports',  path: '/dashboard/national-reports' },
+  { perm: 'performance_audit', path: '/dashboard/performance-audit' },
+  { perm: 'notifications',     path: '/dashboard/notifications' },
+  { perm: 'user_management',   path: '/dashboard/users' },
+  { perm: 'system_settings',   path: '/dashboard/system-settings' },
+];
+
+const getFirstPermittedRoute = (user) => {
+  let perms = user.permissions;
+  if (typeof perms === 'string') { try { perms = JSON.parse(perms); } catch (e) { perms = null; } }
+  const effectivePerms = (Array.isArray(perms) && perms.length > 0) ? perms : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
+  const match = PERM_ROUTES.find(r => effectivePerms.includes(r.perm));
+  return match ? match.path : '/dashboard/notifications';
+};
+
+const SmartRedirect = () => {
+  const userStr = localStorage.getItem('user');
+  if (!userStr) return <Navigate to="/login" replace />;
+  const user = JSON.parse(userStr);
+  return <Navigate to={getFirstPermittedRoute(user)} replace />;
+};
+
 const ProtectedRoute = ({ children }) => {
   const userStr = localStorage.getItem('user');
   if (!userStr) return <Navigate to="/login" replace />;
@@ -33,13 +69,6 @@ const PermittedRoute = ({ permKey, children }) => {
   const userStr = localStorage.getItem('user');
   if (!userStr) return <Navigate to="/login" replace />;
   const user = JSON.parse(userStr);
-
-  const DEFAULT_ROLE_PERMISSIONS = {
-    RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
-    DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
-    SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
-    POLICE: ['cases', 'gps', 'notifications']
-  };
 
   let perms = user.permissions;
   if (typeof perms === 'string') {
@@ -55,7 +84,7 @@ const PermittedRoute = ({ permKey, children }) => {
     : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
 
   if (!effectivePerms.includes(permKey)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getFirstPermittedRoute(user)} replace />;
   }
 
   return children;
@@ -132,7 +161,8 @@ function App() {
 
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-          <Route index element={<Overview />} />
+          <Route index element={<SmartRedirect />} />
+          <Route path="overview" element={<PermittedRoute permKey="overview"><Overview /></PermittedRoute>} />
 
           <Route path="notifications" element={<PermittedRoute permKey="notifications"><Notifications /></PermittedRoute>} />
           <Route path="movements" element={<PermittedRoute permKey="movements"><Movements /></PermittedRoute>} />
