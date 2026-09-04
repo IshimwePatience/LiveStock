@@ -129,67 +129,32 @@ const SystemSettings = () => {
       </div>
 
       {/* Main Title & Description */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Permissions & Access Control</h1>
-          <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">
-            Control which features and navigation modules RAB users can see in the app.
-            You can change these settings at any time.
-            <a href="#info" className="text-[#0052cc] hover:underline ml-1">More about managing permissions</a>
-          </p>
-        </div>
-
-        {/* Auto-save Indicator Badge */}
-        <div className="shrink-0 pt-1">
-          {saveState === 'saving' && (
-            <span className="text-xs text-blue-600 font-medium flex items-center gap-1.5 bg-blue-50 px-3 py-1 rounded-full">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...
-            </span>
-          )}
-          {saveState === 'saved' && (
-            <span className="text-xs text-emerald-700 font-medium flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Saved automatically
-            </span>
-          )}
-          {saveState === 'error' && (
-            <span className="text-xs text-red-600 font-medium flex items-center gap-1.5 bg-red-50 px-3 py-1 rounded-full">
-              Error saving
-            </span>
-          )}
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Permissions & Access Control</h1>
+        <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">
+          Control which features and navigation modules RAB users can see in the app.
+          You can change these settings at any time.
+          <a href="#info" className="text-[#0052cc] hover:underline ml-1">More about managing permissions</a>
+        </p>
       </div>
 
       {/* User Selector Card */}
-      <div className="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-            Target User Account
-          </label>
-          <select
-            value={selectedUserId}
-            onChange={handleUserChange}
-            disabled={loadingUsers}
-            className="w-full max-w-lg bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] shadow-sm"
-          >
-            {users.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name} — ({u.role}) [{u.email}] {u.district_id ? `— ${u.district_id}` : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {selectedUser && (
-          <div className="flex items-center gap-3 bg-white px-3 py-2 rounded border border-gray-200 shadow-sm shrink-0">
-            <div className="w-8 h-8 rounded-full bg-[#0052cc] text-white font-bold text-xs flex items-center justify-center">
-              {selectedUser.name?.substring(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-900">{selectedUser.name}</p>
-              <p className="text-[11px] text-gray-500">{selectedUser.role} • {selectedUser.status || 'Active'}</p>
-            </div>
-          </div>
-        )}
+      <div className="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200 mb-8">
+        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+          Target User Account
+        </label>
+        <select
+          value={selectedUserId}
+          onChange={handleUserChange}
+          disabled={loadingUsers}
+          className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] shadow-sm"
+        >
+          {users.map(u => (
+            <option key={u.id} value={u.id}>
+              {u.name} — ({u.role}) [{u.email}] {u.district_id ? `— ${u.district_id}` : ''}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Jira-style Settings Section */}

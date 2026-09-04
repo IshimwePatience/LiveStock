@@ -212,21 +212,21 @@ const CreatePermit = () => {
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
   const COLUMN_GROUPS = [
-    { id: 'owner', label: "Nyir'amatungo (Owner)", cols: [0, 1, 2, 3, 4, 5, 6, 7] },
+    { id: 'owner', label: "Nyir'amatungo (Owner)", cols: [0, 1, 2, 3, 4, 5] },
     { id: 'origin', label: 'Biva (Origin)', cols: [8, 9, 10, 11] },
     { id: 'dest', label: 'Bijya (Destination)', cols: [12, 13, 14, 15] },
     { id: 'animal', label: 'Amatungo (Animals & Medical)', cols: [16, 17, 18, 19, 20, 21, 22] },
-    { id: 'driver', label: 'Utwara Amatungo (Transporter)', cols: [23, 24, 25] },
     { id: 'buyer', label: 'Umuguzi (Buyer / Company)', cols: [26, 27, 28, 29] },
   ];
 
   const isColVisible = (idx) => {
+    // Hide transporter columns from table since they are set in the top header card for all animals
+    if ([6, 7, 23, 24, 25].includes(idx)) return false;
     if (user?.role === 'SARO' && (idx === 8 || idx === 12)) return false;
-    if ([0,1,2,3,4,5,6,7].includes(idx)) return visibleGroups.owner;
+    if ([0,1,2,3,4,5].includes(idx)) return visibleGroups.owner;
     if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
     if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
     if ([16,17,18,19,20,21,22].includes(idx)) return visibleGroups.animal;
-    if ([23,24,25].includes(idx)) return visibleGroups.driver ?? true;
     if ([26,27,28,29].includes(idx)) return visibleGroups.buyer ?? true;
     return true;
   };
