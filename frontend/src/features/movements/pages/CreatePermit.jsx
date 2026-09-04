@@ -1615,12 +1615,6 @@ const CreatePermit = () => {
           </fieldset>
         </form>
       </div>
-
-      <OfficialRabPermitModal
-        isOpen={officialPermitModal.isOpen}
-        permit={officialPermitModal.permit}
-        onClose={() => setOfficialPermitModal({ isOpen: false, permit: null })}
-      />
     </>
   );
 };
