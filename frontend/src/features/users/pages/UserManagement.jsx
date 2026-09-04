@@ -140,8 +140,14 @@ const UserManagement = () => {
 
     try {
       const payload = { ...formData, permissions: modalPermissions };
-      if (payload.role === 'RAB' || payload.role === 'POLICE') {
+      if (payload.role === 'RAB') {
         payload.district_id = null;
+        payload.sector_id = null;
+      } else if (payload.role === 'POLICE') {
+        // National Level police have no district; district-level police keep their district
+        if (payload.district_id === 'NATIONAL' || !payload.district_id) {
+          payload.district_id = null;
+        }
         payload.sector_id = null;
       } else if (payload.role === 'DARO') {
         payload.sector_id = null;
@@ -276,8 +282,13 @@ const UserManagement = () => {
   const districtOptions = useMemo(() => {
     const provs = getProvinces();
     const dists = provs.flatMap(p => getDistricts(p));
-    return dists.sort().map(d => ({ value: d, label: d }));
-  }, []);
+    const distList = dists.sort().map(d => ({ value: d, label: d }));
+    // For Police, add National Level as first option
+    if (formData.role === 'POLICE') {
+      return [{ value: 'NATIONAL', label: '🌍 National Level' }, ...distList];
+    }
+    return distList;
+  }, [formData.role]);
 
   const sectorOptions = useMemo(() => {
     if (!formData.district_id) return [];
@@ -568,13 +579,15 @@ const UserManagement = () => {
                 {(formData.role === 'DARO' || formData.role === 'POLICE') && (
                   <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
                     <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
-                      District <span className="text-red-500">*</span>
+                      District {formData.role === 'DARO' && <span className="text-red-500">*</span>}
+                      {formData.role === 'POLICE' && <span className="text-gray-400 text-xs ml-1">(or National)</span>}
                     </label>
                     <div className="flex-1">
                       <CustomSelect
                         value={formData.district_id}
                         onChange={(val) => handleSelectChange('district_id', val)}
                         options={districtOptions}
+                        placeholder={formData.role === 'POLICE' ? 'Select district or National Level...' : 'Select...'}
                       />
                     </div>
                   </div>
