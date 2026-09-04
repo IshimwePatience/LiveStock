@@ -177,11 +177,11 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                   <div className="grid grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100 text-xs">
                     <div>
                       <span className="text-gray-500 block">Uburyo bwo kugenda</span>
-                      <span className="font-semibold text-gray-900">{permit.transport_type || 'Imodoka'}</span>
+                      <span className="font-semibold text-gray-900">{permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (permit.transport_type || 'Imodoka')}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500 block">Nomero ya pulaki</span>
-                      <span className="font-semibold text-gray-900">{permit.plate_number || 'N/A'}</span>
+                      <span className="text-gray-500 block">{permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Nyir\'amatungo / Moving Person' : 'Nomero ya pulaki'}</span>
+                      <span className="font-semibold text-gray-900">{permit.transporter_mode === 'PERSON_ON_FOOT' ? (permit.driver_name || 'N/A') : (permit.plate_number || 'N/A')}</span>
                     </div>
                     <div>
                       <span className="text-gray-500 block">Utwara Amatungo</span>
@@ -189,6 +189,14 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Cargo Photo (If attached) */}
+                {permit.cargo_photo && (
+                  <div className="border-t border-gray-200 pt-3">
+                    <h4 className="text-xs font-bold text-gray-900 mb-2 uppercase tracking-wide">Ifoto y'Amatungo Yapakijwe / Arimo Kwimuka</h4>
+                    <img src={permit.cargo_photo} alt="Loaded Cargo" className="h-36 max-w-xs object-cover rounded-lg border border-gray-300 shadow-sm" />
+                  </div>
+                )}
 
                 {/* Buyer Details (If provided) */}
                 {permit.buyer_name && (

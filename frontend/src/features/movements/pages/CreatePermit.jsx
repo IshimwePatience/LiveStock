@@ -408,8 +408,8 @@ const CreatePermit = () => {
       reason: firstRow[3],
       priority: firstRow[4],
       valid_until: firstRow[5],
-      transport_type: firstRow[6],
-      plate_number: firstRow[7],
+      transport_type: headerForm.transporter_mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (firstRow[6] || headerForm.transport_type),
+      plate_number: headerForm.transporter_mode === 'PERSON_ON_FOOT' ? 'ON_FOOT' : (headerForm.plate_number || firstRow[7]),
       origin_district: firstRow[8] || user?.district_id,
       origin_sector: firstRow[9] || user?.sector_id,
       origin_cell: firstRow[10],
@@ -422,9 +422,11 @@ const CreatePermit = () => {
       origin_id: user?.sector_id || user?.district_id || user?.id,
       destination_id: firstRow[13] || firstRow[12] || user?.id,
       animal_type: firstRow[16] || 'COW',
-      driver_name: firstRow[23],
-      driver_phone: firstRow[24],
-      driver_nid: firstRow[25],
+      transporter_mode: headerForm.transporter_mode,
+      cargo_photo: headerForm.cargo_photo,
+      driver_name: headerForm.driver_name || firstRow[23],
+      driver_phone: headerForm.driver_phone || firstRow[24],
+      driver_nid: headerForm.driver_nid || firstRow[25],
       buyer_type: firstRow[26] || 'Person',
       buyer_name: firstRow[27],
       buyer_phone: firstRow[28],
@@ -476,9 +478,36 @@ const CreatePermit = () => {
   // MOBILE: FORMS STATE
   // ==========================
   const today = new Date().toISOString().split('T')[0];
+
+  const [headerForm, setHeaderForm] = useState({
+    transporter_mode: 'DRIVER_VEHICLE',
+    cargo_photo: '',
+    transport_type: 'Imodoka',
+    plate_number: 'RAB 195F',
+    driver_name: '',
+    driver_phone: '',
+    driver_nid: '',
+  });
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ifoto Ntoya (Max 5MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setHeaderForm(prev => ({ ...prev, cargo_photo: reader.result }));
+      setMobileForm(prev => ({ ...prev, cargo_photo: reader.result }));
+      toast.success('Ifoto y\'amatungo yapakiwe neza!');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [mobileForm, setMobileForm] = useState({
     owner_name: '', owner_id_number: '', owner_phone: '', priority: '', transport_type: '', plate_number: '',
-    driver_name: '', driver_phone: '', driver_nid: '',
+    driver_name: '', driver_phone: '', driver_nid: '', cargo_photo: '',
     origin_district: '', origin_sector: '', origin_cell: '', origin_village: '',
     dest_district: '', dest_sector: '', dest_cell: '', dest_village: '',
     valid_until: today, reason: ''
@@ -754,6 +783,164 @@ const CreatePermit = () => {
                 </button>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Trip Header & Cargo Photo Upload Card */}
+        <div className="bg-[#F8FAFC] border-b border-gray-300 p-4 space-y-3 shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center gap-2">
+              <span>🚚</span> Amakuru y'Ubwikorezi & Ifoto y'Amatungo Yapakijwe (Trip & Cargo Info)
+            </h3>
+            
+            {/* Transporter Mode Toggle */}
+            <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-gray-300 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                  headerForm.transporter_mode === 'DRIVER_VEHICLE' ? 'bg-[#0052cc] text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Imodoka n'Umushoferi (Vehicle & Driver)
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                  headerForm.transporter_mode === 'PERSON_ON_FOOT' ? 'bg-[#0052cc] text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Umunyamaguru / Omushumba (Person on Foot)
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            {/* Transporter Details */}
+            {headerForm.transporter_mode === 'DRIVER_VEHICLE' ? (
+              <>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Amazina y'Umushoferi</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_name}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
+                    placeholder="Amazina y'Umushoferi"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Telephoni y'Umushoferi</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_phone}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                    placeholder="0788000000 (10 digits)"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Indangamuntu y'Umushoferi</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_nid}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
+                    placeholder="16 digits ID"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Pulaki ya Imodoka (Plate Number)</label>
+                  <input
+                    type="text"
+                    value={headerForm.plate_number}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, plate_number: e.target.value }))}
+                    placeholder="e.g. RAB 195F"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Amazina y'Umunyamaguru</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_name}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
+                    placeholder="Amazina y'Umunyamaguru"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Telephoni y'Umunyamaguru</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_phone}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                    placeholder="0788000000 (10 digits)"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Indangamuntu y'Umunyamaguru</label>
+                  <input
+                    type="text"
+                    value={headerForm.driver_nid}
+                    onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
+                    placeholder="16 digits ID"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Uburyo bwo Kwimura</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value="Umunyamaguru / Person"
+                    className="w-full bg-gray-100 border border-gray-300 rounded px-2.5 py-1 text-xs outline-none cursor-not-allowed"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Cargo Photo Upload Box */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-3 rounded-lg border border-gray-200">
+            <div>
+              <label className="block text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                📷 Ifoto y'Amatungo Yapakijwe / Arimo Kwimuka (Loaded Cargo Batch Photo)
+              </label>
+              <p className="text-[11px] text-gray-500">
+                Ohoza amafoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {headerForm.cargo_photo && (
+                <div className="relative group">
+                  <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover rounded border border-gray-300 shadow-sm" />
+                  <button
+                    type="button"
+                    onClick={() => setHeaderForm(prev => ({ ...prev, cargo_photo: '' }))}
+                    className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-0.5 text-[10px] hover:bg-red-700 shadow"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              <label className="bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition shadow-sm">
+                <span>📷</span> {headerForm.cargo_photo ? 'Hindura Ifoto' : 'Ohoza Ifoto (Upload Photo)'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
         </div>
 

@@ -54,6 +54,10 @@ const MovementRequest = sequelize.define('MovementRequest', {
   buyer_name: { type: DataTypes.STRING, allowNull: true },
   buyer_phone: { type: DataTypes.STRING, allowNull: true },
   buyer_id_tin: { type: DataTypes.STRING, allowNull: true },
+
+  // Transporter Mode & Batch Cargo Photo
+  transporter_mode: { type: DataTypes.STRING, defaultValue: 'DRIVER_VEHICLE' },
+  cargo_photo: { type: DataTypes.TEXT, allowNull: true },
 });
 
 module.exports = MovementRequest;
