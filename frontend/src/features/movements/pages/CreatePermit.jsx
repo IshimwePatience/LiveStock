@@ -831,7 +831,7 @@ const CreatePermit = () => {
                     toast.error('Failed to download permit.');
                   }
                 }} 
-                className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm text-xs"
+                className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 <Download className="w-3.5 h-3.5" /> Download Permit
               </button>

@@ -1,3 +1,5 @@
+import rabLogo from '../assets/images/RAB_Logo2.png';
+
 export const printOfficialPermit = (permit) => {
   if (!permit) return;
 
@@ -48,7 +50,7 @@ export const printOfficialPermit = (permit) => {
           }
         </style>
       </head>
-      <body onload="setTimeout(() => { window.print(); window.close(); }, 400)">
+      <body onload="setTimeout(() => { window.print(); window.close(); }, 300)">
         <div style="width:100%;max-width:794px;margin:0 auto;padding:24px;box-sizing:border-box;">
 
           <!-- PAGE 1: PERMIT DETAILS -->
@@ -69,10 +71,11 @@ export const printOfficialPermit = (permit) => {
                     Ubuyobozi bwa serivisi z'ubuvuzi bw'amatungo Agasanduku k'Iposita 5016 Kigali / Nomero itishyuzwa: 4673
                   </p>
                 </div>
-                <div style="width:64px;height:64px;border-radius:50%;border:2px solid #059669;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#ecfdf5;text-align:center;">
-                  <span style="font-weight:900;color:#065f46;font-size:13px;">RAB</span>
-                  <span style="font-size:7px;color:#047857;font-weight:bold;">RWANDA</span>
-                </div>
+                <img
+                  src="${rabLogo}"
+                  alt="RAB Logo"
+                  style="width:72px;height:72px;object-fit:contain;"
+                />
               </div>
 
               <!-- Flag Bar -->
@@ -199,9 +202,11 @@ export const printOfficialPermit = (permit) => {
                   <h1 style="font-size:16px;font-weight:bold;text-transform:uppercase;margin:0;">REPUBULIKA Y'U RWANDA</h1>
                   <h2 style="font-size:12px;font-weight:bold;margin:2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
                 </div>
-                <div style="width:56px;height:56px;border-radius:50%;border:2px solid #059669;display:flex;align-items:center;justify-content:center;background:#ecfdf5;font-weight:bold;color:#065f46;font-size:12px;">
-                  RAB
-                </div>
+                <img
+                  src="${rabLogo}"
+                  alt="RAB Logo"
+                  style="width:60px;height:60px;object-fit:contain;"
+                />
               </div>
 
               <div style="height:6px;width:100%;background:linear-gradient(to right, #10b981, #facc15, #0284c7);border-radius:9999px;margin:12px 0;"></div>
