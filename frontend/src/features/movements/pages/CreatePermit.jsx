@@ -246,7 +246,7 @@ const CreatePermit = () => {
         e.preventDefault();
         setIsEditing(false);
         const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].every(c => c.toString().trim() !== '')) {
+        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.toString().trim() !== '')) {
           setSelectedCell({ row: nextRow, col });
           setSelectionEnd({ row: nextRow, col });
         } else {
@@ -264,7 +264,7 @@ const CreatePermit = () => {
       case 'ArrowDown':
         e.preventDefault();
         const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].every(c => c.toString().trim() !== '')) {
+        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.toString().trim() !== '')) {
           setSelectedCell({ row: nextRow, col });
           setSelectionEnd({ row: nextRow, col });
         } else {
@@ -1140,7 +1140,7 @@ const CreatePermit = () => {
                       <td 
                         key={cIdx} 
                         onMouseDown={() => {
-                          if (originalIndex === 0 || gridData[originalIndex - 1].every(c => c.toString().trim() !== '')) {
+                          if (originalIndex === 0 || gridData[originalIndex - 1].some(c => c.toString().trim() !== '')) {
                             setSelectedCell({ row: originalIndex, col: cIdx });
                             setSelectionEnd({ row: originalIndex, col: cIdx });
                             setIsDragging(true);
