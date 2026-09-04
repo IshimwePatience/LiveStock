@@ -95,119 +95,142 @@ export const printOfficialPermit = async (permit) => {
         <head>
           <style>
             * { box-sizing: border-box; }
-            body { margin: 0; padding: 0; background: white; font-family: system-ui, -apple-system, sans-serif; color: #111827; }
+            body { margin: 0; padding: 0; background: white; font-family: Arial, Helvetica, sans-serif; color: #111827; }
             .page { background: white; padding: 32px; border: 1px solid #e5e7eb; position: relative; min-height: 1050px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; width: 794px; }
             .page-break { page-break-before: always; height: 0; }
-            .flex-between { display: flex; align-items: center; justify-content: space-between; }
-            .text-center { text-align: center; }
-            .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-            .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-            .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-            table { width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 11px; margin-top: 14px; }
-            th, td { border: 1px solid #d1d5db; padding: 8px; }
-            th { background: #f3f4f6; color: #111827; font-weight: bold; }
+            table.animal-table { width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 11px; margin-top: 14px; }
+            table.animal-table th, table.animal-table td { border: 1px solid #d1d5db; padding: 8px; }
+            table.animal-table th { background: #f3f4f6; color: #111827; font-weight: bold; }
           </style>
         </head>
         <body>
           <!-- PAGE 1: PERMIT DETAILS -->
           <div class="page">
             <div>
-              <div class="flex-between" style="border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
-                <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 64px; height: 64px; object-fit: contain;" />
-                <div class="text-center">
-                  <h1 style="font-size: 15px; font-weight: bold; text-transform: uppercase; margin: 0;">REPUBULIKA Y'U RWANDA</h1>
-                  <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
-                  <p style="font-size: 9px; color: #4b5563; margin: 0;">
-                    Ubuyobozi bwa serivisi z'ubuvuzi bw'amatungo Agasanduku k'Iposita 5016 Kigali / Nomero itishyuzwa: 4673
-                  </p>
-                </div>
-                <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 68px; height: 68px; object-fit: contain;" />
-              </div>
+              <!-- Header Logos Table -->
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; border: none;">
+                <tr>
+                  <td style="width: 80px; vertical-align: middle; border: none; padding: 0;">
+                    <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 64px; height: 64px; object-fit: contain;" />
+                  </td>
+                  <td style="text-align: center; vertical-align: middle; border: none; padding: 0 10px;">
+                    <h1 style="font-size: 15px; font-weight: bold; text-transform: uppercase; margin: 0;">REPUBULIKA Y'U RWANDA</h1>
+                    <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
+                    <p style="font-size: 9px; color: #4b5563; margin: 0;">
+                      Ubuyobozi bwa serivisi z'ubuvuzi bw'amatungo Agasanduku k'Iposita 5016 Kigali / Nomero itishyuzwa: 4673
+                    </p>
+                  </td>
+                  <td style="width: 80px; text-align: right; vertical-align: middle; border: none; padding: 0;">
+                    <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 68px; height: 68px; object-fit: contain; float: right;" />
+                  </td>
+                </tr>
+              </table>
 
+              <!-- Flag Bar -->
               <div style="height: 5px; width: 100%; background: linear-gradient(to right, #10b981, #facc15, #0284c7); border-radius: 9999px; margin: 10px 0;"></div>
 
+              <!-- Banner -->
               <div style="border-top: 2px solid black; border-bottom: 2px solid black; padding: 6px 0; text-align: center; background: #f9fafb; margin-bottom: 14px;">
                 <h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 0;">
                   URUHUSHYA RWO KWIMURA AMATUNGO
                 </h2>
               </div>
 
-              <div class="grid-2" style="padding-top: 4px;">
-                <div>
-                  <span style="font-size: 11px; color: #6b7280; display: block;">Amazina</span>
-                  <span style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${permit.owner_name || 'N/A'}</span>
-                </div>
-                <div>
-                  <span style="font-size: 11px; color: #6b7280; display: block;">Nomero y'icyangombwa</span>
-                  <span style="font-size: 13px; font-weight: bold;">${permit.owner_id_number || 'N/A'}</span>
-                </div>
-              </div>
+              <!-- Owner Details Table -->
+              <table style="width: 100%; border-collapse: collapse; margin-top: 6px; border: none;">
+                <tr>
+                  <td style="width: 50%; border: none; padding: 4px 0; vertical-align: top;">
+                    <span style="font-size: 11px; color: #6b7280; display: block;">Amazina</span>
+                    <span style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${permit.owner_name || 'N/A'}</span>
+                  </td>
+                  <td style="width: 50%; border: none; padding: 4px 0; vertical-align: top;">
+                    <span style="font-size: 11px; color: #6b7280; display: block;">Nomero y'icyangombwa</span>
+                    <span style="font-size: 13px; font-weight: bold;">${permit.owner_id_number || 'N/A'}</span>
+                  </td>
+                </tr>
+              </table>
 
               <div style="margin-top: 10px;">
                 <span style="font-size: 11px; color: #6b7280; display: block;">Impamvu y'iyimuka</span>
                 <span style="font-size: 13px; font-weight: bold;">${permit.reason || 'Kubaga amatungo'}</span>
               </div>
 
+              <!-- Transportation Details Table -->
               <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">Ibisobanuro birambuye by'ubwikorezi (Transportation Details)</h4>
-                <div class="grid-3" style="background: #f9fafb; padding: 10px; border-radius: 6px; border: 1px solid #f3f4f6; font-size: 11px;">
-                  <div>
-                    <span style="color: #6b7280; display: block;">Uburyo bwo kugenda</span>
-                    <span style="font-weight: 600; color: #111827;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (permit.transport_type || 'Imodoka')}</span>
-                  </div>
-                  <div>
-                    <span style="color: #6b7280; display: block;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Nyir\'amatungo' : 'Nomero ya pulaki'}</span>
-                    <span style="font-weight: 600; color: #111827;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? (permit.driver_name || 'N/A') : (permit.plate_number || 'N/A')}</span>
-                  </div>
-                  <div>
-                    <span style="color: #6b7280; display: block;">Utwara Amatungo</span>
-                    <span style="font-weight: 600; color: #111827;">${permit.driver_name || 'N/A'} (${permit.driver_phone || ''})</span>
-                  </div>
-                </div>
+                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px 0;">Ibisobanuro birambuye by'ubwikorezi (Transportation Details)</h4>
+                <table style="width: 100%; border-collapse: collapse; background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 6px; font-size: 11px;">
+                  <tr>
+                    <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;">
+                      <span style="color: #6b7280; display: block;">Uburyo bwo kugenda</span>
+                      <span style="font-weight: 600; color: #111827;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (permit.transport_type || 'Imodoka')}</span>
+                    </td>
+                    <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;">
+                      <span style="color: #6b7280; display: block;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? 'Nyir\'amatungo' : 'Nomero ya pulaki'}</span>
+                      <span style="font-weight: 600; color: #111827;">${permit.transporter_mode === 'PERSON_ON_FOOT' ? (permit.driver_name || 'N/A') : (permit.plate_number || 'N/A')}</span>
+                    </td>
+                    <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;">
+                      <span style="color: #6b7280; display: block;">Utwara Amatungo</span>
+                      <span style="font-weight: 600; color: #111827;">${permit.driver_name || 'N/A'} (${permit.driver_phone || ''})</span>
+                    </td>
+                  </tr>
+                </table>
               </div>
 
               ${permit.cargo_photo ? `
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                  <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">Ifoto y'Amatungo Yapakijwe / Arimo Kwimuka</h4>
+                  <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px 0;">Ifoto y'Amatungo Yapakijwe / Arimo Kwimuka</h4>
                   <img src="${permit.cargo_photo}" alt="Loaded Cargo" style="height: 120px; max-width: 260px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d5db;" />
                 </div>
               ` : ''}
 
               ${permit.buyer_name ? `
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                  <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">Amakuru y'Umuguzi (Buyer / Company Details)</h4>
-                  <div class="grid-3" style="background: #f9fafb; padding: 10px; border-radius: 6px; border: 1px solid #f3f4f6; font-size: 11px;">
-                    <div><span style="color: #6b7280; display: block;">Ubwoko bw'Umuguzi</span><span style="font-weight: 600;">${permit.buyer_type || 'Person'}</span></div>
-                    <div><span style="color: #6b7280; display: block;">Amazina / Isociete</span><span style="font-weight: 600;">${permit.buyer_name}</span></div>
-                    <div><span style="color: #6b7280; display: block;">Telephoni / NID</span><span style="font-weight: 600;">${permit.buyer_phone || ''} ${permit.buyer_id_tin ? `(${permit.buyer_id_tin})` : ''}</span></div>
-                  </div>
+                  <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px 0;">Amakuru y'Umuguzi (Buyer / Company Details)</h4>
+                  <table style="width: 100%; border-collapse: collapse; background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 6px; font-size: 11px;">
+                    <tr>
+                      <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Ubwoko bw'Umuguzi</span><span style="font-weight: 600;">${permit.buyer_type || 'Person'}</span></td>
+                      <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Amazina / Isociete</span><span style="font-weight: 600;">${permit.buyer_name}</span></td>
+                      <td style="width: 33.3%; padding: 10px; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Telephoni / NID</span><span style="font-weight: 600;">${permit.buyer_phone || ''} ${permit.buyer_id_tin ? `(${permit.buyer_id_tin})` : ''}</span></td>
+                    </tr>
+                  </table>
                 </div>
               ` : ''}
 
+              <!-- Origin Table -->
               <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Ahantu aturuka: (Origin)</h4>
-                <div class="grid-4" style="font-size: 11px; padding: 6px 0;">
-                  <div><span style="color: #6b7280; display: block;">Akarere:</span><span style="font-weight: bold;">${permit.origin_district || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Umurenge:</span><span style="font-weight: bold;">${permit.origin_sector || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Akagari:</span><span style="font-weight: bold;">${permit.origin_cell || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Umudugudu:</span><span style="font-weight: bold;">${permit.origin_village || 'N/A'}</span></div>
-                </div>
+                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 0 0 4px 0;">Ahantu aturuka: (Origin)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; border: none;">
+                  <tr>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Akarere:</span><span style="font-weight: bold;">${permit.origin_district || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Umurenge:</span><span style="font-weight: bold;">${permit.origin_sector || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Akagari:</span><span style="font-weight: bold;">${permit.origin_cell || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Umudugudu:</span><span style="font-weight: bold;">${permit.origin_village || 'N/A'}</span></td>
+                  </tr>
+                </table>
               </div>
 
+              <!-- Destination Table -->
               <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Aho yerekeza: (Destination)</h4>
-                <div class="grid-4" style="font-size: 11px; padding: 6px 0;">
-                  <div><span style="color: #6b7280; display: block;">Akarere:</span><span style="font-weight: bold;">${permit.dest_district || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Umurenge:</span><span style="font-weight: bold;">${permit.dest_sector || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Akagari:</span><span style="font-weight: bold;">${permit.dest_cell || 'N/A'}</span></div>
-                  <div><span style="color: #6b7280; display: block;">Umudugudu:</span><span style="font-weight: bold;">${permit.dest_village || 'N/A'}</span></div>
-                </div>
+                <h4 style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 0 0 4px 0;">Aho yerekeza: (Destination)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; border: none;">
+                  <tr>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Akarere:</span><span style="font-weight: bold;">${permit.dest_district || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Umurenge:</span><span style="font-weight: bold;">${permit.dest_sector || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Akagari:</span><span style="font-weight: bold;">${permit.dest_cell || 'N/A'}</span></td>
+                    <td style="width: 25%; border: none; padding: 4px 0; vertical-align: top;"><span style="color: #6b7280; display: block;">Umudugudu:</span><span style="font-weight: bold;">${permit.dest_village || 'N/A'}</span></td>
+                  </tr>
+                </table>
               </div>
 
-              <div class="grid-3" style="border-top: 2px solid #e5e7eb; border-bottom: 2px solid #e5e7eb; padding: 10px 0; margin-top: 12px; font-size: 11px;">
-                <div><span style="color: #6b7280; display: block;">Rutanzwe ku wa:</span><span style="font-weight: bold; font-size: 13px;">${issueDate}</span></div>
-                <div><span style="color: #6b7280; display: block;">Inyandiko ifite agaciro kugeza:</span><span style="font-weight: bold; font-size: 13px;">${validUntilDate}</span></div>
-                <div><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #0052cc;">${permitCode}</span></div>
+              <!-- Validity Table -->
+              <div style="border-top: 2px solid #e5e7eb; border-bottom: 2px solid #e5e7eb; padding: 10px 0; margin-top: 12px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: none;">
+                  <tr>
+                    <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Rutanzwe ku wa:</span><span style="font-weight: bold; font-size: 13px;">${issueDate}</span></td>
+                    <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Inyandiko ifite agaciro kugeza:</span><span style="font-weight: bold; font-size: 13px;">${validUntilDate}</span></td>
+                    <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #0052cc;">${permitCode}</span></td>
+                  </tr>
+                </table>
               </div>
 
               <div style="padding-top: 12px;">
@@ -218,16 +241,21 @@ export const printOfficialPermit = async (permit) => {
               </div>
             </div>
 
+            <!-- Footer Table -->
             <div style="border-top: 2px solid black; padding-top: 12px; margin-top: 16px;">
-              <div style="display: flex; align-items: center; gap: 14px;">
-                <img src="${qrCodeUrl}" alt="QR Code" style="width: 56px; height: 56px; border: 1px solid #d1d5db; padding: 4px;" />
-                <div>
-                  <span style="font-size: 9px; color: #6b7280; display: block; font-weight: bold; text-transform: uppercase;">INYANDIKO ITANGIWE KU</span>
-                  <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; display: block;">
-                    RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)
-                  </span>
-                </div>
-              </div>
+              <table style="width: 100%; border-collapse: collapse; border: none;">
+                <tr>
+                  <td style="width: 70px; border: none; vertical-align: middle;">
+                    <img src="${qrCodeUrl}" alt="QR Code" style="width: 56px; height: 56px; border: 1px solid #d1d5db; padding: 4px;" />
+                  </td>
+                  <td style="border: none; vertical-align: middle; padding-left: 10px;">
+                    <span style="font-size: 9px; color: #6b7280; display: block; font-weight: bold; text-transform: uppercase;">INYANDIKO ITANGIWE KU</span>
+                    <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; display: block;">
+                      RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </div>
           </div>
 
@@ -237,14 +265,21 @@ export const printOfficialPermit = async (permit) => {
           <!-- PAGE 2: ANIMAL SPECIFICATIONS LIST -->
           <div class="page">
             <div>
-              <div class="flex-between" style="border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
-                <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 56px; height: 56px; object-fit: contain;" />
-                <div class="text-center">
-                  <h1 style="font-size: 15px; font-weight: bold; text-transform: uppercase; margin: 0;">REPUBULIKA Y'U RWANDA</h1>
-                  <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
-                </div>
-                <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 60px; height: 60px; object-fit: contain;" />
-              </div>
+              <!-- Header Logos Table Page 2 -->
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; border: none;">
+                <tr>
+                  <td style="width: 80px; vertical-align: middle; border: none; padding: 0;">
+                    <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 56px; height: 56px; object-fit: contain;" />
+                  </td>
+                  <td style="text-align: center; vertical-align: middle; border: none; padding: 0 10px;">
+                    <h1 style="font-size: 15px; font-weight: bold; text-transform: uppercase; margin: 0;">REPUBULIKA Y'U RWANDA</h1>
+                    <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
+                  </td>
+                  <td style="width: 80px; text-align: right; vertical-align: middle; border: none; padding: 0;">
+                    <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 60px; height: 60px; object-fit: contain; float: right;" />
+                  </td>
+                </tr>
+              </table>
 
               <div style="height: 5px; width: 100%; background: linear-gradient(to right, #10b981, #facc15, #0284c7); border-radius: 9999px; margin: 10px 0;"></div>
 
@@ -254,12 +289,14 @@ export const printOfficialPermit = async (permit) => {
                 </h2>
               </div>
 
-              <div class="flex-between" style="font-size: 11px; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
-                <div><span style="color: #6b7280;">Ubwoko:</span> <span style="font-weight: bold; font-size: 13px; margin-left: 4px;">${permit.animal_type || 'Inka'}</span></div>
-                <div><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 13px; color: #0052cc; margin-left: 4px;">${permitCode}</span></div>
-              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 10px;">
+                <tr>
+                  <td style="border: none; padding: 4px 0;"><span style="color: #6b7280;">Ubwoko:</span> <span style="font-weight: bold; font-size: 13px; margin-left: 4px;">${permit.animal_type || 'Inka'}</span></td>
+                  <td style="text-align: right; border: none; padding: 4px 0;"><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 13px; color: #0052cc; margin-left: 4px;">${permitCode}</span></td>
+                </tr>
+              </table>
 
-              <table>
+              <table class="animal-table">
                 <thead>
                   <tr>
                     <th style="text-align: center; width: 40px;">#</th>
@@ -287,16 +324,21 @@ export const printOfficialPermit = async (permit) => {
               </table>
             </div>
 
+            <!-- Footer Table Page 2 -->
             <div style="border-top: 2px solid black; padding-top: 12px; margin-top: 16px;">
-              <div style="display: flex; align-items: center; gap: 14px;">
-                <img src="${qrCodeUrl}" alt="QR Code" style="width: 56px; height: 56px; border: 1px solid #d1d5db; padding: 4px;" />
-                <div>
-                  <span style="font-size: 9px; color: #6b7280; display: block; font-weight: bold; text-transform: uppercase;">INYANDIKO ITANGIWE KU</span>
-                  <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; display: block;">
-                    RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)
-                  </span>
-                </div>
-              </div>
+              <table style="width: 100%; border-collapse: collapse; border: none;">
+                <tr>
+                  <td style="width: 70px; border: none; vertical-align: middle;">
+                    <img src="${qrCodeUrl}" alt="QR Code" style="width: 56px; height: 56px; border: 1px solid #d1d5db; padding: 4px;" />
+                  </td>
+                  <td style="border: none; vertical-align: middle; padding-left: 10px;">
+                    <span style="font-size: 9px; color: #6b7280; display: block; font-weight: bold; text-transform: uppercase;">INYANDIKO ITANGIWE KU</span>
+                    <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; display: block;">
+                      RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </div>
           </div>
         </body>
