@@ -68,7 +68,7 @@ const DashboardLayout = () => {
 
   const getEffectivePermissions = () => {
     if (!user) return [];
-    if (Array.isArray(user.permissions) && user.permissions.length > 0) {
+    if (user.permissions !== null && user.permissions !== undefined && Array.isArray(user.permissions)) {
       return user.permissions;
     }
     return DEFAULT_ROLE_PERMISSIONS[user.role] || DEFAULT_ROLE_PERMISSIONS.SARO;

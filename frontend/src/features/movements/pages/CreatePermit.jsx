@@ -383,6 +383,47 @@ const CreatePermit = () => {
   }, [isEditing]);
 
   const handleSubmitSheets = async () => {
+    // Enforce mandatory header fields based on ticked mode (User cannot skip what he ticked)
+    if (headerForm.transporter_mode === 'DRIVER_VEHICLE') {
+      if (!headerForm.driver_name?.trim()) {
+        toast.error("Banza wuzuze Amazina y'Umushoferi.");
+        return;
+      }
+      if (!headerForm.driver_phone?.trim() || headerForm.driver_phone.trim().length !== 10) {
+        toast.error("Telephoni y'Umushoferi igomba kuba imibare 10 (e.g. 0788000000).");
+        return;
+      }
+      if (!headerForm.driver_nid?.trim() || headerForm.driver_nid.trim().length !== 16) {
+        toast.error("Indangamuntu y'Umushoferi igomba kuba imibare 16.");
+        return;
+      }
+      if (!headerForm.plate_number?.trim()) {
+        toast.error("Banza wuzuze Pulaki y'Imodoka (Plate Number).");
+        return;
+      }
+      if (!headerForm.cargo_photo) {
+        toast.error("Banza wohoze Ifoto 1 y'amatungo yapakijwe (Cargo Photo).");
+        return;
+      }
+    } else {
+      if (!headerForm.driver_name?.trim()) {
+        toast.error("Banza wuzuze Amazina y'Umunyamaguru.");
+        return;
+      }
+      if (!headerForm.driver_phone?.trim() || headerForm.driver_phone.trim().length !== 10) {
+        toast.error("Telephoni y'Umunyamaguru igomba kuba imibare 10.");
+        return;
+      }
+      if (!headerForm.driver_nid?.trim() || headerForm.driver_nid.trim().length !== 16) {
+        toast.error("Indangamuntu y'Umunyamaguru igomba kuba imibare 16.");
+        return;
+      }
+      if (!headerForm.cargo_photo) {
+        toast.error("Banza wohoze Ifoto 1 y'amatungo arimo kwimuka.");
+        return;
+      }
+    }
+
     let validRows = gridData.filter(r => r[17].trim() !== ''); 
     if (validRows.length === 0) {
       toast.error('Nta tungo ririmo. Uzuza Column R (Tag).');
@@ -492,8 +533,8 @@ const CreatePermit = () => {
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Ifoto Ntoya (Max 5MB)');
+    if (file.size > 1000 * 1024 * 1024) {
+      toast.error('Ifoto iraburemerere cyane (Max 1000MB)');
       return;
     }
     const reader = new FileReader();

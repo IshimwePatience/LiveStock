@@ -12,10 +12,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
 };
 
 const resolveUserPermissions = (user) => {
-  if (Array.isArray(user.permissions) && user.permissions.length > 0) {
+  if (user && user.permissions !== null && user.permissions !== undefined && Array.isArray(user.permissions)) {
     return user.permissions;
   }
-  return DEFAULT_ROLE_PERMISSIONS[user.role] || DEFAULT_ROLE_PERMISSIONS.SARO;
+  return DEFAULT_ROLE_PERMISSIONS[user?.role] || DEFAULT_ROLE_PERMISSIONS.SARO;
 };
 
 class AuthService {

@@ -151,6 +151,19 @@ const UserManagement = () => {
         const res = await api.put(`/auth/users/${editUserId}`, payload);
         toast.success('User updated successfully!');
         setUsers(users.map(u => u.id === editUserId ? { ...res.data, status: res.data.status || u.status, permissions: modalPermissions } : u));
+
+        // Sync localStorage if editing currently logged-in user
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const currentUser = JSON.parse(userStr);
+          if (currentUser.id === editUserId) {
+            const updatedUser = { ...currentUser, ...res.data, permissions: modalPermissions };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+          }
+        }
       } else {
         const res = await api.post('/auth/register', payload);
         toast.success('User created successfully!');
@@ -185,7 +198,7 @@ const UserManagement = () => {
       district_id: user.district_id || '',
       sector_id: user.sector_id || ''
     });
-    setModalPermissions(user.permissions || ROLE_DEFAULTS[user.role] || []);
+    setModalPermissions(Array.isArray(user.permissions) ? user.permissions : (ROLE_DEFAULTS[user.role] || []));
     setEditUserId(user.id);
     setIsEditMode(true);
     setIsModalOpen(true);
