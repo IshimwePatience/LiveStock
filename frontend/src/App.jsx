@@ -1,12 +1,11 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { Toaster, toast } from 'react-hot-toast'
-import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import Landing from './pages/Landing'
-import Login from './features/auth/pages/Login'
-import ForgotPassword from './features/auth/pages/ForgotPassword'
-import DashboardLayout from './components/layout/DashboardLayout'
-import Overview from './features/dashboard/pages/Overview'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster, toast } from 'react-hot-toast';
+import { useEffect } from 'react';
+import Landing from './pages/Landing';
+import Login from './features/auth/pages/Login';
+import ForgotPassword from './features/auth/pages/ForgotPassword';
+import DashboardLayout from './components/layout/DashboardLayout';
+import Overview from './features/dashboard/pages/Overview';
 import Movements from './features/movements/pages/Movements';
 import CreatePermit from './features/movements/pages/CreatePermit';
 import UserManagement from './features/users/pages/UserManagement';
@@ -21,7 +20,7 @@ import Geofencing from './features/geofencing/pages/Geofencing';
 import Notifications from './features/notifications/pages/Notifications';
 import SystemSettings from './features/settings/pages/SystemSettings';
 import DriverTripPage from './features/driver/DriverTripPage';
-import api from './lib/api'
+import api from './lib/api';
 import { connectSocket } from './lib/socket';
 
 const ProtectedRoute = ({ children }) => {
@@ -53,6 +52,13 @@ const PermittedRoute = ({ permKey, children }) => {
   return children;
 };
 
+const VetRoute = ({ children }) => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.role !== 'DARO' && user?.role !== 'SARO' && user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
 function App() {
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -81,7 +87,7 @@ function App() {
             )}
           </div>
         ),
-        { duration: 10000 } // Keep toast up for 10s
+        { duration: 10000 }
       );
     });
 
@@ -137,7 +143,7 @@ function App() {
         </Route>
       </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
