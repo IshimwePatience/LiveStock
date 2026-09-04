@@ -76,7 +76,7 @@ const DashboardLayout = () => {
         perms = null;
       }
     }
-    if (perms !== null && perms !== undefined && Array.isArray(perms)) {
+    if (Array.isArray(perms) && perms.length > 0) {
       return perms;
     }
     return DEFAULT_ROLE_PERMISSIONS[user.role] || DEFAULT_ROLE_PERMISSIONS.SARO;

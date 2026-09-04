@@ -50,7 +50,7 @@ const PermittedRoute = ({ permKey, children }) => {
     }
   }
 
-  const effectivePerms = (perms !== null && perms !== undefined && Array.isArray(perms))
+  const effectivePerms = (Array.isArray(perms) && perms.length > 0)
     ? perms
     : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
 

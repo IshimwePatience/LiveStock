@@ -16,7 +16,6 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
   const [assignModal, setAssignModal] = useState({ isOpen: false, requestId: null });
   const [confirmArrivalModal, setConfirmArrivalModal] = useState({ isOpen: false, request: null });
-  const [officialPermitModal, setOfficialPermitModal] = useState({ isOpen: false, permit: null });
   const queryClient = useQueryClient();
   
   const userStr = localStorage.getItem('user');
@@ -438,12 +437,6 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
         request={confirmArrivalModal.request}
         onClose={() => setConfirmArrivalModal({ isOpen: false, request: null })}
         onConfirmSuccess={() => queryClient.invalidateQueries(['movements'])}
-      />
-
-      <OfficialRabPermitModal
-        isOpen={officialPermitModal.isOpen}
-        permit={officialPermitModal.permit}
-        onClose={() => setOfficialPermitModal({ isOpen: false, permit: null })}
       />
 
     </div>
