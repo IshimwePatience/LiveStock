@@ -190,6 +190,10 @@ const UserManagement = () => {
   };
 
   const handleEdit = (user) => {
+    let perms = user.permissions;
+    if (typeof perms === 'string') {
+      try { perms = JSON.parse(perms); } catch (e) { perms = null; }
+    }
     setFormData({
       name: user.name,
       email: user.email,
@@ -198,7 +202,7 @@ const UserManagement = () => {
       district_id: user.district_id || '',
       sector_id: user.sector_id || ''
     });
-    setModalPermissions(Array.isArray(user.permissions) ? user.permissions : (ROLE_DEFAULTS[user.role] || []));
+    setModalPermissions(Array.isArray(perms) ? perms : (ROLE_DEFAULTS[user.role] || []));
     setEditUserId(user.id);
     setIsEditMode(true);
     setIsModalOpen(true);

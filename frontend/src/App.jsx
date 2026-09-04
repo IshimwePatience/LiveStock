@@ -41,11 +41,20 @@ const PermittedRoute = ({ permKey, children }) => {
     POLICE: ['cases', 'gps', 'notifications']
   };
 
-  const perms = (user.permissions !== null && user.permissions !== undefined && Array.isArray(user.permissions))
-    ? user.permissions
+  let perms = user.permissions;
+  if (typeof perms === 'string') {
+    try {
+      perms = JSON.parse(perms);
+    } catch (e) {
+      perms = null;
+    }
+  }
+
+  const effectivePerms = (perms !== null && perms !== undefined && Array.isArray(perms))
+    ? perms
     : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
 
-  if (!perms.includes(permKey)) {
+  if (!effectivePerms.includes(permKey)) {
     return <Navigate to="/dashboard" replace />;
   }
 
