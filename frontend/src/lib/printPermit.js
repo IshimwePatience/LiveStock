@@ -12,6 +12,27 @@ const ensureHtml2Pdf = () => {
   });
 };
 
+const getBase64FromUrl = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        resolve(url);
+      }
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+};
+
 const waitForImages = (container) => {
   const imgs = container.querySelectorAll('img');
   const promises = Array.from(imgs).map(img => {
@@ -55,25 +76,34 @@ export const printOfficialPermit = async (permit) => {
           vaccines: permit.vaccines || '-'
         }];
 
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(permitCode)}`;
+    const rawQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(permitCode)}`;
+    const coatOfArmsRaw = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png";
+
+    // Convert images to Base64 to prevent html2canvas CORS canvas tainting
+    const [qrCodeUrl, coatOfArmsUrl, rabLogoBase64] = await Promise.all([
+      getBase64FromUrl(rawQrCodeUrl),
+      getBase64FromUrl(coatOfArmsRaw),
+      getBase64FromUrl(rabLogo)
+    ]);
 
     const container = document.createElement('div');
     container.style.position = 'fixed';
     container.style.top = '0';
     container.style.left = '0';
-    container.style.zIndex = '-99999';
     container.style.width = '794px';
+    container.style.zIndex = '99999';
     container.style.background = 'white';
+    container.style.pointerEvents = 'none';
 
     container.innerHTML = `
-      <div style="font-family: system-ui, -apple-system, sans-serif; background: white; color: #111827; box-sizing: border-box;">
+      <div style="font-family: system-ui, -apple-system, sans-serif; background: white; color: #111827; box-sizing: border-box; width: 794px;">
         <!-- PAGE 1: PERMIT DETAILS -->
         <div style="background:white; padding: 32px; border: 1px solid #e5e7eb; position: relative; min-height: 1050px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
           <div>
             <!-- Header Logos -->
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
               <img
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png"
+                src="${coatOfArmsUrl}"
                 alt="Rwanda Coat of Arms"
                 style="width: 64px; height: 64px; object-fit: contain;"
               />
@@ -85,7 +115,7 @@ export const printOfficialPermit = async (permit) => {
                 </p>
               </div>
               <img
-                src="${rabLogo}"
+                src="${rabLogoBase64}"
                 alt="RAB Logo"
                 style="width: 68px; height: 68px; object-fit: contain;"
               />
@@ -208,7 +238,7 @@ export const printOfficialPermit = async (permit) => {
           <div>
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
               <img
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png"
+                src="${coatOfArmsUrl}"
                 alt="Rwanda Coat of Arms"
                 style="width: 56px; height: 56px; object-fit: contain;"
               />
@@ -217,7 +247,7 @@ export const printOfficialPermit = async (permit) => {
                 <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
               </div>
               <img
-                src="${rabLogo}"
+                src="${rabLogoBase64}"
                 alt="RAB Logo"
                 style="width: 60px; height: 60px; object-fit: contain;"
               />
@@ -283,7 +313,7 @@ export const printOfficialPermit = async (permit) => {
 
     // Wait for images to load into DOM before capturing canvas
     await waitForImages(container);
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     const html2pdf = await ensureHtml2Pdf();
     if (html2pdf) {
@@ -296,7 +326,7 @@ export const printOfficialPermit = async (permit) => {
       };
       await html2pdf().set(opt).from(container).save();
       document.body.removeChild(container);
-      toast.success(`Permit_${permitCode}.pdf saved!`, { id: toastId });
+      toast.success(`Permit_${permitCode}.pdf downloaded!`, { id: toastId });
     } else {
       const htmlContent = container.innerHTML;
       const blob = new Blob([htmlContent], { type: 'text/html' });
