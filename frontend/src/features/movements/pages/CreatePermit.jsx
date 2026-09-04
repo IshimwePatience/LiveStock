@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, F
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
-import OfficialRabPermitModal from '../components/OfficialRabPermitModal';
+import { printOfficialPermit } from '../../../lib/printPermit';
 
 const NUM_ROWS = 30;
 const NUM_COLS = 30;
@@ -105,6 +105,8 @@ const CreatePermit = () => {
     }
   }, [gridData, editId]);
 
+  const [permitDetails, setPermitDetails] = useState(null);
+
   useEffect(() => {
     if (editId) {
       const fetchRequest = async () => {
@@ -112,13 +114,26 @@ const CreatePermit = () => {
           setLoading(true);
           const res = await api.get(`/movement/${editId}`);
           const data = res.data;
+          setPermitDetails(data);
           
+          // Populate header form for driver & cargo info card
+          setHeaderForm({
+            transporter_mode: data.transporter_mode || (data.plate_number === 'ON_FOOT' ? 'PERSON_ON_FOOT' : 'DRIVER_VEHICLE'),
+            cargo_photo: data.cargo_photo || '',
+            transport_type: data.transport_type || 'Imodoka',
+            plate_number: data.plate_number || '',
+            driver_name: data.driver_name || '',
+            driver_phone: data.driver_phone || '',
+            driver_nid: data.driver_nid || '',
+          });
+
           // Populate mobile form
           setMobileForm({
             owner_name: data.owner_name || '', owner_id_number: data.owner_id_number || '',
             owner_phone: data.owner_phone || '', priority: data.priority || '',
             transport_type: data.transport_type || '', plate_number: data.plate_number || '',
             driver_name: data.driver_name || '', driver_phone: data.driver_phone || '', driver_nid: data.driver_nid || '',
+            cargo_photo: data.cargo_photo || '',
             origin_district: data.origin_district || '', origin_sector: data.origin_sector || '',
             origin_cell: data.origin_cell || '', origin_village: data.origin_village || '',
             dest_district: data.dest_district || '', dest_sector: data.dest_sector || '',
@@ -170,7 +185,36 @@ const CreatePermit = () => {
               newGrid[r][23] = data.driver_name || '';
               newGrid[r][24] = data.driver_phone || '';
               newGrid[r][25] = data.driver_nid || '';
+              newGrid[r][26] = data.buyer_type || '';
+              newGrid[r][27] = data.buyer_name || '';
+              newGrid[r][28] = data.buyer_phone || '';
+              newGrid[r][29] = data.buyer_id_tin || '';
             });
+          } else {
+            newGrid[0][0] = data.owner_name || '';
+            newGrid[0][1] = data.owner_id_number || '';
+            newGrid[0][2] = data.owner_phone || '';
+            newGrid[0][3] = data.reason || '';
+            newGrid[0][4] = data.priority || '';
+            newGrid[0][5] = data.valid_until ? data.valid_until.split('T')[0] : '';
+            newGrid[0][6] = data.transport_type || '';
+            newGrid[0][7] = data.plate_number || '';
+            newGrid[0][8] = data.origin_district || '';
+            newGrid[0][9] = data.origin_sector || '';
+            newGrid[0][10] = data.origin_cell || '';
+            newGrid[0][11] = data.origin_village || '';
+            newGrid[0][12] = data.dest_district || '';
+            newGrid[0][13] = data.dest_sector || '';
+            newGrid[0][14] = data.dest_cell || '';
+            newGrid[0][15] = data.dest_village || '';
+            newGrid[0][16] = data.animal_type || 'COW';
+            newGrid[0][23] = data.driver_name || '';
+            newGrid[0][24] = data.driver_phone || '';
+            newGrid[0][25] = data.driver_nid || '';
+            newGrid[0][26] = data.buyer_type || '';
+            newGrid[0][27] = data.buyer_name || '';
+            newGrid[0][28] = data.buyer_phone || '';
+            newGrid[0][29] = data.buyer_id_tin || '';
           }
           setGridData(newGrid);
 
@@ -777,19 +821,19 @@ const CreatePermit = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {(isViewMode || editId) && (
+            {(isViewMode || editId) && permitDetails?.status === 'APPROVED' && (
               <button 
                 onClick={async () => {
                   try {
                     const res = await api.get(`/movement/${editId}`);
-                    setOfficialPermitModal({ isOpen: true, permit: res.data });
+                    printOfficialPermit(res.data);
                   } catch(e) {
-                    toast.error('Failed to load official permit details.');
+                    toast.error('Failed to download permit.');
                   }
                 }} 
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm text-xs"
+                className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm text-xs"
               >
-                <Printer className="w-3.5 h-3.5" /> Print Official RAB Permit
+                <Download className="w-3.5 h-3.5" /> Download Permit
               </button>
             )}
             {isViewMode ? (
@@ -874,40 +918,44 @@ const CreatePermit = () => {
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Amazina y'Umushoferi</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umushoferi"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Telephoni y'Umushoferi</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Indangamuntu y'Umushoferi</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Pulaki ya Imodoka (Plate Number)</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.plate_number}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, plate_number: e.target.value }))}
                     placeholder="RAB 195F"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
               </>
@@ -917,30 +965,33 @@ const CreatePermit = () => {
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Amazina y'Umunyamaguru</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umunyamaguru"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Telephoni y'Umunyamaguru</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Indangamuntu y'Umunyamaguru</label>
                   <input
                     type="text"
+                    readOnly={isViewMode}
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -956,7 +1007,7 @@ const CreatePermit = () => {
             )}
           </div>
 
-          {/* Cargo Photo Upload Box (Flat, No Border, No Shadow, Gray Upload) */}
+          {/* Cargo Photo Upload Box */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white py-2">
             <div>
               <label className="block text-[13px] font-semibold text-gray-800">
@@ -971,26 +1022,30 @@ const CreatePermit = () => {
               {headerForm.cargo_photo && (
                 <div className="relative group">
                   <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover border border-gray-300" />
-                  <button
-                    type="button"
-                    onClick={() => setHeaderForm(prev => ({ ...prev, cargo_photo: '' }))}
-                    className="absolute -top-1.5 -right-1.5 bg-red-600 text-white p-0.5 text-[10px] hover:bg-red-700"
-                  >
-                    ✕
-                  </button>
+                  {!isViewMode && (
+                    <button
+                      type="button"
+                      onClick={() => setHeaderForm(prev => ({ ...prev, cargo_photo: '' }))}
+                      className="absolute -top-1.5 -right-1.5 bg-red-600 text-white p-0.5 text-[10px] hover:bg-red-700"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               )}
 
-              <label className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 transition">
-                <UploadCloud className="w-4 h-4 text-gray-600" />
-                <span>Upload Photo</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
-              </label>
+              {!isViewMode && (
+                <label className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 transition">
+                  <UploadCloud className="w-4 h-4 text-gray-600" />
+                  <span>Upload Photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </div>
         </div>

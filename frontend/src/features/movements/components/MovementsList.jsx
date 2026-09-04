@@ -6,7 +6,7 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
-import OfficialRabPermitModal from './OfficialRabPermitModal';
+import { printOfficialPermit } from '../../../lib/printPermit';
 
 const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const navigate = useNavigate();
@@ -75,12 +75,12 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
     }
   };
 
-  const handleOpenOfficialPermit = async (dbId) => {
+  const handleDownloadPermit = async (dbId) => {
     try {
       const res = await api.get(`/movement/${dbId}`);
-      setOfficialPermitModal({ isOpen: true, permit: res.data });
+      printOfficialPermit(res.data);
     } catch (err) {
-      toast.error('Failed to load official permit details.');
+      toast.error('Failed to download official permit.');
     }
   };
 
@@ -358,10 +358,10 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                     )}
                     {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
                       <button 
-                        onClick={() => { handleOpenOfficialPermit(item.dbId); setOpenActionDropdown(null); }}
+                        onClick={() => { handleDownloadPermit(item.dbId); setOpenActionDropdown(null); }}
                         className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
                       >
-                        📄 View RAB Permit
+                        📄 Download Permit
                       </button>
                     )}
                     <button 
