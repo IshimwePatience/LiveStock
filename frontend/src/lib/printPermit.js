@@ -12,10 +12,22 @@ const ensureHtml2Pdf = () => {
   });
 };
 
+const waitForImages = (container) => {
+  const imgs = container.querySelectorAll('img');
+  const promises = Array.from(imgs).map(img => {
+    if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    });
+  });
+  return Promise.all(promises);
+};
+
 export const printOfficialPermit = async (permit) => {
   if (!permit) return;
 
-  const toastId = toast.loading('Downloading permit PDF to your machine...');
+  const toastId = toast.loading('Generating permit PDF...');
 
   try {
     const formatDate = (dateStr) => {
@@ -46,16 +58,17 @@ export const printOfficialPermit = async (permit) => {
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(permitCode)}`;
 
     const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.zIndex = '-99999';
     container.style.width = '794px';
     container.style.background = 'white';
 
     container.innerHTML = `
       <div style="font-family: system-ui, -apple-system, sans-serif; background: white; color: #111827; box-sizing: border-box;">
         <!-- PAGE 1: PERMIT DETAILS -->
-        <div style="background:white; padding: 28px; border: 1px solid #e5e7eb; position: relative; min-height: 1040px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+        <div style="background:white; padding: 32px; border: 1px solid #e5e7eb; position: relative; min-height: 1050px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
           <div>
             <!-- Header Logos -->
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
@@ -191,7 +204,7 @@ export const printOfficialPermit = async (permit) => {
         <div class="html2pdf__page-break" style="page-break-before: always; height: 0;"></div>
 
         <!-- PAGE 2: ANIMAL SPECIFICATIONS LIST -->
-        <div style="background:white; padding: 28px; border: 1px solid #e5e7eb; position: relative; min-height: 1040px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+        <div style="background:white; padding: 32px; border: 1px solid #e5e7eb; position: relative; min-height: 1050px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
           <div>
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px;">
               <img
@@ -268,18 +281,22 @@ export const printOfficialPermit = async (permit) => {
 
     document.body.appendChild(container);
 
+    // Wait for images to load into DOM before capturing canvas
+    await waitForImages(container);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     const html2pdf = await ensureHtml2Pdf();
     if (html2pdf) {
       const opt = {
         margin:       0,
         filename:     `Permit_${permitCode}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
       };
       await html2pdf().set(opt).from(container).save();
       document.body.removeChild(container);
-      toast.success(`Permit_${permitCode}.pdf downloaded directly to your machine!`, { id: toastId });
+      toast.success(`Permit_${permitCode}.pdf saved!`, { id: toastId });
     } else {
       const htmlContent = container.innerHTML;
       const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -292,7 +309,7 @@ export const printOfficialPermit = async (permit) => {
       document.body.removeChild(a);
       document.body.removeChild(container);
       URL.revokeObjectURL(url);
-      toast.success(`Permit downloaded as Permit_${permitCode}.html`, { id: toastId });
+      toast.success(`Permit saved as Permit_${permitCode}.html`, { id: toastId });
     }
   } catch (err) {
     console.error('PDF download error:', err);
