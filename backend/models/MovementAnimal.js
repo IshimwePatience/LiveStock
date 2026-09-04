@@ -39,6 +39,14 @@ const MovementAnimal = sequelize.define('MovementAnimal', {
     type: DataTypes.STRING, 
     allowNull: true 
   },
+  vaccines: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  medication: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
 });
 
 module.exports = MovementAnimal;

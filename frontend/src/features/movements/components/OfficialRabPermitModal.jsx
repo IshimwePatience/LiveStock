@@ -101,8 +101,8 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
           <div ref={printRef} className="w-full max-w-[794px] space-y-8">
 
             {/* PAGE 1: PERMIT DETAILS */}
-            <div className="bg-white p-8 rounded-sm shadow-md border border-gray-200 relative overflow-hidden min-h-[1120px] flex flex-col justify-between">
-              
+            <div className="bg-white p-8 pl-16 rounded-sm shadow-md border border-gray-200 relative overflow-hidden min-h-[1120px] flex flex-col justify-between">
+
               {/* RAB Watermark Background */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 select-none">
                 <div className="text-[140px] font-black tracking-widest text-center text-gray-900 leading-none">
@@ -293,33 +293,13 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
 
             </div>
 
-            {/* PAGE 2: ANIMAL SPECIFICATIONS LIST */}
-            <div className="bg-white p-8 rounded-sm shadow-md border border-gray-200 relative overflow-hidden min-h-[1120px] flex flex-col justify-between">
+            {/* PAGE 2: ANIMAL SPECIFICATIONS LIST (CLEAN PAGE: NO LOGOS, NO QR CODE, NO BANNER) */}
+            <div className="bg-white p-8 pl-16 rounded-sm shadow-md border border-gray-200 relative overflow-hidden min-h-[1120px] flex flex-col justify-between">
               
               <div className="relative z-10 space-y-5">
-                {/* Header Logos */}
-                <div className="flex items-center justify-between border-b-2 border-gray-100 pb-3">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png"
-                    alt="Rwanda Coat of Arms"
-                    className="w-14 h-14 object-contain"
-                  />
-                  <div className="text-center space-y-0.5">
-                    <h1 className="text-base font-bold text-gray-900 uppercase">REPUBULIKA Y'U RWANDA</h1>
-                    <h2 className="text-xs font-bold text-gray-800">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
-                  </div>
-                  <div className="w-14 h-14 rounded-full border-2 border-emerald-600 flex items-center justify-center bg-emerald-50 text-center font-bold text-emerald-800 text-xs">
-                    RAB
-                  </div>
-                </div>
-
-                <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-sky-500 rounded-full"></div>
-
-                <div className="border-y-2 border-black py-2 text-center bg-gray-50/50">
-                  <h2 className="text-lg font-bold text-black tracking-wide uppercase">
-                    URUHUSHYA RWO KWIMURA AMATUNGO - LIST OF ANIMALS
-                  </h2>
-                </div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase border-b-2 border-gray-900 pb-1">
+                  Ibisobanuro by'Amatungo (Animal Specifications)
+                </h3>
 
                 <div className="flex justify-between items-center text-xs py-2 border-b border-gray-200">
                   <div><span className="text-gray-500">Ubwoko:</span> <span className="font-bold text-black text-sm ml-1">{permit.animal_type || 'Inka'}</span></div>
@@ -353,19 +333,6 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                     ))}
                   </tbody>
                 </table>
-              </div>
-
-              {/* Page 2 Footer */}
-              <div className="relative z-10 border-t-2 border-black pt-4 mt-6">
-                <div className="flex items-center gap-4">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-16 h-16 border p-1 rounded bg-white" />
-                  <div>
-                    <span className="text-[10px] text-gray-500 block uppercase font-bold">INYANDIKO ITANGIWE KU</span>
-                    <span className="text-xs font-extrabold text-blue-900 block">
-                      RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)
-                    </span>
-                  </div>
-                </div>
               </div>
 
             </div>

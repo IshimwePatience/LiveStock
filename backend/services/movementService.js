@@ -38,7 +38,9 @@ class MovementService {
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
       valid_until, animals,
-      driver_name, driver_phone, driver_nid
+      driver_name, driver_phone, driver_nid,
+      buyer_type, buyer_name, buyer_phone, buyer_id_tin,
+      transporter_mode, cargo_photo
     } = data;
     
     if (type === 'SECTOR_TO_SECTOR' && user.role !== 'SARO') {
@@ -80,6 +82,12 @@ class MovementService {
       driver_name,
       driver_phone,
       driver_nid,
+      buyer_type,
+      buyer_name,
+      buyer_phone,
+      buyer_id_tin,
+      transporter_mode,
+      cargo_photo,
       Animals: animals || []
     }, {
       include: [{ model: MovementAnimal, as: 'Animals' }]
@@ -99,7 +107,9 @@ class MovementService {
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
       valid_until, animals, count,
-      driver_name, driver_phone, driver_nid
+      driver_name, driver_phone, driver_nid,
+      buyer_type, buyer_name, buyer_phone, buyer_id_tin,
+      transporter_mode, cargo_photo
     } = data;
 
     await request.update({
@@ -107,7 +117,9 @@ class MovementService {
       origin_district, origin_sector, origin_cell, origin_village,
       dest_district, dest_sector, dest_cell, dest_village,
       valid_until, count,
-      driver_name, driver_phone, driver_nid
+      driver_name, driver_phone, driver_nid,
+      buyer_type, buyer_name, buyer_phone, buyer_id_tin,
+      transporter_mode, cargo_photo
     });
 
     if (animals) {
