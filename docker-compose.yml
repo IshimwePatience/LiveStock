@@ -19,11 +19,14 @@ services:
       context: ./backend
     restart: unless-stopped
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       NODE_ENV: production
+      TRACCAR_API_URL: https://ekazeapi.benomobility.rw
+      TRACCAR_USERNAME: ishimwepatience102@gmail.com
+      TRACCAR_PASSWORD: z3fOM2SjKfe%5,2<4
     depends_on:
       db:
         condition: service_healthy

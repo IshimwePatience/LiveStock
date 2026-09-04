@@ -3,12 +3,15 @@ const { Trip, MovementRequest, User } = require('../models');
 
 class TraccarService {
   constructor() {
+    const baseURL = (process.env.TRACCAR_API_URL && !process.env.TRACCAR_API_URL.includes('134.209.24.128'))
+      ? process.env.TRACCAR_API_URL
+      : 'https://ekazeapi.benomobility.rw';
+    const username = process.env.TRACCAR_USERNAME || 'ishimwepatience102@gmail.com';
+    const password = process.env.TRACCAR_PASSWORD || 'z3fOM2SjKfe%5,2<4';
+
     this.client = axios.create({
-      baseURL: process.env.TRACCAR_API_URL,
-      auth: {
-        username: process.env.TRACCAR_USERNAME,
-        password: process.env.TRACCAR_PASSWORD
-      },
+      baseURL,
+      auth: { username, password },
       timeout: 10000 // 10s timeout
     });
   }
