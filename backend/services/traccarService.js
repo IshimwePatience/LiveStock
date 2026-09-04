@@ -89,24 +89,30 @@ class TraccarService {
         }
       });
 
-      const locations = positions
-        .filter(pos => deviceMap[pos.deviceId])
-        .map(pos => {
-          const device = deviceMap[pos.deviceId];
-          return {
-            deviceId: pos.deviceId,
-            deviceName: device.name || 'Unknown',
-            devicePhone: device.phone || '',
-            status: device.status || 'offline',
-            lastUpdate: device.lastUpdate || pos.serverTime,
-            latitude: pos.latitude,
-            longitude: pos.longitude,
-            speed: pos.speed,
-            course: pos.course,
-            attributes: pos.attributes,
-            route: device.route
-          };
-        });
+      const locations = await Promise.all(
+        positions
+          .filter(pos => deviceMap[pos.deviceId])
+          .map(async pos => {
+            const device = deviceMap[pos.deviceId];
+            const geofenceService = require('./geofenceService');
+            const violation = await geofenceService.checkVehicleViolation(device.name, pos.latitude, pos.longitude);
+
+            return {
+              deviceId: pos.deviceId,
+              deviceName: device.name || 'Unknown',
+              devicePhone: device.phone || '',
+              status: device.status || 'offline',
+              lastUpdate: device.lastUpdate || pos.serverTime,
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+              speed: pos.speed,
+              course: pos.course,
+              attributes: pos.attributes,
+              route: device.route,
+              geofenceViolation: violation
+            };
+          })
+      );
 
       return locations;
     } catch (error) {

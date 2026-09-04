@@ -10,6 +10,7 @@ import {
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 // Fix Leaflet's default icon path issues in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -283,6 +284,23 @@ const TrackingMap = () => {
       setSearchTerm(plate);
     }
   }, []);
+
+  useEffect(() => {
+    if (locations && locations.length > 0) {
+      locations.forEach(loc => {
+        if (loc.geofenceViolation && loc.geofenceViolation.violation) {
+          const isForbidden = loc.geofenceViolation.rule_type === 'FORBIDDEN';
+          toast.error(
+            loc.geofenceViolation.reason || `🚨 GEOFENCE VIOLATION: Vehicle ${loc.deviceName}`,
+            {
+              id: `geo-violation-${loc.deviceId}`,
+              duration: isForbidden ? 8000 : 5000
+            }
+          );
+        }
+      });
+    }
+  }, [locations]);
 
   useEffect(() => {
     if (locations && searchTerm) {

@@ -123,8 +123,13 @@ const Geofencing = () => {
       const res = await api.post('/geofence', payload);
       return res.data;
     },
-    onSuccess: () => {
-      toast.success('Geofence zone active!');
+    onSuccess: (data) => {
+      const targetStr = data.vehicle_plate ? `Vehicle ${data.vehicle_plate}` : 'All Vehicles';
+      if (data.rule_type === 'FORBIDDEN') {
+        toast.error(`🛑 FORBIDDEN NO-GO ZONE SET: ${targetStr} restricted in '${data.name}'!`, { duration: 6000 });
+      } else {
+        toast.success(`✅ ALLOWED ROUTE GEOFENCE ACTIVE: ${targetStr} set to '${data.name}'`, { duration: 6000 });
+      }
       queryClient.invalidateQueries(['geofences']);
       setIsModalOpen(false);
       setZoneName(''); setSelectedDistrict(''); setSelectedSector('');

@@ -2,7 +2,10 @@ const { Geofence, Case, Trip, MovementRequest, User } = require('../models');
 const turf = require('@turf/turf');
 const fs = require('fs');
 const path = require('path');
+const notificationService = require('./notificationService');
 
+// Throttle violation notifications (key: plate_fenceId_ruleType -> timestamp)
+const lastNotifiedMap = new Map();
 
 // Cache converted GeoJSON features for fast lookup
 let districtGeoJSON = null;
@@ -85,7 +88,7 @@ class GeofenceService {
       }
     }
 
-    return await Geofence.create({
+    const fence = await Geofence.create({
       name,
       rule_type: rule_type || 'ALLOWED',
       zone_type: zone_type || 'DISTRICT',
@@ -96,6 +99,18 @@ class GeofenceService {
       active: true,
       created_by
     });
+
+    // Notify RAB, Police & Admin about the new active geofence
+    try {
+      const targetStr = vehicle_plate ? `Vehicle ${vehicle_plate.trim().toUpperCase()}` : 'All Vehicles';
+      const ruleText = rule_type === 'FORBIDDEN' ? 'Forbidden Zone (No-Go)' : 'Allowed Route Zone';
+      const msg = `🛡️ GEOFENCE ACTIVE: ${ruleText} '${name}' set for ${targetStr}.`;
+      await notificationService.notifyRoles(['RAB', 'POLICE', 'ADMIN'], msg, 'ALERT');
+    } catch (err) {
+      console.error('Failed to send geofence creation notification:', err.message);
+    }
+
+    return fence;
   }
 
   async deleteGeofence(id) {
@@ -137,25 +152,42 @@ class GeofenceService {
       try {
         isInside = turf.booleanPointInPolygon(pt, fence.geometry);
       } catch (err) {
-
         console.error('Turf point-in-polygon error:', err.message);
         continue;
       }
 
+      let isViolation = false;
+      let reason = null;
+
       // Check FORBIDDEN rule (vehicle must NOT enter)
       if (fence.rule_type === 'FORBIDDEN' && isInside) {
-        return {
-          violation: true,
-          reason: `Vehicle ${plateUpper} entered forbidden zone '${fence.name}'`,
-          fence
-        };
+        isViolation = true;
+        reason = `🚨 CRITICAL GEOFENCE VIOLATION: Vehicle ${plateUpper} entered Forbidden No-Go Zone '${fence.name}'!`;
       }
 
       // Check ALLOWED rule (vehicle MUST stay inside)
       if (fence.rule_type === 'ALLOWED' && !isInside) {
+        isViolation = true;
+        reason = `⚠️ GEOFENCE BREACH: Vehicle ${plateUpper} strayed outside Allowed Route Zone '${fence.name}'!`;
+      }
+
+      if (isViolation) {
+        // Cooldown throttling: notify DB at most once every 5 mins per vehicle+fence
+        const throttleKey = `${plateUpper}_${fence.id}_${fence.rule_type}`;
+        const now = Date.now();
+        const lastTime = lastNotifiedMap.get(throttleKey) || 0;
+
+        if (now - lastTime > 5 * 60 * 1000) {
+          lastNotifiedMap.set(throttleKey, now);
+          notificationService.notifyRoles(['RAB', 'POLICE', 'ADMIN'], reason, 'ALERT')
+            .catch(e => console.error('Notification log error:', e.message));
+        }
+
         return {
           violation: true,
-          reason: `Vehicle ${plateUpper} strayed outside allowed zone '${fence.name}'`,
+          rule_type: fence.rule_type,
+          fenceName: fence.name,
+          reason,
           fence
         };
       }

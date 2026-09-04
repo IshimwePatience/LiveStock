@@ -1,4 +1,4 @@
-const { NotificationLog } = require('../models');
+const { NotificationLog, User } = require('../models');
 const socketService = require('./socketService');
 
 class NotificationService {
@@ -20,6 +20,21 @@ class NotificationService {
     }
 
     return log;
+  }
+
+  async notifyRoles(roles, message, type) {
+    try {
+      const users = await User.findAll({ where: { role: roles } });
+      const logs = [];
+      for (const user of users) {
+        const log = await this.notifyUser(user.id, message, type);
+        logs.push(log);
+      }
+      return logs;
+    } catch (err) {
+      console.error('Failed to notify roles:', err.message);
+      return [];
+    }
   }
 }
 

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power } from 'lucide-react';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
+import { useQuery } from '@tanstack/react-query';
+import { getTraccarLocations } from '../../lib/api';
+import toast from 'react-hot-toast';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -11,6 +14,34 @@ const DashboardLayout = () => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   });
+
+  // Global GPS / Geofence violation watcher
+  const { data: locations } = useQuery({
+    queryKey: ['global-gps-locations'],
+    queryFn: async () => {
+      const res = await getTraccarLocations();
+      return res.data;
+    },
+    refetchInterval: 12000,
+    enabled: !!user
+  });
+
+  useEffect(() => {
+    if (locations && locations.length > 0) {
+      locations.forEach(loc => {
+        if (loc.geofenceViolation && loc.geofenceViolation.violation) {
+          const isForbidden = loc.geofenceViolation.rule_type === 'FORBIDDEN';
+          toast.error(
+            loc.geofenceViolation.reason || `🚨 GEOFENCE VIOLATION: Vehicle ${loc.deviceName}`,
+            {
+              id: `global-viol-${loc.deviceId}`,
+              duration: isForbidden ? 8000 : 5000
+            }
+          );
+        }
+      });
+    }
+  }, [locations]);
 
   React.useEffect(() => {
     const handleUpdate = () => {
