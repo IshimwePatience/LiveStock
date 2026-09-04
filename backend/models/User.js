@@ -15,6 +15,7 @@ const User = sequelize.define('User', {
   reset_token: { type: DataTypes.STRING, allowNull: true },
   reset_token_expires: { type: DataTypes.DATE, allowNull: true },
   status: { type: DataTypes.STRING, defaultValue: 'Active' },
+  permissions: { type: DataTypes.JSON, allowNull: true, defaultValue: [] },
 });
 
 module.exports = User;

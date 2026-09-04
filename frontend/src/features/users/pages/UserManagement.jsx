@@ -18,7 +18,34 @@ const UserManagement = () => {
     district_id: '',
     sector_id: ''
   });
+  const [modalPermissions, setModalPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const ALL_MODULES = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'cases', label: 'Police Cases' },
+    { id: 'gps', label: 'GPS Tracking' },
+    { id: 'movements', label: 'Movements' },
+    { id: 'geofencing', label: 'Geo-Fencing' },
+    { id: 'national_reports', label: 'National Reports' },
+    { id: 'performance_audit', label: 'Performance Audit' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'system_settings', label: 'System Settings' },
+    { id: 'user_management', label: 'User Management' },
+  ];
+
+  const ROLE_DEFAULTS = {
+    RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
+    DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
+    SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
+    POLICE: ['cases', 'gps', 'notifications']
+  };
+
+  const toggleModalPermission = (id) => {
+    setModalPermissions(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
@@ -102,6 +129,9 @@ const UserManagement = () => {
 
   const handleRoleChange = (value) => {
     setFormData({ ...formData, role: value });
+    if (!isEditMode) {
+      setModalPermissions(ROLE_DEFAULTS[value] || []);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -109,7 +139,7 @@ const UserManagement = () => {
     setLoading(true);
 
     try {
-      const payload = { ...formData };
+      const payload = { ...formData, permissions: modalPermissions };
       if (payload.role === 'RAB' || payload.role === 'POLICE') {
         payload.district_id = null;
         payload.sector_id = null;
@@ -120,11 +150,11 @@ const UserManagement = () => {
       if (isEditMode) {
         const res = await api.put(`/auth/users/${editUserId}`, payload);
         toast.success('User updated successfully!');
-        setUsers(users.map(u => u.id === editUserId ? { ...res.data, status: res.data.status || u.status } : u));
+        setUsers(users.map(u => u.id === editUserId ? { ...res.data, status: res.data.status || u.status, permissions: modalPermissions } : u));
       } else {
         const res = await api.post('/auth/register', payload);
         toast.success('User created successfully!');
-        setUsers([...users, { ...res.data, status: 'Active' }]);
+        setUsers([...users, { ...res.data, status: 'Active', permissions: modalPermissions }]);
       }
 
       setTimeout(() => {
@@ -143,6 +173,7 @@ const UserManagement = () => {
     setIsEditMode(false);
     setEditUserId(null);
     setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
+    setModalPermissions([]);
   };
 
   const handleEdit = (user) => {
@@ -154,6 +185,7 @@ const UserManagement = () => {
       district_id: user.district_id || '',
       sector_id: user.sector_id || ''
     });
+    setModalPermissions(user.permissions || ROLE_DEFAULTS[user.role] || []);
     setEditUserId(user.id);
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -562,11 +594,36 @@ const UserManagement = () => {
                 )}
 
                 {formData.role === 'RAB' && (
-                  <div className="flex items-center min-h-[48px]">
-                    <span className="w-36 shrink-0" />
+                  <div className="flex items-center min-h-[48px] border-b border-gray-200/80">
+                    <span className="w-36 shrink-0 text-xs font-medium text-gray-500">Scope</span>
                     <p className="text-xs text-orange-600 italic">Super-admin account — national scope.</p>
                   </div>
                 )}
+
+                {/* Module Permissions Checkboxes */}
+                <div className="pt-3 pb-2">
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    Module Access Permissions (Check what this user can see):
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                    {ALL_MODULES.map(mod => {
+                      const isChecked = modalPermissions.includes(mod.id);
+                      return (
+                        <label key={mod.id} className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleModalPermission(mod.id)}
+                            className="rounded border-gray-300 text-[#0052cc] focus:ring-[#0052cc]"
+                          />
+                          <span className={isChecked ? 'font-semibold text-gray-900' : 'text-gray-500'}>
+                            {mod.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Footer */}

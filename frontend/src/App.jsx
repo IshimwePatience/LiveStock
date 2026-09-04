@@ -19,6 +19,7 @@ import TrackingMap from './features/gps/pages/TrackingMap';
 import Geofencing from './features/geofencing/pages/Geofencing';
 
 import Notifications from './features/notifications/pages/Notifications';
+import SystemSettings from './features/settings/pages/SystemSettings';
 import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
 import { connectSocket } from './lib/socket';
@@ -131,6 +132,7 @@ function App() {
           <Route path="movements/edit/:id" element={<CreatePermit key="edit" />} />
           <Route path="movements/view/:id" element={<CreatePermit key="view" />} />
           <Route path="users" element={<UserManagementRoute><UserManagement /></UserManagementRoute>} />
+          <Route path="system-settings" element={<AdminRoute><SystemSettings /></AdminRoute>} />
           <Route path="national-reports" element={<AdminRoute><NationalReports /></AdminRoute>} />
           <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
           <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />

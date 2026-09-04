@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from 'rwanda-locations';
 import { useNavigate, Link, useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye, UploadCloud, CheckCircle2 } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -787,119 +787,128 @@ const CreatePermit = () => {
         </div>
 
         {/* Trip Header & Cargo Photo Upload Card */}
-        <div className="bg-[#F8FAFC] border-b border-gray-300 p-4 space-y-3 shrink-0">
+        <div className="bg-white border-b border-gray-200 p-5 space-y-4 shrink-0 font-sans">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center gap-2">
-              <span>🚚</span> Amakuru y'Ubwikorezi & Ifoto y'Amatungo Yapakijwe (Trip & Cargo Info)
+            <h3 className="text-[13.5px] font-semibold text-gray-800 tracking-normal">
+              Amakuru y'ubwikorezi n'ifoto y'amatungo yapakijwe (Trip & Cargo Info)
             </h3>
             
-            {/* Transporter Mode Toggle */}
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-gray-300 shadow-sm">
-              <button
-                type="button"
+            {/* Transporter Mode Selector with Ticks */}
+            <div className="flex items-center gap-5 bg-white px-3 py-1.5 rounded-lg border border-gray-300">
+              <label
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
-                  headerForm.transporter_mode === 'DRIVER_VEHICLE' ? 'bg-[#0052cc] text-white' : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                Imodoka n'Umushoferi (Vehicle & Driver)
-              </button>
-              <button
-                type="button"
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  headerForm.transporter_mode === 'DRIVER_VEHICLE'
+                    ? 'bg-[#0052cc] border-[#0052cc] text-white'
+                    : 'border-gray-400 bg-white'
+                }`}>
+                  {headerForm.transporter_mode === 'DRIVER_VEHICLE' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span>Imodoka n'Umushoferi (Vehicle & Driver)</span>
+              </label>
+
+              <label
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
-                  headerForm.transporter_mode === 'PERSON_ON_FOOT' ? 'bg-[#0052cc] text-white' : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                Umunyamaguru / Omushumba (Person on Foot)
-              </button>
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  headerForm.transporter_mode === 'PERSON_ON_FOOT'
+                    ? 'bg-[#0052cc] border-[#0052cc] text-white'
+                    : 'border-gray-400 bg-white'
+                }`}>
+                  {headerForm.transporter_mode === 'PERSON_ON_FOOT' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span>Umunyamaguru / Omushumba (Person on Foot)</span>
+              </label>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Transporter Details */}
             {headerForm.transporter_mode === 'DRIVER_VEHICLE' ? (
               <>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Amazina y'Umushoferi</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Amazina y'Umushoferi</label>
                   <input
                     type="text"
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umushoferi"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Telephoni y'Umushoferi</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Telephoni y'Umushoferi</label>
                   <input
                     type="text"
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Indangamuntu y'Umushoferi</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Indangamuntu y'Umushoferi</label>
                   <input
                     type="text"
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Pulaki ya Imodoka (Plate Number)</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Pulaki ya Imodoka (Plate Number)</label>
                   <input
                     type="text"
                     value={headerForm.plate_number}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, plate_number: e.target.value }))}
-                    placeholder="e.g. RAB 195F"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    placeholder="RAB 195F"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
               </>
             ) : (
               <>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Amazina y'Umunyamaguru</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Amazina y'Umunyamaguru</label>
                   <input
                     type="text"
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umunyamaguru"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Telephoni y'Umunyamaguru</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Telephoni y'Umunyamaguru</label>
                   <input
                     type="text"
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Indangamuntu y'Umunyamaguru</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Indangamuntu y'Umunyamaguru</label>
                   <input
                     type="text"
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1 text-xs outline-none focus:border-[#0052cc]"
+                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">Uburyo bwo Kwimura</label>
+                  <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Uburyo bwo Kwimura</label>
                   <input
                     type="text"
                     readOnly
                     value="Umunyamaguru / Person"
-                    className="w-full bg-gray-100 border border-gray-300 rounded px-2.5 py-1 text-xs outline-none cursor-not-allowed"
+                    className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-600 outline-none cursor-not-allowed"
                   />
                 </div>
               </>
@@ -907,13 +916,13 @@ const CreatePermit = () => {
           </div>
 
           {/* Cargo Photo Upload Box */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-3 rounded-lg border border-gray-200">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-3.5 rounded-lg border border-gray-200 shadow-sm">
             <div>
-              <label className="block text-xs font-semibold text-gray-800 flex items-center gap-1.5">
-                📷 Ifoto y'Amatungo Yapakijwe / Arimo Kwimuka (Loaded Cargo Batch Photo)
+              <label className="block text-[13px] font-semibold text-gray-800">
+                Ifoto y'amatungo yapakijwe / arimo kwimuka (Loaded Cargo Batch Photo)
               </label>
-              <p className="text-[11px] text-gray-500">
-                Ohoza amafoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
+              <p className="text-xs text-gray-500 mt-0.5">
+                Ohoza ifoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
               </p>
             </div>
             
@@ -931,8 +940,9 @@ const CreatePermit = () => {
                 </div>
               )}
 
-              <label className="bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition shadow-sm">
-                <span>📷</span> {headerForm.cargo_photo ? 'Hindura Ifoto' : 'Ohoza Ifoto (Upload Photo)'}
+              <label className="bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-4 py-2 rounded-md text-xs font-semibold cursor-pointer flex items-center gap-2 transition shadow-sm">
+                <UploadCloud className="w-4 h-4 text-emerald-600" />
+                <span>Upload Photo</span>
                 <input
                   type="file"
                   accept="image/*"
