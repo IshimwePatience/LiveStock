@@ -3,13 +3,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-livestock_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Patience123@}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-livestock_db}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,6 +23,9 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-livestock_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-Patience123@}
       NODE_ENV: production
       TRACCAR_API_URL: https://ekazeapi.benomobility.rw
       TRACCAR_USERNAME: ishimwepatience102@gmail.com
