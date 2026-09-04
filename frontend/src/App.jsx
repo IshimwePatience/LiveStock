@@ -24,41 +24,34 @@ import DriverTripPage from './features/driver/DriverTripPage';
 import api from './lib/api'
 import { connectSocket } from './lib/socket';
 
-// Simple Auth Guard component
 const ProtectedRoute = ({ children }) => {
   const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
   if (!userStr) return <Navigate to="/login" replace />;
   return children;
-}
+};
 
-const AdminRoute = ({ children }) => {
+const PermittedRoute = ({ permKey, children }) => {
   const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  if (user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
-  return children;
-}
+  if (!userStr) return <Navigate to="/login" replace />;
+  const user = JSON.parse(userStr);
 
-const PoliceRoute = ({ children }) => {
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  if (user?.role !== 'POLICE' && user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
-  return children;
-}
+  const DEFAULT_ROLE_PERMISSIONS = {
+    RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
+    DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
+    SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
+    POLICE: ['cases', 'gps', 'notifications']
+  };
 
-const UserManagementRoute = ({ children }) => {
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  if (user?.role !== 'RAB' && user?.role !== 'DARO') return <Navigate to="/dashboard" replace />;
-  return children;
-}
+  const perms = (user.permissions !== null && user.permissions !== undefined && Array.isArray(user.permissions))
+    ? user.permissions
+    : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
 
-const VetRoute = ({ children }) => {
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  if (user?.role !== 'DARO' && user?.role !== 'SARO' && user?.role !== 'RAB') return <Navigate to="/dashboard" replace />;
+  if (!perms.includes(permKey)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
-}
+};
 
 function App() {
   useEffect(() => {
@@ -126,20 +119,20 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<Overview />} />
 
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="movements" element={<Movements />} />
-          <Route path="movements/new" element={<CreatePermit key="new" />} />
-          <Route path="movements/edit/:id" element={<CreatePermit key="edit" />} />
-          <Route path="movements/view/:id" element={<CreatePermit key="view" />} />
-          <Route path="users" element={<UserManagementRoute><UserManagement /></UserManagementRoute>} />
-          <Route path="system-settings" element={<AdminRoute><SystemSettings /></AdminRoute>} />
-          <Route path="national-reports" element={<AdminRoute><NationalReports /></AdminRoute>} />
-          <Route path="performance-audit" element={<AdminRoute><PerformanceAudit /></AdminRoute>} />
-          <Route path="cases" element={<PoliceRoute><PoliceCases /></PoliceRoute>} />
+          <Route path="notifications" element={<PermittedRoute permKey="notifications"><Notifications /></PermittedRoute>} />
+          <Route path="movements" element={<PermittedRoute permKey="movements"><Movements /></PermittedRoute>} />
+          <Route path="movements/new" element={<PermittedRoute permKey="movements"><CreatePermit key="new" /></PermittedRoute>} />
+          <Route path="movements/edit/:id" element={<PermittedRoute permKey="movements"><CreatePermit key="edit" /></PermittedRoute>} />
+          <Route path="movements/view/:id" element={<PermittedRoute permKey="movements"><CreatePermit key="view" /></PermittedRoute>} />
+          <Route path="users" element={<PermittedRoute permKey="user_management"><UserManagement /></PermittedRoute>} />
+          <Route path="system-settings" element={<PermittedRoute permKey="system_settings"><SystemSettings /></PermittedRoute>} />
+          <Route path="national-reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
+          <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><PerformanceAudit /></PermittedRoute>} />
+          <Route path="cases" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
           <Route path="vet-records/create" element={<VetRoute><CreateVetRecord /></VetRoute>} />
-          <Route path="gps" element={<TrackingMap />} />
-          <Route path="geofencing" element={<Geofencing />} />
+          <Route path="gps" element={<PermittedRoute permKey="gps"><TrackingMap /></PermittedRoute>} />
+          <Route path="geofencing" element={<PermittedRoute permKey="geofencing"><Geofencing /></PermittedRoute>} />
 
         </Route>
       </Routes>
