@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, F
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
+import OfficialRabPermitModal from '../components/OfficialRabPermitModal';
 
 const NUM_ROWS = 30;
 const NUM_COLS = 30;
@@ -54,6 +55,7 @@ const CreatePermit = () => {
   const isViewMode = location.pathname.includes('/view/') || searchParams.get('mode') === 'view';
 
   const [loading, setLoading] = useState(false);
+  const [officialPermitModal, setOfficialPermitModal] = useState({ isOpen: false, permit: null });
   // tag -> { vaccinated, antibioticActive, daysRemaining, antibiotic, withdrawalEnd }
   const [tagStatuses, setTagStatuses] = useState({});
 
@@ -705,6 +707,21 @@ const CreatePermit = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {(isViewMode || editId) && (
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await api.get(`/movement/${editId}`);
+                    setOfficialPermitModal({ isOpen: true, permit: res.data });
+                  } catch(e) {
+                    toast.error('Failed to load official permit details.');
+                  }
+                }} 
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm text-xs"
+              >
+                <Printer className="w-3.5 h-3.5" /> Print Official RAB Permit
+              </button>
+            )}
             {isViewMode ? (
               <button 
                 onClick={() => navigate('/dashboard/movements')} 
@@ -1305,6 +1322,12 @@ const CreatePermit = () => {
           </fieldset>
         </form>
       </div>
+
+      <OfficialRabPermitModal
+        isOpen={officialPermitModal.isOpen}
+        permit={officialPermitModal.permit}
+        onClose={() => setOfficialPermitModal({ isOpen: false, permit: null })}
+      />
     </>
   );
 };

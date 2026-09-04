@@ -6,6 +6,7 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
+import OfficialRabPermitModal from './OfficialRabPermitModal';
 
 const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
   const [assignModal, setAssignModal] = useState({ isOpen: false, requestId: null });
   const [confirmArrivalModal, setConfirmArrivalModal] = useState({ isOpen: false, request: null });
+  const [officialPermitModal, setOfficialPermitModal] = useState({ isOpen: false, permit: null });
   const queryClient = useQueryClient();
   
   const userStr = localStorage.getItem('user');
@@ -70,6 +72,15 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
       queryClient.invalidateQueries(['movements']);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error reverting request');
+    }
+  };
+
+  const handleOpenOfficialPermit = async (dbId) => {
+    try {
+      const res = await api.get(`/movement/${dbId}`);
+      setOfficialPermitModal({ isOpen: true, permit: res.data });
+    } catch (err) {
+      toast.error('Failed to load official permit details.');
     }
   };
 
@@ -345,6 +356,14 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                         Confirm Arrival (OTP)
                       </button>
                     )}
+                    {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
+                      <button 
+                        onClick={() => { handleOpenOfficialPermit(item.dbId); setOpenActionDropdown(null); }}
+                        className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
+                      >
+                        📄 View RAB Permit
+                      </button>
+                    )}
                     <button 
                       onClick={() => { navigate(`/dashboard/movements/view/${item.dbId}`); setOpenActionDropdown(null); }}
                       className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
@@ -419,6 +438,12 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
         request={confirmArrivalModal.request}
         onClose={() => setConfirmArrivalModal({ isOpen: false, request: null })}
         onConfirmSuccess={() => queryClient.invalidateQueries(['movements'])}
+      />
+
+      <OfficialRabPermitModal
+        isOpen={officialPermitModal.isOpen}
+        permit={officialPermitModal.permit}
+        onClose={() => setOfficialPermitModal({ isOpen: false, permit: null })}
       />
 
     </div>
