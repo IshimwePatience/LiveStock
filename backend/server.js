@@ -46,9 +46,11 @@ app.use('/api/geofence', geofenceRoutes);
 const socketService = require('./services/socketService');
 socketService.init(server);
 
-// Sync Database (in dev only)
-sequelize.sync({ alter: true }).then(() => {
+// Sync Database
+const autoSeed = require('./seeders/autoSeed');
+sequelize.sync({ alter: true }).then(async () => {
   console.log('Database synced');
+  await autoSeed();
 }).catch(err => {
   console.error('Failed to sync db:', err);
 });
