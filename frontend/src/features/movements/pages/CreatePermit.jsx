@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from 'rwanda-locations';
 import { useNavigate, Link, useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye, UploadCloud, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye, UploadCloud, CheckCircle2, Check } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -715,7 +715,7 @@ const CreatePermit = () => {
       {/* ==================================================== */}
       <div className="hidden md:flex flex-col h-full bg-white font-sans text-[13px] text-gray-800 overflow-hidden">
         {/* Sheets Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300">
+        <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -793,18 +793,18 @@ const CreatePermit = () => {
               Amakuru y'ubwikorezi n'ifoto y'amatungo yapakijwe (Trip & Cargo Info)
             </h3>
             
-            {/* Transporter Mode Selector with Ticks */}
-            <div className="flex items-center gap-5 bg-white px-3 py-1.5 rounded-lg border border-gray-300">
+            {/* Transporter Mode Selector with Ticks (No Outer Border) */}
+            <div className="flex items-center gap-6 bg-white py-1">
               <label
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
                 className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
                   headerForm.transporter_mode === 'DRIVER_VEHICLE'
-                    ? 'bg-[#0052cc] border-[#0052cc] text-white'
-                    : 'border-gray-400 bg-white'
+                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
+                    : 'border border-gray-300 bg-white'
                 }`}>
-                  {headerForm.transporter_mode === 'DRIVER_VEHICLE' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  {headerForm.transporter_mode === 'DRIVER_VEHICLE' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                 </div>
                 <span>Imodoka n'Umushoferi (Vehicle & Driver)</span>
               </label>
@@ -813,12 +813,12 @@ const CreatePermit = () => {
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
                 className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
                   headerForm.transporter_mode === 'PERSON_ON_FOOT'
-                    ? 'bg-[#0052cc] border-[#0052cc] text-white'
-                    : 'border-gray-400 bg-white'
+                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
+                    : 'border border-gray-300 bg-white'
                 }`}>
-                  {headerForm.transporter_mode === 'PERSON_ON_FOOT' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  {headerForm.transporter_mode === 'PERSON_ON_FOOT' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                 </div>
                 <span>Umunyamaguru / Omushumba (Person on Foot)</span>
               </label>
@@ -836,7 +836,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umushoferi"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -846,7 +846,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -856,7 +856,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -866,7 +866,7 @@ const CreatePermit = () => {
                     value={headerForm.plate_number}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, plate_number: e.target.value }))}
                     placeholder="RAB 195F"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
               </>
@@ -879,7 +879,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_name}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_name: e.target.value }))}
                     placeholder="Amazina y'Umunyamaguru"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -889,7 +889,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_phone}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="0788000000 (10 digits)"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -899,7 +899,7 @@ const CreatePermit = () => {
                     value={headerForm.driver_nid}
                     onChange={(e) => setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
                     placeholder="16 digits ID"
-                    className="w-full bg-white border border-[#4c9aff] focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm"
                   />
                 </div>
                 <div>
@@ -915,8 +915,8 @@ const CreatePermit = () => {
             )}
           </div>
 
-          {/* Cargo Photo Upload Box */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-3.5 rounded-lg border border-gray-200 shadow-sm">
+          {/* Cargo Photo Upload Box (Flat, No Border, No Shadow, Gray Upload) */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white py-2">
             <div>
               <label className="block text-[13px] font-semibold text-gray-800">
                 Ifoto y'amatungo yapakijwe / arimo kwimuka (Loaded Cargo Batch Photo)
@@ -929,19 +929,19 @@ const CreatePermit = () => {
             <div className="flex items-center gap-3">
               {headerForm.cargo_photo && (
                 <div className="relative group">
-                  <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover rounded border border-gray-300 shadow-sm" />
+                  <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover border border-gray-300" />
                   <button
                     type="button"
                     onClick={() => setHeaderForm(prev => ({ ...prev, cargo_photo: '' }))}
-                    className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-0.5 text-[10px] hover:bg-red-700 shadow"
+                    className="absolute -top-1.5 -right-1.5 bg-red-600 text-white p-0.5 text-[10px] hover:bg-red-700"
                   >
                     ✕
                   </button>
                 </div>
               )}
 
-              <label className="bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-4 py-2 rounded-md text-xs font-semibold cursor-pointer flex items-center gap-2 transition shadow-sm">
-                <UploadCloud className="w-4 h-4 text-emerald-600" />
+              <label className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 transition">
+                <UploadCloud className="w-4 h-4 text-gray-600" />
                 <span>Upload Photo</span>
                 <input
                   type="file"
