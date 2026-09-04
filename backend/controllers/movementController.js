@@ -23,6 +23,7 @@ const getRequests = async (req, res) => {
     const requests = await movementService.getRequests(req.user);
     res.json(requests);
   } catch (error) {
+    console.error('getRequests error:', error);
     res.status(500).json({ message: error.message });
   }
 };
