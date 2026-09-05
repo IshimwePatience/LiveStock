@@ -7,7 +7,7 @@ import L from 'leaflet';
 import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
-  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity
+  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -59,6 +59,9 @@ const VEHICLE_ROUTES = {
     permitNumber: 'MVT-7B1A2C3D',
     distance: '128.4 km',
     avgSpeed: '56 km/h',
+    departedTime: '05 Sep 2026, 08:00 AM',
+    expectedArrival: '05 Sep 2026, 01:15 PM',
+    status: 'In Transit',
     coordinates: [
       [-1.3000, 30.3200], // Nyagatare Start
       [-1.4200, 30.3500], // Gatsibo Transit
@@ -68,10 +71,28 @@ const VEHICLE_ROUTES = {
       [-1.9536, 30.0605]  // Nyarugenge End
     ],
     checkpoints: [
-      { name: 'Nyagatare Gate', time: '08:15 AM', status: 'Verified' },
-      { name: 'Gatsibo Control Post', time: '09:40 AM', status: 'Verified' },
-      { name: 'Rwamagana Weighbridge', time: '11:10 AM', status: 'Verified' },
-      { name: 'Kigali Entry Checkpoint', time: '12:35 PM', status: 'Verified' }
+      { name: 'Nyagatare Gate Checkpoint', date: '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
+      { name: 'Gatsibo Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' },
+      { name: 'Rwamagana Weighbridge', date: '05 Sep 2026', time: '11:10 AM', status: 'Verified', details: 'Stopped for Weight Inspection' },
+      { name: 'Kigali Entry Checkpoint', date: '05 Sep 2026', time: '12:35 PM', status: 'Verified', details: 'Final City Permit Clearance' }
+    ],
+    stops: [
+      {
+        location: 'Gatsibo Control Post Rest Area',
+        district: 'Gatsibo District, Kabarore',
+        stoppedAt: '05 Sep 2026, 09:40 AM',
+        resumedAt: '05 Sep 2026, 10:05 AM',
+        duration: '25 Mins',
+        reason: 'RAB Health Verification & Ear-Tag Scan'
+      },
+      {
+        location: 'Rwamagana Weighbridge Station',
+        district: 'Rwamagana District, Kigabiro',
+        stoppedAt: '05 Sep 2026, 11:10 AM',
+        resumedAt: '05 Sep 2026, 11:35 AM',
+        duration: '25 Mins',
+        reason: 'Vehicle Weight Scale & Livestock Count'
+      }
     ]
   },
   'RAC 202A': {
@@ -88,6 +109,9 @@ const VEHICLE_ROUTES = {
     permitNumber: 'MVT-4A89DF12',
     distance: '94.2 km',
     avgSpeed: '51 km/h',
+    departedTime: '05 Sep 2026, 07:15 AM',
+    expectedArrival: '05 Sep 2026, 11:30 AM',
+    status: 'In Transit',
     coordinates: [
       [-2.1500, 30.0800], // Bugesera Nyamata Start
       [-2.0500, 30.0900], // Gashora Junction
@@ -96,9 +120,27 @@ const VEHICLE_ROUTES = {
       [-1.7000, 29.7800]  // Gakenke End
     ],
     checkpoints: [
-      { name: 'Nyamata Sector Post', time: '07:30 AM', status: 'Verified' },
-      { name: 'Kigali Bypass', time: '09:00 AM', status: 'Verified' },
-      { name: 'Gakenke District Checkpoint', time: '10:45 AM', status: 'Verified' }
+      { name: 'Nyamata Sector Post', date: '05 Sep 2026', time: '07:30 AM', status: 'Verified', details: 'Departure Logged' },
+      { name: 'Kigali Bypass Station', date: '05 Sep 2026', time: '09:00 AM', status: 'Verified', details: 'Rest & Fuel Stop' },
+      { name: 'Gakenke District Checkpoint', date: '05 Sep 2026', time: '10:45 AM', status: 'Verified', details: 'Destination Clearance' }
+    ],
+    stops: [
+      {
+        location: 'Nyamata Sector Checkpoint',
+        district: 'Bugesera District, Nyamata',
+        stoppedAt: '05 Sep 2026, 07:30 AM',
+        resumedAt: '05 Sep 2026, 07:50 AM',
+        duration: '20 Mins',
+        reason: 'Initial Permit Verification'
+      },
+      {
+        location: 'Kigali Bypass Fuel Station',
+        district: 'Gasabo District, Kimironko',
+        stoppedAt: '05 Sep 2026, 09:00 AM',
+        resumedAt: '05 Sep 2026, 09:30 AM',
+        duration: '30 Mins',
+        reason: 'Driver Rest & Fuel Refill'
+      }
     ]
   },
   'RAD 101B': {
@@ -115,6 +157,9 @@ const VEHICLE_ROUTES = {
     permitNumber: 'MVT-9C21A45F',
     distance: '186.0 km',
     avgSpeed: '58 km/h',
+    departedTime: '04 Sep 2026, 05:45 AM',
+    expectedArrival: '04 Sep 2026, 12:30 PM',
+    status: 'Completed',
     coordinates: [
       [-1.5000, 29.6300], // Musanze Start
       [-1.7000, 29.7800], // Gakenke Transit
@@ -123,9 +168,64 @@ const VEHICLE_ROUTES = {
       [-2.6000, 29.7400]  // Huye End
     ],
     checkpoints: [
-      { name: 'Musanze Animal Hub', time: '06:00 AM', status: 'Verified' },
-      { name: 'Muhanga Checkpoint', time: '09:15 AM', status: 'Verified' },
-      { name: 'Huye Quarantine Hub', time: '11:50 AM', status: 'Verified' }
+      { name: 'Musanze Animal Hub', date: '04 Sep 2026', time: '06:00 AM', status: 'Verified', details: 'Cattle Loading & Ear Tag Scan' },
+      { name: 'Muhanga Checkpoint', date: '04 Sep 2026', time: '09:15 AM', status: 'Verified', details: 'Police Security Check' },
+      { name: 'Huye Quarantine Hub', date: '04 Sep 2026', time: '11:50 AM', status: 'Verified', details: 'Final Offload Inspection' }
+    ],
+    stops: [
+      {
+        location: 'Musanze Animal Loading Hub',
+        district: 'Musanze District, Muhoza',
+        stoppedAt: '04 Sep 2026, 06:00 AM',
+        resumedAt: '04 Sep 2026, 06:40 AM',
+        duration: '40 Mins',
+        reason: 'Cattle Loading & Ear Tag Scan'
+      },
+      {
+        location: 'Muhanga Inspection Station',
+        district: 'Muhanga District, Nyamabuye',
+        stoppedAt: '04 Sep 2026, 09:15 AM',
+        resumedAt: '04 Sep 2026, 09:45 AM',
+        duration: '30 Mins',
+        reason: 'Police Border & Transit Check'
+      }
+    ]
+  },
+  'RAE 303C': {
+    plate: 'RAE 303C',
+    driverName: 'Claude MUNYANEZA',
+    driverPhone: '0789445566',
+    driverNid: '1199380066778899',
+    farmerName: 'Kamanzi Jean',
+    route: 'Kayonza District → Nyarugenge District',
+    origin: 'Kayonza, Mukarange',
+    destination: 'Kigali, Nyarugenge',
+    cargo: '18 Inka (Cattle)',
+    transporterMode: 'Imodoka n\'Umushoferi (Vehicle & Driver)',
+    permitNumber: 'MVT-2D55E89A',
+    distance: '78.5 km',
+    avgSpeed: '54 km/h',
+    departedTime: '05 Sep 2026, 09:00 AM',
+    expectedArrival: '05 Sep 2026, 12:00 PM',
+    status: 'In Transit',
+    coordinates: [
+      [-1.9300, 30.5000], // Kayonza Start
+      [-1.9441, 30.0619], // Kigali Gasabo
+      [-1.9536, 30.0605]  // Nyarugenge End
+    ],
+    checkpoints: [
+      { name: 'Kayonza Roundabout Gate', date: '05 Sep 2026', time: '09:15 AM', status: 'Verified', details: 'Passed Departure Point' },
+      { name: 'Rwamagana Control Post', date: '05 Sep 2026', time: '10:10 AM', status: 'Verified', details: 'RAB Health Clearance' }
+    ],
+    stops: [
+      {
+        location: 'Rwamagana Control Post Rest',
+        district: 'Rwamagana District, Kigabiro',
+        stoppedAt: '05 Sep 2026, 10:10 AM',
+        resumedAt: '05 Sep 2026, 10:30 AM',
+        duration: '20 Mins',
+        reason: 'RAB Animal Health Check'
+      }
     ]
   }
 };
@@ -250,23 +350,32 @@ const NationalReports = () => {
             {/* Vehicle Selection & Quick Summary Toolbar */}
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-700">Select GPS Tracked Vehicle:</span>
-                <div className="flex items-center gap-2">
-                  {Object.keys(VEHICLE_ROUTES).map((plate) => (
-                    <button
-                      key={plate}
-                      onClick={() => {
-                        setSelectedPlate(plate);
-                        handleResetReplay();
-                      }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition border ${selectedPlate === plate
-                          ? 'bg-blue-50 text-[#0052cc] border-[#0052cc] shadow-sm'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                <span className="text-sm font-semibold text-gray-700">Select Tracked GPS Vehicle:</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {Object.keys(VEHICLE_ROUTES).map((plate) => {
+                    const v = VEHICLE_ROUTES[plate];
+                    return (
+                      <button
+                        key={plate}
+                        onClick={() => {
+                          setSelectedPlate(plate);
+                          handleResetReplay();
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 border ${
+                          selectedPlate === plate
+                            ? 'bg-blue-50 text-[#0052cc] border-[#0052cc] shadow-sm ring-1 ring-[#0052cc]/30'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
-                    >
-                      🚗 {plate}
-                    </button>
-                  ))}
+                      >
+                        <span>🚗 {plate}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                          v.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {v.status || 'Active'}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -274,8 +383,9 @@ const NationalReports = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-white transition ${isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0052cc] hover:bg-[#0047b3]'
-                    }`}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-white transition ${
+                    isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0052cc] hover:bg-[#0047b3]'
+                  }`}
                 >
                   {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause Replay</> : <><Play className="w-3.5 h-3.5" /> Play Route Replay</>}
                 </button>
@@ -300,7 +410,7 @@ const NationalReports = () => {
             </div>
 
             {/* Selected Vehicle Info Card */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 text-xs">
               <div className="space-y-1">
                 <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Vehicle &amp; Driver</span>
                 <p className="font-bold text-gray-900 text-sm">{currentRoute.plate} — {currentRoute.driverName}</p>
@@ -320,9 +430,17 @@ const NationalReports = () => {
               </div>
 
               <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">GPS Analytics</span>
+                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Departure &amp; Arrival</span>
+                <p className="font-semibold text-emerald-700">Departed: {currentRoute.departedTime}</p>
+                <p className="text-gray-600">Expected: {currentRoute.expectedArrival}</p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">GPS &amp; Rest Analytics</span>
                 <p className="font-semibold text-gray-800">Distance: {currentRoute.distance} | Avg: {currentRoute.avgSpeed}</p>
-                <p className="text-emerald-600 font-medium">Progress: Position {replayIndex + 1} of {coordinates.length} waypoints</p>
+                <p className="text-amber-700 font-semibold flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> Rest Stops Made: {(currentRoute.stops || []).length} Stops
+                </p>
               </div>
             </div>
 
@@ -388,7 +506,7 @@ const NationalReports = () => {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
                     <th className="py-2.5 px-3">Checkpoint Name</th>
-                    <th className="py-2.5 px-3">Timestamp</th>
+                    <th className="py-2.5 px-3">Date &amp; Timestamp</th>
                     <th className="py-2.5 px-3">Status</th>
                     <th className="py-2.5 px-3">Verification</th>
                   </tr>
@@ -397,7 +515,9 @@ const NationalReports = () => {
                   {currentRoute.checkpoints.map((cp, idx) => (
                     <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-2.5 px-3 font-medium text-gray-800">{cp.name}</td>
-                      <td className="py-2.5 px-3 text-gray-600">{cp.time}</td>
+                      <td className="py-2.5 px-3 font-medium text-gray-700">
+                        {cp.date ? `${cp.date}, ${cp.time}` : `05 Sep 2026, ${cp.time}`}
+                      </td>
                       <td className="py-2.5 px-3">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">
                           {cp.status}
@@ -406,6 +526,53 @@ const NationalReports = () => {
                       <td className="py-2.5 px-3 text-gray-500">RAB Verified Officer Logged</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Vehicle Rest & Parking Stops Audit Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-600" /> Vehicle Rest &amp; Rest Stop Locations ({currentRoute.plate})
+                </h3>
+                <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                  {(currentRoute.stops || []).length} Recorded Rest Stops
+                </span>
+              </div>
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
+                    <th className="py-2.5 px-3">Stop Location Name</th>
+                    <th className="py-2.5 px-3">District / Sector</th>
+                    <th className="py-2.5 px-3">Stopped At (Arrival)</th>
+                    <th className="py-2.5 px-3">Resumed Journey (Departure)</th>
+                    <th className="py-2.5 px-3">Duration</th>
+                    <th className="py-2.5 px-3">Inspection / Stop Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(currentRoute.stops || []).map((st, idx) => (
+                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-2.5 px-3 font-semibold text-gray-900 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-amber-600" /> {st.location}
+                      </td>
+                      <td className="py-2.5 px-3 text-gray-600">{st.district}</td>
+                      <td className="py-2.5 px-3 font-medium text-amber-700">{st.stoppedAt}</td>
+                      <td className="py-2.5 px-3 font-medium text-green-700">{st.resumedAt}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                          ⏱️ {st.duration}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-gray-700 font-medium">{st.reason}</td>
+                    </tr>
+                  ))}
+                  {(!currentRoute.stops || currentRoute.stops.length === 0) && (
+                    <tr>
+                      <td colSpan="6" className="py-4 text-center text-gray-500">No extended rest stops recorded for this trip</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
