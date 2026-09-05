@@ -7,7 +7,8 @@ import {
   Search, X, Menu, Navigation, MapPin,
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
-  Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle
+  Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
+  ArrowLeft, FileText, CheckCircle
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -259,12 +260,42 @@ const TrackingMap = () => {
   const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
   const [routeHistory, setRouteHistory] = useState([]);
 
-  // Claim Vehicle Modal States
+  // Claim Vehicle & Police Side Panel States
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimCaseType, setClaimCaseType] = useState('VEHICLE_CLAIM');
   const [claimLocation, setClaimLocation] = useState('');
   const [claimDetails, setClaimDetails] = useState('');
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+
+  const [sidebarView, setSidebarView] = useState('info'); // 'info' | 'claims_list' | 'claim_detail'
+  const [selectedClaim, setSelectedClaim] = useState(null);
+
+  const userStr = localStorage.getItem('user');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isPolice = currentUser?.role === 'POLICE';
+
+  const { data: rawCases = [] } = useQuery({
+    queryKey: ['police-cases'],
+    queryFn: async () => {
+      const res = await api.get('/cases');
+      return res.data;
+    }
+  });
+
+  const deviceClaims = React.useMemo(() => {
+    if (!selectedDevice || !rawCases) return [];
+    const plate = (selectedDevice.deviceName || '').toUpperCase().trim();
+    return rawCases.filter(c => {
+      const cPlate = (c.vehicle_plate || '').toUpperCase().trim();
+      const cDetails = (c.details || '').toUpperCase();
+      return (cPlate && cPlate === plate) || (cDetails && cDetails.includes(plate));
+    });
+  }, [selectedDevice, rawCases]);
+
+  useEffect(() => {
+    setSidebarView('info');
+    setSelectedClaim(null);
+  }, [selectedDevice]);
 
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter') {
@@ -545,160 +576,314 @@ const TrackingMap = () => {
         </div>
       </div>
 
-      {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS PANEL) ----------------- */}
+      {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS / POLICE CLAIMS PANEL) ----------------- */}
       <div
         className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
       >
         {selectedDevice ? (
-          <div className="flex flex-col pb-32">
+          sidebarView === 'claims_list' ? (
+            /* POLICE CLAIMS LIST VIEW IN SIDEBAR */
+            <div className="flex flex-col h-full bg-white pb-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <button 
+                  onClick={() => setSidebarView('info')} 
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Vehicle Info</span>
+                </button>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            {/* Search Header when open (Google Maps style) */}
-            <div className="px-4 py-3 flex items-center gap-3">
-              <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+              <div className="p-5 border-b border-gray-100 bg-blue-50/50">
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">
+                  <FileText className="w-4 h-4" /> Reported Police Claims
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">{selectedDevice.deviceName}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">{deviceClaims.length} claims registered in system</p>
+              </div>
 
-            {/* Header Image */}
-            <div className="relative h-56 w-full bg-gray-200">
-              <img
-                src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop"
-                alt="Truck"
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Title Section */}
-            <div className="p-5 pb-4 border-b border-gray-100">
-              <h2 className="text-[22px] font-normal text-gray-900 mb-1">{selectedDevice.deviceName}</h2>
-              <p className="text-[14px] text-gray-600">Livestock Transport</p>
-            </div>
-
-            {/* Action Buttons Row */}
-            <div className="flex justify-around items-center px-4 py-4 border-b border-gray-100">
-              <div className="flex flex-col items-center gap-2 cursor-pointer group">
-                <div className="w-11 h-11 rounded-full bg-[#1a73e8] flex items-center justify-center text-white group-hover:bg-blue-700 transition-colors">
-                  <div className="w-5 h-5 border-[2px] border-white rounded-sm transform rotate-45 flex items-center justify-center">
-                    <CornerUpRight className="w-3.5 h-3.5 -rotate-45" />
+              <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
+                {deviceClaims.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    No claims or police cases filed for this vehicle yet.
                   </div>
-                </div>
-                <span className="text-[12px] font-medium text-[#1a73e8]">Directions</span>
-              </div>
-              <div
-                className="flex flex-col items-center gap-2 cursor-pointer group"
-                onClick={() => {
-                  if (selectedDevice) {
-                    window.dispatchEvent(new CustomEvent('map-recenter', { detail: selectedDevice }));
-                  }
-                }}
-              >
-                <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#1a73e8] group-hover:bg-[#f1f3f4] transition-colors">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <span className="text-[12px] font-medium text-[#1a73e8]">Nearby</span>
-              </div>
-              <a
-                href={`https://wa.me/?text=Check out this vehicle location: ${selectedDevice.deviceName} at https://maps.google.com/?q=${selectedDevice.latitude},${selectedDevice.longitude}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex flex-col items-center gap-2 cursor-pointer group"
-              >
-                <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#25D366] group-hover:bg-green-50 transition-colors">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-                <span className="text-[12px] font-medium text-[#25D366]">WhatsApp</span>
-              </a>
-            </div>
-
-            {/* Contact & Details Info (Google Maps Style List) */}
-            <div className="p-4 flex flex-col gap-5">
-              {/* Location */}
-              <div className="flex items-start gap-4 text-sm text-gray-700">
-                <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
-                <div className="flex flex-col flex-1">
-                  <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
-                  <span className="text-[10px] text-gray-400 mt-1.5 uppercase tracking-wider font-bold">GPS: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
-                </div>
-              </div>
-
-              {/* Speed and Status */}
-              <div className="flex items-start gap-4 text-sm text-gray-700">
-                <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">
-                      {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
-                    </span>
-                    <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
-                        selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-600'
-                      }`}>
-                      {selectedDevice.status === 'unknown' ? 'STANDBY' : selectedDevice.status}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-500 mt-0.5">
-                    Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
-                  </span>
-                </div>
-              </div>
-
-              {selectedDevice.devicePhone && (
-                <div className="flex items-center gap-4 text-sm text-gray-700">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
-                </div>
-              )}
-
-              {/* Route Information */}
-              <div className="flex items-start gap-4 text-sm text-gray-700">
-                <Route className="w-5 h-5 text-gray-500 mt-0.5" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-900">Current Trip</span>
-                  {selectedDevice.route ? (
-                    <div className="flex flex-col mt-0.5">
-                      <div className="flex items-center gap-1.5 text-[13px] text-gray-800 font-semibold">
-                        <span>{selectedDevice.route.originDistrict}</span>
-                        <ArrowRight className="w-3 h-3 text-gray-400" />
-                        <span>{selectedDevice.route.destDistrict}</span>
+                ) : (
+                  deviceClaims.map((claim) => (
+                    <div
+                      key={claim.id}
+                      onClick={() => {
+                        setSelectedClaim(claim);
+                        setSidebarView('claim_detail');
+                      }}
+                      className="p-5 hover:bg-blue-50/40 cursor-pointer transition-colors flex flex-col gap-2 group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
+                          CAS-{claim.id.substring(0, 8).toUpperCase()}
+                        </span>
+                        <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${
+                          claim.status === 'Case Solved' ? 'bg-green-100 text-green-700' :
+                          claim.status === 'Following Up' ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {claim.status || 'Open'}
+                        </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 mt-0.5">
-                        {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700">
+                        {claim.details || `Claim reported for vehicle ${selectedDevice.deviceName}`}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                        <span>Reported by: <strong className="text-gray-700">{claim.User?.name || 'Officer'}</strong></span>
+                        <span>{new Date(claim.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : sidebarView === 'claim_detail' && selectedClaim ? (
+            /* POLICE CLAIM DETAIL VIEW IN SIDEBAR */
+            <div className="flex flex-col h-full bg-white pb-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <button 
+                  onClick={() => setSidebarView('claims_list')} 
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Claims List</span>
+                </button>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 flex flex-col gap-4 overflow-y-auto flex-1">
+                <div>
+                  <span className="text-xs font-mono text-gray-400 uppercase font-semibold">Case Reference</span>
+                  <h3 className="text-xl font-bold text-gray-900">CAS-{selectedClaim.id.substring(0, 8).toUpperCase()}</h3>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                  <div>
+                    <span className="text-xs text-gray-500">Target Vehicle Plate</span>
+                    <p className="text-sm font-semibold text-gray-900">{selectedClaim.vehicle_plate || selectedDevice.deviceName}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Claim Type</span>
+                    <p className="text-sm font-semibold text-blue-600">{selectedClaim.type || 'VEHICLE_CLAIM'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Claimed By</span>
+                    <p className="text-sm font-semibold text-gray-900">{selectedClaim.User?.name || 'Officer'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Location</span>
+                    <p className="text-sm font-medium text-gray-800">{selectedClaim.location || 'Gasabo District'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Date Filed</span>
+                    <p className="text-sm font-medium text-gray-800">{new Date(selectedClaim.createdAt).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Details &amp; Description</span>
+                  <div className="mt-1.5 p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-sm text-gray-800 leading-relaxed">
+                    {selectedClaim.details}
+                  </div>
+                </div>
+
+                {isPolice && (
+                  <div className="mt-2 pt-4 border-t border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Update Police Action Status</span>
+                    <select
+                      value={selectedClaim.status || 'Open'}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        try {
+                          await api.put(`/cases/${selectedClaim.id}/status`, { status: newStatus });
+                          setSelectedClaim(prev => ({ ...prev, status: newStatus }));
+                          queryClient.invalidateQueries(['police-cases']);
+                          toast.success(`Case status updated to '${newStatus}'`);
+                        } catch (err) {
+                          toast.error('Failed to update status');
+                        }
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white cursor-pointer"
+                    >
+                      <option value="Open">Open</option>
+                      <option value="Following Up">Following Up</option>
+                      <option value="Case Solved">Case Solved</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* DEFAULT VEHICLE OVERVIEW INFO VIEW */
+            <div className="flex flex-col pb-32">
+
+              {/* Search Header when open (Google Maps style) */}
+              <div className="px-4 py-3 flex items-center gap-3">
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Header Image */}
+              <div className="relative h-56 w-full bg-gray-200">
+                <img
+                  src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop"
+                  alt="Truck"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Title Section */}
+              <div className="p-5 pb-4 border-b border-gray-100">
+                <h2 className="text-[22px] font-normal text-gray-900 mb-1">{selectedDevice.deviceName}</h2>
+                <p className="text-[14px] text-gray-600">Livestock Transport</p>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="flex justify-around items-center px-4 py-4 border-b border-gray-100">
+                <div className="flex flex-col items-center gap-2 cursor-pointer group">
+                  <div className="w-11 h-11 rounded-full bg-[#1a73e8] flex items-center justify-center text-white group-hover:bg-blue-700 transition-colors">
+                    <div className="w-5 h-5 border-[2px] border-white rounded-sm transform rotate-45 flex items-center justify-center">
+                      <CornerUpRight className="w-3.5 h-3.5 -rotate-45" />
+                    </div>
+                  </div>
+                  <span className="text-[12px] font-medium text-[#1a73e8]">Directions</span>
+                </div>
+                <div
+                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  onClick={() => {
+                    if (selectedDevice) {
+                      window.dispatchEvent(new CustomEvent('map-recenter', { detail: selectedDevice }));
+                    }
+                  }}
+                >
+                  <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#1a73e8] group-hover:bg-[#f1f3f4] transition-colors">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <span className="text-[12px] font-medium text-[#1a73e8]">Nearby</span>
+                </div>
+                <a
+                  href={`https://wa.me/?text=Check out this vehicle location: ${selectedDevice.deviceName} at https://maps.google.com/?q=${selectedDevice.latitude},${selectedDevice.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                >
+                  <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#25D366] group-hover:bg-green-50 transition-colors">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <span className="text-[12px] font-medium text-[#25D366]">WhatsApp</span>
+                </a>
+              </div>
+
+              {/* Contact & Details Info (Google Maps Style List) */}
+              <div className="p-4 flex flex-col gap-5">
+                {/* Location */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex flex-col flex-1">
+                    <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
+                    <span className="text-[10px] text-gray-400 mt-1.5 uppercase tracking-wider font-bold">GPS: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
+                  </div>
+                </div>
+
+                {/* Speed and Status */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
                       </span>
-                      <span className="text-[11px] text-gray-500 mt-0.5">
-                        Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>
+                      <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
+                          selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-600'
+                        }`}>
+                        {selectedDevice.status === 'unknown' ? 'STANDBY' : selectedDevice.status}
                       </span>
                     </div>
-                  ) : (
-                    <span className="text-xs text-gray-500 mt-0.5">No active livestock permit assigned</span>
-                  )}
+                    <span className="text-xs text-gray-500 mt-0.5">
+                      Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
+                    </span>
+                  </div>
                 </div>
+
+                {selectedDevice.devicePhone && (
+                  <div className="flex items-center gap-4 text-sm text-gray-700">
+                    <Phone className="w-5 h-5 text-gray-500" />
+                    <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
+                  </div>
+                )}
+
+                {/* Route Information */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <Route className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">Current Trip</span>
+                    {selectedDevice.route ? (
+                      <div className="flex flex-col mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[13px] text-gray-800 font-semibold">
+                          <span>{selectedDevice.route.originDistrict}</span>
+                          <ArrowRight className="w-3 h-3 text-gray-400" />
+                          <span>{selectedDevice.route.destDistrict}</span>
+                        </div>
+                        <span className="text-[11px] text-gray-500 mt-0.5">
+                          {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
+                        </span>
+                        <span className="text-[11px] text-gray-500 mt-0.5">
+                          Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-500 mt-0.5">No active livestock permit assigned</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm text-gray-700">
+                  <Clock className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">Last updated</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(selectedDevice.lastUpdate).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {isPolice ? (
+                  <div
+                    onClick={() => setSidebarView('claims_list')}
+                    className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
+                  >
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <span>See claims ({deviceClaims.length})</span>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => {
+                      setClaimCaseType('VEHICLE_CLAIM');
+                      setClaimLocation(selectedDevice.route ? `${selectedDevice.route.originDistrict} District` : 'Gasabo District');
+                      setClaimDetails(`Claim reported for vehicle ${selectedDevice.deviceName} by officer.`);
+                      setIsClaimModalOpen(true);
+                    }}
+                    className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
+                  >
+                    <CornerUpRight className="w-5 h-5" />
+                    <span>Claim this vehicle</span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-4 text-sm text-gray-700">
-                <Clock className="w-5 h-5 text-gray-500" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-900">Last updated</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(selectedDevice.lastUpdate).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                onClick={() => {
-                  setClaimCaseType('VEHICLE_CLAIM');
-                  setClaimLocation(selectedDevice.route ? `${selectedDevice.route.originDistrict} District` : 'Gasabo District');
-                  setClaimDetails(`Claim reported for vehicle ${selectedDevice.deviceName} by officer.`);
-                  setIsClaimModalOpen(true);
-                }}
-                className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
-              >
-                <CornerUpRight className="w-5 h-5" />
-                <span>Claim this vehicle</span>
-              </div>
             </div>
-
-          </div>
+          )
         ) : (
           <div className="p-4 pt-16 text-center text-gray-500">
             {/* Search box overlay when sidebar is open but no device selected (Google Maps style) */}
