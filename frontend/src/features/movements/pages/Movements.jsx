@@ -3,7 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import { Search, Bell, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
+import ReportDropdown from '../../../components/ui/ReportDropdown';
 import MovementsList from '../components/MovementsList';
 import MovementsMap from '../components/MovementsMap';
 import MovementsHistory from '../components/MovementsHistory';
@@ -33,6 +35,7 @@ const Movements = () => {
   const activeTab = searchParams.get('tab') || 'Requests';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
+  const [timeRange, setTimeRange] = useState('ALL');
   const navigate = useNavigate();
 
   const userStr = localStorage.getItem('user');
@@ -202,10 +205,28 @@ const Movements = () => {
     ]
   };
 
-  // Filter movements by search and checkboxes
+  // Filter movements by search, checkboxes, and date range
   const filteredMovements = useMemo(() => {
     if (!movements) return [];
     let result = movements;
+
+    // Time Range Filter
+    if (timeRange !== 'ALL') {
+      const now = new Date();
+      result = result.filter(m => {
+        const date = new Date(m.updatedAt || Date.now());
+        if (timeRange === 'TODAY') {
+          return date.toDateString() === now.toDateString();
+        } else if (timeRange === 'WEEK') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return date >= weekAgo;
+        } else if (timeRange === 'MONTH') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          return date >= monthAgo;
+        }
+        return true;
+      });
+    }
 
     // Text Search Filter
     if (searchQuery.trim()) {
@@ -234,7 +255,105 @@ const Movements = () => {
     }
 
     return result;
-  }, [movements, searchQuery, selectedFilters]);
+  }, [movements, searchQuery, selectedFilters, timeRange]);
+
+  // CSV Export Handler
+  const exportToCSV = () => {
+    if (!filteredMovements || filteredMovements.length === 0) {
+      toast.error('No movements available to export');
+      return;
+    }
+    const headers = ['Permit Number', 'Farmer / Owner', 'Route', 'Animals / Details', 'Type', 'Status', 'Driver', 'Plate Number'];
+    const rows = filteredMovements.map(m => [
+      m.permitNumber,
+      `"${(m.farmerName || '').replace(/"/g, '""')}"`,
+      `"${(m.route || '').replace(/"/g, '""')}"`,
+      `"${(m.title || '').replace(/"/g, '""')}"`,
+      m.rawType,
+      m.rawStatus,
+      `"${(m.driverName || '').replace(/"/g, '""')}"`,
+      m.plateNumber || 'N/A'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Livestock_Movements_${activeTab}_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // PDF Print Report Handler
+  const printPDFReport = () => {
+    if (!filteredMovements || filteredMovements.length === 0) {
+      toast.error('No movements available to print report');
+      return;
+    }
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>RAB Movement Permits Report - ${activeTab}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
+            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
+            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge-approved { background: #dcfce7; color: #166534; }
+            .badge-pending { background: #fef3c7; color: #92400e; }
+            .badge-rejected { background: #fee2e2; color: #991b1b; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)</h1>
+              <p>Official Livestock Movement Permit Registry • ${activeTab.toUpperCase()}</p>
+            </div>
+          </div>
+          <div class="meta">
+            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
+            <strong>Category Tab:</strong> ${activeTab}<br/>
+            <strong>Total Records:</strong> ${filteredMovements.length}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Permit No</th>
+                <th>Farmer / Owner</th>
+                <th>Route</th>
+                <th>Animals / Details</th>
+                <th>Status</th>
+                <th>Driver / Vehicle</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredMovements.map(m => `
+                <tr>
+                  <td><strong>${m.permitNumber}</strong></td>
+                  <td>${m.farmerName}</td>
+                  <td>${m.route}</td>
+                  <td>${m.title}</td>
+                  <td><span class="badge ${m.rawStatus === 'APPROVED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
+                  <td>${m.driverName} (${m.plateNumber})</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   // Helper to check if movement is incoming to current user's jurisdiction
   const isIncoming = (m) => {
@@ -379,7 +498,17 @@ const Movements = () => {
              optionsMap={movementOptionsMap}
            />
          </div>
-         <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
+
+         <div className="relative z-50">
+           <ReportDropdown 
+             onExportCSV={exportToCSV}
+             onPrintPDF={printPDFReport}
+             timeRange={timeRange}
+             setTimeRange={setTimeRange}
+           />
+         </div>
+
+         <button className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
          </button>
          

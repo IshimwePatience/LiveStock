@@ -5,6 +5,7 @@ import api from '../../../lib/api';
 import { Search, Bell, Download, Printer, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
+import ReportDropdown from '../../../components/ui/ReportDropdown';
 import PoliceCasesList from '../components/PoliceCasesList';
 
 // Helper to generate initials from name
@@ -331,36 +332,6 @@ const PoliceCases = () => {
             </span>
           </h1>
         </div>
-
-        {/* Report Export Buttons */}
-        <div className="flex items-center gap-3">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 bg-white focus:outline-none focus:border-[#0052cc]"
-          >
-            <option value="ALL">All Time</option>
-            <option value="TODAY">Today</option>
-            <option value="WEEK">This Week</option>
-            <option value="MONTH">This Month</option>
-          </select>
-          
-          <button
-            onClick={exportToCSV}
-            className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors"
-          >
-            <Download className="w-3.5 h-3.5 text-gray-600" />
-            <span>Export CSV</span>
-          </button>
-          
-          <button
-            onClick={printPDFReport}
-            className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors shadow-sm"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print PDF Report</span>
-          </button>
-        </div>
       </div>
 
       {/* Tabs / Toolbar (Matches Movements tab design) */}
@@ -418,6 +389,19 @@ const PoliceCases = () => {
              optionsMap={policeOptionsMap}
            />
          </div>
+
+         <div className="relative z-50">
+           <ReportDropdown 
+             onExportCSV={exportToCSV}
+             onPrintPDF={printPDFReport}
+             timeRange={timeRange}
+             setTimeRange={setTimeRange}
+           />
+         </div>
+
+         <button className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
+         </button>
          
          <div className="flex-1"></div>
       </div>

@@ -3,6 +3,7 @@ import { Users, UserPlus, Search, Edit2, Trash2, Power, MoreVertical } from 'luc
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
+import ReportDropdown from '../../../components/ui/ReportDropdown';
 import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -55,6 +56,7 @@ const UserManagement = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
+  const [timeRange, setTimeRange] = useState('ALL');
 
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -233,8 +235,118 @@ const UserManagement = () => {
     }
   };
 
+  // CSV Export Handler
+  const exportToCSV = () => {
+    if (!filteredUsers || filteredUsers.length === 0) {
+      toast.error('No users available to export');
+      return;
+    }
+    const headers = ['User ID', 'Full Name', 'Email', 'Role', 'District', 'Sector', 'Status'];
+    const rows = filteredUsers.map(u => [
+      u.id,
+      `"${(u.name || '').replace(/"/g, '""')}"`,
+      `"${(u.email || '').replace(/"/g, '""')}"`,
+      u.role,
+      `"${(u.district_id || 'National').replace(/"/g, '""')}"`,
+      `"${(u.sector_id || '-').replace(/"/g, '""')}"`,
+      u.status || 'Active'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `System_Users_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // PDF Print Report Handler
+  const printPDFReport = () => {
+    if (!filteredUsers || filteredUsers.length === 0) {
+      toast.error('No users available to print report');
+      return;
+    }
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>User Accounts Registry Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
+            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
+            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge-active { background: #dcfce7; color: #166534; }
+            .badge-inactive { background: #fee2e2; color: #991b1b; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>RWANDA LIVESTOCK SYSTEM — USER ACCOUNTS REGISTRY</h1>
+              <p>Official User & Role Audit Report</p>
+            </div>
+          </div>
+          <div class="meta">
+            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
+            <strong>Total Users:</strong> ${filteredUsers.length}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Jurisdiction</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredUsers.map(u => `
+                <tr>
+                  <td><strong>${u.name}</strong></td>
+                  <td>${u.email}</td>
+                  <td>${u.role}</td>
+                  <td>${u.sector_id ? `${u.district_id} / ${u.sector_id}` : (u.district_id || 'National (All)')}</td>
+                  <td><span class="badge ${u.status === 'Inactive' ? 'badge-inactive' : 'badge-active'}">${u.status || 'Active'}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const filteredUsers = useMemo(() => {
     let result = users;
+
+    if (timeRange !== 'ALL') {
+      const now = new Date();
+      result = result.filter(u => {
+        const date = new Date(u.createdAt || Date.now());
+        if (timeRange === 'TODAY') {
+          return date.toDateString() === now.toDateString();
+        } else if (timeRange === 'WEEK') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return date >= weekAgo;
+        } else if (timeRange === 'MONTH') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          return date >= monthAgo;
+        }
+        return true;
+      });
+    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -257,7 +369,7 @@ const UserManagement = () => {
 
     setCurrentPage(1);
     return result;
-  }, [users, searchQuery, selectedFilters]);
+  }, [users, searchQuery, selectedFilters, timeRange]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -412,8 +524,18 @@ const UserManagement = () => {
             }}
           />
         </div>
-        <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
+
+        <div className="relative z-50">
+          <ReportDropdown
+            onExportCSV={exportToCSV}
+            onPrintPDF={printPDFReport}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+          />
+        </div>
+
+        <button className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
         </button>
       </div>
 
