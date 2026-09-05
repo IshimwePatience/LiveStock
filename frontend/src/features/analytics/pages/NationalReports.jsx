@@ -7,7 +7,7 @@ import L from 'leaflet';
 import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
-  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock
+  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -421,41 +421,35 @@ const NationalReports = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50/30">
+      <div className="flex-1 overflow-auto p-6 bg-white">
 
         {/* TAB 1: MOVEMENT GPS & ROUTE REPLAY */}
         {activeTab === 'replay' && (
           <div className="flex flex-col gap-6">
 
             {/* Vehicle Selection & Quick Summary Toolbar */}
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-700">Select Tracked GPS Vehicle:</span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {Object.keys(VEHICLE_ROUTES).map((plate) => {
-                    const v = VEHICLE_ROUTES[plate];
-                    return (
-                      <button
-                        key={plate}
-                        onClick={() => {
-                          setSelectedPlate(plate);
-                          handleResetReplay();
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 border ${
-                          selectedPlate === plate
-                            ? 'bg-blue-50 text-[#0052cc] border-[#0052cc] shadow-sm ring-1 ring-[#0052cc]/30'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span>🚗 {plate}</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                          v.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {v.status || 'Active'}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
+                <div className="relative min-w-[280px]">
+                  <select
+                    value={selectedPlate}
+                    onChange={(e) => {
+                      setSelectedPlate(e.target.value);
+                      handleResetReplay();
+                    }}
+                    className="w-full appearance-none bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-3.5 py-2 pr-9 text-xs font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] focus:border-[#0052cc] cursor-pointer transition-all"
+                  >
+                    {Object.keys(VEHICLE_ROUTES).map((plate) => {
+                      const v = VEHICLE_ROUTES[plate];
+                      return (
+                        <option key={plate} value={plate}>
+                          🚗 {plate} — {v.driverName} ({v.status || 'Active'})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
