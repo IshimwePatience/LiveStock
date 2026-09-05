@@ -57,6 +57,7 @@ const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
+  const [recordScope, setRecordScope] = useState('BOTH');
 
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -531,6 +532,8 @@ const UserManagement = () => {
             onPrintPDF={printPDFReport}
             timeRange={timeRange}
             setTimeRange={setTimeRange}
+            recordScope={recordScope}
+            setRecordScope={setRecordScope}
           />
         </div>
       </div>

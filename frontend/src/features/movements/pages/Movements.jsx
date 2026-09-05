@@ -36,6 +36,7 @@ const Movements = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
+  const [recordScope, setRecordScope] = useState('BOTH');
   const navigate = useNavigate();
 
   const userStr = localStorage.getItem('user');
@@ -156,12 +157,19 @@ const Movements = () => {
         status: filterStatus,
         rawStatus: req.status,
         updatedAt: req.updatedAt,
+        createdAt: req.createdAt,
+        reason: req.reason || 'No reason provided',
+        validUntil: req.valid_until ? new Date(req.valid_until).toLocaleDateString() : 'N/A',
+        farmerNid: req.owner_id_number || 'N/A',
+        farmerPhone: req.owner_phone || 'N/A',
+        transporterMode: req.transporter_mode || (req.plate_number ? 'DRIVER_VEHICLE' : 'PERSON_ON_FOOT'),
+        driverNid: req.driver_nid || req.Trip?.driver_nid || 'N/A',
         tripStatus: req.Trip?.status || null,
         tripId: req.Trip?.id || null,
         driverToken: req.Trip?.driver_token || null,
-        driverName: req.Trip?.driver_name || req.driver_name || 'Unknown',
-        driverPhone: req.Trip?.driver_phone || req.driver_phone || 'Unknown',
-        plateNumber: req.Trip?.plate_number || req.plate_number || 'Unknown',
+        driverName: req.driver_name || req.Trip?.driver_name || 'N/A',
+        driverPhone: req.driver_phone || req.Trip?.driver_phone || 'N/A',
+        plateNumber: req.plate_number || req.Trip?.plate_number || 'N/A',
       };
     });
   }, [rawMovements]);
@@ -257,95 +265,163 @@ const Movements = () => {
     return result;
   }, [movements, searchQuery, selectedFilters, timeRange]);
 
+  // Helper function to filter dataset by recordScope (REQUESTS, HISTORY, BOTH)
+  const getExportDataset = (scopeParam = recordScope) => {
+    let target = filteredMovements;
+    if (scopeParam === 'REQUESTS') {
+      target = target.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING');
+    } else if (scopeParam === 'HISTORY') {
+      target = target.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus));
+    } else {
+      target = target.filter(m => isOutgoing(m));
+    }
+    return target;
+  };
+
   // CSV Export Handler
-  const exportToCSV = () => {
-    if (!filteredMovements || filteredMovements.length === 0) {
-      toast.error('No movements available to export');
+  const exportToCSV = (scopeParam = recordScope) => {
+    const dataset = getExportDataset(scopeParam);
+    if (!dataset || dataset.length === 0) {
+      toast.error('No movement records available to export for selected scope');
       return;
     }
-    const headers = ['Permit Number', 'Farmer / Owner', 'Route', 'Animals / Details', 'Type', 'Status', 'Driver', 'Plate Number'];
-    const rows = filteredMovements.map(m => [
-      m.permitNumber,
-      `"${(m.farmerName || '').replace(/"/g, '""')}"`,
-      `"${(m.route || '').replace(/"/g, '""')}"`,
-      `"${(m.title || '').replace(/"/g, '""')}"`,
-      m.rawType,
-      m.rawStatus,
-      `"${(m.driverName || '').replace(/"/g, '""')}"`,
-      m.plateNumber || 'N/A'
-    ]);
+
+    const headers = [
+      'Permit Number',
+      'Transport Mode (Car vs Umushumba)',
+      'Driver / Herder Name',
+      'Driver / Herder Phone',
+      'Driver / Herder NID',
+      'Vehicle Plate Number',
+      'Farmer / Owner Name',
+      'Farmer NID',
+      'Farmer Phone',
+      'Movement Reason',
+      'Priority',
+      'Valid Until',
+      'Origin District',
+      'Origin Sector',
+      'Destination District',
+      'Destination Sector',
+      'Animal Type & Details',
+      'Permit Status',
+      'Date Created'
+    ];
+
+    const rows = dataset.map(m => {
+      const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+      const modeStr = isPersonOnFoot ? 'Umushumba (Person on Foot)' : 'Imodoka n\'Umushoferi (Vehicle & Driver)';
+      const plateStr = isPersonOnFoot ? 'N/A (Person on Foot)' : m.plateNumber;
+      const driverStr = m.driverName !== 'N/A' && m.driverName !== 'Unknown' ? m.driverName : (isPersonOnFoot ? 'Umushumba (Herder)' : 'Driver Unassigned');
+
+      return [
+        m.permitNumber,
+        `"${modeStr}"`,
+        `"${driverStr.replace(/"/g, '""')}"`,
+        `"${(m.driverPhone || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.driverNid || 'N/A').replace(/"/g, '""')}"`,
+        `"${plateStr.replace(/"/g, '""')}"`,
+        `"${(m.farmerName || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.farmerNid || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.farmerPhone || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.reason || 'N/A').replace(/"/g, '""')}"`,
+        m.priority || 'Minor',
+        m.validUntil || 'N/A',
+        `"${(m.originDistrict || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.originSector || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.destDistrict || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.destSector || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.title || 'N/A').replace(/"/g, '""')}"`,
+        m.rawStatus,
+        new Date(m.createdAt || m.updatedAt).toLocaleDateString()
+      ];
+    });
+
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Livestock_Movements_${activeTab}_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    const scopeLabel = scopeParam === 'REQUESTS' ? 'Requests' : scopeParam === 'HISTORY' ? 'History' : 'AllRecords';
+    link.setAttribute('download', `RAB_Livestock_Movements_${scopeLabel}_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // PDF Print Report Handler
-  const printPDFReport = () => {
-    if (!filteredMovements || filteredMovements.length === 0) {
-      toast.error('No movements available to print report');
+  const printPDFReport = (scopeParam = recordScope) => {
+    const dataset = getExportDataset(scopeParam);
+    if (!dataset || dataset.length === 0) {
+      toast.error('No movement records available to print report');
       return;
     }
     const printWindow = window.open('', '_blank');
+    const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY (REQUESTS & HISTORY)';
+    
     printWindow.document.write(`
       <html>
         <head>
-          <title>RAB Movement Permits Report - ${activeTab}</title>
+          <title>RAB Movement Permits Report - ${scopeLabel}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
             .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
+            .header h1 { color: #0052cc; margin: 0; font-size: 20px; font-weight: bold; }
             .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
             .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
             table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
-            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-size: 11px; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
             tr:nth-child(even) { background-color: #f8fafc; }
-            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
             .badge-approved { background: #dcfce7; color: #166534; }
             .badge-pending { background: #fef3c7; color: #92400e; }
             .badge-rejected { background: #fee2e2; color: #991b1b; }
+            .mode-car { color: #0052cc; font-weight: 600; }
+            .mode-foot { color: #d97706; font-weight: 600; }
           </style>
         </head>
         <body>
           <div class="header">
             <div>
               <h1>RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)</h1>
-              <p>Official Livestock Movement Permit Registry • ${activeTab.toUpperCase()}</p>
+              <p>Official Livestock Movement Permit Registry • ${scopeLabel}</p>
             </div>
           </div>
           <div class="meta">
             <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
-            <strong>Category Tab:</strong> ${activeTab}<br/>
-            <strong>Total Records:</strong> ${filteredMovements.length}
+            <strong>Export Scope:</strong> ${scopeLabel}<br/>
+            <strong>Total Records:</strong> ${dataset.length}
           </div>
           <table>
             <thead>
               <tr>
                 <th>Permit No</th>
+                <th>Transport Mode</th>
                 <th>Farmer / Owner</th>
+                <th>Driver / Herder</th>
+                <th>Vehicle / Plate</th>
                 <th>Route</th>
-                <th>Animals / Details</th>
+                <th>Details</th>
                 <th>Status</th>
-                <th>Driver / Vehicle</th>
               </tr>
             </thead>
             <tbody>
-              ${filteredMovements.map(m => `
-                <tr>
-                  <td><strong>${m.permitNumber}</strong></td>
-                  <td>${m.farmerName}</td>
-                  <td>${m.route}</td>
-                  <td>${m.title}</td>
-                  <td><span class="badge ${m.rawStatus === 'APPROVED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
-                  <td>${m.driverName} (${m.plateNumber})</td>
-                </tr>
-              `).join('')}
+              ${dataset.map(m => {
+                const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+                return `
+                  <tr>
+                    <td><strong>${m.permitNumber}</strong></td>
+                    <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${isPersonOnFoot ? 'Umushumba' : 'Vehicle'}</td>
+                    <td>${m.farmerName}<br/><span style="color:#6b7280;font-size:10px;">ID: ${m.farmerNid}</span></td>
+                    <td>${m.driverName !== 'N/A' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned')}<br/><span style="color:#6b7280;font-size:10px;">Tel: ${m.driverPhone}</span></td>
+                    <td>${isPersonOnFoot ? 'N/A' : m.plateNumber}</td>
+                    <td>${m.route}</td>
+                    <td>${m.title}</td>
+                    <td><span class="badge ${m.rawStatus === 'APPROVED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </body>
@@ -505,6 +581,8 @@ const Movements = () => {
              onPrintPDF={printPDFReport}
              timeRange={timeRange}
              setTimeRange={setTimeRange}
+             recordScope={recordScope}
+             setRecordScope={setRecordScope}
            />
          </div>
          

@@ -33,6 +33,7 @@ const PoliceCases = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
+  const [recordScope, setRecordScope] = useState('BOTH');
 
   const setActiveTab = (tab) => {
     setSearchParams({ tab });
@@ -202,20 +203,33 @@ const PoliceCases = () => {
     return filteredCases.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
   }, [filteredCases, activeTab]);
 
+  // Helper to filter cases by scope (REQUESTS = Active Cases, HISTORY = Solved History, BOTH = All Cases)
+  const getExportDataset = (scopeParam = recordScope) => {
+    let target = filteredCases;
+    if (scopeParam === 'REQUESTS') {
+      target = target.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
+    } else if (scopeParam === 'HISTORY') {
+      target = target.filter(c => c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED');
+    }
+    return target;
+  };
+
   // CSV Export Handler
-  const exportToCSV = () => {
-    if (!displayedCases || displayedCases.length === 0) {
-      toast.error('No cases available to export');
+  const exportToCSV = (scopeParam = recordScope) => {
+    const dataset = getExportDataset(scopeParam);
+    if (!dataset || dataset.length === 0) {
+      toast.error('No cases available to export for selected scope');
       return;
     }
-    const headers = ['Case ID', 'Vehicle Plate', 'Title / Description', 'Type', 'Reporter', 'Status', 'Date'];
-    const rows = displayedCases.map(c => [
+    const headers = ['Case ID', 'Vehicle Plate', 'Title / Description', 'Type', 'Reporter', 'Status', 'Location', 'Date Reported'];
+    const rows = dataset.map(c => [
       c.id,
       c.vehiclePlate || 'N/A',
       `"${(c.title || '').replace(/"/g, '""')}"`,
       c.type,
       `"${c.reporter?.name || ''}"`,
       c.status,
+      `"${(c.location || '').replace(/"/g, '""')}"`,
       new Date(c.createdAt).toLocaleDateString()
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -223,34 +237,37 @@ const PoliceCases = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Police_Cases_${activeTab}_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    const scopeLabel = scopeParam === 'REQUESTS' ? 'ActiveCases' : scopeParam === 'HISTORY' ? 'SolvedHistory' : 'AllCases';
+    link.setAttribute('download', `Police_Cases_${scopeLabel}_Report_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // PDF Print Report Handler
-  const printPDFReport = () => {
-    if (!displayedCases || displayedCases.length === 0) {
+  const printPDFReport = (scopeParam = recordScope) => {
+    const dataset = getExportDataset(scopeParam);
+    if (!dataset || dataset.length === 0) {
       toast.error('No cases available to print report');
       return;
     }
+    const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE CASES' : scopeParam === 'HISTORY' ? 'SOLVED HISTORY' : 'FULL REGISTRY (ACTIVE & SOLVED)';
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Police Cases Report - ${activeTab}</title>
+          <title>Police Cases Report - ${scopeLabel}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
             .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
+            .header h1 { color: #0052cc; margin: 0; font-size: 20px; font-weight: bold; }
             .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
             .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
             table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
-            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-size: 11px; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
             tr:nth-child(even) { background-color: #f8fafc; }
-            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
             .badge-open { background: #fee2e2; color: #991b1b; }
             .badge-solved { background: #dcfce7; color: #166534; }
           </style>
@@ -259,13 +276,13 @@ const PoliceCases = () => {
           <div class="header">
             <div>
               <h1>RWANDA NATIONAL POLICE — OFFICIAL CASE REPORT</h1>
-              <p>Livestock &amp; Transit Security Division • ${activeTab.toUpperCase()} REGISTRY</p>
+              <p>Livestock &amp; Transit Security Division • ${scopeLabel}</p>
             </div>
           </div>
           <div class="meta">
             <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
-            <strong>Active Category Tab:</strong> ${activeTab}<br/>
-            <strong>Total Cases Included:</strong> ${displayedCases.length}
+            <strong>Export Scope:</strong> ${scopeLabel}<br/>
+            <strong>Total Cases Included:</strong> ${dataset.length}
           </div>
           <table>
             <thead>
@@ -275,17 +292,19 @@ const PoliceCases = () => {
                 <th>Case Summary</th>
                 <th>Type</th>
                 <th>Reporter</th>
+                <th>Location</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              ${displayedCases.map(c => `
+              ${dataset.map(c => `
                 <tr>
                   <td><strong>${c.id}</strong></td>
                   <td>${c.vehiclePlate || 'N/A'}</td>
                   <td>${c.title}</td>
                   <td>${c.type}</td>
                   <td>${c.reporter?.name || 'System'}</td>
+                  <td>${c.location}</td>
                   <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : 'badge-open'}">${c.status}</span></td>
                 </tr>
               `).join('')}
@@ -396,6 +415,8 @@ const PoliceCases = () => {
              onPrintPDF={printPDFReport}
              timeRange={timeRange}
              setTimeRange={setTimeRange}
+             recordScope={recordScope}
+             setRecordScope={setRecordScope}
            />
          </div>
 
