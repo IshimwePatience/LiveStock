@@ -28,14 +28,23 @@ const NotificationDropdown = () => {
   useEffect(() => {
     fetchNotifications();
 
+    // Polling interval every 5s to ensure live updates
+    const interval = setInterval(fetchNotifications, 5000);
+
     // Setup Socket.io
     const token = localStorage.getItem('token');
-    if (!token) return;
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
 
-    // Use same domain as backend (usually proxy handles it, or explicit URL)
+    if (!token) return () => clearInterval(interval);
+
     const socket = connectSocket({
       auth: { token }
     });
+
+    if (user?.id) {
+      socket.emit('joinRoom', `user_${user.id}`);
+    }
 
     socket.on('notification', (newNotif) => {
       setNotifications(prev => [newNotif, ...prev]);
@@ -43,6 +52,7 @@ const NotificationDropdown = () => {
     });
 
     return () => {
+      clearInterval(interval);
       socket.disconnect();
     };
   }, []);

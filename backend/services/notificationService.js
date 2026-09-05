@@ -1,8 +1,11 @@
 const { NotificationLog, User } = require('../models');
+const { Op } = require('sequelize');
 const socketService = require('./socketService');
 
 class NotificationService {
-  async notifyUser(userId, message, type) {
+  async notifyUser(userId, message, type = 'ALERT') {
+    if (!userId) return null;
+    
     // 1. Log to DB
     const log = await NotificationLog.create({
       user_id: userId,
@@ -22,13 +25,30 @@ class NotificationService {
     return log;
   }
 
-  async notifyRoles(roles, message, type) {
+  async notifyRoles(roles, message, type = 'ALERT') {
     try {
-      const users = await User.findAll({ where: { role: roles } });
+      const rawRoles = Array.isArray(roles) ? roles : [roles];
+      const roleSet = new Set();
+      for (const r of rawRoles) {
+        if (!r || typeof r !== 'string') continue;
+        roleSet.add(r.toUpperCase());
+        roleSet.add(r.toLowerCase());
+        roleSet.add(r.charAt(0).toUpperCase() + r.slice(1).toLowerCase());
+      }
+      const roleList = Array.from(roleSet);
+
+      const users = await User.findAll({
+        where: {
+          role: { [Op.in]: roleList }
+        }
+      });
+
+      console.log(`Notifying ${users.length} users for roles [${roleList.join(', ')}]`);
+
       const logs = [];
       for (const user of users) {
         const log = await this.notifyUser(user.id, message, type);
-        logs.push(log);
+        if (log) logs.push(log);
       }
       return logs;
     } catch (err) {
