@@ -106,16 +106,6 @@ const NotificationDropdown = () => {
 
   const filteredNotifications = notifications.filter(n => {
     if (showOnlyUnread && n.read) return false;
-    
-    const notifDate = new Date(n.createdAt);
-    const today = new Date();
-    const isToday = notifDate.getDate() === today.getDate() && 
-                    notifDate.getMonth() === today.getMonth() && 
-                    notifDate.getFullYear() === today.getFullYear();
-    
-    if (activeTab === 'Direct' && !isToday) return false;
-    if (activeTab === 'Recents' && isToday) return false;
-
     return true;
   });
 

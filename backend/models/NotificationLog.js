@@ -6,8 +6,9 @@ const NotificationLog = sequelize.define('NotificationLog', {
   user_id: { type: DataTypes.UUID, allowNull: false },
   message: { type: DataTypes.STRING, allowNull: false },
   type: { 
-    type: DataTypes.ENUM('ARRIVAL', 'APPROVAL', 'ALERT', 'SYSTEM'), 
-    allowNull: false 
+    type: DataTypes.STRING, 
+    allowNull: false,
+    defaultValue: 'ALERT'
   },
   read: { type: DataTypes.BOOLEAN, defaultValue: false },
 });

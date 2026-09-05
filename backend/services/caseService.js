@@ -87,6 +87,30 @@ class CaseService {
       order: [['createdAt', 'DESC']]
     });
   }
+
+  async updateCaseStatus(user, caseId, status) {
+    await ensureCaseColumns();
+    const item = await Case.findByPk(caseId);
+    if (!item) throw new Error('Case not found');
+
+    item.status = status;
+    await item.save();
+
+    // Send notifications to the person who reported/claimed the case AND to all officers!
+    try {
+      const plateStr = item.vehicle_plate ? ` for Vehicle ${item.vehicle_plate}` : '';
+      const notifMsg = `📢 CASE STATUS UPDATE: Case ${item.id.substring(0, 8).toUpperCase()}${plateStr} status updated to '${status}' by ${user.name}.`;
+
+      if (item.reporter_id) {
+        await notificationService.notifyUser(item.reporter_id, notifMsg, 'ALERT');
+      }
+      await notificationService.notifyRoles(['RAB', 'POLICE', 'ADMIN'], notifMsg, 'ALERT');
+    } catch (err) {
+      console.error('Failed to send status update notification:', err.message);
+    }
+
+    return item;
+  }
 }
 
 module.exports = new CaseService();

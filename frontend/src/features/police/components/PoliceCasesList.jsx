@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { User, ChevronDown, AlertTriangle, FileText, ArrowUp, MoreVertical } from 'lucide-react';
+import { User, ChevronDown, AlertTriangle, FileText, ArrowUp, MoreVertical, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '../../../lib/api';
+import toast from 'react-hot-toast';
 
 const PoliceCasesList = ({ cases, isLoading, isError }) => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
@@ -19,7 +25,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
   const getTypeIcon = (type) => {
     if (type === 'THEFT') return <AlertTriangle className="w-4 h-4 text-red-500" />;
     if (type === 'ROBBERY') return <AlertTriangle className="w-4 h-4 text-orange-500" />;
-    return <FileText className="w-4 h-4 text-gray-500" />;
+    return <FileText className="w-4 h-4 text-blue-600" />;
   };
 
   const getSeverityIcon = (severity) => {
@@ -63,7 +69,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Assigned Officer</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Reporter</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Severity</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Status</th>
+            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-36">Status</th>
             <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
           </tr>
         </thead>
@@ -87,15 +93,9 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
               </td>
               <td className="py-2 px-4">
                 <div className="flex items-center gap-2">
-                  {item.assignee.initials === 'U' ? (
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                        <User className="w-3.5 h-3.5" />
-                      </div>
-                  ) : (
-                      <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
-                        {item.assignee.initials}
-                      </div>
-                  )}
+                  <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                    {item.assignee.initials}
+                  </div>
                   <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.assignee.name}</span>
                 </div>
               </td>
@@ -114,15 +114,31 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
                 </div>
               </td>
               <td className="py-2 px-4">
-                {item.status === 'Closed' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-black text-[11px] font-medium tracking-wide">
-                    Closed <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
-                  </div>
-                ) : (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 bg-white text-black text-[11px] font-medium hover:bg-gray-50 cursor-pointer tracking-wide">
-                    Open <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
-                  </div>
-                )}
+                <select
+                  value={item.status || 'Open'}
+                  onChange={async (e) => {
+                    const newStatus = e.target.value;
+                    try {
+                      await api.put(`/cases/${item.dbId}/status`, { status: newStatus });
+                      toast.success(`📢 Case status updated to '${newStatus}'! Notification sent.`);
+                      queryClient.invalidateQueries(['police-cases']);
+                      queryClient.invalidateQueries(['notifications']);
+                    } catch (err) {
+                      toast.error('Failed to update case status.');
+                    }
+                  }}
+                  className={`text-[11px] font-semibold tracking-wide rounded px-2.5 py-1 border cursor-pointer focus:outline-none ${
+                    item.status === 'Case Solved' || item.status === 'Closed' || item.status === 'RESOLVED'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                      : item.status === 'Following Up'
+                      ? 'bg-amber-50 text-amber-700 border-amber-300'
+                      : 'bg-blue-50 text-blue-700 border-blue-300'
+                  }`}
+                >
+                  <option value="Open">Open</option>
+                  <option value="Following Up">Following Up</option>
+                  <option value="Case Solved">Case Solved</option>
+                </select>
               </td>
               <td className="py-2 px-4 text-right relative">
                 <button 
@@ -132,18 +148,26 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
                   <MoreVertical className="w-4 h-4" />
                 </button>
                 {openActionDropdown === item.id && (
-                  <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                  <div className="absolute right-6 top-7 w-36 bg-white rounded-xl shadow-xl border border-gray-200 py-1.5 z-50 text-left animate-in fade-in zoom-in duration-100">
                     <button 
-                      onClick={() => setOpenActionDropdown(null)}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                      onClick={() => {
+                        setOpenActionDropdown(null);
+                        let plate = item.vehiclePlate;
+                        if (!plate && item.title) {
+                          const match = item.title.match(/\[Plate:\s*([^\]]+)\]/i);
+                          if (match) plate = match[1];
+                        }
+                        if (plate) {
+                          toast.success(`Locating vehicle ${plate} on map...`);
+                          navigate(`/dashboard/gps?plate=${encodeURIComponent(plate.trim())}`);
+                        } else {
+                          toast.error('No vehicle plate registered to this case.');
+                        }
+                      }}
+                      className="w-full flex items-center gap-2 text-left px-3 py-2 text-[13px] text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors font-medium"
                     >
-                      View Case
-                    </button>
-                    <button 
-                      onClick={() => setOpenActionDropdown(null)}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                    >
-                      Update Case
+                      <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                      See on map
                     </button>
                   </div>
                 )}
@@ -153,7 +177,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
           
           {cases.length === 0 && (
             <tr>
-                <td colSpan="6" className="p-8 text-center text-gray-500">
+                <td colSpan="7" className="p-8 text-center text-gray-500">
                   No police cases found.
                 </td>
             </tr>

@@ -18,4 +18,15 @@ const getCases = async (req, res) => {
   }
 };
 
-module.exports = { createCase, getCases };
+const updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updated = await caseService.updateCaseStatus(req.user, id, status);
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { createCase, getCases, updateStatus };

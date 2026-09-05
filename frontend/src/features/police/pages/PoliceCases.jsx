@@ -27,7 +27,7 @@ const getColorForInitials = (initials) => {
 
 const PoliceCases = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'List';
+  const activeTab = searchParams.get('tab') || 'Cases';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
 
@@ -60,9 +60,9 @@ const PoliceCases = () => {
     if (!rawCases) return [];
     return rawCases.map(req => {
       
-      const assigneeName = 'Unassigned'; // Assuming cases aren't directly assigned in current schema
-      const assigneeInitials = getInitials(assigneeName);
-      const assigneeColor = getColorForInitials(assigneeInitials);
+      const assigneeName = 'Police';
+      const assigneeInitials = 'PO';
+      const assigneeColor = 'bg-[#0052cc]';
 
       const reporterName = req.User ? req.User.name : 'System';
       const reporterInitials = getInitials(reporterName);
@@ -72,10 +72,11 @@ const PoliceCases = () => {
       if (req.type === 'ROBBERY' || req.type === 'THEFT') severity = 'Critical';
       else if (req.type === 'UNAUTHORIZED_MOVEMENT' || req.type === 'GEOFENCE_VIOLATION' || req.type === 'VEHICLE_CLAIM') severity = 'High';
 
-      const filterStatus = req.status === 'CLOSED' ? 'Closed' : 'Open';
+      const rawStatus = req.status || 'Open';
       const filterType = req.type || 'VEHICLE_CLAIM';
 
-      const plateStr = req.vehicle_plate ? ` [Plate: ${req.vehicle_plate}]` : '';
+      const vehiclePlate = req.vehicle_plate || '';
+      const plateStr = vehiclePlate ? ` [Plate: ${vehiclePlate}]` : '';
       const displayTitle = req.details ? `${req.details}${plateStr}` : `Case reported: ${filterType}${plateStr}`;
 
       return {
@@ -83,12 +84,13 @@ const PoliceCases = () => {
         dbId: req.id,
         type: filterType,
         filterType,
-        filterStatus,
+        filterStatus: rawStatus,
         title: displayTitle,
+        vehiclePlate,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         severity,
-        status: filterStatus
+        status: rawStatus
       };
     });
   }, [rawCases]);
@@ -121,10 +123,18 @@ const PoliceCases = () => {
     return result;
   }, [cases, searchQuery, selectedFilters]);
 
+  // Filter cases based on active tab ('Cases' vs 'History')
+  const displayedCases = useMemo(() => {
+    if (activeTab === 'History') {
+      return filteredCases.filter(c => c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED');
+    }
+    return filteredCases.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
+  }, [filteredCases, activeTab]);
+
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
-    filteredCases.forEach(m => {
+    displayedCases.forEach(m => {
        if (m.reporter.name !== 'System' && !userMap.has(m.reporter.name)) {
           userMap.set(m.reporter.name, m.reporter);
        }
@@ -133,14 +143,12 @@ const PoliceCases = () => {
        }
     });
     return Array.from(userMap.values());
-  }, [filteredCases]);
+  }, [displayedCases]);
 
   const displayUsers = uniqueUsers.slice(0, 3);
   const extraUsersCount = Math.max(0, uniqueUsers.length - 3);
 
-  const tabs = [
-    'List', 'Map View', 'History'
-  ];
+  const tabs = ['Cases', 'History'];
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -153,10 +161,27 @@ const PoliceCases = () => {
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             Police Cases 
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
-              {filteredCases.length}
+              {displayedCases.length}
             </span>
           </h1>
         </div>
+      </div>
+
+      {/* Tabs / Toolbar (Matches Movements tab design) */}
+      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
+        {tabs.map(tab => (
+          <button 
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`whitespace-nowrap pb-2 -mb-2 ${
+              activeTab === tab 
+                ? 'text-green-600 font-medium border-b-2 border-green-600' 
+                : 'hover:text-gray-900'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       {/* Filters Toolbar */}
@@ -198,7 +223,7 @@ const PoliceCases = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-        <PoliceCasesList cases={filteredCases} isLoading={isLoading} isError={isError} />
+        <PoliceCasesList cases={displayedCases} isLoading={isLoading} isError={isError} />
       </div>
     </div>
   );
