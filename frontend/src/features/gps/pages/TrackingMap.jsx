@@ -8,7 +8,7 @@ import {
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
-  ArrowLeft, FileText, CheckCircle, Play
+  ArrowLeft, FileText, CheckCircle
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -983,145 +983,12 @@ const TrackingMap = () => {
 
             </div>
           )
-        ) : null}
+        ) : (
+          <div className="p-4 pt-16 text-center text-gray-500">
+            {/* Search box overlay when sidebar is open but no device selected (Google Maps style) */}
+          </div>
+        )}
       </div>
-
-      {/* ----------------- BOTTOM FLOATING TELEMETRY SPEC CARD (PICTURE 2 & 3 DOWN CLONE) ----------------- */}
-      {selectedDevice && (
-        <div className="absolute bottom-[16px] left-1/2 -translate-x-1/2 z-[450] w-[calc(100%-32px)] max-w-[1080px] bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-visible font-sans animate-in fade-in slide-in-from-bottom-4 duration-200">
-
-          {/* Floating Controls above top right of card (Picture 2 & 3 top right ▷ ✕ buttons) */}
-          <div className="absolute -top-9 right-1 flex items-center gap-1.5 z-50">
-            <button
-              onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
-              className="w-8 h-8 bg-white hover:bg-gray-100 text-gray-700 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition"
-              title="Route Replay"
-            >
-              <Play className="w-4 h-4 fill-current text-gray-700 ml-0.5" />
-            </button>
-            <button
-              onClick={() => setSelectedDevice(null)}
-              className="w-8 h-8 bg-white hover:bg-gray-100 text-gray-700 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition"
-              title="Close Details"
-            >
-              <X className="w-4 h-4 text-gray-700" />
-            </button>
-          </div>
-
-          <div className="p-3.5 flex flex-col lg:flex-row gap-4 items-stretch">
-
-            {/* Left 2-Column Spec Table Grid (Matches Picture 2 & 3 down spec grid) */}
-            <div className="flex-1 grid grid-cols-2 text-[12px] border border-gray-200/80 rounded-xl overflow-hidden shadow-sm border-collapse">
-              {/* Row 1 */}
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Vehicle Number</div>
-              <div className="p-2.5 bg-white font-bold text-gray-900 border-b border-gray-200 flex items-center justify-between">
-                <span>{selectedDevice.deviceName}</span>
-              </div>
-
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Device Status</div>
-              <div className="p-2.5 bg-white font-bold border-b border-gray-200 flex items-center gap-2">
-                <span className={`w-3.5 h-3.5 rounded-full inline-block ${selectedDevice.status === 'online' ? 'bg-emerald-500 animate-pulse shadow-sm' : 'bg-[#dc2626]'}`}></span>
-                <span className={selectedDevice.status === 'online' ? 'text-emerald-700 font-semibold' : 'text-gray-700 font-semibold'}>
-                  {selectedDevice.status === 'online' ? 'Online' : 'Offline'}
-                </span>
-              </div>
-
-              {/* Row 2 */}
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Today Distance</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 border-b border-gray-200 text-right">
-                {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '0.2 km'}
-              </div>
-
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Ignition Status</div>
-              <div className="p-2.5 bg-white border-b border-gray-200 flex items-center gap-2">
-                <span className={`w-3.5 h-3.5 rounded-full inline-block ${selectedDevice.attributes?.ignition || selectedDevice.speed > 0 ? 'bg-emerald-500 shadow-sm' : 'bg-[#dc2626]'}`}></span>
-              </div>
-
-              {/* Row 3 */}
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Current Speed</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 border-b border-gray-200 text-right">
-                {selectedDevice.speed > 0 ? `${(selectedDevice.speed * 1.852).toFixed(1)} km/h` : 'N/A'}
-              </div>
-
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Current Driver</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 border-b border-gray-200 text-right">
-                {selectedDevice.route?.driverName || 'N/A'}
-              </div>
-
-              {/* Row 4 */}
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Address</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 border-b border-gray-200 truncate" title={selectedDevice.address}>
-                {selectedDevice.address || <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />}
-              </div>
-
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-b border-r border-gray-200">Top Speed</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 border-b border-gray-200 text-right">
-                {selectedDevice.attributes?.topSpeed ? `${(selectedDevice.attributes.topSpeed * 1.852).toFixed(1)} km/h` : '15.1 kn'}
-              </div>
-
-              {/* Row 5 */}
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-r border-gray-200">Odometer</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 text-right">
-                {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : '131.5 km'}
-              </div>
-
-              <div className="p-2.5 bg-gray-100/90 font-bold text-gray-900 border-r border-gray-200">Fuel Level</div>
-              <div className="p-2.5 bg-white font-medium text-gray-600 text-right">N/A</div>
-            </div>
-
-            {/* Right Panel (Picture 2 & 3 Services Side) */}
-            <div className="w-full lg:w-72 p-4 bg-gray-50/60 rounded-xl border border-gray-200/80 flex flex-col justify-between text-xs">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-800">Services</h3>
-                  <button
-                    onClick={() => {
-                      setClaimCaseType('VEHICLE_CLAIM');
-                      setClaimLocation(selectedDevice.address || `${selectedDevice.latitude.toFixed(4)}, ${selectedDevice.longitude.toFixed(4)}`);
-                      setClaimDetails(`Police claim reported for vehicle ${selectedDevice.deviceName}`);
-                      setIsClaimModalOpen(true);
-                    }}
-                    className="text-[11px] font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 px-2.5 py-1 rounded-lg transition shadow-sm"
-                  >
-                    🚨 Claim Vehicle
-                  </button>
-                </div>
-
-                {claimedVehiclesMap[selectedDevice.deviceName?.toUpperCase().trim()] ? (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl space-y-1 text-red-900">
-                    <div className="flex items-center justify-between font-bold">
-                      <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-red-600" /> POLICE CLAIM</span>
-                      <span className="text-[10px] px-1.5 py-0.5 bg-red-200 rounded font-extrabold">
-                        {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].type || 'CLAIM'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-red-700 leading-snug">
-                      {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].details || 'Police claim log filed for this vehicle'}
-                    </p>
-                  </div>
-                ) : selectedDevice.route ? (
-                  <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl space-y-1 text-blue-900">
-                    <div className="font-bold text-blue-900 text-xs">Active Livestock Movement</div>
-                    <div className="text-[11px] text-blue-800 flex justify-between">
-                      <span>Permit:</span>
-                      <span className="font-semibold">{selectedDevice.route.permitNumber || 'MVT-PERMIT'}</span>
-                    </div>
-                    <div className="text-[11px] text-blue-800 flex justify-between">
-                      <span>Route:</span>
-                      <span className="font-semibold">{selectedDevice.route.originDistrict} → {selectedDevice.route.destDistrict}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-gray-400 text-xs">
-                    No services set for this vehicle.
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* ----------------- CLAIM VEHICLE / REPORT POLICE CASE MODAL (MATCHES ADVANCED SEARCH DESIGN) ----------------- */}
       {isClaimModalOpen && selectedDevice && (
