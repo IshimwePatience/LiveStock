@@ -615,33 +615,49 @@ const TrackingMap = () => {
         </div>
       </div>
 
-      {/* ----------------- SEARCH RESULTS SIDEBAR ----------------- */}
+      {/* ----------------- SEARCH RESULTS SIDEBAR (HOVERS OVER SEARCH) ----------------- */}
       <div
-        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
+        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[500] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
       >
-        <div className="h-[100px] flex-shrink-0 border-b border-gray-200" /> {/* Spacer for search bar */}
+        {/* Sticky Fixed Header for Search Results with Fixed Close Button */}
+        <div className="sticky top-0 z-20 bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between shadow-sm flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 pr-2">
+            <Search className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+            <span className="font-semibold text-sm text-gray-900 truncate">Results for "{activeSearchQuery}"</span>
+          </div>
+          <button
+            onClick={() => {
+              setIsSearchSidebarOpen(false);
+              setActiveSearchQuery('');
+              setSearchTerm('');
+              setSelectedSearchResult(null);
+            }}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-all shrink-0 shadow-sm"
+            title="Close results"
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
+        </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
           <div className="p-4">
-            <h2 className="text-[20px] font-normal text-gray-900 mb-4">Results for "{activeSearchQuery}"</h2>
-
             {isSearching ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
                 <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-                Searching...
+                Searching places...
               </div>
             ) : searchResults.length === 0 ? (
-              <div className="text-gray-500 text-sm">No results found in this area. Try zooming out or searching another term.</div>
+              <div className="text-gray-500 text-sm py-4">No results found in this area. Try searching another location.</div>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {searchResults.map((res, idx) => (
                   <div
                     key={idx}
                     onClick={() => setSelectedSearchResult(res)}
-                    className="flex flex-col border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                    className="flex flex-col border-b border-gray-100 pb-3.5 cursor-pointer hover:bg-blue-50/60 p-3 rounded-xl transition-all border border-transparent hover:border-blue-200"
                   >
-                    <span className="font-medium text-[16px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
-                    <span className="text-[13px] text-gray-600 line-clamp-2">{res.display_name}</span>
+                    <span className="font-bold text-[15px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
+                    <span className="text-[12px] text-gray-600 line-clamp-2">{res.display_name}</span>
                   </div>
                 ))}
               </div>
@@ -650,15 +666,15 @@ const TrackingMap = () => {
         </div>
       </div>
 
-      {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS / POLICE CLAIMS PANEL) ----------------- */}
+      {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS / POLICE CLAIMS PANEL - HOVERS OVER SEARCH) ----------------- */}
       <div
-        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
+        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[500] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
       >
         {selectedDevice ? (
           sidebarView === 'claims_list' ? (
             /* POLICE CLAIMS LIST VIEW IN SIDEBAR */
             <div className="flex flex-col h-full bg-white pb-10">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-20 shadow-sm">
                 <button
                   onClick={() => setSidebarView('info')}
                   className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -666,8 +682,15 @@ const TrackingMap = () => {
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back to Vehicle Info</span>
                 </button>
-                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
-                  <X className="w-5 h-5" />
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setSelectedDevice(null);
+                  }}
+                  className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 flex items-center justify-center transition-all shadow-sm"
+                  title="Close sidebar"
+                >
+                  <X className="w-4.5 h-4.5" />
                 </button>
               </div>
 
@@ -711,7 +734,7 @@ const TrackingMap = () => {
           ) : sidebarView === 'claim_detail' && selectedClaim ? (
             /* POLICE CLAIM DETAIL VIEW IN SIDEBAR */
             <div className="flex flex-col h-full bg-white pb-10">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-20 shadow-sm">
                 <button
                   onClick={() => setSidebarView('claims_list')}
                   className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -719,8 +742,15 @@ const TrackingMap = () => {
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back to Claims List</span>
                 </button>
-                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
-                  <X className="w-5 h-5" />
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setSelectedDevice(null);
+                  }}
+                  className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 flex items-center justify-center transition-all shadow-sm"
+                  title="Close sidebar"
+                >
+                  <X className="w-4.5 h-4.5" />
                 </button>
               </div>
 
@@ -788,14 +818,19 @@ const TrackingMap = () => {
             </div>
           ) : (
             /* DEFAULT VEHICLE OVERVIEW INFO VIEW */
-            <div className="flex flex-col pb-32">
+            <div className="flex flex-col pb-32 relative">
 
-              {/* Search Header when open (Google Maps style) */}
-              <div className="px-4 py-3 flex items-center gap-3">
-                <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              {/* FIXED CLOSE BUTTON AT TOP RIGHT (ALWAYS VISIBLE DURING SCROLL) */}
+              <button
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  setSelectedDevice(null);
+                }}
+                className="absolute top-3 right-3 z-30 w-9 h-9 bg-white/95 hover:bg-white text-gray-700 rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all transform hover:scale-105"
+                title="Close Sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
               {/* Header Image */}
               <div className="relative h-56 w-full bg-gray-200">
