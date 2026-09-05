@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ListFilter, Search, Plus, ChevronDown } from 'lucide-react';
 
 const FilterDropdown = ({ 
@@ -27,6 +27,12 @@ const FilterDropdown = ({
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (categories && categories.length > 0 && !categories.includes(activeCategory)) {
+      setActiveCategory(categories[0]);
+    }
+  }, [categories]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -75,7 +81,7 @@ const FilterDropdown = ({
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${
-          isOpen || hasActiveFilters ? 'bg-green-50 text-green-700 border-green-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+          isOpen || hasActiveFilters ? 'bg-blue-50 text-[#0052cc] border-[#0052cc]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
         }`}
       >
         <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#0052cc] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
@@ -108,7 +114,7 @@ const FilterDropdown = ({
                     }}
                     className={`w-full text-left flex items-center justify-between px-4 py-2 text-sm ${
                       activeCategory === cat 
-                        ? 'bg-green-50 text-green-700 border-l-4 border-green-600' 
+                        ? 'bg-blue-50 text-[#0052cc] font-semibold border-l-4 border-[#0052cc]' 
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                     }`}
                   >
@@ -124,7 +130,7 @@ const FilterDropdown = ({
             {/* Right Column: Options */}
             <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative">
               <div className="pr-3 pb-3">
-                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition overflow-hidden">
+                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#0052cc] focus-within:ring-1 focus-within:ring-[#0052cc] transition overflow-hidden">
                   <div className="pl-2.5 text-gray-500">
                     <Search className="w-4 h-4" strokeWidth={2} />
                   </div>
@@ -147,7 +153,7 @@ const FilterDropdown = ({
                         type="checkbox" 
                         checked={isChecked}
                         onChange={() => handleCheckboxChange(activeCategory, opt.id)}
-                        className="mt-1 border-gray-300 rounded text-green-600 focus:ring-green-600 w-4 h-4 cursor-pointer" 
+                        className="mt-1 border-gray-300 rounded text-[#0052cc] focus:ring-[#0052cc] w-4 h-4 cursor-pointer" 
                       />
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-tight">{opt.title}</span>

@@ -205,7 +205,7 @@ const VetRecords = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
-              ? 'text-green-600 font-medium border-b-2 border-green-600'
+              ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
               : 'hover:text-gray-900'
               }`}
           >
@@ -223,7 +223,7 @@ const VetRecords = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search records"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
           />
         </div>
 

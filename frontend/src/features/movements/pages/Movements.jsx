@@ -163,34 +163,74 @@ const Movements = () => {
     });
   }, [rawMovements]);
 
-  // Apply Search Filter & Checkbox Filters
+  const movementCategories = ['District', 'Sector', 'Type', 'Status', 'Animal'];
+  const movementOptionsMap = {
+    'District': [
+      { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
+      { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
+      { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
+      { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
+      { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
+      { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
+      { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
+      { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
+    ],
+    'Sector': [
+      { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
+      { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
+      { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
+      { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
+      { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
+      { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
+    ],
+    'Type': [
+      { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Requires RAB approval' },
+      { id: 'SECTOR_TO_SECTOR', title: 'Sector to Sector', subtitle: 'Requires DARO approval' }
+    ],
+    'Status': [
+      { id: 'PENDING', title: 'Pending', subtitle: 'Awaiting approval' },
+      { id: 'APPROVED', title: 'Approved', subtitle: 'Permit issued & active' },
+      { id: 'REJECTED', title: 'Rejected', subtitle: 'Request rejected' },
+      { id: 'COMPLETED', title: 'Completed', subtitle: 'Arrived at destination' }
+    ],
+    'Animal': [
+      { id: 'cattle', title: 'Cattle', subtitle: 'Cows, bulls, calves' },
+      { id: 'goat', title: 'Goats', subtitle: '' },
+      { id: 'sheep', title: 'Sheep', subtitle: '' },
+      { id: 'pig', title: 'Pigs', subtitle: '' },
+      { id: 'poultry', title: 'Poultry', subtitle: 'Chickens, ducks, turkeys' }
+    ]
+  };
+
+  // Filter movements by search and checkboxes
   const filteredMovements = useMemo(() => {
+    if (!movements) return [];
     let result = movements;
 
-    // 1. Text Search
+    // Text Search Filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase();
       result = result.filter(m => 
-         m.title.toLowerCase().includes(query) || 
-         m.id.toLowerCase().includes(query) || 
-         m.reporter.name.toLowerCase().includes(query) || 
-         m.assignee.name.toLowerCase().includes(query)
+        m.requestByTitle.toLowerCase().includes(q) ||
+        m.title.toLowerCase().includes(q) ||
+        m.farmerName.toLowerCase().includes(q) ||
+        m.driverName.toLowerCase().includes(q) ||
+        m.plateNumber.toLowerCase().includes(q) ||
+        m.route.toLowerCase().includes(q)
       );
     }
 
-    // 2. Checkbox Filters
+    // Checkbox Category Filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
-       result = result.filter(m => {
-          // Check Type
-          if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
-          // Check Status
-          if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.filterStatus)) return false;
-          // Check Animal
-          if (selectedFilters['Animal']?.length > 0 && !selectedFilters['Animal'].includes(m.filterAnimal)) return false;
-          
-          return true;
-       });
+      result = result.filter(m => {
+        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.route.includes(d))) return false;
+        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.route.includes(s))) return false;
+        if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.rawType)) return false;
+        if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.rawStatus)) return false;
+        if (selectedFilters['Animal']?.length > 0 && !selectedFilters['Animal'].includes(m.filterAnimal)) return false;
+        return true;
+      });
     }
 
     return result;
@@ -289,7 +329,7 @@ const Movements = () => {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${
               activeTab === tab 
-                ? 'text-green-600 font-medium border-b-2 border-green-600' 
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
                 : 'hover:text-gray-900'
             }`}
           >
@@ -307,7 +347,7 @@ const Movements = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search requests" 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
+              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
             />
          </div>
          
@@ -332,7 +372,12 @@ const Movements = () => {
          </div>
 
          <div className="ml-4 relative z-50">
-           <FilterDropdown selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
+           <FilterDropdown 
+             selectedFilters={selectedFilters} 
+             onFilterChange={handleFilterChange}
+             categories={movementCategories}
+             optionsMap={movementOptionsMap}
+           />
          </div>
          <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group

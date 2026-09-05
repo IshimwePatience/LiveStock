@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Download, Printer, FileText } from 'lucide-react';
+import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
 import PoliceCasesList from '../components/PoliceCasesList';
 
@@ -30,6 +31,7 @@ const PoliceCases = () => {
   const activeTab = searchParams.get('tab') || 'Cases';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
+  const [timeRange, setTimeRange] = useState('ALL');
 
   const setActiveTab = (tab) => {
     setSearchParams({ tab });
@@ -59,7 +61,6 @@ const PoliceCases = () => {
   const cases = useMemo(() => {
     if (!rawCases) return [];
     return rawCases.map(req => {
-      
       const assigneeName = 'Police';
       const assigneeInitials = 'PO';
       const assigneeColor = 'bg-[#0052cc]';
@@ -78,6 +79,7 @@ const PoliceCases = () => {
       const vehiclePlate = req.vehicle_plate || '';
       const plateStr = vehiclePlate ? ` [Plate: ${vehiclePlate}]` : '';
       const displayTitle = req.details ? `${req.details}${plateStr}` : `Case reported: ${filterType}${plateStr}`;
+      const location = req.location || 'Gasabo District';
 
       return {
         id: `CAS-${req.id.substring(0, 8).toUpperCase()}`,
@@ -87,6 +89,8 @@ const PoliceCases = () => {
         filterStatus: rawStatus,
         title: displayTitle,
         vehiclePlate,
+        location,
+        createdAt: req.createdAt,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         severity,
@@ -95,25 +99,91 @@ const PoliceCases = () => {
     });
   }, [rawCases]);
 
-  // Apply Search Filter & Checkbox Filters
+  // Extract all unique vehicle plates for dynamic filter dropdown
+  const uniquePlates = useMemo(() => {
+    const set = new Set();
+    cases.forEach(c => {
+      if (c.vehiclePlate) set.add(c.vehiclePlate.toUpperCase().trim());
+    });
+    return Array.from(set).map(plate => ({ id: plate, title: plate, subtitle: `Case vehicle plate` }));
+  }, [cases]);
+
+  const policeCategories = ['District', 'Sector', 'Vehicle Plate', 'Type', 'Status'];
+  const policeOptionsMap = useMemo(() => ({
+    'District': [
+      { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
+      { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
+      { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
+      { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
+      { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
+      { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
+      { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
+      { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
+    ],
+    'Sector': [
+      { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
+      { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
+      { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
+      { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
+      { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
+      { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
+    ],
+    'Vehicle Plate': uniquePlates,
+    'Type': [
+      { id: 'VEHICLE_CLAIM', title: 'Vehicle Claim', subtitle: 'Claimed by owner or officer' },
+      { id: 'THEFT', title: 'Livestock Theft', subtitle: 'Stolen livestock report' },
+      { id: 'UNAUTHORIZED_MOVEMENT', title: 'Unauthorized Movement', subtitle: 'Moving without permit' },
+      { id: 'GEOFENCE_VIOLATION', title: 'Geofence Violation', subtitle: 'Out-of-bounds movement' },
+      { id: 'ILLEGAL_TRANSPORT', title: 'Illegal Transport', subtitle: 'Unregistered transport' }
+    ],
+    'Status': [
+      { id: 'Open', title: 'Open', subtitle: 'Active investigation' },
+      { id: 'Following Up', title: 'Following Up', subtitle: 'Officer assigned / trailing' },
+      { id: 'Case Solved', title: 'Case Solved', subtitle: 'Resolved & closed' }
+    ]
+  }), [uniquePlates]);
+
+  // Apply Search Filter & Checkbox Filters & Time Range Filter
   const filteredCases = useMemo(() => {
     let result = cases;
 
-    // 1. Text Search
+    // Time Range Filter
+    if (timeRange !== 'ALL') {
+      const now = new Date();
+      result = result.filter(c => {
+        const date = new Date(c.createdAt);
+        if (timeRange === 'TODAY') {
+          return date.toDateString() === now.toDateString();
+        } else if (timeRange === 'WEEK') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return date >= weekAgo;
+        } else if (timeRange === 'MONTH') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          return date >= monthAgo;
+        }
+        return true;
+      });
+    }
+
+    // Text Search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(m => 
          m.title.toLowerCase().includes(query) || 
          m.id.toLowerCase().includes(query) || 
          m.reporter.name.toLowerCase().includes(query) || 
-         m.assignee.name.toLowerCase().includes(query)
+         m.assignee.name.toLowerCase().includes(query) ||
+         m.vehiclePlate.toLowerCase().includes(query)
       );
     }
 
-    // 2. Checkbox Filters
+    // Checkbox Filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
        result = result.filter(m => {
+          if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.location.includes(d))) return false;
+          if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.location.includes(s))) return false;
+          if (selectedFilters['Vehicle Plate']?.length > 0 && !selectedFilters['Vehicle Plate'].includes(m.vehiclePlate.toUpperCase())) return false;
           if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
           if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.filterStatus)) return false;
           return true;
@@ -121,7 +191,7 @@ const PoliceCases = () => {
     }
 
     return result;
-  }, [cases, searchQuery, selectedFilters]);
+  }, [cases, searchQuery, selectedFilters, timeRange]);
 
   // Filter cases based on active tab ('Cases' vs 'History')
   const displayedCases = useMemo(() => {
@@ -130,6 +200,102 @@ const PoliceCases = () => {
     }
     return filteredCases.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
   }, [filteredCases, activeTab]);
+
+  // CSV Export Handler
+  const exportToCSV = () => {
+    if (!displayedCases || displayedCases.length === 0) {
+      toast.error('No cases available to export');
+      return;
+    }
+    const headers = ['Case ID', 'Vehicle Plate', 'Title / Description', 'Type', 'Reporter', 'Status', 'Date'];
+    const rows = displayedCases.map(c => [
+      c.id,
+      c.vehiclePlate || 'N/A',
+      `"${(c.title || '').replace(/"/g, '""')}"`,
+      c.type,
+      `"${c.reporter?.name || ''}"`,
+      c.status,
+      new Date(c.createdAt).toLocaleDateString()
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Police_Cases_${activeTab}_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // PDF Print Report Handler
+  const printPDFReport = () => {
+    if (!displayedCases || displayedCases.length === 0) {
+      toast.error('No cases available to print report');
+      return;
+    }
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Police Cases Report - ${activeTab}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
+            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
+            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge-open { background: #fee2e2; color: #991b1b; }
+            .badge-solved { background: #dcfce7; color: #166534; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>RWANDA NATIONAL POLICE — OFFICIAL CASE REPORT</h1>
+              <p>Livestock &amp; Transit Security Division • ${activeTab.toUpperCase()} REGISTRY</p>
+            </div>
+          </div>
+          <div class="meta">
+            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
+            <strong>Active Category Tab:</strong> ${activeTab}<br/>
+            <strong>Total Cases Included:</strong> ${displayedCases.length}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Vehicle Plate</th>
+                <th>Case Summary</th>
+                <th>Type</th>
+                <th>Reporter</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${displayedCases.map(c => `
+                <tr>
+                  <td><strong>${c.id}</strong></td>
+                  <td>${c.vehiclePlate || 'N/A'}</td>
+                  <td>${c.title}</td>
+                  <td>${c.type}</td>
+                  <td>${c.reporter?.name || 'System'}</td>
+                  <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : 'badge-open'}">${c.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars
   const uniqueUsers = useMemo(() => {
@@ -165,6 +331,36 @@ const PoliceCases = () => {
             </span>
           </h1>
         </div>
+
+        {/* Report Export Buttons */}
+        <div className="flex items-center gap-3">
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 bg-white focus:outline-none focus:border-[#0052cc]"
+          >
+            <option value="ALL">All Time</option>
+            <option value="TODAY">Today</option>
+            <option value="WEEK">This Week</option>
+            <option value="MONTH">This Month</option>
+          </select>
+          
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors"
+          >
+            <Download className="w-3.5 h-3.5 text-gray-600" />
+            <span>Export CSV</span>
+          </button>
+          
+          <button
+            onClick={printPDFReport}
+            className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors shadow-sm"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print PDF Report</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs / Toolbar (Matches Movements tab design) */}
@@ -175,7 +371,7 @@ const PoliceCases = () => {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${
               activeTab === tab 
-                ? 'text-green-600 font-medium border-b-2 border-green-600' 
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
                 : 'hover:text-gray-900'
             }`}
           >
@@ -215,7 +411,12 @@ const PoliceCases = () => {
          </div>
 
          <div className="ml-4 relative z-50">
-           <FilterDropdown selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
+           <FilterDropdown 
+             selectedFilters={selectedFilters} 
+             onFilterChange={handleFilterChange}
+             categories={policeCategories}
+             optionsMap={policeOptionsMap}
+           />
          </div>
          
          <div className="flex-1"></div>

@@ -248,6 +248,8 @@ const UserManagement = () => {
     if (hasFilters) {
       result = result.filter(u => {
         if (selectedFilters['Role']?.length > 0 && !selectedFilters['Role'].includes(u.role)) return false;
+        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => (u.district_id || '').toLowerCase().includes(d.toLowerCase()))) return false;
+        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => (u.sector_id || '').toLowerCase().includes(s.toLowerCase()))) return false;
         if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(u.status)) return false;
         return true;
       });
@@ -349,7 +351,7 @@ const UserManagement = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search users"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
           />
         </div>
 
@@ -377,7 +379,7 @@ const UserManagement = () => {
           <FilterDropdown
             selectedFilters={selectedFilters}
             onFilterChange={handleFilterChange}
-            categories={['Role', 'Status']}
+            categories={['Role', 'District', 'Sector', 'Status']}
             optionsMap={{
               'Role': [
                 { id: 'RAB', title: 'RAB', subtitle: 'National Admin' },
@@ -385,9 +387,27 @@ const UserManagement = () => {
                 { id: 'SARO', title: 'SARO', subtitle: 'Sector Vet' },
                 { id: 'POLICE', title: 'Police', subtitle: 'Law Enforcement' }
               ],
+              'District': [
+                { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
+                { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
+                { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
+                { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
+                { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
+                { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
+                { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
+                { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
+              ],
+              'Sector': [
+                { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
+                { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
+                { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
+                { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
+                { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
+                { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
+              ],
               'Status': [
-                { id: 'Active', title: 'Active', subtitle: '' },
-                { id: 'Inactive', title: 'Inactive', subtitle: '' }
+                { id: 'Active', title: 'Active', subtitle: 'Enabled account' },
+                { id: 'Inactive', title: 'Inactive', subtitle: 'Disabled account' }
               ]
             }}
           />

@@ -95,6 +95,51 @@ const Overview = () => {
   const displayUsers = uniqueUsers.slice(0, 5);
   const extraUsersCount = Math.max(0, uniqueUsers.length - 5);
 
+  const [selectedFilters, setSelectedFilters] = useState({});
+
+  const handleFilterChange = (categoryId, filters) => {
+    if (categoryId === 'all') {
+      setSelectedFilters({});
+    } else {
+      setSelectedFilters(prev => ({
+        ...prev,
+        [categoryId]: filters
+      }));
+    }
+  };
+
+  const overviewCategories = ['District', 'Sector', 'Status', 'Type'];
+  const overviewOptionsMap = {
+    'District': [
+      { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
+      { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
+      { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
+      { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
+      { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
+      { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
+      { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
+      { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
+    ],
+    'Sector': [
+      { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
+      { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
+      { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
+      { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
+      { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
+      { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
+    ],
+    'Status': [
+      { id: 'Completed', title: 'Completed', subtitle: 'Permits fulfilled & arrived' },
+      { id: 'In Transit', title: 'In Transit', subtitle: 'Vehicles actively moving' },
+      { id: 'Pending', title: 'Pending Approval', subtitle: 'Awaiting DARO/RAB approval' },
+      { id: 'Rejected', title: 'Rejected', subtitle: 'Permits rejected' }
+    ],
+    'Type': [
+      { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Inter-district movements' },
+      { id: 'SECTOR_TO_SECTOR', title: 'Sector to Sector', subtitle: 'Intra-district movements' }
+    ]
+  };
+
   return (
     <div className="flex flex-col h-full bg-white text-gray-800 p-6 overflow-x-hidden">
       
@@ -150,7 +195,12 @@ const Overview = () => {
            </div>
          )}
          <div className="ml-2">
-           <FilterDropdown />
+           <FilterDropdown 
+             selectedFilters={selectedFilters}
+             onFilterChange={handleFilterChange}
+             categories={overviewCategories}
+             optionsMap={overviewOptionsMap}
+           />
          </div>
       </div>
 
