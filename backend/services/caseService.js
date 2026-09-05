@@ -1,5 +1,20 @@
-const { Case, User } = require('../models');
+const { Case, User, sequelize } = require('../models');
 const notificationService = require('./notificationService');
+
+let columnsEnsured = false;
+async function ensureCaseColumns() {
+  if (columnsEnsured) return;
+  try {
+    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS vehicle_plate TEXT;');
+    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS location TEXT;');
+    columnsEnsured = true;
+  } catch (err) {
+    console.error('Failed to alter Cases table columns:', err.message);
+  }
+}
+
+// Run at module load
+ensureCaseColumns();
 
 class CaseService {
   _buildScopeFilter(user) {
@@ -8,8 +23,8 @@ class CaseService {
   }
 
   async createCase(user, data) {
+    await ensureCaseColumns();
     const { type, trip_id, vehicle_plate, location, details } = data;
-    try { await Case.sync(); } catch (e) {}
 
     const newCase = await Case.create({
       type: type || 'VEHICLE_CLAIM',
@@ -35,7 +50,7 @@ class CaseService {
   }
 
   async getCases(user) {
-    try { await Case.sync(); } catch (e) {}
+    await ensureCaseColumns();
     const filter = this._buildScopeFilter(user);
 
     return await Case.findAll({

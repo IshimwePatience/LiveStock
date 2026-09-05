@@ -144,48 +144,28 @@ const PoliceCases = () => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Top Breadcrumb/Title Area */}
-      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
+      {/* Top Title Area */}
+      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
         <div>
-          <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-            Overview / Livestock Tracking app
-          </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             Police Cases 
-            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
+            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold border border-blue-200">
               {filteredCases.length}
             </span>
           </h1>
         </div>
       </div>
 
-      {/* Tabs / Toolbar */}
-      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
-        {tabs.map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${
-              activeTab === tab 
-                ? 'text-green-600 font-medium border-b-2 border-green-600' 
-                : 'hover:text-gray-900'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       {/* Filters Toolbar */}
-      <div className="px-6 py-3 flex items-center gap-3">
+      <div className="px-6 py-3 flex items-center gap-3 border-b border-gray-100">
          <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search cases" 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-green-500"
+              placeholder="Search cases..." 
+              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-blue-600"
             />
          </div>
          
@@ -204,32 +184,18 @@ const PoliceCases = () => {
                 +{extraUsersCount}
               </div>
             )}
-            {uniqueUsers.length === 0 && (
-              <div className="text-xs text-gray-400 pl-4 font-medium italic">No active users in current filter</div>
-            )}
          </div>
 
          <div className="ml-4 relative z-50">
            <FilterDropdown selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
          </div>
-         <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> Group
-         </button>
          
          <div className="flex-1"></div>
       </div>
 
-      {/* Dynamic Content Area based on Active Tab */}
+      {/* Main Content Area */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-         {activeTab === 'List' && (
-            <PoliceCasesList cases={filteredCases} isLoading={isLoading} isError={isError} />
-         )}
-         {activeTab === 'Map View' && (
-            <div className="p-8 text-center text-gray-500">Map view is not available for cases yet.</div>
-         )}
-         {activeTab === 'History' && (
-            <div className="p-8 text-center text-gray-500">History view is not available for cases yet.</div>
-         )}
+        <PoliceCasesList cases={filteredCases} isLoading={isLoading} isError={isError} />
       </div>
     </div>
   );
