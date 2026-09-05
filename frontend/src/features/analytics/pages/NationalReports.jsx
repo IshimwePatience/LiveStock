@@ -4,9 +4,9 @@ import api from '../../../lib/api';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { 
-  BarChart2, MapPin, Play, Pause, RotateCcw, Truck, 
-  ShieldAlert, CheckCircle2, AlertTriangle, User, Phone, 
+import {
+  BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
+  ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
   Calendar, ArrowRight, Layers, Award, FileText, Search, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -19,96 +19,29 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom marker icons for location types
-const createLocationIcon = (category) => {
-  let bgColor = '#0052cc';
-  let label = '📍';
-  if (category === 'Checkpoints') { bgColor = '#ea4335'; label = '🛃'; }
-  else if (category === 'Quarantine Hubs') { bgColor = '#d97706'; label = '🛡️'; }
-  else if (category === 'Veterinary Posts') { bgColor = '#166534'; label = '🏥'; }
+// Custom vehicle truck marker icon
+const createTruckIcon = () => new L.divIcon({
+  html: `<div style="background-color: #0052cc; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,82,204,0.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>`,
+  className: '',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+});
 
-  return new L.divIcon({
-    html: `<div style="background-color: ${bgColor}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px;">${label}</div>`,
-    className: '',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-};
+// Start pin icon
+const createStartIcon = () => new L.divIcon({
+  html: `<div style="background-color: #166534; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: white; font-weight: bold; font-size: 11px;">A</div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
 
-// Map FlyTo controller
-const MapFlyController = ({ center, zoom }) => {
-  const map = useMap();
-  useEffect(() => {
-    if (center && center[0] && center[1]) {
-      map.flyTo(center, zoom || 13, { duration: 1.5 });
-    }
-  }, [center, zoom, map]);
-  return null;
-};
-
-// Real place locations across Rwanda with high-res photos
-const REAL_LOCATIONS = [
-  {
-    id: 'loc_1',
-    name: 'Nyagatare Main Checkpoint & Control Post',
-    category: 'Checkpoints',
-    address: 'Nyagatare District, Tabagwe Sector, Kuri Kariyeri, Eastern Province, Rwanda',
-    coords: [-1.3000, 30.3200],
-    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&w=600&q=80',
-    status: 'Verified Checkpoint 24/7',
-    details: 'Primary northern livestock transit hub, inspecting cattle movement permits from Tabagwe & Karangazi.'
-  },
-  {
-    id: 'loc_2',
-    name: 'Bugesera Nyamata Livestock Quarantine Station',
-    category: 'Quarantine Hubs',
-    address: 'Bugesera District, Nyamata Sector, NR5 Highway, Eastern Province, Rwanda',
-    coords: [-2.1500, 30.0800],
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
-    status: 'Active Surveillance Zone',
-    details: 'RAB bio-security facility monitoring livestock health, quarantine clearance, and disease prevention.'
-  },
-  {
-    id: 'loc_3',
-    name: 'Gatsibo Regional Veterinary Control Hub',
-    category: 'Veterinary Posts',
-    address: 'Gatsibo District, Kabarore Sector, Kuri Gatsibo, Eastern Province, Rwanda',
-    coords: [-1.4200, 30.3500],
-    image: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=600&q=80',
-    status: 'RAB Operational Post',
-    details: 'Equipped veterinary outpost providing ear-tag validation and official health clearance permits.'
-  },
-  {
-    id: 'loc_4',
-    name: 'Kigali Gasabo Inspection & Abattoir Post',
-    category: 'Checkpoints',
-    address: 'Gasabo District, Kimironko Sector, KG 303 Street, City of Kigali, Rwanda',
-    coords: [-1.9441, 30.0619],
-    image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80',
-    status: 'Heavy Traffic Hub',
-    details: 'Central slaughterhouse and final destination verification for cattle arriving from Eastern Province.'
-  },
-  {
-    id: 'loc_5',
-    name: 'Musanze Regional Livestock Center',
-    category: 'Veterinary Posts',
-    address: 'Musanze District, Muhoza Sector, Kinigi Road, Northern Province, Rwanda',
-    coords: [-1.5000, 29.6300],
-    image: 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?auto=format&fit=crop&w=600&q=80',
-    status: 'Verified Checkpoint 24/7',
-    details: 'Northern agricultural corridor checkpoint tracking dairy and meat stock movement across volcanic region.'
-  },
-  {
-    id: 'loc_6',
-    name: 'Rwamagana Weighbridge & Inspection Post',
-    category: 'Checkpoints',
-    address: 'Rwamagana District, Kigabiro Sector, NR4 Road, Eastern Province, Rwanda',
-    coords: [-1.7500, 30.3000],
-    image: 'https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?auto=format&fit=crop&w=600&q=80',
-    status: 'Verified Checkpoint 24/7',
-    details: 'Main eastern arterial weighbridge logging animal counts and vehicle weight compliance.'
-  }
-];
+// End pin icon
+const createEndIcon = () => new L.divIcon({
+  html: `<div style="background-color: #991b1b; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: white; font-weight: bold; font-size: 11px;">B</div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
 
 // Sample route trajectory waypoints across Rwanda for replay simulation
 const VEHICLE_ROUTES = {
@@ -200,13 +133,6 @@ const VEHICLE_ROUTES = {
 const NationalReports = () => {
   const [activeTab, setActiveTab] = useState('replay');
   const [selectedPlate, setSelectedPlate] = useState('RAI 182I');
-  
-  // Google Maps Style Satellite & Category Filter States
-  const [isSatellite, setIsSatellite] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchFilter, setSearchFilter] = useState('');
-  const [activeLocation, setActiveLocation] = useState(REAL_LOCATIONS[0]);
-  const [flyTarget, setFlyTarget] = useState(REAL_LOCATIONS[0].coords);
 
   // Replay animation states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -215,17 +141,6 @@ const NationalReports = () => {
 
   const currentRoute = VEHICLE_ROUTES[selectedPlate] || VEHICLE_ROUTES['RAI 182I'];
   const coordinates = currentRoute.coordinates;
-
-  // Filtered locations based on selected category & search filter
-  const filteredLocations = useMemo(() => {
-    return REAL_LOCATIONS.filter(loc => {
-      const matchCat = selectedCategory === 'All' || loc.category === selectedCategory;
-      const matchSearch = !searchFilter || 
-        loc.name.toLowerCase().includes(searchFilter.toLowerCase()) || 
-        loc.address.toLowerCase().includes(searchFilter.toLowerCase());
-      return matchCat && matchSearch;
-    });
-  }, [selectedCategory, searchFilter]);
 
   // Animation loop for route replay
   useEffect(() => {
@@ -249,12 +164,6 @@ const NationalReports = () => {
   const handleResetReplay = () => {
     setIsPlaying(false);
     setReplayIndex(0);
-  };
-
-  const handleSelectLocationCard = (loc) => {
-    setActiveLocation(loc);
-    setFlyTarget(loc.coords);
-    toast.success(`Flying map to ${loc.name}`, { icon: '🛰️' });
   };
 
   // Fetch real backend data for charts
@@ -302,7 +211,7 @@ const NationalReports = () => {
 
   return (
     <div className="flex flex-col h-full bg-white text-gray-900 font-sans">
-      
+
       {/* Top Header */}
       <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
         <div>
@@ -318,14 +227,13 @@ const NationalReports = () => {
       {/* Main Tabs (Exact Movements tab bar styling) */}
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
         {tabs.map(tab => (
-          <button 
+          <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${
-              activeTab === tab.id 
-                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
+            className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab.id
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
                 : 'hover:text-gray-900'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -338,7 +246,7 @@ const NationalReports = () => {
         {/* TAB 1: MOVEMENT GPS & ROUTE REPLAY */}
         {activeTab === 'replay' && (
           <div className="flex flex-col gap-6">
-            
+
             {/* Vehicle Selection & Quick Summary Toolbar */}
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -351,11 +259,10 @@ const NationalReports = () => {
                         setSelectedPlate(plate);
                         handleResetReplay();
                       }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition border ${
-                        selectedPlate === plate 
-                          ? 'bg-blue-50 text-[#0052cc] border-[#0052cc] shadow-sm' 
+                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition border ${selectedPlate === plate
+                          ? 'bg-blue-50 text-[#0052cc] border-[#0052cc] shadow-sm'
                           : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       🚗 {plate}
                     </button>
@@ -367,13 +274,12 @@ const NationalReports = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-white transition ${
-                    isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0052cc] hover:bg-[#0047b3]'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-white transition ${isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0052cc] hover:bg-[#0047b3]'
+                    }`}
                 >
                   {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause Replay</> : <><Play className="w-3.5 h-3.5" /> Play Route Replay</>}
                 </button>
-                
+
                 <button
                   onClick={handleResetReplay}
                   className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold transition"
@@ -420,201 +326,57 @@ const NationalReports = () => {
               </div>
             </div>
 
-            {/* Google Maps Style Filter & Category Header */}
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-              {/* Category Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-                {[
-                  { id: 'All', label: '📍 All Locations' },
-                  { id: 'Checkpoints', label: '🛃 Checkpoints' },
-                  { id: 'Quarantine Hubs', label: '🛡️ Quarantine Hubs' },
-                  { id: 'Veterinary Posts', label: '🏥 Vet Outposts' },
-                ].map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border ${
-                      selectedCategory === cat.id
-                        ? 'bg-[#0052cc] text-white border-[#0052cc] shadow-sm'
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
+            {/* Interactive Leaflet Map View */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[450px] relative">
+              <MapContainer
+                center={currentPosition}
+                zoom={10}
+                className="w-full h-full"
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                />
 
-              {/* Search & Satellite Layer Switcher */}
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <div className="relative flex-1 md:w-64">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    placeholder="Search district, sector or place..."
-                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#0052cc]"
-                  />
-                  {searchFilter && (
-                    <button onClick={() => setSearchFilter('')} className="absolute right-2 top-2 text-gray-400 hover:text-gray-600">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
+                {/* Route Trajectory Polyline */}
+                <Polyline
+                  positions={coordinates}
+                  color="#0052cc"
+                  weight={5}
+                  opacity={0.7}
+                  dashArray="8, 8"
+                />
 
-                <button
-                  onClick={() => setIsSatellite(!isSatellite)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
-                    isSatellite
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  {isSatellite ? '🛰️ Satellite View' : '🗺️ Map View'}
-                </button>
-              </div>
-            </div>
+                {/* Traversed Trajectory Polyline */}
+                <Polyline
+                  positions={coordinates.slice(0, replayIndex + 1)}
+                  color="#166534"
+                  weight={6}
+                  opacity={0.9}
+                />
 
-            {/* Split Screen Google Maps Style Layout (Results List + Map View) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[550px]">
-              
-              {/* Left Side Panel: Results List with Real Place Pictures (Google Maps Style) */}
-              <div className="lg:col-span-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col h-full overflow-hidden">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
-                      Results for "{selectedCategory}"
-                    </h3>
-                    <p className="text-[11px] text-gray-500">{filteredLocations.length} locations found in Rwanda</p>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0052cc]">
-                    Google Satellite Active
-                  </span>
-                </div>
+                {/* Start Marker */}
+                <Marker position={coordinates[0]} icon={createStartIcon()}>
+                  <Popup><strong>Origin:</strong> {currentRoute.origin}</Popup>
+                </Marker>
 
-                {/* Cards List */}
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                  {filteredLocations.map(loc => (
-                    <div
-                      key={loc.id}
-                      onClick={() => handleSelectLocationCard(loc)}
-                      className={`p-3 rounded-lg border transition cursor-pointer flex gap-3 ${
-                        activeLocation?.id === loc.id
-                          ? 'border-[#0052cc] bg-blue-50/40 shadow-sm ring-1 ring-[#0052cc]/30'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                    >
-                      {/* Real Place Picture Thumbnail */}
-                      <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                        <img 
-                          src={loc.image} 
-                          alt={loc.name} 
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 rounded font-mono">
-                          {loc.category === 'Checkpoints' ? '🛃' : loc.category === 'Quarantine Hubs' ? '🛡️' : '🏥'}
-                        </span>
-                      </div>
+                {/* End Marker */}
+                <Marker position={coordinates[coordinates.length - 1]} icon={createEndIcon()}>
+                  <Popup><strong>Destination:</strong> {currentRoute.destination}</Popup>
+                </Marker>
 
-                      {/* Info Details */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between text-xs">
-                        <div>
-                          <h4 className="font-bold text-[#0052cc] truncate leading-tight text-xs hover:underline">
-                            {loc.name}
-                          </h4>
-                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 leading-snug">
-                            {loc.address}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700">
-                            {loc.status}
-                          </span>
-                          <span className="text-[10px] font-semibold text-[#0052cc] flex items-center gap-0.5 hover:underline">
-                            Fly Map <ArrowRight className="w-3 h-3" />
-                          </span>
-                        </div>
-                      </div>
+                {/* Current Animated Moving Vehicle Marker */}
+                <Marker position={currentPosition} icon={createTruckIcon()}>
+                  <Popup>
+                    <div className="p-1 space-y-1">
+                      <p className="font-bold text-blue-700">{currentRoute.plate}</p>
+                      <p className="text-xs text-gray-700">Driver: {currentRoute.driverName}</p>
+                      <p className="text-xs text-gray-500">Speed: {currentRoute.avgSpeed}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right Panel: Satellite & Route Replay Map View */}
-              <div className="lg:col-span-8 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full relative">
-                <MapContainer 
-                  center={currentPosition} 
-                  zoom={10} 
-                  className="w-full h-full"
-                  scrollWheelZoom={true}
-                >
-                  <MapFlyController center={flyTarget} zoom={13} />
-
-                  {isSatellite ? (
-                    <TileLayer
-                      url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
-                      attribution="&copy; Google Maps Satellite"
-                    />
-                  ) : (
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    />
-                  )}
-                  
-                  {/* Route Trajectory Polyline */}
-                  <Polyline 
-                    positions={coordinates} 
-                    color="#0052cc" 
-                    weight={5} 
-                    opacity={0.7} 
-                    dashArray="8, 8"
-                  />
-
-                  {/* Traversed Trajectory Polyline */}
-                  <Polyline 
-                    positions={coordinates.slice(0, replayIndex + 1)} 
-                    color="#166534" 
-                    weight={6} 
-                    opacity={0.9} 
-                  />
-
-                  {/* Location POI Markers with Real Place Picture Popups */}
-                  {filteredLocations.map(loc => (
-                    <Marker key={loc.id} position={loc.coords} icon={createLocationIcon(loc.category)}>
-                      <Popup maxWidth={280}>
-                        <div className="p-1 font-sans space-y-2">
-                          <img 
-                            src={loc.image} 
-                            alt={loc.name} 
-                            className="w-full h-28 object-cover rounded-md shadow-sm"
-                          />
-                          <h4 className="font-bold text-gray-900 text-xs leading-tight">{loc.name}</h4>
-                          <p className="text-[11px] text-gray-600 leading-snug">{loc.address}</p>
-                          <div className="flex items-center justify-between text-[10px] pt-1 border-t border-gray-100">
-                            <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">{loc.status}</span>
-                            <span className="text-gray-500 font-mono">{loc.coords[0].toFixed(4)}, {loc.coords[1].toFixed(4)}</span>
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ))}
-
-                  {/* Current Animated Moving Vehicle Marker */}
-                  <Marker position={currentPosition} icon={createLocationIcon('Checkpoints')}>
-                    <Popup maxWidth={260}>
-                      <div className="p-1 space-y-1">
-                        <p className="font-bold text-[#0052cc] text-xs">🚗 Vehicle: {currentRoute.plate}</p>
-                        <p className="text-xs text-gray-700">Driver: {currentRoute.driverName}</p>
-                        <p className="text-xs text-gray-500">Speed: {currentRoute.avgSpeed}</p>
-                      </div>
-                    </Popup>
-                  </Marker>
-                </MapContainer>
-              </div>
-
+                  </Popup>
+                </Marker>
+              </MapContainer>
             </div>
 
             {/* Checkpoint Transit Audit Table */}
@@ -654,7 +416,7 @@ const NationalReports = () => {
         {/* TAB 2: DISTRICT & SECTOR VOLUME ANALYTICS */}
         {activeTab === 'district_analytics' && (
           <div className="flex flex-col gap-6">
-            
+
             {/* High Level KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
@@ -700,14 +462,14 @@ const NationalReports = () => {
 
             {/* Volume Leaderboards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* Origin District Volume Distribution */}
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                 <h3 className="font-semibold text-gray-900 text-sm flex items-center justify-between">
                   <span>Top Origin Districts Movement Volume</span>
                   <span className="text-xs font-normal text-gray-500">Last 30 Days</span>
                 </h3>
-                
+
                 <div className="space-y-3 pt-2">
                   <div>
                     <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
@@ -809,7 +571,7 @@ const NationalReports = () => {
         {/* TAB 3: POLICE SECURITY ANALYTICS */}
         {activeTab === 'police_analytics' && (
           <div className="flex flex-col gap-6">
-            
+
             {/* Police Security KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
@@ -882,13 +644,12 @@ const NationalReports = () => {
                       <td className="py-2.5 px-3 text-gray-600">{c.location || 'Gasabo District'}</td>
                       <td className="py-2.5 px-3 text-gray-700">{c.User?.name || 'System'}</td>
                       <td className="py-2.5 px-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          c.status === 'Case Solved' || c.status === 'Closed'
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.status === 'Case Solved' || c.status === 'Closed'
                             ? 'bg-green-100 text-green-700'
                             : c.status === 'Following Up'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
                           {c.status || 'Open'}
                         </span>
                       </td>
