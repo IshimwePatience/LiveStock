@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import api, { getTraccarLocations, getTraccarRoute } from '../../../lib/api';
 import {
-  Search, X, Navigation, MapPin,
+  Search, X, Menu, Navigation, MapPin,
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
-  FileText, CheckCircle, Play
+  ArrowLeft, FileText, CheckCircle
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -59,7 +59,10 @@ const GeocodedAddress = ({ lat, lon }) => {
       .then(data => {
         if (data && data.address) {
           const addr = data.address;
+
+          // Find nearest landmark or amenity
           const nearestLandmark = addr.amenity || addr.building || addr.shop || addr.office || addr.tourism || addr.leisure || addr.historic || null;
+          // Find road/street
           const street = addr.road || addr.street || addr.path || addr.pedestrian || null;
 
           let main = null;
@@ -77,13 +80,16 @@ const GeocodedAddress = ({ lat, lon }) => {
             main = data.display_name ? data.display_name.split(',')[0] : "Unknown Location";
           }
 
+          // Sub-area (village, cell, sector equivalent in Rwanda)
           const subParts = [];
           if (addr.neighbourhood && main !== addr.neighbourhood) subParts.push(addr.neighbourhood);
           if (addr.village && main !== addr.village) subParts.push(addr.village);
           if (addr.suburb && main !== addr.suburb) subParts.push(addr.suburb);
           if (addr.city_district && main !== addr.city_district) subParts.push(addr.city_district);
+          // Deduplicate
           const uniqueSub = [...new Set(subParts)].join(', ');
 
+          // Administrative area (District, Province)
           const adminParts = [];
           if (addr.city || addr.town || addr.county) adminParts.push(addr.city || addr.town || addr.county);
           if (addr.state) adminParts.push(addr.state);
@@ -102,82 +108,23 @@ const GeocodedAddress = ({ lat, lon }) => {
       .catch(() => setLocationDetails({ loading: false, main: "Address not found", sub: "", admin: "" }));
   }, [lat, lon]);
 
-  if (locationDetails.loading) return <span className="font-medium text-gray-900 leading-tight">Loading address...</span>;
+  if (locationDetails.loading) return <span className="font-medium text-gray-900 leading-tight">Loading exact location...</span>;
 
   return (
     <div className="flex flex-col">
-      <span className="font-medium text-gray-900 leading-tight text-[13px]">{locationDetails.main}</span>
-      {locationDetails.sub && <span className="text-[11px] text-gray-600">{locationDetails.sub}</span>}
-      {locationDetails.admin && <span className="text-[11px] text-gray-400">{locationDetails.admin}</span>}
+      <span className="font-medium text-gray-900 leading-tight text-[15px]">{locationDetails.main}</span>
+      {locationDetails.sub && <span className="text-[13px] text-gray-700 mt-0.5">{locationDetails.sub}</span>}
+      {locationDetails.admin && <span className="text-[12px] text-gray-500 mt-0.5">{locationDetails.admin}{locationDetails.admin.toLowerCase().includes('rwanda') ? '' : ', Rwanda'}</span>}
     </div>
   );
 };
 
-// Custom 2D Flat Heavy Livestock Truck Marker with License Plate Badge (Lays flat on road surface)
-const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = false) => {
-  const isOnline = status === 'online';
-  const cabColor = hasClaim ? '#dc2626' : (isOnline ? '#166534' : '#eab308');
-  const trailerColor = hasClaim ? '#991b1b' : (isOnline ? '#1e293b' : '#ca8a04');
-  const trailerBorder = hasClaim ? '#ef4444' : (isOnline ? '#22c55e' : '#854d0e');
-  const slatColor = hasClaim ? '#fca5a5' : (isOnline ? '#4ade80' : '#fef08a');
-  const shadowColor = hasClaim ? 'rgba(220, 38, 38, 0.55)' : (isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(234, 179, 8, 0.45)');
-
-  const html = `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
-      <!-- License Plate Badge floating cleanly above truck -->
-      <div style="background: ${hasClaim ? '#fef2f2' : '#ffffff'}; border: 1.5px solid ${hasClaim ? '#ef4444' : '#d1d5db'}; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: ${hasClaim ? '#991b1b' : '#111827'}; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; margin-bottom: 3px; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.2px;">
-        ${hasClaim ? '🚨 CLAIM: ' : ''}${deviceName || 'Vehicle'}
-      </div>
-      <!-- 2D Top-Down Heavy Livestock Truck Body laying flat on surface -->
-      <div style="transform: rotate(${course || 0}deg); transition: transform 0.3s ease;">
-        <svg width="32" height="54" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 6px ${shadowColor});">
-          <!-- Front & Rear Dual Axle Tires -->
-          <rect x="2" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
-          <rect x="31" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
-          <rect x="2" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
-          <rect x="31" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
-
-          <!-- Main Cargo Trailer Container -->
-          <rect x="4" y="20" width="28" height="36" rx="3" fill="${trailerColor}" stroke="${trailerBorder}" stroke-width="1.5" />
-          <!-- Livestock Ventilation Slats -->
-          <line x1="7" y1="26" x2="29" y2="26" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
-          <line x1="7" y1="32" x2="29" y2="32" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
-          <line x1="7" y1="38" x2="29" y2="38" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
-          <line x1="7" y1="44" x2="29" y2="44" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
-          <line x1="7" y1="50" x2="29" y2="50" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
-
-          <!-- Truck Cab Hitch Connection -->
-          <rect x="14" y="16" width="8" height="6" fill="#334155" />
-
-          <!-- Front Driver Cab -->
-          <path d="M6 6 C6 3, 10 2, 18 2 C26 2, 30 3, 30 6 L30 18 C30 19.5, 28.5 20, 27 20 L9 20 C7.5 20, 6 19.5, 6 18 Z" fill="${cabColor}" />
-          
-          <!-- Front Windshield -->
-          <path d="M8 8 C10 6.5, 15 6, 18 6 C21 6, 26 6.5, 28 8 L27 12 L9 12 Z" fill="#94a3b8" opacity="0.9" />
-
-          <!-- Side Mirrors -->
-          <rect x="3" y="10" width="3" height="2" rx="0.5" fill="#475569" />
-          <rect x="30" y="10" width="3" height="2" rx="0.5" fill="#475569" />
-
-          <!-- Headlights -->
-          <rect x="7" y="3" width="5" height="2.5" rx="1" fill="#fef08a" />
-          <rect x="24" y="3" width="5" height="2.5" rx="1" fill="#fef08a" />
-
-          <!-- Taillights -->
-          <rect x="6" y="55" width="5" height="2" rx="0.5" fill="#ef4444" />
-          <rect x="25" y="55" width="5" height="2" rx="0.5" fill="#ef4444" />
-        </svg>
-      </div>
-    </div>
-  `;
-
-  return new L.divIcon({
-    html: html,
-    className: 'flat-vehicle-marker',
-    iconSize: [110, 75],
-    iconAnchor: [55, 48]
-  });
-};
+// Custom Icon for trucks
+const truckIcon = new L.Icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/713/713311.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
 
 // Component to dynamically switch layers
 const MapLayerControl = ({ isSatellite }) => {
@@ -209,6 +156,20 @@ const MapCenterer = ({ selectedDevice }) => {
       });
     }
   }, [selectedDevice, map]);
+
+  useEffect(() => {
+    const handleRecenter = (e) => {
+      const device = e.detail;
+      if (device) {
+        map.flyTo([device.latitude, device.longitude], 15, {
+          animate: true,
+          duration: 1.5
+        });
+      }
+    };
+    window.addEventListener('map-recenter', handleRecenter);
+    return () => window.removeEventListener('map-recenter', handleRecenter);
+  }, [map]);
 
   return null;
 };
@@ -248,8 +209,10 @@ const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
     let queryUrl = '';
 
     if (categories.includes(searchQuery)) {
+      // Enforce bounded search within the current map view for local POIs
       queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&viewbox=${viewbox}&bounded=1&limit=20`;
     } else {
+      // Global search heavily biased to Rwanda and neighboring countries
       queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=rw,cd,ug,bi,tz&limit=10`;
     }
 
@@ -274,8 +237,6 @@ const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
 
 const TrackingMap = () => {
   const queryClient = useQueryClient();
-
-  // Live real data query from Traccar GPS & Backend DB
   const { data: locations, isLoading, isError, error } = useQuery({
     queryKey: ['gps-locations'],
     queryFn: async () => {
@@ -285,101 +246,125 @@ const TrackingMap = () => {
     refetchInterval: 10000,
   });
 
-  // Query Police Cases & Vehicle Claims
-  const { data: rawCases } = useQuery({
-    queryKey: ['police-cases-gps'],
-    queryFn: async () => {
-      const res = await api.get('/cases');
-      return res.data || [];
-    }
-  });
-
-  const claimedVehiclesMap = useMemo(() => {
-    const map = {};
-    if (Array.isArray(rawCases)) {
-      rawCases.forEach(c => {
-        if (c.vehicle_plate) {
-          map[c.vehicle_plate.toUpperCase().trim()] = c;
-        }
-      });
-    }
-    return map;
-  }, [rawCases]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
 
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSatellite, setIsSatellite] = useState(true);
+  const [activeTab, setActiveTab] = useState('Overview');
   const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
   const [routeHistory, setRouteHistory] = useState([]);
 
-  // Sidebar Filter States
-  const [deviceFilter, setDeviceFilter] = useState('all'); // 'all' | 'online' | 'offline' | 'claimed'
-  const [sidebarSearch, setSidebarSearch] = useState('');
-
-  // Vehicle Claim Modal States
+  // Claim Vehicle & Police Side Panel States
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
-  const [claimType, setClaimType] = useState('Stolen Vehicle');
+  const [claimCaseType, setClaimCaseType] = useState('VEHICLE_CLAIM');
   const [claimLocation, setClaimLocation] = useState('');
   const [claimDetails, setClaimDetails] = useState('');
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
 
-  const handleOpenClaimModal = (veh) => {
-    if (!veh) return;
-    setSelectedDevice(veh);
-    setClaimType('Stolen Vehicle');
-    setClaimLocation(veh.address || (veh.latitude ? `${veh.latitude.toFixed(4)}, ${veh.longitude.toFixed(4)}` : 'Rwanda'));
-    setClaimDetails('');
-    setIsClaimModalOpen(true);
-  };
+  const [sidebarView, setSidebarView] = useState('info'); // 'info' | 'claims_list' | 'claim_detail'
+  const [selectedClaim, setSelectedClaim] = useState(null);
 
-  const handleSubmitClaim = async (e) => {
-    e.preventDefault();
-    if (!selectedDevice) return;
-    setIsSubmittingClaim(true);
-    try {
-      await api.post('/cases', {
-        vehicle_plate: selectedDevice.deviceName,
-        type: claimType,
-        location: claimLocation || 'Rwanda',
-        details: claimDetails || `Police claim reported for vehicle ${selectedDevice.deviceName}`,
-        status: 'OPEN'
-      });
-      toast.success(`Claim reported for vehicle ${selectedDevice.deviceName}`);
-      queryClient.invalidateQueries(['police-cases-gps']);
-      setIsClaimModalOpen(false);
-    } catch (err) {
-      console.error('Failed to submit claim', err);
-      toast.error('Failed to report vehicle claim');
-    } finally {
-      setIsSubmittingClaim(false);
+  const userStr = localStorage.getItem('user');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isPolice = currentUser?.role === 'POLICE';
+
+  const { data: rawCases = [] } = useQuery({
+    queryKey: ['police-cases'],
+    queryFn: async () => {
+      const res = await api.get('/cases');
+      return res.data;
     }
-  };
+  });
+
+  const deviceClaims = React.useMemo(() => {
+    if (!selectedDevice || !rawCases) return [];
+    const plate = (selectedDevice.deviceName || '').toUpperCase().trim();
+    return rawCases.filter(c => {
+      const cPlate = (c.vehicle_plate || '').toUpperCase().trim();
+      const cDetails = (c.details || '').toUpperCase();
+      return (cPlate && cPlate === plate) || (cDetails && cDetails.includes(plate));
+    });
+  }, [selectedDevice, rawCases]);
+
+  useEffect(() => {
+    setSidebarView('info');
+    setSelectedClaim(null);
+  }, [selectedDevice]);
 
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter') {
       setActiveSearchQuery(searchTerm);
+      setIsSearchSidebarOpen(true);
       setSelectedDevice(null);
       setSelectedSearchResult(null);
+      setIsSidebarOpen(false);
     }
   };
 
   const handleFilterClick = (filterName) => {
     setSearchTerm(filterName);
     setActiveSearchQuery(filterName);
+    setIsSearchSidebarOpen(true);
     setSelectedDevice(null);
     setSelectedSearchResult(null);
+    setIsSidebarOpen(false);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plate = params.get('plate');
+    if (plate) {
+      setSearchTerm(plate);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (locations && locations.length > 0) {
+      locations.forEach(loc => {
+        if (loc.geofenceViolation && loc.geofenceViolation.violation) {
+          const isForbidden = loc.geofenceViolation.rule_type === 'FORBIDDEN';
+          toast.error(
+            loc.geofenceViolation.reason || `🚨 GEOFENCE VIOLATION: Vehicle ${loc.deviceName}`,
+            {
+              id: `geo-violation-${loc.deviceId}`,
+              duration: isForbidden ? 8000 : 5000
+            }
+          );
+        }
+      });
+    }
+  }, [locations]);
+
+  useEffect(() => {
+    if (locations && searchTerm) {
+      const filtered = locations.filter(loc =>
+        loc.deviceName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      if (filtered.length === 1 && !selectedDevice) {
+        handleMarkerClick(filtered[0]);
+      }
+    }
+  }, [locations, searchTerm]);
+
+  const filteredLocations = locations?.filter(loc =>
+    loc.deviceName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const center = [-1.9441, 30.0619];
 
   const handleMarkerClick = async (loc) => {
     setSelectedDevice(loc);
-    setRouteHistory([]);
+    setIsSidebarOpen(true);
+    setIsSearchSidebarOpen(false);
+    setRouteHistory([]); // clear old
 
+    // Fetch route for the last 24 hours
     try {
       const to = new Date().toISOString();
       const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -387,32 +372,10 @@ const TrackingMap = () => {
       if (res.data && res.data.length > 0) {
         setRouteHistory(res.data.map(p => [p.latitude, p.longitude]));
       }
-    } catch (err) {
-      console.error('Failed to fetch route history', err);
+    } catch (error) {
+      console.error('Failed to fetch route history', error);
     }
   };
-
-  const onlineCount = useMemo(() => (locations || []).filter(l => l.status === 'online').length, [locations]);
-  const offlineCount = useMemo(() => (locations || []).filter(l => l.status === 'offline' || l.status === 'unknown').length, [locations]);
-  const claimedCount = useMemo(() => (locations || []).filter(l => !!claimedVehiclesMap[l.deviceName.toUpperCase().trim()]).length, [locations, claimedVehiclesMap]);
-  const totalCount = (locations || []).length;
-
-  const displayedVehicles = useMemo(() => {
-    if (!locations) return [];
-    return locations.filter(loc => {
-      if (deviceFilter === 'online' && loc.status !== 'online') return false;
-      if (deviceFilter === 'offline' && loc.status !== 'offline' && loc.status !== 'unknown') return false;
-      if (deviceFilter === 'claimed' && !claimedVehiclesMap[loc.deviceName.toUpperCase().trim()]) return false;
-
-      if (sidebarSearch.trim()) {
-        const q = sidebarSearch.toLowerCase();
-        return loc.deviceName.toLowerCase().includes(q);
-      }
-      return true;
-    });
-  }, [locations, deviceFilter, sidebarSearch, claimedVehiclesMap]);
-
-  const center = [-1.9441, 30.0619];
 
   if (isError) {
     return (
@@ -423,14 +386,6 @@ const TrackingMap = () => {
       </div>
     );
   }
-
-  const handleClearSearch = () => {
-    setActiveSearchQuery('');
-    setSearchTerm('');
-    setSidebarSearch('');
-    setSearchResults([]);
-    setSelectedSearchResult(null);
-  };
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full bg-gray-100 relative overflow-hidden font-sans">
@@ -453,6 +408,7 @@ const TrackingMap = () => {
             />
           )}
 
+          {/* Search Result Markers */}
           {searchResults.map((res, idx) => (
             <Marker
               key={`search-${idx}`}
@@ -466,493 +422,591 @@ const TrackingMap = () => {
             </Marker>
           ))}
 
-          {locations && locations.map((loc) => {
-            const hasClaim = !!claimedVehiclesMap[loc.deviceName.toUpperCase().trim()];
-            return (
-              <Marker
-                key={loc.deviceId}
-                position={[loc.latitude, loc.longitude]}
-                icon={createVehicleMarkerIcon(loc.deviceName, loc.status, loc.course, hasClaim)}
-                eventHandlers={{
-                  click: () => handleMarkerClick(loc),
-                }}
-              />
-            );
-          })}
+          {filteredLocations && filteredLocations.map((loc) => (
+            <Marker
+              key={loc.deviceId}
+              position={[loc.latitude, loc.longitude]}
+              icon={truckIcon}
+              eventHandlers={{
+                click: () => handleMarkerClick(loc),
+              }}
+            />
+          ))}
         </MapContainer>
       </div>
 
-      {/* ----------------- TOP LEFT EARLY SEARCH BAR ----------------- */}
-      <div className="absolute top-[20px] left-[20px] z-[400] flex items-center gap-2">
-        <div className="flex items-center bg-white rounded-2xl shadow-xl border border-gray-200/90 w-[330px] h-[44px] px-3.5">
-          <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2.5" />
+      {/* ----------------- FLOATING SEARCH BAR ----------------- */}
+      <div className="absolute top-[22px] left-[22px] z-[400] flex flex-col gap-4 shadow-sm">
+        <div className="flex items-center bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.2)] w-[392px] h-[48px] px-2">
+          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
+            <Menu className="w-5 h-5" />
+          </button>
           <input
             type="text"
-            placeholder="Search places or vehicles..."
+            placeholder="Search Google Maps"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setSidebarSearch(e.target.value);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleSearchSubmit}
-            className="flex-1 bg-transparent border-none outline-none text-xs font-medium text-gray-800 placeholder-gray-400"
+            className="flex-1 bg-transparent border-none outline-none px-2 text-[15px] text-gray-800 placeholder-gray-500 font-normal"
           />
           {searchTerm && (
-            <button onClick={handleClearSearch} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
-              <X className="w-4 h-4" />
+            <button
+              onClick={() => { setSearchTerm(''); setSelectedDevice(null); setIsSidebarOpen(false); setIsSearchSidebarOpen(false); }}
+              className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors mr-1"
+            >
+              <X className="w-5 h-5" />
             </button>
+          )}
+          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
+            <Search className="w-5 h-5" />
+          </button>
+          <div className="h-6 w-px bg-gray-200 mx-1"></div>
+          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-blue-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center transform rotate-45">
+              <CornerUpRight className="w-3.5 h-3.5 -rotate-45" />
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* ----------------- FLOATING PILLS (TOP RIGHT) ----------------- */}
+      <div className="absolute top-[28px] left-[430px] z-[400] flex">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+          <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
+          <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
+          <button onClick={() => handleFilterClick('Transit')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Train className="w-4 h-4 text-gray-500" /> Transit</button>
+          <button onClick={() => handleFilterClick('Parking')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CircleParking className="w-4 h-4 text-gray-500" /> Parking</button>
+          <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
+          <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
+        </div>
+      </div>
+
+      {/* ----------------- LAYERS BUTTON (BOTTOM LEFT) ----------------- */}
+      <div className={`absolute z-[400] transition-all duration-300 ${isRouteDrawerOpen ? 'bottom-[140px]' : 'bottom-[40px]'} ${isSidebarOpen || isSearchSidebarOpen ? 'left-[420px]' : 'left-6'}`}>
+        <button
+          onClick={() => setIsSatellite(!isSatellite)}
+          className="w-12 h-12 bg-white rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center gap-0.5 hover:bg-gray-50 transition-colors"
+        >
+          <Layers className="w-5 h-5 text-gray-600" />
+          <span className="text-[10px] font-medium text-gray-700">Layers</span>
+        </button>
+      </div>
+
+      {/* ----------------- BOTTOM ROUTE DRAWER (ITINERARY) ----------------- */}
+      <div className={`absolute bottom-0 left-[400px] right-0 bg-white z-[300] border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out ${isRouteDrawerOpen ? 'translate-y-0' : 'translate-y-[120px]'}`}>
+
+        {/* Pull Tab */}
+        <button
+          onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
+          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-t-lg shadow-[0_-2px_4px_rgba(0,0,0,0.1)] border border-b-0 border-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+        >
+          {isRouteDrawerOpen ? 'Hide Route' : 'Show Route Details'}
+        </button>
+
+        <div className="h-[120px] flex items-center px-8 w-full">
+          {selectedDevice?.route ? (
+            <div className="flex items-center w-full max-w-4xl mx-auto gap-4">
+
+              {/* Origin */}
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-500 z-10">
+                  <MapPin className="w-5 h-5 text-green-600" />
+                </div>
+                <span className="text-[13px] font-semibold text-gray-800 mt-2">Origin</span>
+                <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.origin}</span>
+              </div>
+
+              {/* Line */}
+              <div className="h-1 bg-blue-500 flex-grow relative mx-2">
+                <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-medium text-blue-600 shadow-sm flex items-center gap-1">
+                  <Navigation className="w-3 h-3" />
+                  In Transit
+                </div>
+              </div>
+
+              {/* Destination */}
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center border-2 border-red-500 z-10">
+                  <MapPin className="w-5 h-5 text-red-600" />
+                </div>
+                <span className="text-[13px] font-semibold text-gray-800 mt-2">Destination</span>
+                <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.destination}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full text-center text-gray-500 text-[14px]">
+              Select a vehicle with an active permit to view its route itinerary.
+            </div>
           )}
         </div>
       </div>
 
-      {/* ----------------- FLOATING PILLS (TOP CENTER / RIGHT OF SEARCH) ----------------- */}
-      <div className="absolute top-[20px] left-[365px] z-[400] flex">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
-          <button
-            onClick={() => activeSearchQuery === 'Restaurants' ? handleClearSearch() : handleFilterClick('Restaurants')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Restaurants' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Utensils className={`w-3.5 h-3.5 ${activeSearchQuery === 'Restaurants' ? 'text-white' : 'text-gray-500'}`} /> Restaurants
-          </button>
-          <button
-            onClick={() => activeSearchQuery === 'Hotels' ? handleClearSearch() : handleFilterClick('Hotels')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Hotels' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <BedDouble className={`w-3.5 h-3.5 ${activeSearchQuery === 'Hotels' ? 'text-white' : 'text-gray-500'}`} /> Hotels
-          </button>
-          <button
-            onClick={() => activeSearchQuery === 'Transit' ? handleClearSearch() : handleFilterClick('Transit')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Transit' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Train className={`w-3.5 h-3.5 ${activeSearchQuery === 'Transit' ? 'text-white' : 'text-gray-500'}`} /> Transit
-          </button>
-          <button
-            onClick={() => activeSearchQuery === 'Parking' ? handleClearSearch() : handleFilterClick('Parking')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Parking' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <CircleParking className={`w-3.5 h-3.5 ${activeSearchQuery === 'Parking' ? 'text-white' : 'text-gray-500'}`} /> Parking
-          </button>
-          <button
-            onClick={() => activeSearchQuery === 'Pharmacies' ? handleClearSearch() : handleFilterClick('Pharmacies')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Pharmacies' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Cross className={`w-3.5 h-3.5 ${activeSearchQuery === 'Pharmacies' ? 'text-white' : 'text-gray-500'}`} /> Pharmacies
-          </button>
-          <button
-            onClick={() => activeSearchQuery === 'ATMs' ? handleClearSearch() : handleFilterClick('ATMs')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'ATMs' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Banknote className={`w-3.5 h-3.5 ${activeSearchQuery === 'ATMs' ? 'text-white' : 'text-gray-500'}`} /> ATMs
-          </button>
+      {/* ----------------- SEARCH RESULTS SIDEBAR ----------------- */}
+      <div
+        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
+      >
+        <div className="h-[100px] flex-shrink-0 border-b border-gray-200" /> {/* Spacer for search bar */}
+
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+          <div className="p-4">
+            <h2 className="text-[20px] font-normal text-gray-900 mb-4">Results for "{activeSearchQuery}"</h2>
+
+            {isSearching ? (
+              <div className="flex items-center gap-2 text-gray-500 text-sm">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                Searching...
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-gray-500 text-sm">No results found in this area. Try zooming out or searching another term.</div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {searchResults.map((res, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedSearchResult(res)}
+                    className="flex flex-col border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                  >
+                    <span className="font-medium text-[16px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
+                    <span className="text-[13px] text-gray-600 line-clamp-2">{res.display_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ----------------- LEFT SIDEBAR (RESTORED ORIGINAL FORMAT BELOW SEARCH BAR) ----------------- */}
-      <div className="absolute top-[74px] left-[20px] bottom-[20px] w-[330px] bg-white rounded-2xl shadow-2xl border border-gray-200/90 z-[350] flex flex-col overflow-hidden">
-        {activeSearchQuery ? (
-          /* ACTIVE FILTER RESULTS MODE */
-          <div className="flex flex-col h-full">
-            <div className="p-4 pb-3 border-b border-gray-100 bg-white flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                  <span>Filter:</span>
-                  <span className="text-blue-600">{activeSearchQuery}</span>
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {isSearching ? 'Searching places...' : `${searchResults.length} places found on map`}
-                </p>
+      {/* ----------------- LEFT SIDEBAR (DEVICE DETAILS / POLICE CLAIMS PANEL) ----------------- */}
+      <div
+        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[350] shadow-2xl transition-transform duration-300 ease-in-out ${isSidebarOpen && selectedDevice ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto no-scrollbar`}
+      >
+        {selectedDevice ? (
+          sidebarView === 'claims_list' ? (
+            /* POLICE CLAIMS LIST VIEW IN SIDEBAR */
+            <div className="flex flex-col h-full bg-white pb-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <button
+                  onClick={() => setSidebarView('info')}
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Vehicle Info</span>
+                </button>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={handleClearSearch}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md transition"
-              >
-                Clear Filter
-              </button>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {isSearching ? (
-                <div className="p-4 text-center text-xs text-gray-500">Searching places...</div>
-              ) : searchResults.length === 0 ? (
-                <div className="p-4 text-center text-xs text-gray-400">No places found for "{activeSearchQuery}"</div>
-              ) : (
-                searchResults.map((res, idx) => {
-                  const isSelected = selectedSearchResult?.lat === res.lat && selectedSearchResult?.lon === res.lon;
-                  return (
+              <div className="p-5 border-b border-gray-100 bg-white">
+                <h3 className="text-xl font-bold text-gray-900">{selectedDevice.deviceName}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">{deviceClaims.length} claims registered in system</p>
+              </div>
+
+              <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
+                {deviceClaims.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    No claims or police cases filed for this vehicle yet.
+                  </div>
+                ) : (
+                  deviceClaims.map((claim) => (
                     <div
-                      key={`sidebar-res-${idx}`}
-                      onClick={() => setSelectedSearchResult(res)}
-                      className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1.5 ${
-                        isSelected
-                          ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
-                          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                      }`}
+                      key={claim.id}
+                      onClick={() => {
+                        setSelectedClaim(claim);
+                        setSidebarView('claim_detail');
+                      }}
+                      className="p-5 hover:bg-gray-50 cursor-pointer transition-colors flex flex-col gap-2 group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-gray-900 truncate">{res.display_name.split(',')[0]}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                          {activeSearchQuery}
+                        <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
+                          CAS-{claim.id.substring(0, 8).toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-500 leading-snug line-clamp-2">{res.display_name}</p>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700">
+                        {claim.details || `Claim reported for vehicle ${selectedDevice.deviceName}`}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                        <span>Reported by: <strong className="text-gray-700">{claim.User?.name || 'Officer'}</strong></span>
+                        <span>{new Date(claim.createdAt).toLocaleDateString()}</span>
+                      </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        ) : (
-          /* STANDARD VEHICLES LIST MODE */
-          <div className="flex flex-col h-full">
-            <div className="p-4 pb-3 border-b border-gray-100 bg-white">
-              <h2 className="text-base font-bold text-gray-900">Vehicles List</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view telemetry &amp; live route on map.</p>
-
-              {/* Status Filter Tabs */}
-              <div className="flex items-center gap-1 mt-3 text-[11px] font-semibold overflow-x-auto pb-1 scrollbar-hide">
-                <button
-                  onClick={() => setDeviceFilter('all')}
-                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                  All ({totalCount})
-                </button>
-                <button
-                  onClick={() => setDeviceFilter('online')}
-                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'online' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
-                >
-                  Online ({onlineCount})
-                </button>
-                <button
-                  onClick={() => setDeviceFilter('offline')}
-                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'offline' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}`}
-                >
-                  Offline ({offlineCount})
-                </button>
-                <button
-                  onClick={() => setDeviceFilter('claimed')}
-                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'claimed' ? 'bg-red-600 text-white shadow-sm' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
-                >
-                  🚨 Claimed ({claimedCount})
-                </button>
+                  ))
+                )}
               </div>
             </div>
+          ) : sidebarView === 'claim_detail' && selectedClaim ? (
+            /* POLICE CLAIM DETAIL VIEW IN SIDEBAR */
+            <div className="flex flex-col h-full bg-white pb-10">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <button
+                  onClick={() => setSidebarView('claims_list')}
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Claims List</span>
+                </button>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            {/* Vehicles Cards List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {displayedVehicles.length === 0 ? (
-                <div className="p-4 text-center text-xs text-gray-400">No vehicles match filter</div>
-              ) : (
-                displayedVehicles.map((loc) => {
-                  const isSelected = selectedDevice?.deviceId === loc.deviceId;
-                  const hasClaim = !!claimedVehiclesMap[loc.deviceName.toUpperCase().trim()];
-                  return (
-                    <div
-                      key={loc.deviceId}
-                      onClick={() => handleMarkerClick(loc)}
-                      className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col gap-2 ${
-                        hasClaim
-                          ? 'bg-red-50/80 border-red-300 hover:border-red-400 shadow-sm'
-                          : isSelected
-                            ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
-                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                      }`}
+              <div className="p-5 flex flex-col gap-4 overflow-y-auto flex-1">
+                <div>
+                  <span className="text-xs font-mono text-gray-400 uppercase font-semibold">Case Reference</span>
+                  <h3 className="text-xl font-bold text-gray-900">CAS-{selectedClaim.id.substring(0, 8).toUpperCase()}</h3>
+                </div>
+
+                <div className="py-1 space-y-3">
+                  <div>
+                    <span className="text-xs text-gray-500">Target Vehicle Plate</span>
+                    <p className="text-sm font-semibold text-gray-900">{selectedClaim.vehicle_plate || selectedDevice.deviceName}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Claim Type</span>
+                    <p className="text-sm font-semibold text-blue-600">{selectedClaim.type || 'VEHICLE_CLAIM'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Claimed By</span>
+                    <p className="text-sm font-semibold text-gray-900">{selectedClaim.User?.name || 'Officer'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Location</span>
+                    <p className="text-sm font-medium text-gray-800">{selectedClaim.location || 'Gasabo District'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Date Filed</span>
+                    <p className="text-sm font-medium text-gray-800">{new Date(selectedClaim.createdAt).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Details &amp; Description</span>
+                  <div className="mt-1.5 text-sm text-gray-800 leading-relaxed">
+                    {selectedClaim.details}
+                  </div>
+                </div>
+
+                {isPolice && (
+                  <div className="mt-2 pt-4 border-t border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Update Police Action Status</span>
+                    <select
+                      value={selectedClaim.status || 'Open'}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        try {
+                          await api.put(`/cases/${selectedClaim.id}/status`, { status: newStatus });
+                          setSelectedClaim(prev => ({ ...prev, status: newStatus }));
+                          queryClient.invalidateQueries(['police-cases']);
+                          toast.success(`Case status updated to '${newStatus}'`);
+                        } catch (err) {
+                          toast.error('Failed to update status');
+                        }
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white cursor-pointer"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-gray-900 flex items-center gap-1">
-                          {hasClaim && <span className="text-red-600 font-extrabold text-[11px]">🚨</span>}
-                          {loc.deviceName}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                          hasClaim ? 'bg-red-100 text-red-800 border border-red-200' :
-                          loc.status === 'online' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      <option value="Open">Open</option>
+                      <option value="Following Up">Following Up</option>
+                      <option value="Case Solved">Case Solved</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* DEFAULT VEHICLE OVERVIEW INFO VIEW */
+            <div className="flex flex-col pb-32">
+
+              {/* Search Header when open (Google Maps style) */}
+              <div className="px-4 py-3 flex items-center gap-3">
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Header Image */}
+              <div className="relative h-56 w-full bg-gray-200">
+                <img
+                  src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop"
+                  alt="Truck"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Title Section */}
+              <div className="p-5 pb-4 border-b border-gray-100">
+                <h2 className="text-[22px] font-normal text-gray-900 mb-1">{selectedDevice.deviceName}</h2>
+                <p className="text-[14px] text-gray-600">Livestock Transport</p>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="flex justify-around items-center px-4 py-4 border-b border-gray-100">
+                <div className="flex flex-col items-center gap-2 cursor-pointer group">
+                  <div className="w-11 h-11 rounded-full bg-[#1a73e8] flex items-center justify-center text-white group-hover:bg-blue-700 transition-colors">
+                    <div className="w-5 h-5 border-[2px] border-white rounded-sm transform rotate-45 flex items-center justify-center">
+                      <CornerUpRight className="w-3.5 h-3.5 -rotate-45" />
+                    </div>
+                  </div>
+                  <span className="text-[12px] font-medium text-[#1a73e8]">Directions</span>
+                </div>
+                <div
+                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  onClick={() => {
+                    if (selectedDevice) {
+                      window.dispatchEvent(new CustomEvent('map-recenter', { detail: selectedDevice }));
+                    }
+                  }}
+                >
+                  <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#1a73e8] group-hover:bg-[#f1f3f4] transition-colors">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <span className="text-[12px] font-medium text-[#1a73e8]">Nearby</span>
+                </div>
+                <a
+                  href={`https://wa.me/?text=Check out this vehicle location: ${selectedDevice.deviceName} at https://maps.google.com/?q=${selectedDevice.latitude},${selectedDevice.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                >
+                  <div className="w-11 h-11 rounded-full border border-[#dadce0] flex items-center justify-center text-[#25D366] group-hover:bg-green-50 transition-colors">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <span className="text-[12px] font-medium text-[#25D366]">WhatsApp</span>
+                </a>
+              </div>
+
+              {/* Contact & Details Info (Google Maps Style List) */}
+              <div className="p-4 flex flex-col gap-5">
+                {/* Location */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex flex-col flex-1">
+                    <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
+                    <span className="text-[10px] text-gray-400 mt-1.5 uppercase tracking-wider font-bold">GPS: {selectedDevice.latitude.toFixed(6)}, {selectedDevice.longitude.toFixed(6)}</span>
+                  </div>
+                </div>
+
+                {/* Speed and Status */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <Navigation className={`w-5 h-5 mt-0.5 ${selectedDevice.speed > 2 ? 'text-green-500' : 'text-gray-500'}`} />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {selectedDevice.speed > 2 ? 'Moving' : 'Stopped / Parked'}
+                      </span>
+                      <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${selectedDevice.status === 'online' ? 'bg-green-100 text-green-700' :
+                        selectedDevice.status === 'offline' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-600'
                         }`}>
-                          {hasClaim ? 'Claimed' : (loc.status || 'Offline')}
+                        {selectedDevice.status === 'unknown' ? 'STANDBY' : selectedDevice.status}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 mt-0.5">
+                      Speed: {(selectedDevice.speed * 1.852).toFixed(1)} km/h • Heading: {selectedDevice.course.toFixed(0)}°
+                    </span>
+                  </div>
+                </div>
+
+                {selectedDevice.devicePhone && (
+                  <div className="flex items-center gap-4 text-sm text-gray-700">
+                    <Phone className="w-5 h-5 text-gray-500" />
+                    <span className="text-[#1a73e8] hover:underline cursor-pointer">{selectedDevice.devicePhone}</span>
+                  </div>
+                )}
+
+                {/* Route Information */}
+                <div className="flex items-start gap-4 text-sm text-gray-700">
+                  <Route className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">Current Trip</span>
+                    {selectedDevice.route ? (
+                      <div className="flex flex-col mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[13px] text-gray-800 font-semibold">
+                          <span>{selectedDevice.route.originDistrict}</span>
+                          <ArrowRight className="w-3 h-3 text-gray-400" />
+                          <span>{selectedDevice.route.destDistrict}</span>
+                        </div>
+                        <span className="text-[11px] text-gray-500 mt-0.5">
+                          {selectedDevice.route.originSector} ➔ {selectedDevice.route.destSector}
+                        </span>
+                        <span className="text-[11px] text-gray-500 mt-0.5">
+                          Initiator: <span className="font-medium text-gray-700">{selectedDevice.route.initiator}</span>
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-gray-600 font-medium">
-                        <span>Speed: <strong className="text-gray-800">{(loc.speed * 1.852).toFixed(1)} km/h</strong></span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenClaimModal(loc);
-                          }}
-                          className="text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.5 rounded transition"
-                        >
-                          Report Claim
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+                    ) : (
+                      <span className="text-xs text-gray-500 mt-0.5">No active livestock permit assigned</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm text-gray-700">
+                  <Clock className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">Last updated</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(selectedDevice.lastUpdate).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {isPolice ? (
+                  <div
+                    onClick={() => setSidebarView('claims_list')}
+                    className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
+                  >
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <span>See claims ({deviceClaims.length})</span>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => {
+                      setClaimCaseType('VEHICLE_CLAIM');
+                      setClaimLocation(selectedDevice.route ? `${selectedDevice.route.originDistrict} District` : 'Gasabo District');
+                      setClaimDetails(`Claim reported for vehicle ${selectedDevice.deviceName} by officer.`);
+                      setIsClaimModalOpen(true);
+                    }}
+                    className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
+                  >
+                    <CornerUpRight className="w-5 h-5" />
+                    <span>Claim this vehicle</span>
+                  </div>
+                )}
+              </div>
+
             </div>
+          )
+        ) : (
+          <div className="p-4 pt-16 text-center text-gray-500">
+            {/* Search box overlay when sidebar is open but no device selected (Google Maps style) */}
           </div>
         )}
       </div>
 
-      {/* ----------------- LAYERS BUTTON ----------------- */}
-      <div className={`absolute z-[400] transition-all duration-300 ${selectedDevice ? 'bottom-[220px]' : 'bottom-[30px]'} left-[370px]`}>
-        <button
-          onClick={() => setIsSatellite(!isSatellite)}
-          className="w-11 h-11 bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-0.5 hover:bg-gray-50 transition-colors"
-        >
-          <Layers className="w-4 h-4 text-gray-600" />
-          <span className="text-[9px] font-bold text-gray-700">Layers</span>
-        </button>
-      </div>
-
-      {/* ----------------- BOTTOM FLOATING VEHICLE DETAIL CARD (LIVE DB TELEMETRY) ----------------- */}
-      {selectedDevice && (
-        <div className="absolute bottom-[20px] left-[365px] right-[20px] z-[450] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-4 duration-200">
-
-          {/* Top Right Controls */}
-          <div className="absolute top-2.5 right-3 flex items-center gap-2 z-20">
-            <button
-              onClick={() => handleOpenClaimModal(selectedDevice)}
-              className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" /> Claim Vehicle
-            </button>
-            <button
-              onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
-              className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" /> Replay
-            </button>
-            <button
-              onClick={() => setSelectedDevice(null)}
-              className="w-7 h-7 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Spec Grid Table (Live GPS & DB Data) */}
-          <div className="flex-1 grid grid-cols-2 text-xs border-collapse">
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Vehicle Number</div>
-            <div className="p-2.5 bg-white font-bold text-gray-900 border-b border-gray-200">{selectedDevice.deviceName}</div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Device Status</div>
-            <div className="p-2.5 bg-white font-bold text-emerald-600 border-b border-gray-200 flex items-center gap-1.5">
-              <span className={`w-2.5 h-2.5 rounded-full ${selectedDevice.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
-              <span className={selectedDevice.status === 'online' ? 'text-emerald-600' : 'text-red-600'}>
-                {selectedDevice.status === 'online' ? 'Online' : 'Offline'}
-              </span>
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Today Distance</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '0.0 km'}
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Ignition Status</div>
-            <div className="p-2.5 bg-white border-b border-gray-200 flex items-center gap-1.5 font-medium">
-              <span className={`w-2.5 h-2.5 rounded-full ${selectedDevice.attributes?.ignition || selectedDevice.speed > 0 ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
-              <span className={selectedDevice.attributes?.ignition || selectedDevice.speed > 0 ? 'text-emerald-700 font-semibold' : 'text-gray-600'}>
-                {selectedDevice.attributes?.ignition !== undefined ? (selectedDevice.attributes.ignition ? 'ON' : 'OFF') : (selectedDevice.speed > 0 ? 'ON' : 'OFF')}
-              </span>
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Current Speed</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {(selectedDevice.speed * 1.852).toFixed(1)} km/h
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Current Driver</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.route?.driverName || 'N/A'}
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Address</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200 truncate" title={selectedDevice.address}>
-              {selectedDevice.address || <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />}
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Top Speed</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.attributes?.topSpeed ? `${(selectedDevice.attributes.topSpeed * 1.852).toFixed(1)} km/h` : `${(selectedDevice.speed * 1.852).toFixed(1)} km/h`}
-            </div>
-
-            <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-r border-gray-200">Odometer</div>
-            <div className="p-2.5 bg-white font-medium text-gray-800">
-              {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : (selectedDevice.attributes?.odometer ? `${(selectedDevice.attributes.odometer / 1000).toFixed(1)} km` : '0.0 km')}
-            </div>
-          </div>
-
-          {/* Police Vehicle Claim Banner if Claimed */}
-          {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()] && (
-            <div className="w-full md:w-80 p-4 bg-red-50/90 border-t md:border-t-0 md:border-l border-red-200 flex flex-col justify-between text-xs">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-red-900 text-xs flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-red-600" /> POLICE CLAIM LOGGED
-                  </h4>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-200 text-red-900 uppercase">
-                    {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].type || 'CLAIM'}
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-red-800 bg-white p-3 rounded-xl border border-red-200 shadow-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 font-medium">Case ID:</span>
-                    <span className="font-bold text-red-900">CAS-{String(claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].id).substring(0, 8).toUpperCase()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 font-medium">Location:</span>
-                    <span className="font-semibold text-gray-900">{claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].location || 'Rwanda'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 font-medium">Status:</span>
-                    <span className="font-bold text-red-700">{claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].status || 'Open'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Right Active Trip & Movement Permit Panel */}
-          <div className="w-full md:w-80 p-4 bg-gray-50/80 flex flex-col justify-between text-xs border-t md:border-t-0 md:border-l border-gray-200">
-            {selectedDevice.route ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
-                    <Route className="w-4 h-4 text-[#0052cc]" /> Active Trip Movement
-                  </h4>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                    {selectedDevice.route.status || 'Active'}
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 font-medium">Permit:</span>
-                    <span className="font-bold text-gray-900">{selectedDevice.route.permitNumber || 'MVT-PERMIT'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 font-medium">Route:</span>
-                    <span className="font-semibold text-gray-800">{selectedDevice.route.originDistrict || 'Origin'} → {selectedDevice.route.destDistrict || 'Dest'}</span>
-                  </div>
-                  {selectedDevice.route.cargo && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400 font-medium">Cargo:</span>
-                      <span className="font-semibold text-blue-700">{selectedDevice.route.cargo}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 font-medium">Driver:</span>
-                    <span className="font-medium text-gray-900">{selectedDevice.route.driverName || 'N/A'}</span>
-                  </div>
-                  {selectedDevice.route.driverPhone && selectedDevice.route.driverPhone !== 'N/A' && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400 font-medium">Phone:</span>
-                      <span className="font-medium text-gray-800">{selectedDevice.route.driverPhone}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col justify-center items-center text-center p-3">
-                <Route className="w-6 h-6 text-gray-400 mb-1" />
-                <h4 className="font-bold text-gray-800 text-xs">Trip Movement</h4>
-                <p className="text-[11px] text-gray-500 mt-1">No active permit linked to this vehicle plate.</p>
-              </div>
-            )}
-          </div>
-
-        </div>
-      )}
-
-      {/* ----------------- VEHICLE CLAIM REPORT MODAL ----------------- */}
+      {/* ----------------- CLAIM VEHICLE / REPORT POLICE CASE MODAL (MATCHES ADVANCED SEARCH DESIGN) ----------------- */}
       {isClaimModalOpen && selectedDevice && (
-        <div className="fixed inset-0 z-[600] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-600" /> Report Police Vehicle Claim
-              </h3>
+        <div className="fixed inset-0 bg-black/40 z-[2000] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-[540px] bg-[#f0f4f9] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <h2 className="text-[19px] font-medium text-gray-900">
+                Claim Vehicle &amp; Report Police Case
+              </h2>
               <button
+                type="button"
                 onClick={() => setIsClaimModalOpen(false)}
-                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 transition text-gray-500"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitClaim} className="mt-4 space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Target Vehicle Plate</label>
+            {/* Body Form */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmittingClaim(true);
+                try {
+                  await api.post('/cases', {
+                    type: claimCaseType,
+                    vehicle_plate: selectedDevice.deviceName,
+                    location: claimLocation,
+                    details: claimDetails
+                  });
+
+                  toast.success(`🚨 Vehicle ${selectedDevice.deviceName} claimed! Police case filed.`, { duration: 6000 });
+                  queryClient.invalidateQueries(['police-cases']);
+                  queryClient.invalidateQueries(['notifications']);
+                  queryClient.invalidateQueries(['gps-locations']);
+                  setIsClaimModalOpen(false);
+                } catch (err) {
+                  toast.error(err.response?.data?.message || 'Failed to submit vehicle claim case.');
+                } finally {
+                  setIsSubmittingClaim(false);
+                }
+              }}
+              className="flex flex-col px-6 py-2 gap-4 text-sm"
+            >
+              {/* Target Vehicle Plate */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Target Vehicle
+                </label>
                 <input
                   type="text"
                   disabled
                   value={selectedDevice.deviceName}
-                  className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 font-bold text-red-700 cursor-not-allowed"
+                  className="flex-1 bg-gray-200/80 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 font-semibold cursor-not-allowed"
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Claim Case Category</label>
+              {/* Case Type */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Case Type <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={claimType}
-                  onChange={(e) => setClaimType(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none"
+                  value={claimCaseType}
+                  onChange={(e) => setClaimCaseType(e.target.value)}
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 >
-                  <option value="Stolen Vehicle">🚨 Stolen Vehicle Alert</option>
-                  <option value="Illegal Movement">⚠️ Unpermitted Livestock Transit</option>
-                  <option value="Contraband Suspect">📦 Contraband / Smuggling Suspect</option>
-                  <option value="Quarantine Violation">🦠 Disease Quarantine Breach</option>
+                  <option value="VEHICLE_CLAIM">Claim Vehicle (Seizure / Hold)</option>
+                  <option value="UNAUTHORIZED_MOVEMENT">Unauthorized Livestock Movement</option>
+                  <option value="GEOFENCE_VIOLATION">Geofence Boundary Breach</option>
+                  <option value="THEFT">Suspected Theft / Stolen Vehicle</option>
+                  <option value="ILLEGAL_TRANSPORT">Illegal Livestock Transport</option>
+                  <option value="ROBBERY">Robbery / Crime Incident</option>
+                  <option value="OTHER">Other Police Case</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Incident / Detection Location</label>
+              {/* Location / District */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Location / District
+                </label>
                 <input
                   type="text"
-                  required
+                  placeholder="e.g. Gasabo District, Kigali"
                   value={claimLocation}
                   onChange={(e) => setClaimLocation(e.target.value)}
-                  placeholder="Enter location or checkpoint..."
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none"
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Police Report Details / Case Notes</label>
+              {/* Reason / Details */}
+              <div className="flex items-start pt-2">
+                <label className="w-36 shrink-0 font-medium text-gray-700 pt-2">
+                  Incident Details <span className="text-red-500">*</span>
+                </label>
                 <textarea
                   rows={3}
+                  placeholder="Enter details or reason for claiming this vehicle / reporting case..."
                   value={claimDetails}
                   onChange={(e) => setClaimDetails(e.target.value)}
-                  placeholder="Provide specific notes, officer observations, or security details..."
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none resize-none"
+                  required
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+              {/* Footer Buttons */}
+              <div className="flex items-center justify-between pt-6 pb-2 border-t border-gray-200 mt-2">
                 <button
                   type="button"
                   onClick={() => setIsClaimModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold border border-gray-300 hover:bg-gray-100 text-gray-700 transition"
+                  className="text-blue-700 font-medium hover:underline text-sm"
                 >
-                  Cancel
+                  Reset / Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingClaim}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition shadow-sm flex items-center gap-1.5"
+                  className="bg-[#0052cc] hover:bg-[#0040a8] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
                 >
-                  {isSubmittingClaim ? 'Submitting Claim...' : 'Submit Claim Log'}
+                  {isSubmittingClaim ? 'Submitting Claim...' : 'Claim Vehicle'}
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
