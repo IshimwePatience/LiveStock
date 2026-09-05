@@ -119,12 +119,71 @@ const GeocodedAddress = ({ lat, lon }) => {
   );
 };
 
-// Custom Icon for trucks
-const truckIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/713/713311.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-});
+// Custom 2D Top-Down Heavy Livestock Truck Marker with License Plate Badge (Lays flat on road surface)
+const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = false) => {
+  const isOnline = status === 'online';
+  const cabColor = hasClaim ? '#dc2626' : (isOnline ? '#166534' : '#eab308');
+  const trailerColor = hasClaim ? '#991b1b' : (isOnline ? '#1e293b' : '#ca8a04');
+  const trailerBorder = hasClaim ? '#ef4444' : (isOnline ? '#22c55e' : '#854d0e');
+  const slatColor = hasClaim ? '#fca5a5' : (isOnline ? '#4ade80' : '#fef08a');
+  const shadowColor = hasClaim ? 'rgba(220, 38, 38, 0.55)' : (isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(234, 179, 8, 0.45)');
+
+  const html = `
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
+      <!-- License Plate Badge floating cleanly above truck -->
+      <div style="background: ${hasClaim ? '#fef2f2' : '#ffffff'}; border: 1.5px solid ${hasClaim ? '#ef4444' : '#d1d5db'}; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: ${hasClaim ? '#991b1b' : '#111827'}; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; margin-bottom: 3px; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.2px;">
+        ${hasClaim ? '🚨 CLAIM: ' : ''}${deviceName || 'Vehicle'}
+      </div>
+      <!-- 2D Top-Down Heavy Livestock Truck Body laying flat on surface -->
+      <div style="transform: rotate(${course || 0}deg); transition: transform 0.3s ease;">
+        <svg width="32" height="54" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 6px ${shadowColor});">
+          <!-- Front & Rear Dual Axle Tires -->
+          <rect x="2" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
+          <rect x="31" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
+          <rect x="2" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
+          <rect x="31" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
+
+          <!-- Main Cargo Trailer Container -->
+          <rect x="4" y="20" width="28" height="36" rx="3" fill="${trailerColor}" stroke="${trailerBorder}" stroke-width="1.5" />
+          <!-- Livestock Ventilation Slats -->
+          <line x1="7" y1="26" x2="29" y2="26" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
+          <line x1="7" y1="32" x2="29" y2="32" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
+          <line x1="7" y1="38" x2="29" y2="38" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
+          <line x1="7" y1="44" x2="29" y2="44" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
+          <line x1="7" y1="50" x2="29" y2="50" stroke="${slatColor}" stroke-width="1.5" stroke-dasharray="3, 2" opacity="0.8" />
+
+          <!-- Truck Cab Hitch Connection -->
+          <rect x="14" y="16" width="8" height="6" fill="#334155" />
+
+          <!-- Front Driver Cab -->
+          <path d="M6 6 C6 3, 10 2, 18 2 C26 2, 30 3, 30 6 L30 18 C30 19.5, 28.5 20, 27 20 L9 20 C7.5 20, 6 19.5, 6 18 Z" fill="${cabColor}" />
+          
+          <!-- Front Windshield -->
+          <path d="M8 8 C10 6.5, 15 6, 18 6 C21 6, 26 6.5, 28 8 L27 12 L9 12 Z" fill="#94a3b8" opacity="0.9" />
+
+          <!-- Side Mirrors -->
+          <rect x="3" y="10" width="3" height="2" rx="0.5" fill="#475569" />
+          <rect x="30" y="10" width="3" height="2" rx="0.5" fill="#475569" />
+
+          <!-- Headlights -->
+          <rect x="7" y="3" width="5" height="2.5" rx="1" fill="#fef08a" />
+          <rect x="24" y="3" width="5" height="2.5" rx="1" fill="#fef08a" />
+
+          <!-- Taillights -->
+          <rect x="6" y="55" width="5" height="2" rx="0.5" fill="#ef4444" />
+          <rect x="25" y="55" width="5" height="2" rx="0.5" fill="#ef4444" />
+        </svg>
+      </div>
+    </div>
+  `;
+
+  return new L.divIcon({
+    html: html,
+    className: 'flat-vehicle-marker',
+    iconSize: [110, 75],
+    iconAnchor: [55, 48]
+  });
+};
 
 // Component to dynamically switch layers
 const MapLayerControl = ({ isSatellite }) => {
@@ -282,6 +341,18 @@ const TrackingMap = () => {
     }
   });
 
+  const claimedVehiclesMap = React.useMemo(() => {
+    const map = {};
+    if (Array.isArray(rawCases)) {
+      rawCases.forEach(c => {
+        if (c.vehicle_plate) {
+          map[c.vehicle_plate.toUpperCase().trim()] = c;
+        }
+      });
+    }
+    return map;
+  }, [rawCases]);
+
   const deviceClaims = React.useMemo(() => {
     if (!selectedDevice || !rawCases) return [];
     const plate = (selectedDevice.deviceName || '').toUpperCase().trim();
@@ -422,16 +493,19 @@ const TrackingMap = () => {
             </Marker>
           ))}
 
-          {filteredLocations && filteredLocations.map((loc) => (
-            <Marker
-              key={loc.deviceId}
-              position={[loc.latitude, loc.longitude]}
-              icon={truckIcon}
-              eventHandlers={{
-                click: () => handleMarkerClick(loc),
-              }}
-            />
-          ))}
+          {filteredLocations && filteredLocations.map((loc) => {
+            const hasClaim = !!claimedVehiclesMap[loc.deviceName?.toUpperCase().trim()];
+            return (
+              <Marker
+                key={loc.deviceId}
+                position={[loc.latitude, loc.longitude]}
+                icon={createVehicleMarkerIcon(loc.deviceName, loc.status, loc.course, hasClaim)}
+                eventHandlers={{
+                  click: () => handleMarkerClick(loc),
+                }}
+              />
+            );
+          })}
         </MapContainer>
       </div>
 
