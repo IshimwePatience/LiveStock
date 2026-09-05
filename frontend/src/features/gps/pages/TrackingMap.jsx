@@ -114,19 +114,19 @@ const GeocodedAddress = ({ lat, lon }) => {
 };
 
 // Custom 2D Flat Heavy Livestock Truck Marker with License Plate Badge (Lays flat on road surface)
-const createVehicleMarkerIcon = (deviceName, status, course = 0) => {
+const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = false) => {
   const isOnline = status === 'online';
-  const cabColor = isOnline ? '#166534' : '#27272a';
-  const trailerColor = isOnline ? '#1e293b' : '#18181b';
-  const trailerBorder = isOnline ? '#22c55e' : '#3f3f46';
-  const slatColor = isOnline ? '#4ade80' : '#71717a';
-  const shadowColor = isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(0, 0, 0, 0.35)';
+  const cabColor = hasClaim ? '#dc2626' : (isOnline ? '#166534' : '#eab308');
+  const trailerColor = hasClaim ? '#991b1b' : (isOnline ? '#1e293b' : '#ca8a04');
+  const trailerBorder = hasClaim ? '#ef4444' : (isOnline ? '#22c55e' : '#854d0e');
+  const slatColor = hasClaim ? '#fca5a5' : (isOnline ? '#4ade80' : '#fef08a');
+  const shadowColor = hasClaim ? 'rgba(220, 38, 38, 0.55)' : (isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(234, 179, 8, 0.45)');
 
   const html = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
-      <!-- White License Plate Badge floating cleanly above truck -->
-      <div style="background: #ffffff; border: 1.5px solid #d1d5db; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: #111827; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; margin-bottom: 3px; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.2px;">
-        ${deviceName || 'Vehicle'}
+      <!-- License Plate Badge floating cleanly above truck -->
+      <div style="background: ${hasClaim ? '#fef2f2' : '#ffffff'}; border: 1.5px solid ${hasClaim ? '#ef4444' : '#d1d5db'}; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: ${hasClaim ? '#991b1b' : '#111827'}; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; margin-bottom: 3px; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.2px;">
+        ${hasClaim ? '🚨 CLAIM: ' : ''}${deviceName || 'Vehicle'}
       </div>
       <!-- 2D Top-Down Heavy Livestock Truck Body laying flat on surface -->
       <div style="transform: rotate(${course || 0}deg); transition: transform 0.3s ease;">
@@ -285,6 +285,27 @@ const TrackingMap = () => {
     refetchInterval: 10000,
   });
 
+  // Query Police Cases & Vehicle Claims
+  const { data: rawCases } = useQuery({
+    queryKey: ['police-cases-gps'],
+    queryFn: async () => {
+      const res = await api.get('/cases');
+      return res.data || [];
+    }
+  });
+
+  const claimedVehiclesMap = useMemo(() => {
+    const map = {};
+    if (Array.isArray(rawCases)) {
+      rawCases.forEach(c => {
+        if (c.vehicle_plate) {
+          map[c.vehicle_plate.toUpperCase().trim()] = c;
+        }
+      });
+    }
+    return map;
+  }, [rawCases]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -298,7 +319,7 @@ const TrackingMap = () => {
   const [routeHistory, setRouteHistory] = useState([]);
 
   // Sidebar Filter States
-  const [deviceFilter, setDeviceFilter] = useState('all'); // 'all' | 'online' | 'offline'
+  const [deviceFilter, setDeviceFilter] = useState('all'); // 'all' | 'online' | 'offline' | 'claimed'
   const [sidebarSearch, setSidebarSearch] = useState('');
 
   const handleSearchSubmit = (e) => {
@@ -334,6 +355,7 @@ const TrackingMap = () => {
 
   const onlineCount = useMemo(() => (locations || []).filter(l => l.status === 'online').length, [locations]);
   const offlineCount = useMemo(() => (locations || []).filter(l => l.status === 'offline' || l.status === 'unknown').length, [locations]);
+  const claimedCount = useMemo(() => (locations || []).filter(l => !!claimedVehiclesMap[l.deviceName.toUpperCase().trim()]).length, [locations, claimedVehiclesMap]);
   const totalCount = (locations || []).length;
 
   const displayedVehicles = useMemo(() => {
@@ -341,6 +363,7 @@ const TrackingMap = () => {
     return locations.filter(loc => {
       if (deviceFilter === 'online' && loc.status !== 'online') return false;
       if (deviceFilter === 'offline' && loc.status !== 'offline' && loc.status !== 'unknown') return false;
+      if (deviceFilter === 'claimed' && !claimedVehiclesMap[loc.deviceName.toUpperCase().trim()]) return false;
 
       if (sidebarSearch.trim()) {
         const q = sidebarSearch.toLowerCase();
@@ -348,7 +371,7 @@ const TrackingMap = () => {
       }
       return true;
     });
-  }, [locations, deviceFilter, sidebarSearch]);
+  }, [locations, deviceFilter, sidebarSearch, claimedVehiclesMap]);
 
   const center = [-1.9441, 30.0619];
 
@@ -403,16 +426,19 @@ const TrackingMap = () => {
             </Marker>
           ))}
 
-          {locations && locations.map((loc) => (
-            <Marker
-              key={loc.deviceId}
-              position={[loc.latitude, loc.longitude]}
-              icon={createVehicleMarkerIcon(loc.deviceName, loc.status, loc.course)}
-              eventHandlers={{
-                click: () => handleMarkerClick(loc),
-              }}
-            />
-          ))}
+          {locations && locations.map((loc) => {
+            const hasClaim = !!claimedVehiclesMap[loc.deviceName.toUpperCase().trim()];
+            return (
+              <Marker
+                key={loc.deviceId}
+                position={[loc.latitude, loc.longitude]}
+                icon={createVehicleMarkerIcon(loc.deviceName, loc.status, loc.course, hasClaim)}
+                eventHandlers={{
+                  click: () => handleMarkerClick(loc),
+                }}
+              />
+            );
+          })}
         </MapContainer>
       </div>
 
@@ -576,24 +602,30 @@ const TrackingMap = () => {
               </div>
 
               {/* Status Filter Tabs */}
-              <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold">
+              <div className="flex items-center gap-1 mt-3 text-[11px] font-semibold overflow-x-auto pb-1 scrollbar-hide">
                 <button
                   onClick={() => setDeviceFilter('all')}
-                  className={`px-3 py-1.5 rounded-md transition ${deviceFilter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
                   All ({totalCount})
                 </button>
                 <button
                   onClick={() => setDeviceFilter('online')}
-                  className={`px-3 py-1.5 rounded-md transition ${deviceFilter === 'online' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'online' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
                 >
                   Online ({onlineCount})
                 </button>
                 <button
                   onClick={() => setDeviceFilter('offline')}
-                  className={`px-3 py-1.5 rounded-md transition ${deviceFilter === 'offline' ? 'bg-red-600 text-white shadow-sm' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'offline' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}`}
                 >
                   Offline ({offlineCount})
+                </button>
+                <button
+                  onClick={() => setDeviceFilter('claimed')}
+                  className={`px-2.5 py-1 rounded-md transition whitespace-nowrap ${deviceFilter === 'claimed' ? 'bg-red-600 text-white shadow-sm' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                >
+                  🚨 Claimed ({claimedCount})
                 </button>
               </div>
             </div>
@@ -605,23 +637,29 @@ const TrackingMap = () => {
               ) : (
                 displayedVehicles.map((loc) => {
                   const isSelected = selectedDevice?.deviceId === loc.deviceId;
+                  const hasClaim = !!claimedVehiclesMap[loc.deviceName.toUpperCase().trim()];
                   return (
                     <div
                       key={loc.deviceId}
                       onClick={() => handleMarkerClick(loc)}
                       className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1.5 ${
-                        isSelected
-                          ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
-                          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                        hasClaim
+                          ? 'bg-red-50/70 border-red-300 hover:border-red-400'
+                          : isSelected
+                            ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-gray-900">{loc.deviceName}</span>
+                        <span className="font-bold text-xs text-gray-900 flex items-center gap-1">
+                          {hasClaim && <span className="text-red-600 font-extrabold text-[11px]">🚨</span>}
+                          {loc.deviceName}
+                        </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                          loc.status === 'online' ? 'bg-emerald-100 text-emerald-800' :
-                          loc.status === 'offline' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                          hasClaim ? 'bg-red-100 text-red-800 border border-red-200' :
+                          loc.status === 'online' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                         }`}>
-                          {loc.status || 'Offline'}
+                          {hasClaim ? 'Claimed' : (loc.status || 'Offline')}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
@@ -683,7 +721,7 @@ const TrackingMap = () => {
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Today Distance</div>
             <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '0.2 km'}
+              {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '0.0 km'}
             </div>
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Ignition Status</div>
@@ -701,7 +739,7 @@ const TrackingMap = () => {
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Current Driver</div>
             <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.route?.driverName || selectedDevice.route?.initiator || 'N/A'}
+              {selectedDevice.route?.driverName || 'N/A'}
             </div>
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Address</div>
@@ -711,19 +749,91 @@ const TrackingMap = () => {
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-b border-r border-gray-200">Top Speed</div>
             <div className="p-2.5 bg-white font-medium text-gray-800 border-b border-gray-200">
-              {selectedDevice.attributes?.topSpeed ? `${(selectedDevice.attributes.topSpeed * 1.852).toFixed(1)} km/h` : '15.1 kn'}
+              {selectedDevice.attributes?.topSpeed ? `${(selectedDevice.attributes.topSpeed * 1.852).toFixed(1)} km/h` : `${(selectedDevice.speed * 1.852).toFixed(1)} km/h`}
             </div>
 
             <div className="p-2.5 bg-gray-100 font-bold text-gray-700 border-r border-gray-200">Odometer</div>
             <div className="p-2.5 bg-white font-medium text-gray-800">
-              {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : '131.5 km'}
+              {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : (selectedDevice.attributes?.odometer ? `${(selectedDevice.attributes.odometer / 1000).toFixed(1)} km` : '0.0 km')}
             </div>
           </div>
 
-          {/* Right Services Panel */}
-          <div className="w-full md:w-64 p-5 bg-gray-50/50 flex flex-col justify-center items-center text-center text-gray-500 text-xs border-t md:border-t-0 md:border-l border-gray-200">
-            <h4 className="font-bold text-gray-800 text-sm mb-2 self-start">Services</h4>
-            <p className="mt-4">No services set for this vehicle.</p>
+          {/* Police Vehicle Claim Banner if Claimed */}
+          {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()] && (
+            <div className="w-full md:w-80 p-4 bg-red-50/90 border-t md:border-t-0 md:border-l border-red-200 flex flex-col justify-between text-xs">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-red-900 text-xs flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-red-600" /> POLICE CLAIM LOGGED
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-200 text-red-900 uppercase">
+                    {claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].type || 'CLAIM'}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-red-800 bg-white p-3 rounded-xl border border-red-200 shadow-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium">Case ID:</span>
+                    <span className="font-bold text-red-900">CAS-{String(claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].id).substring(0, 8).toUpperCase()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium">Location:</span>
+                    <span className="font-semibold text-gray-900">{claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].location || 'Rwanda'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium">Status:</span>
+                    <span className="font-bold text-red-700">{claimedVehiclesMap[selectedDevice.deviceName.toUpperCase().trim()].status || 'Open'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Right Active Trip & Movement Permit Panel */}
+          <div className="w-full md:w-80 p-4 bg-gray-50/80 flex flex-col justify-between text-xs border-t md:border-t-0 md:border-l border-gray-200">
+            {selectedDevice.route ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                    <Route className="w-4 h-4 text-[#0052cc]" /> Active Trip Movement
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    {selectedDevice.route.status || 'Active'}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 font-medium">Permit:</span>
+                    <span className="font-bold text-gray-900">{selectedDevice.route.permitNumber || 'MVT-PERMIT'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 font-medium">Route:</span>
+                    <span className="font-semibold text-gray-800">{selectedDevice.route.originDistrict || 'Origin'} → {selectedDevice.route.destDistrict || 'Dest'}</span>
+                  </div>
+                  {selectedDevice.route.cargo && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 font-medium">Cargo:</span>
+                      <span className="font-semibold text-blue-700">{selectedDevice.route.cargo}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 font-medium">Driver:</span>
+                    <span className="font-medium text-gray-900">{selectedDevice.route.driverName || 'N/A'}</span>
+                  </div>
+                  {selectedDevice.route.driverPhone && selectedDevice.route.driverPhone !== 'N/A' && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 font-medium">Phone:</span>
+                      <span className="font-medium text-gray-800">{selectedDevice.route.driverPhone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col justify-center items-center text-center p-3">
+                <Route className="w-6 h-6 text-gray-400 mb-1" />
+                <h4 className="font-bold text-gray-800 text-xs">Trip Movement</h4>
+                <p className="text-[11px] text-gray-500 mt-1">No active permit linked to this vehicle plate.</p>
+              </div>
+            )}
           </div>
 
         </div>

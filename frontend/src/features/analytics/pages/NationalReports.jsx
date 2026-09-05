@@ -21,11 +21,11 @@ L.Icon.Default.mergeOptions({
 // Custom 2D vehicle heavy livestock truck marker icon (Lays flat on road surface with plate badge)
 const createTruckIcon = (plateName = 'Vehicle', status = 'online', course = 0) => {
   const isOnline = status === 'online';
-  const cabColor = isOnline ? '#166534' : '#27272a';
-  const trailerColor = isOnline ? '#1e293b' : '#18181b';
-  const trailerBorder = isOnline ? '#22c55e' : '#3f3f46';
-  const slatColor = isOnline ? '#4ade80' : '#71717a';
-  const shadowColor = isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(0, 0, 0, 0.35)';
+  const cabColor = isOnline ? '#166534' : '#eab308';
+  const trailerColor = isOnline ? '#1e293b' : '#ca8a04';
+  const trailerBorder = isOnline ? '#22c55e' : '#854d0e';
+  const slatColor = isOnline ? '#4ade80' : '#fef08a';
+  const shadowColor = isOnline ? 'rgba(22, 101, 52, 0.45)' : 'rgba(234, 179, 8, 0.45)';
 
   return new L.divIcon({
     html: `

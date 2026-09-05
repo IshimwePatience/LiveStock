@@ -21,14 +21,19 @@ class TraccarService {
       const isNationalPolice = user.role === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
       const isNationalUser = user.role === 'RAB' || isNationalPolice;
 
-      // 1. Get all active trips
-      const activeTrips = await Trip.findAll({
-        where: { status: 'ACTIVE' },
-        include: [{ 
-          model: MovementRequest,
+      // 1. Get all active trips & movement requests
+      const [activeTrips, activeMovements] = await Promise.all([
+        Trip.findAll({
+          where: { status: 'ACTIVE' },
+          include: [{ 
+            model: MovementRequest,
+            include: [{ model: User, as: 'Initiator' }]
+          }]
+        }),
+        MovementRequest.findAll({
           include: [{ model: User, as: 'Initiator' }]
-        }]
-      });
+        })
+      ]);
 
       // 2. Filter trips based on RBAC (RAB & National Police sees all, DARO/SARO sees origin/dest, District Police sees district)
       const allowedPlateNumbers = new Set();
@@ -68,9 +73,10 @@ class TraccarService {
       const deviceMap = {};
       devices.forEach(device => {
         if (isNationalUser || allowedPlateNumbers.has(device.name.toUpperCase())) {
-            // Find matching trip for this device
-            const trip = activeTrips.find(t => t.plate_number?.toUpperCase() === device.name.toUpperCase());
-            const req = trip?.MovementRequest;
+            const devPlate = (device.name || '').toUpperCase().trim();
+            // Find matching trip or movement request for this device
+            const trip = activeTrips.find(t => (t.plate_number || '').toUpperCase().trim() === devPlate);
+            const req = trip?.MovementRequest || activeMovements.find(m => (m.plate_number || '').toUpperCase().trim() === devPlate);
             
             deviceMap[device.id] = {
               id: device.id,
@@ -79,11 +85,16 @@ class TraccarService {
               status: device.status,
               lastUpdate: device.lastUpdate,
               route: req ? {
-                originDistrict: req.origin_district,
-                originSector: req.origin_sector,
-                destDistrict: req.dest_district,
-                destSector: req.dest_sector,
-                initiator: req.Initiator ? req.Initiator.name : 'Unknown'
+                permitNumber: req.permit_number || `MVT-${String(req.id).substring(0, 8).toUpperCase()}`,
+                originDistrict: req.origin_district || 'Nyagatare',
+                originSector: req.origin_sector || '',
+                destDistrict: req.dest_district || 'Gasabo',
+                destSector: req.dest_sector || '',
+                cargo: `${req.count || 1} ${req.animal_type || 'Livestock'}`,
+                driverName: req.driver_name || trip?.driver_name || (req.Initiator ? req.Initiator.name : 'N/A'),
+                driverPhone: req.driver_phone || trip?.driver_phone || (req.Initiator ? req.Initiator.phone : 'N/A'),
+                ownerName: req.owner_name || 'N/A',
+                status: trip?.status || req.status || 'ACTIVE'
               } : null
             };
         }
