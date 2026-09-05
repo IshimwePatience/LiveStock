@@ -983,11 +983,7 @@ const TrackingMap = () => {
 
             </div>
           )
-        ) : (
-          <div className="p-4 pt-16 text-center text-gray-500">
-            {/* Search box overlay when sidebar is open but no device selected (Google Maps style) */}
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* ----------------- CLAIM VEHICLE / REPORT POLICE CASE MODAL (MATCHES ADVANCED SEARCH DESIGN) ----------------- */}
