@@ -322,6 +322,45 @@ const TrackingMap = () => {
   const [deviceFilter, setDeviceFilter] = useState('all'); // 'all' | 'online' | 'offline' | 'claimed'
   const [sidebarSearch, setSidebarSearch] = useState('');
 
+  // Vehicle Claim Modal States
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimType, setClaimType] = useState('Stolen Vehicle');
+  const [claimLocation, setClaimLocation] = useState('');
+  const [claimDetails, setClaimDetails] = useState('');
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+
+  const handleOpenClaimModal = (veh) => {
+    if (!veh) return;
+    setSelectedDevice(veh);
+    setClaimType('Stolen Vehicle');
+    setClaimLocation(veh.address || (veh.latitude ? `${veh.latitude.toFixed(4)}, ${veh.longitude.toFixed(4)}` : 'Rwanda'));
+    setClaimDetails('');
+    setIsClaimModalOpen(true);
+  };
+
+  const handleSubmitClaim = async (e) => {
+    e.preventDefault();
+    if (!selectedDevice) return;
+    setIsSubmittingClaim(true);
+    try {
+      await api.post('/cases', {
+        vehicle_plate: selectedDevice.deviceName,
+        type: claimType,
+        location: claimLocation || 'Rwanda',
+        details: claimDetails || `Police claim reported for vehicle ${selectedDevice.deviceName}`,
+        status: 'OPEN'
+      });
+      toast.success(`Claim reported for vehicle ${selectedDevice.deviceName}`);
+      queryClient.invalidateQueries(['police-cases-gps']);
+      setIsClaimModalOpen(false);
+    } catch (err) {
+      console.error('Failed to submit claim', err);
+      toast.error('Failed to report vehicle claim');
+    } finally {
+      setIsSubmittingClaim(false);
+    }
+  };
+
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter') {
       setActiveSearchQuery(searchTerm);
@@ -388,6 +427,7 @@ const TrackingMap = () => {
   const handleClearSearch = () => {
     setActiveSearchQuery('');
     setSearchTerm('');
+    setSidebarSearch('');
     setSearchResults([]);
     setSelectedSearchResult(null);
   };
@@ -442,94 +482,85 @@ const TrackingMap = () => {
         </MapContainer>
       </div>
 
-      {/* ----------------- TOP RIGHT SEARCH ICON BUTTON (NO BACK BUTTON) ----------------- */}
-      <div className="absolute top-[22px] right-[22px] z-[400] flex items-center gap-2">
-        {isSearchExpanded ? (
-          <div className="flex items-center bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.18)] w-[260px] h-[40px] px-3 border border-gray-200 animate-in fade-in zoom-in duration-150">
-            <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
-            <input
-              type="text"
-              autoFocus
-              placeholder="Search places..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleSearchSubmit}
-              className="flex-1 bg-transparent border-none outline-none text-xs font-medium text-gray-800 placeholder-gray-400"
-            />
-            <button
-              onClick={() => { setIsSearchExpanded(false); handleClearSearch(); }}
-              className="p-1 hover:bg-gray-100 rounded-full text-gray-400"
-            >
+      {/* ----------------- TOP LEFT EARLY SEARCH BAR ----------------- */}
+      <div className="absolute top-[20px] left-[20px] z-[400] flex items-center gap-2">
+        <div className="flex items-center bg-white rounded-2xl shadow-xl border border-gray-200/90 w-[330px] h-[44px] px-3.5">
+          <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2.5" />
+          <input
+            type="text"
+            placeholder="Search places or vehicles..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setSidebarSearch(e.target.value);
+            }}
+            onKeyDown={handleSearchSubmit}
+            className="flex-1 bg-transparent border-none outline-none text-xs font-medium text-gray-800 placeholder-gray-400"
+          />
+          {searchTerm && (
+            <button onClick={handleClearSearch} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
               <X className="w-4 h-4" />
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsSearchExpanded(true)}
-            className="w-10 h-10 bg-white border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.18)] rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-50 transition"
-            title="Search places"
-          >
-            <Search className="w-4 h-4" />
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* ----------------- FLOATING PILLS (TOP CENTER / LEFT OF SEARCH) ----------------- */}
-      <div className="absolute top-[24px] left-[360px] z-[400] flex">
+      {/* ----------------- FLOATING PILLS (TOP CENTER / RIGHT OF SEARCH) ----------------- */}
+      <div className="absolute top-[20px] left-[365px] z-[400] flex">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
           <button
             onClick={() => activeSearchQuery === 'Restaurants' ? handleClearSearch() : handleFilterClick('Restaurants')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Restaurants' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'Restaurants' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <Utensils className={`w-4 h-4 ${activeSearchQuery === 'Restaurants' ? 'text-white' : 'text-gray-500'}`} /> Restaurants
+            <Utensils className={`w-3.5 h-3.5 ${activeSearchQuery === 'Restaurants' ? 'text-white' : 'text-gray-500'}`} /> Restaurants
           </button>
           <button
             onClick={() => activeSearchQuery === 'Hotels' ? handleClearSearch() : handleFilterClick('Hotels')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Hotels' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'Hotels' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <BedDouble className={`w-4 h-4 ${activeSearchQuery === 'Hotels' ? 'text-white' : 'text-gray-500'}`} /> Hotels
+            <BedDouble className={`w-3.5 h-3.5 ${activeSearchQuery === 'Hotels' ? 'text-white' : 'text-gray-500'}`} /> Hotels
           </button>
           <button
             onClick={() => activeSearchQuery === 'Transit' ? handleClearSearch() : handleFilterClick('Transit')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Transit' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'Transit' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <Train className={`w-4 h-4 ${activeSearchQuery === 'Transit' ? 'text-white' : 'text-gray-500'}`} /> Transit
+            <Train className={`w-3.5 h-3.5 ${activeSearchQuery === 'Transit' ? 'text-white' : 'text-gray-500'}`} /> Transit
           </button>
           <button
             onClick={() => activeSearchQuery === 'Parking' ? handleClearSearch() : handleFilterClick('Parking')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Parking' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'Parking' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <CircleParking className={`w-4 h-4 ${activeSearchQuery === 'Parking' ? 'text-white' : 'text-gray-500'}`} /> Parking
+            <CircleParking className={`w-3.5 h-3.5 ${activeSearchQuery === 'Parking' ? 'text-white' : 'text-gray-500'}`} /> Parking
           </button>
           <button
             onClick={() => activeSearchQuery === 'Pharmacies' ? handleClearSearch() : handleFilterClick('Pharmacies')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'Pharmacies' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'Pharmacies' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <Cross className={`w-4 h-4 ${activeSearchQuery === 'Pharmacies' ? 'text-white' : 'text-gray-500'}`} /> Pharmacies
+            <Cross className={`w-3.5 h-3.5 ${activeSearchQuery === 'Pharmacies' ? 'text-white' : 'text-gray-500'}`} /> Pharmacies
           </button>
           <button
             onClick={() => activeSearchQuery === 'ATMs' ? handleClearSearch() : handleFilterClick('ATMs')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium transition whitespace-nowrap ${
-              activeSearchQuery === 'ATMs' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md text-xs font-medium transition whitespace-nowrap ${
+              activeSearchQuery === 'ATMs' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <Banknote className={`w-4 h-4 ${activeSearchQuery === 'ATMs' ? 'text-white' : 'text-gray-500'}`} /> ATMs
+            <Banknote className={`w-3.5 h-3.5 ${activeSearchQuery === 'ATMs' ? 'text-white' : 'text-gray-500'}`} /> ATMs
           </button>
         </div>
       </div>
 
-      {/* ----------------- LEFT SIDEBAR (DYNAMIC VEHICLES OR SEARCH FILTER RESULTS PANEL) ----------------- */}
-      <div className="absolute top-[22px] left-[22px] bottom-[22px] w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-200/80 z-[350] flex flex-col overflow-hidden">
+      {/* ----------------- LEFT SIDEBAR (RESTORED ORIGINAL FORMAT BELOW SEARCH BAR) ----------------- */}
+      <div className="absolute top-[74px] left-[20px] bottom-[20px] w-[330px] bg-white rounded-2xl shadow-2xl border border-gray-200/90 z-[350] flex flex-col overflow-hidden">
         {activeSearchQuery ? (
           /* ACTIVE FILTER RESULTS MODE */
           <div className="flex flex-col h-full">
@@ -587,19 +618,7 @@ const TrackingMap = () => {
           <div className="flex flex-col h-full">
             <div className="p-4 pb-3 border-b border-gray-100 bg-white">
               <h2 className="text-base font-bold text-gray-900">Vehicles List</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view its details on the map.</p>
-
-              {/* Inner Device Search */}
-              <div className="mt-3 relative">
-                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search devices..."
-                  value={sidebarSearch}
-                  onChange={(e) => setSidebarSearch(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 pr-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
-                />
-              </div>
+              <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view telemetry &amp; live route on map.</p>
 
               {/* Status Filter Tabs */}
               <div className="flex items-center gap-1 mt-3 text-[11px] font-semibold overflow-x-auto pb-1 scrollbar-hide">
@@ -630,7 +649,7 @@ const TrackingMap = () => {
               </div>
             </div>
 
-            {/* Vehicles List */}
+            {/* Vehicles Cards List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {displayedVehicles.length === 0 ? (
                 <div className="p-4 text-center text-xs text-gray-400">No vehicles match filter</div>
@@ -642,9 +661,9 @@ const TrackingMap = () => {
                     <div
                       key={loc.deviceId}
                       onClick={() => handleMarkerClick(loc)}
-                      className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1.5 ${
+                      className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col gap-2 ${
                         hasClaim
-                          ? 'bg-red-50/70 border-red-300 hover:border-red-400'
+                          ? 'bg-red-50/80 border-red-300 hover:border-red-400 shadow-sm'
                           : isSelected
                             ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
                             : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -662,9 +681,17 @@ const TrackingMap = () => {
                           {hasClaim ? 'Claimed' : (loc.status || 'Offline')}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
-                        <span>Speed:</span>
-                        <span>{(loc.speed * 1.852).toFixed(2)} km/h</span>
+                      <div className="flex items-center justify-between text-[11px] text-gray-600 font-medium">
+                        <span>Speed: <strong className="text-gray-800">{(loc.speed * 1.852).toFixed(1)} km/h</strong></span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenClaimModal(loc);
+                          }}
+                          className="text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.5 rounded transition"
+                        >
+                          Report Claim
+                        </button>
                       </div>
                     </div>
                   );
@@ -676,7 +703,7 @@ const TrackingMap = () => {
       </div>
 
       {/* ----------------- LAYERS BUTTON ----------------- */}
-      <div className={`absolute z-[400] transition-all duration-300 ${selectedDevice ? 'bottom-[220px]' : 'bottom-[40px]'} left-[360px]`}>
+      <div className={`absolute z-[400] transition-all duration-300 ${selectedDevice ? 'bottom-[220px]' : 'bottom-[30px]'} left-[370px]`}>
         <button
           onClick={() => setIsSatellite(!isSatellite)}
           className="w-11 h-11 bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-0.5 hover:bg-gray-50 transition-colors"
@@ -688,10 +715,16 @@ const TrackingMap = () => {
 
       {/* ----------------- BOTTOM FLOATING VEHICLE DETAIL CARD (LIVE DB TELEMETRY) ----------------- */}
       {selectedDevice && (
-        <div className="absolute bottom-[22px] left-[360px] right-[22px] z-[450] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="absolute bottom-[20px] left-[365px] right-[20px] z-[450] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-4 duration-200">
 
           {/* Top Right Controls */}
           <div className="absolute top-2.5 right-3 flex items-center gap-2 z-20">
+            <button
+              onClick={() => handleOpenClaimModal(selectedDevice)}
+              className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" /> Claim Vehicle
+            </button>
             <button
               onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
               className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition"
@@ -839,8 +872,94 @@ const TrackingMap = () => {
         </div>
       )}
 
+      {/* ----------------- VEHICLE CLAIM REPORT MODAL ----------------- */}
+      {isClaimModalOpen && selectedDevice && (
+        <div className="fixed inset-0 z-[600] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" /> Report Police Vehicle Claim
+              </h3>
+              <button
+                onClick={() => setIsClaimModalOpen(false)}
+                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitClaim} className="mt-4 space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Target Vehicle Plate</label>
+                <input
+                  type="text"
+                  disabled
+                  value={selectedDevice.deviceName}
+                  className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 font-bold text-red-700 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Claim Case Category</label>
+                <select
+                  value={claimType}
+                  onChange={(e) => setClaimType(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none"
+                >
+                  <option value="Stolen Vehicle">🚨 Stolen Vehicle Alert</option>
+                  <option value="Illegal Movement">⚠️ Unpermitted Livestock Transit</option>
+                  <option value="Contraband Suspect">📦 Contraband / Smuggling Suspect</option>
+                  <option value="Quarantine Violation">🦠 Disease Quarantine Breach</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Incident / Detection Location</label>
+                <input
+                  type="text"
+                  required
+                  value={claimLocation}
+                  onChange={(e) => setClaimLocation(e.target.value)}
+                  placeholder="Enter location or checkpoint..."
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Police Report Details / Case Notes</label>
+                <textarea
+                  rows={3}
+                  value={claimDetails}
+                  onChange={(e) => setClaimDetails(e.target.value)}
+                  placeholder="Provide specific notes, officer observations, or security details..."
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-red-500 outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setIsClaimModalOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold border border-gray-300 hover:bg-gray-100 text-gray-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingClaim}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition shadow-sm flex items-center gap-1.5"
+                >
+                  {isSubmittingClaim ? 'Submitting Claim...' : 'Submit Claim Log'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
 export default TrackingMap;
+
