@@ -1,35 +1,41 @@
 const { Case, User } = require('../models');
+const notificationService = require('./notificationService');
 
 class CaseService {
   _buildScopeFilter(user) {
-    // Police sees all cases globally OR we could scope it to their district if required.
-    // Assuming Police sees everything related to crime, but let's scope if they are tied to a district
-    if (user.role === 'POLICE' && user.district_id) {
-      // Find cases reported in their district
-      // For simplicity, we just return all cases for police, or filter by reporter's district
-      return {}; 
-    }
-    if (user.role === 'RAB') return {};
-    
-    // SARO/DARO only see cases they reported
+    if (user.role === 'POLICE' || user.role === 'RAB') return {};
     return { reporter_id: user.id };
   }
 
   async createCase(user, data) {
-    const { type, trip_id, details } = data;
+    const { type, trip_id, vehicle_plate, location, details } = data;
+    try { await Case.sync(); } catch (e) {}
 
     const newCase = await Case.create({
-      type,
+      type: type || 'VEHICLE_CLAIM',
       reporter_id: user.id,
       trip_id: trip_id || null,
-      details,
+      vehicle_plate: vehicle_plate ? vehicle_plate.trim().toUpperCase() : null,
+      location: location || null,
+      details: details || `Vehicle ${vehicle_plate || ''} claimed by ${user.name}`,
       status: 'OPEN'
     });
+
+    // Notify RAB, Police & Admin about the new police case
+    try {
+      const plateStr = vehicle_plate ? `for Vehicle ${vehicle_plate.toUpperCase()}` : '';
+      const typeLabel = type ? type.replace(/_/g, ' ') : 'VEHICLE CLAIM';
+      const notifMsg = `🚨 POLICE CASE FILED: ${user.name} reported [${typeLabel}] ${plateStr}. ${details ? `Details: ${details}` : ''}`;
+      await notificationService.notifyRoles(['RAB', 'POLICE', 'ADMIN'], notifMsg, 'ALERT');
+    } catch (err) {
+      console.error('Failed to send case creation notification:', err.message);
+    }
 
     return newCase;
   }
 
   async getCases(user) {
+    try { await Case.sync(); } catch (e) {}
     const filter = this._buildScopeFilter(user);
 
     return await Case.findAll({

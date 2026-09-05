@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
@@ -68,12 +68,15 @@ const PoliceCases = () => {
       const reporterInitials = getInitials(reporterName);
       const reporterColor = getColorForInitials(reporterInitials);
 
-      let severity = 'High';
-      if (req.type === 'ROBBERY') severity = 'Critical';
-      else if (req.type === 'THEFT') severity = 'Major';
+      let severity = 'Medium';
+      if (req.type === 'ROBBERY' || req.type === 'THEFT') severity = 'Critical';
+      else if (req.type === 'UNAUTHORIZED_MOVEMENT' || req.type === 'GEOFENCE_VIOLATION' || req.type === 'VEHICLE_CLAIM') severity = 'High';
 
       const filterStatus = req.status === 'CLOSED' ? 'Closed' : 'Open';
-      const filterType = req.type;
+      const filterType = req.type || 'VEHICLE_CLAIM';
+
+      const plateStr = req.vehicle_plate ? ` [Plate: ${req.vehicle_plate}]` : '';
+      const displayTitle = req.details ? `${req.details}${plateStr}` : `Case reported: ${filterType}${plateStr}`;
 
       return {
         id: `CAS-${req.id.substring(0, 8).toUpperCase()}`,
@@ -81,7 +84,7 @@ const PoliceCases = () => {
         type: filterType,
         filterType,
         filterStatus,
-        title: req.details || `Case reported: ${filterType}`,
+        title: displayTitle,
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         severity,

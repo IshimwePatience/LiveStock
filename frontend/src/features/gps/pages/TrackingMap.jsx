@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { getTraccarLocations, getTraccarRoute } from '../../../lib/api';
+import api, { getTraccarLocations, getTraccarRoute } from '../../../lib/api';
 import {
   Search, X, Menu, Navigation, MapPin,
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 // Fix Leaflet's default icon path issues in React
@@ -235,6 +235,7 @@ const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
 };
 
 const TrackingMap = () => {
+  const queryClient = useQueryClient();
   const { data: locations, isLoading, isError, error } = useQuery({
     queryKey: ['gps-locations'],
     queryFn: async () => {
@@ -257,6 +258,13 @@ const TrackingMap = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
   const [routeHistory, setRouteHistory] = useState([]);
+
+  // Claim Vehicle Modal States
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimCaseType, setClaimCaseType] = useState('VEHICLE_CLAIM');
+  const [claimLocation, setClaimLocation] = useState('');
+  const [claimDetails, setClaimDetails] = useState('');
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
 
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter') {
@@ -676,7 +684,15 @@ const TrackingMap = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2">
+              <div
+                onClick={() => {
+                  setClaimCaseType('VEHICLE_CLAIM');
+                  setClaimLocation(selectedDevice.route ? `${selectedDevice.route.originDistrict} District` : 'Gasabo District');
+                  setClaimDetails(`Claim reported for vehicle ${selectedDevice.deviceName} by officer.`);
+                  setIsClaimModalOpen(true);
+                }}
+                className="flex items-center gap-4 text-sm text-blue-600 cursor-pointer font-medium hover:underline mt-2"
+              >
                 <CornerUpRight className="w-5 h-5" />
                 <span>Claim this vehicle</span>
               </div>
@@ -689,6 +705,136 @@ const TrackingMap = () => {
           </div>
         )}
       </div>
+
+      {/* ----------------- CLAIM VEHICLE / REPORT POLICE CASE MODAL (MATCHES ADVANCED SEARCH DESIGN) ----------------- */}
+      {isClaimModalOpen && selectedDevice && (
+        <div className="fixed inset-0 bg-black/40 z-[2000] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-[540px] bg-[#f0f4f9] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <h2 className="text-[19px] font-medium text-gray-900">
+                Claim Vehicle &amp; Report Police Case
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsClaimModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 transition text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body Form */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmittingClaim(true);
+                try {
+                  await api.post('/cases', {
+                    type: claimCaseType,
+                    vehicle_plate: selectedDevice.deviceName,
+                    location: claimLocation,
+                    details: claimDetails
+                  });
+
+                  toast.success(`🚨 Vehicle ${selectedDevice.deviceName} claimed! Police case filed.`, { duration: 6000 });
+                  queryClient.invalidateQueries(['police-cases']);
+                  queryClient.invalidateQueries(['notifications']);
+                  queryClient.invalidateQueries(['gps-locations']);
+                  setIsClaimModalOpen(false);
+                } catch (err) {
+                  toast.error(err.response?.data?.message || 'Failed to submit vehicle claim case.');
+                } finally {
+                  setIsSubmittingClaim(false);
+                }
+              }}
+              className="flex flex-col px-6 py-2 gap-4 text-sm"
+            >
+              {/* Target Vehicle Plate */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Target Vehicle
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={selectedDevice.deviceName}
+                  className="flex-1 bg-gray-200/80 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 font-semibold cursor-not-allowed"
+                />
+              </div>
+
+              {/* Case Type */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Case Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={claimCaseType}
+                  onChange={(e) => setClaimCaseType(e.target.value)}
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="VEHICLE_CLAIM">Claim Vehicle (Seizure / Hold)</option>
+                  <option value="UNAUTHORIZED_MOVEMENT">Unauthorized Livestock Movement</option>
+                  <option value="GEOFENCE_VIOLATION">Geofence Boundary Breach</option>
+                  <option value="THEFT">Suspected Theft / Stolen Vehicle</option>
+                  <option value="ILLEGAL_TRANSPORT">Illegal Livestock Transport</option>
+                  <option value="ROBBERY">Robbery / Crime Incident</option>
+                  <option value="OTHER">Other Police Case</option>
+                </select>
+              </div>
+
+              {/* Location / District */}
+              <div className="flex items-center min-h-[48px]">
+                <label className="w-36 shrink-0 font-medium text-gray-700">
+                  Location / District
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Gasabo District, Kigali"
+                  value={claimLocation}
+                  onChange={(e) => setClaimLocation(e.target.value)}
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              {/* Reason / Details */}
+              <div className="flex items-start pt-2">
+                <label className="w-36 shrink-0 font-medium text-gray-700 pt-2">
+                  Incident Details <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Enter details or reason for claiming this vehicle / reporting case..."
+                  value={claimDetails}
+                  onChange={(e) => setClaimDetails(e.target.value)}
+                  required
+                  className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 resize-none"
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex items-center justify-between pt-6 pb-2 border-t border-gray-200 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsClaimModalOpen(false)}
+                  className="text-blue-700 font-medium hover:underline text-sm"
+                >
+                  Reset / Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingClaim}
+                  className="bg-[#0052cc] hover:bg-[#0040a8] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
+                >
+                  {isSubmittingClaim ? 'Submitting Claim...' : 'Claim Vehicle'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
