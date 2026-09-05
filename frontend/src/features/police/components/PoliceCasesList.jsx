@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { User, ChevronDown, AlertTriangle, FileText, ArrowUp, MoreVertical } from 'lucide-react';
 
 const PoliceCasesList = ({ cases, isLoading, isError }) => {
@@ -162,10 +162,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
       </table>
 
       {/* Footer actions */}
-      <div className="py-4 flex justify-between text-sm text-gray-500 items-center mt-auto">
-          <button className="flex items-center gap-1 hover:text-gray-800 font-medium">
-            <span className="text-lg leading-none">+</span> Create Case
-          </button>
+      <div className="py-4 flex justify-end text-sm text-gray-500 items-center mt-auto">
           <div className="flex items-center gap-2">
             {cases.length} of <span className="text-green-600">{cases.length}</span> 
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>

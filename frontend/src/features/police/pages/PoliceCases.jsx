@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import { Search, Bell } from 'lucide-react';
@@ -144,12 +144,15 @@ const PoliceCases = () => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Top Title Area */}
-      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
+      {/* Top Breadcrumb/Title Area */}
+      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
         <div>
+          <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+            <Link to="/dashboard/overview" className="hover:underline text-blue-600">Overview</Link> / <span>Livestock Tracking app</span>
+          </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             Police Cases 
-            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold border border-blue-200">
+            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {filteredCases.length}
             </span>
           </h1>
