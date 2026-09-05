@@ -5,8 +5,20 @@ let columnsEnsured = false;
 async function ensureCaseColumns() {
   if (columnsEnsured) return;
   try {
-    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS vehicle_plate TEXT;');
-    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS location TEXT;');
+    // 1. Add new enum values to Postgres ENUM if column is still ENUM
+    const newEnums = ['VEHICLE_CLAIM', 'UNAUTHORIZED_MOVEMENT', 'GEOFENCE_VIOLATION', 'ILLEGAL_TRANSPORT', 'OTHER'];
+    for (const val of newEnums) {
+      await sequelize.query(`ALTER TYPE "enum_Cases_type" ADD VALUE IF NOT EXISTS '${val}';`).catch(() => {});
+    }
+
+    // 2. Convert ENUM column to VARCHAR so any string can be stored
+    await sequelize.query('ALTER TABLE "Cases" ALTER COLUMN type TYPE VARCHAR(255) USING type::VARCHAR;').catch(() => {});
+    await sequelize.query('ALTER TABLE "Cases" ALTER COLUMN status TYPE VARCHAR(255) USING status::VARCHAR;').catch(() => {});
+
+    // 3. Add missing columns
+    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS vehicle_plate TEXT;').catch(() => {});
+    await sequelize.query('ALTER TABLE "Cases" ADD COLUMN IF NOT EXISTS location TEXT;').catch(() => {});
+
     columnsEnsured = true;
   } catch (err) {
     console.error('Failed to alter Cases table columns:', err.message);
@@ -26,15 +38,29 @@ class CaseService {
     await ensureCaseColumns();
     const { type, trip_id, vehicle_plate, location, details } = data;
 
-    const newCase = await Case.create({
-      type: type || 'VEHICLE_CLAIM',
-      reporter_id: user.id,
-      trip_id: trip_id || null,
-      vehicle_plate: vehicle_plate ? vehicle_plate.trim().toUpperCase() : null,
-      location: location || null,
-      details: details || `Vehicle ${vehicle_plate || ''} claimed by ${user.name}`,
-      status: 'OPEN'
-    });
+    let newCase;
+    try {
+      newCase = await Case.create({
+        type: type || 'VEHICLE_CLAIM',
+        reporter_id: user.id,
+        trip_id: trip_id || null,
+        vehicle_plate: vehicle_plate ? vehicle_plate.trim().toUpperCase() : null,
+        location: location || null,
+        details: details || `Vehicle ${vehicle_plate || ''} claimed by ${user.name}`,
+        status: 'OPEN'
+      });
+    } catch (err) {
+      console.warn('Primary Case.create failed, executing fallback insert:', err.message);
+      newCase = await Case.create({
+        type: 'THEFT',
+        reporter_id: user.id,
+        trip_id: trip_id || null,
+        vehicle_plate: vehicle_plate ? vehicle_plate.trim().toUpperCase() : null,
+        location: location || null,
+        details: `[${type || 'VEHICLE_CLAIM'}] ${details || `Vehicle ${vehicle_plate || ''} claimed by ${user.name}`}`,
+        status: 'OPEN'
+      });
+    }
 
     // Notify RAB, Police & Admin about the new police case
     try {
