@@ -2,9 +2,23 @@ const { NotificationLog, User } = require('../models');
 const { Op } = require('sequelize');
 const socketService = require('./socketService');
 
+let notifColsEnsured = false;
+async function ensureNotificationColumns() {
+  if (notifColsEnsured) return;
+  try {
+    const { sequelize } = require('../models');
+    await sequelize.query('ALTER TABLE "NotificationLogs" ALTER COLUMN message TYPE TEXT;').catch(() => {});
+    await sequelize.query('ALTER TABLE "NotificationLogs" ALTER COLUMN type TYPE TEXT USING type::TEXT;').catch(() => {});
+    notifColsEnsured = true;
+  } catch (err) {
+    console.error('Failed to alter NotificationLogs table columns:', err.message);
+  }
+}
+
 class NotificationService {
   async notifyUser(userId, message, type = 'ALERT') {
     if (!userId) return null;
+    await ensureNotificationColumns();
     
     // 1. Log to DB
     const log = await NotificationLog.create({

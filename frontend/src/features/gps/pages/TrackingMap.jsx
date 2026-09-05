@@ -597,10 +597,7 @@ const TrackingMap = () => {
                 </button>
               </div>
 
-              <div className="p-5 border-b border-gray-100 bg-blue-50/50">
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">
-                  <FileText className="w-4 h-4" /> Reported Police Claims
-                </div>
+              <div className="p-5 border-b border-gray-100 bg-white">
                 <h3 className="text-xl font-bold text-gray-900">{selectedDevice.deviceName}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{deviceClaims.length} claims registered in system</p>
               </div>
@@ -618,18 +615,11 @@ const TrackingMap = () => {
                         setSelectedClaim(claim);
                         setSidebarView('claim_detail');
                       }}
-                      className="p-5 hover:bg-blue-50/40 cursor-pointer transition-colors flex flex-col gap-2 group"
+                      className="p-5 hover:bg-gray-50 cursor-pointer transition-colors flex flex-col gap-2 group"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
                           CAS-{claim.id.substring(0, 8).toUpperCase()}
-                        </span>
-                        <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${
-                          claim.status === 'Case Solved' ? 'bg-green-100 text-green-700' :
-                          claim.status === 'Following Up' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {claim.status || 'Open'}
                         </span>
                       </div>
                       <p className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700">
@@ -666,7 +656,7 @@ const TrackingMap = () => {
                   <h3 className="text-xl font-bold text-gray-900">CAS-{selectedClaim.id.substring(0, 8).toUpperCase()}</h3>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <div className="py-1 space-y-3">
                   <div>
                     <span className="text-xs text-gray-500">Target Vehicle Plate</span>
                     <p className="text-sm font-semibold text-gray-900">{selectedClaim.vehicle_plate || selectedDevice.deviceName}</p>
@@ -691,7 +681,7 @@ const TrackingMap = () => {
 
                 <div>
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Details &amp; Description</span>
-                  <div className="mt-1.5 p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-sm text-gray-800 leading-relaxed">
+                  <div className="mt-1.5 text-sm text-gray-800 leading-relaxed">
                     {selectedClaim.details}
                   </div>
                 </div>
