@@ -107,9 +107,9 @@ const DashboardLayout = () => {
 
   const DEFAULT_ROLE_PERMISSIONS = {
     RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
-    DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
-    SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
-    POLICE: ['cases', 'gps', 'notifications']
+    DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
+    SARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications'],
+    POLICE: ['cases', 'gps', 'national_reports', 'notifications']
   };
 
   const getEffectivePermissions = () => {
@@ -325,32 +325,18 @@ const DashboardLayout = () => {
 
             {/* Analytics & Reports */}
             {(hasPerm('national_reports') || hasPerm('performance_audit')) && (
-              <div className="mt-4">
-                <div
-                  className="flex items-center gap-2 px-4 py-2 cursor-pointer group"
-                  onClick={() => setTopChartsOpen(!topChartsOpen)}
+              <div className="mt-4 space-y-1">
+                <Link 
+                  to="/dashboard/national-reports" 
+                  className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 mt-2 ${
+                    isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
+                      ? 'bg-[#e9f2ff] text-[#0052cc]' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
-                  {topChartsOpen ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                  )}
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    Analytics & Reports
-                  </div>
-                </div>
-
-                {topChartsOpen && (
-                  <div className="pl-12 pr-4 space-y-1">
-                    {hasPerm('national_reports') && (
-                      <Link to="/dashboard/national-reports" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/national-reports') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>National Reports</Link>
-                    )}
-                    {hasPerm('performance_audit') && (
-                      <Link to="/dashboard/performance-audit" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/performance-audit') ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>Performance Audit</Link>
-                    )}
-                  </div>
-                )}
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  Analytics & Reports
+                </Link>
               </div>
             )}
 

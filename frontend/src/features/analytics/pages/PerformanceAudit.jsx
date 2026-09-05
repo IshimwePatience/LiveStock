@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   MoreHorizontal, Share2, Upload, ChevronRight, X,
   Layout, List, Columns, Calendar as CalendarIcon, BarChart2,
@@ -6,9 +7,22 @@ import {
 } from 'lucide-react';
 
 const PerformanceAudit = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('performance-audit');
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+
+  const analyticsTabs = [
+    { id: 'national-reports', label: 'National Reports', path: '/dashboard/national-reports' },
+    { id: 'performance-audit', label: 'Performance Audit', path: '/dashboard/performance-audit' },
+    { id: 'district-summaries', label: 'District Summaries' },
+    { id: 'sector-tracking', label: 'Sector Tracking' },
+    { id: 'veterinary-logs', label: 'Veterinary Logs' },
+    { id: 'police-reports', label: 'Police Reports' },
+    { id: 'geofencing-data', label: 'Geo-Fencing Data' },
+  ];
+
   return (
     <div className="flex flex-col h-full bg-white text-[#172b4d] overflow-x-hidden font-sans pb-10">
       
@@ -50,29 +64,24 @@ const PerformanceAudit = () => {
           </div>
         </div>
 
-      {/* Tabs */}
-      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 overflow-x-auto">
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <BarChart2 className="w-4 h-4" /> National Reports
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-green-700 text-[14px] font-medium border-b-2 border-green-700 cursor-pointer whitespace-nowrap">
-          <Layout className="w-4 h-4" /> Performance Audit
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <FileText className="w-4 h-4" /> District Summaries
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <List className="w-4 h-4" /> Sector Tracking
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <Target className="w-4 h-4" /> Veterinary Logs
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <Box className="w-4 h-4" /> Police Reports
-        </div>
-        <div className="flex items-center gap-2 pb-2 text-[#42526e] text-[14px] font-medium cursor-pointer hover:text-[#172b4d] whitespace-nowrap">
-          <CalendarIcon className="w-4 h-4" /> Geo-Fencing Data
-        </div>
+      {/* Tabs / Toolbar (Matching Movements tab design) */}
+      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
+        {analyticsTabs.map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => {
+              if (tab.path) navigate(tab.path);
+              else setActiveTab(tab.id);
+            }}
+            className={`whitespace-nowrap pb-2 -mb-2 ${
+              activeTab === tab.id 
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
+                : 'hover:text-gray-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="p-6">
@@ -87,7 +96,7 @@ const PerformanceAudit = () => {
           <div className="relative">
             <button 
               onClick={() => { setMoreOpen(!moreOpen); setExportOpen(false); }}
-              className={`p-1.5 rounded border transition-colors ${moreOpen ? 'bg-green-50 border-green-600 text-green-700' : 'hover:bg-[#091e4214] border-[#dfe1e6] text-[#42526e]'}`}
+              className={`p-1.5 rounded border transition-colors ${moreOpen ? 'bg-blue-50 border-[#0052cc] text-[#0052cc]' : 'hover:bg-[#091e4214] border-[#dfe1e6] text-[#42526e]'}`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -96,7 +105,7 @@ const PerformanceAudit = () => {
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
                 <button 
                   onClick={() => setExportOpen(!exportOpen)}
-                  className={`w-full text-left px-4 py-2 text-[14px] flex items-center justify-between ${exportOpen ? 'bg-green-50 text-green-700 border-l-2 border-green-600' : 'text-[#172b4d] hover:bg-gray-50'}`}
+                  className={`w-full text-left px-4 py-2 text-[14px] flex items-center justify-between ${exportOpen ? 'bg-blue-50 text-[#0052cc] border-l-2 border-[#0052cc]' : 'text-[#172b4d] hover:bg-gray-50'}`}
                 >
                   <div className="flex items-center gap-3">
                     <Upload className="w-4 h-4" />

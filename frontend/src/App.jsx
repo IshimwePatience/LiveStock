@@ -25,9 +25,9 @@ import { connectSocket } from './lib/socket';
 
 const DEFAULT_ROLE_PERMISSIONS = {
   RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
-  DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
-  SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
-  POLICE: ['cases', 'gps', 'notifications']
+  DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
+  SARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications'],
+  POLICE: ['cases', 'gps', 'national_reports', 'notifications']
 };
 
 // Ordered list: first match for a permission wins
@@ -83,7 +83,11 @@ const PermittedRoute = ({ permKey, children }) => {
     ? perms
     : (DEFAULT_ROLE_PERMISSIONS[user.role] || []);
 
-  if (!effectivePerms.includes(permKey)) {
+  if (permKey === 'national_reports' || permKey === 'performance_audit') {
+    if (!effectivePerms.includes('national_reports') && !effectivePerms.includes('performance_audit')) {
+      return <Navigate to={getFirstPermittedRoute(user)} replace />;
+    }
+  } else if (!effectivePerms.includes(permKey)) {
     return <Navigate to={getFirstPermittedRoute(user)} replace />;
   }
 
@@ -172,7 +176,7 @@ function App() {
           <Route path="users" element={<PermittedRoute permKey="user_management"><UserManagement /></PermittedRoute>} />
           <Route path="system-settings" element={<PermittedRoute permKey="system_settings"><SystemSettings /></PermittedRoute>} />
           <Route path="national-reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
-          <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><PerformanceAudit /></PermittedRoute>} />
+          <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><NationalReports /></PermittedRoute>} />
           <Route path="cases" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
           <Route path="vet-records/create" element={<VetRoute><CreateVetRecord /></VetRoute>} />

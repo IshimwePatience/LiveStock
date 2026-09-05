@@ -28,7 +28,7 @@ const UserManagement = () => {
     { id: 'gps', label: 'GPS Tracking' },
     { id: 'movements', label: 'Movements' },
     { id: 'geofencing', label: 'Geo-Fencing' },
-    { id: 'national_reports', label: 'National Reports' },
+    { id: 'national_reports', label: 'Analytics & Reports' },
     { id: 'performance_audit', label: 'Performance Audit' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'system_settings', label: 'System Settings' },
@@ -37,9 +37,9 @@ const UserManagement = () => {
 
   const ROLE_DEFAULTS = {
     RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
-    DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
-    SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
-    POLICE: ['cases', 'gps', 'notifications']
+    DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
+    SARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications'],
+    POLICE: ['cases', 'gps', 'national_reports', 'notifications']
   };
 
   const toggleModalPermission = (id) => {

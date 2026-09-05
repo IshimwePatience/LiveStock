@@ -9,7 +9,7 @@ const MODULE_PERMISSIONS = [
   { id: 'gps', label: "GPS Tracking", desc: 'Real-time vehicle GPS tracking map, live routes, and speed alert monitoring.' },
   { id: 'movements', label: "Movements & Permits", desc: 'Permit request creation, verification, approval, and official RAB PDF generation.' },
   { id: 'geofencing', label: "Geo-Fencing & Quarantine", desc: 'Configuring quarantine zones, geo-fenced perimeters, and perimeter alerts.' },
-  { id: 'national_reports', label: "National Reports", desc: 'Accessing national livestock volume, trade, and disease outbreak analytics.' },
+  { id: 'national_reports', label: "Analytics & Reports", desc: 'Accessing national livestock volume, GPS route replay, movement trends, and police analytics.' },
   { id: 'performance_audit', label: "Performance Audit", desc: 'Inspecting official RAB user activity logs, audit trails, and security timestamps.' },
   { id: 'notifications', label: "Notifications", desc: 'Receiving real-time security alerts, permit status updates, and system messages.' },
   { id: 'system_settings', label: "System Settings", desc: 'Configuring system module permissions, role policies, and global settings.' },
@@ -18,9 +18,9 @@ const MODULE_PERMISSIONS = [
 
 const DEFAULT_ROLE_PERMISSIONS = {
   RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
-  DARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications', 'user_management'],
-  SARO: ['overview', 'gps', 'movements', 'geofencing', 'notifications'],
-  POLICE: ['cases', 'gps', 'notifications']
+  DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
+  SARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications'],
+  POLICE: ['cases', 'gps', 'national_reports', 'notifications']
 };
 
 const SystemSettings = () => {

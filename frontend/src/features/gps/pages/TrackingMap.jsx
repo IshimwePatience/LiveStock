@@ -44,6 +44,21 @@ const getCustomIcon = (category) => {
   });
 };
 
+// Helper to resolve high-resolution real place photos for locations
+const getPlaceImage = (name, category) => {
+  const n = (name || '').toLowerCase();
+  const c = (category || '').toLowerCase();
+
+  if (n.includes('nyagatare') || n.includes('gatsibo')) return 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&w=600&q=80';
+  if (n.includes('bugesera') || n.includes('nyamata')) return 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80';
+  if (n.includes('gasabo') || n.includes('kigali') || n.includes('kimironko')) return 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80';
+  if (n.includes('musanze') || n.includes('kinigi')) return 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?auto=format&fit=crop&w=600&q=80';
+  if (c.includes('hotel') || n.includes('hotel') || n.includes('chez lando')) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80';
+  if (c.includes('restaurant') || n.includes('bar') || n.includes('restaurant')) return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80';
+  
+  return 'https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?auto=format&fit=crop&w=600&q=80';
+};
+
 // Component to reverse geocode lat/lon to a readable address
 const GeocodedAddress = ({ lat, lon }) => {
   const [locationDetails, setLocationDetails] = useState({
@@ -408,16 +423,23 @@ const TrackingMap = () => {
             />
           )}
 
-          {/* Search Result Markers */}
+          {/* Search Result Markers with Real Place Picture Popups */}
           {searchResults.map((res, idx) => (
             <Marker
               key={`search-${idx}`}
               position={[res.lat, res.lon]}
               icon={getCustomIcon(activeSearchQuery)}
             >
-              <Popup className="custom-popup">
-                <div className="font-medium text-gray-900">{res.display_name.split(',')[0]}</div>
-                <div className="text-xs text-gray-500 mt-1">{res.display_name}</div>
+              <Popup className="custom-popup" maxWidth={280}>
+                <div className="p-1 font-sans space-y-2">
+                  <img 
+                    src={getPlaceImage(res.display_name, activeSearchQuery)} 
+                    alt={res.display_name} 
+                    className="w-full h-28 object-cover rounded-md shadow-sm"
+                  />
+                  <div className="font-bold text-[#1a73e8] text-xs">{res.display_name.split(',')[0]}</div>
+                  <div className="text-[11px] text-gray-600 leading-snug">{res.display_name}</div>
+                </div>
               </Popup>
             </Marker>
           ))}
@@ -559,17 +581,57 @@ const TrackingMap = () => {
             ) : searchResults.length === 0 ? (
               <div className="text-gray-500 text-sm">No results found in this area. Try zooming out or searching another term.</div>
             ) : (
-              <div className="flex flex-col gap-4">
-                {searchResults.map((res, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setSelectedSearchResult(res)}
-                    className="flex flex-col border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                  >
-                    <span className="font-medium text-[16px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
-                    <span className="text-[13px] text-gray-600 line-clamp-2">{res.display_name}</span>
-                  </div>
-                ))}
+              <div className="flex flex-col gap-3">
+                {searchResults.map((res, idx) => {
+                  const title = res.display_name.split(',')[0];
+                  const address = res.display_name;
+                  const imgUrl = getPlaceImage(address, activeSearchQuery);
+
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedSearchResult(res)}
+                      className={`p-3 rounded-lg border transition cursor-pointer flex gap-3 ${
+                        selectedSearchResult?.lat === res.lat && selectedSearchResult?.lon === res.lon
+                          ? 'border-[#1a73e8] bg-blue-50/40 shadow-sm ring-1 ring-[#1a73e8]/30'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      {/* Real Place Picture Thumbnail */}
+                      <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                        <img 
+                          src={imgUrl} 
+                          alt={title} 
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 rounded font-mono">
+                          📍
+                        </span>
+                      </div>
+
+                      {/* Info Details */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between text-xs">
+                        <div>
+                          <h4 className="font-bold text-[#1a73e8] truncate leading-tight text-xs hover:underline">
+                            {title}
+                          </h4>
+                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 leading-snug">
+                            {address}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-[#1a73e8]">
+                            {activeSearchQuery || 'Location'}
+                          </span>
+                          <span className="text-[10px] font-semibold text-[#1a73e8] flex items-center gap-0.5 hover:underline">
+                            Fly Satellite Map <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
