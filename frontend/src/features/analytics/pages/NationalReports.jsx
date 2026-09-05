@@ -19,12 +19,33 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom vehicle truck marker icon
-const createTruckIcon = () => new L.divIcon({
-  html: `<div style="background-color: #0052cc; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,82,204,0.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>`,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16]
+// Custom vehicle truck marker icon (Lays flat on road surface with plate badge)
+const createTruckIcon = (plateName = 'RAI 182I') => new L.divIcon({
+  html: `
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
+      <!-- License Plate Badge -->
+      <div style="background: #ffffff; border: 1.5px solid #d1d5db; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: #111827; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; margin-bottom: 2px; font-family: system-ui, -apple-system, sans-serif;">
+        ${plateName}
+      </div>
+      <!-- 2D Top-Down Truck Body flat on surface -->
+      <div>
+        <svg width="26" height="38" viewBox="0 0 28 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 5px rgba(0,82,204,0.4));">
+          <rect x="3" y="2" width="22" height="38" rx="5" fill="#0052cc" />
+          <rect x="6" y="7" width="16" height="7" rx="2" fill="#94a3b8" opacity="0.85" />
+          <rect x="7" y="29" width="14" height="4" rx="1.5" fill="#94a3b8" opacity="0.7" />
+          <rect x="4" y="15" width="2" height="11" rx="0.5" fill="#cbd5e1" opacity="0.8" />
+          <rect x="22" y="15" width="2" height="11" rx="0.5" fill="#cbd5e1" opacity="0.8" />
+          <rect x="4" y="3" width="4" height="2" rx="1" fill="#fef08a" />
+          <rect x="20" y="3" width="4" height="2" rx="1" fill="#fef08a" />
+          <rect x="4" y="38" width="4" height="2" rx="1" fill="#ef4444" />
+          <rect x="20" y="38" width="4" height="2" rx="1" fill="#ef4444" />
+        </svg>
+      </div>
+    </div>
+  `,
+  className: 'flat-vehicle-marker',
+  iconSize: [100, 65],
+  iconAnchor: [50, 42]
 });
 
 // Start pin icon
@@ -588,7 +609,7 @@ const NationalReports = () => {
                 </Marker>
 
                 {/* Current Animated Moving Vehicle Marker */}
-                <Marker position={currentPosition} icon={createTruckIcon()}>
+                <Marker position={currentPosition} icon={createTruckIcon(currentRoute.plate)}>
                   <Popup>
                     <div className="p-1 space-y-1">
                       <p className="font-bold text-blue-700">{currentRoute.plate}</p>
