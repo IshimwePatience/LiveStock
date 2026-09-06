@@ -8,7 +8,7 @@ import {
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
-  ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert
+  ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert, PlaySquare, Play
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
