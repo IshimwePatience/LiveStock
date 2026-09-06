@@ -10,6 +10,7 @@ import MovementsList from '../components/MovementsList';
 import MovementsMap from '../components/MovementsMap';
 import MovementsHistory from '../components/MovementsHistory';
 import { useNavigate } from 'react-router-dom';
+import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
 
 // Helper to generate initials from name
 const getInitials = (name) => {
@@ -379,74 +380,41 @@ const Movements = () => {
     const printWindow = window.open('', '_blank');
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY (REQUESTS & HISTORY)';
     
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>RAB Movement Permits Report - ${scopeLabel}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .header h1 { color: #0052cc; margin: 0; font-size: 20px; font-weight: bold; }
-            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
-            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-size: 11px; }
-            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-            tr:nth-child(even) { background-color: #f8fafc; }
-            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-            .badge-approved { background: #dcfce7; color: #166534; }
-            .badge-pending { background: #fef3c7; color: #92400e; }
-            .badge-rejected { background: #fee2e2; color: #991b1b; }
-            .mode-car { color: #0052cc; font-weight: 600; }
-            .mode-foot { color: #d97706; font-weight: 600; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <h1>RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)</h1>
-              <p>Official Livestock Movement Permit Registry • ${scopeLabel}</p>
-            </div>
-          </div>
-          <div class="meta">
-            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
-            <strong>Export Scope:</strong> ${scopeLabel}<br/>
-            <strong>Total Records:</strong> ${dataset.length}
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Permit No</th>
-                <th>Transport Mode</th>
-                <th>Farmer / Owner</th>
-                <th>Driver / Herder</th>
-                <th>Vehicle / Plate</th>
-                <th>Route</th>
-                <th>Details</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${dataset.map(m => {
-                const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
-                return `
-                  <tr>
-                    <td><strong>${m.permitNumber}</strong></td>
-                    <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${isPersonOnFoot ? 'Umushumba' : 'Vehicle'}</td>
-                    <td>${m.farmerName}<br/><span style="color:#6b7280;font-size:10px;">ID: ${m.farmerNid}</span></td>
-                    <td>${m.driverName !== 'N/A' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned')}<br/><span style="color:#6b7280;font-size:10px;">Tel: ${m.driverPhone}</span></td>
-                    <td>${isPersonOnFoot ? 'N/A' : m.plateNumber}</td>
-                    <td>${m.route}</td>
-                    <td>${m.title}</td>
-                    <td><span class="badge ${m.rawStatus === 'APPROVED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
+    printWindow.document.write(generatePdfReportHTML({
+      titleMain: 'RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)',
+      titleSub: '',
+      subtitle: `Official Livestock Movement Permit Registry • ${scopeLabel}`,
+      meta: [
+        { label: 'GENERATED ON', value: new Date().toLocaleString() },
+        { label: 'EXPORT SCOPE', value: scopeLabel },
+        { label: 'TOTAL RECORDS', value: dataset.length }
+      ],
+      columns: [
+        { header: 'PERMIT NO', align: 'left' },
+        { header: 'TRANSPORT MODE', align: 'left' },
+        { header: 'FARMER / OWNER', align: 'left' },
+        { header: 'DRIVER / HERDER', align: 'left' },
+        { header: 'VEHICLE / PLATE', align: 'left' },
+        { header: 'ROUTE', align: 'left' },
+        { header: 'DETAILS', align: 'left' },
+        { header: 'STATUS', align: 'left' }
+      ],
+      rowsHtml: dataset.map(m => {
+        const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+        return `
+          <tr>
+            <td class="col-bold">${m.permitNumber}</td>
+            <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${isPersonOnFoot ? 'Umushumba' : 'Vehicle'}</td>
+            <td><strong>${m.farmerName}</strong><span class="sub-text">ID: ${m.farmerNid}</span></td>
+            <td>${m.driverName !== 'N/A' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned')}<span class="sub-text">Tel: ${m.driverPhone}</span></td>
+            <td>${isPersonOnFoot ? 'N/A' : m.plateNumber}</td>
+            <td>${m.route}</td>
+            <td>${m.title}</td>
+            <td><span class="badge ${m.rawStatus === 'APPROVED' || m.rawStatus === 'COMPLETED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
+          </tr>
+        `;
+      }).join('')
+    }));
     printWindow.document.close();
     printWindow.print();
   };

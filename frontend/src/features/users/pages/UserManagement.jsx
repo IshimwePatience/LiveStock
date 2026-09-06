@@ -8,6 +8,7 @@ import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 import CustomSelect from '../../../components/ui/CustomSelect';
 import Pagination from '../../../components/ui/Pagination';
+import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
 
 const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,61 +271,31 @@ const UserManagement = () => {
       return;
     }
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>User Accounts Registry Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .header h1 { color: #0052cc; margin: 0; font-size: 22px; font-weight: bold; }
-            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
-            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; font-size: 12px; }
-            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-            tr:nth-child(even) { background-color: #f8fafc; }
-            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-            .badge-active { background: #dcfce7; color: #166534; }
-            .badge-inactive { background: #fee2e2; color: #991b1b; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <h1>RWANDA LIVESTOCK SYSTEM — USER ACCOUNTS REGISTRY</h1>
-              <p>Official User & Role Audit Report</p>
-            </div>
-          </div>
-          <div class="meta">
-            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
-            <strong>Total Users:</strong> ${filteredUsers.length}
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Jurisdiction</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredUsers.map(u => `
-                <tr>
-                  <td><strong>${u.name}</strong></td>
-                  <td>${u.email}</td>
-                  <td>${u.role}</td>
-                  <td>${u.sector_id ? `${u.district_id} / ${u.sector_id}` : (u.district_id || 'National (All)')}</td>
-                  <td><span class="badge ${u.status === 'Inactive' ? 'badge-inactive' : 'badge-active'}">${u.status || 'Active'}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
+    printWindow.document.write(generatePdfReportHTML({
+      titleMain: 'RWANDA LIVESTOCK SYSTEM',
+      titleSub: '— USER ACCOUNTS REGISTRY',
+      subtitle: 'Official User & Role Audit Report',
+      meta: [
+        { label: 'GENERATED ON', value: new Date().toLocaleString() },
+        { label: 'TOTAL USERS', value: filteredUsers.length }
+      ],
+      columns: [
+        { header: 'NAME', align: 'left' },
+        { header: 'EMAIL', align: 'left' },
+        { header: 'ROLE', align: 'left' },
+        { header: 'JURISDICTION', align: 'left' },
+        { header: 'STATUS', align: 'left' }
+      ],
+      rowsHtml: filteredUsers.map(u => `
+        <tr>
+          <td class="col-bold">${u.name}</td>
+          <td>${u.email}</td>
+          <td><span class="role-pill">${u.role}</span></td>
+          <td>${u.sector_id ? `${u.district_id} / ${u.sector_id}` : (u.district_id || 'National (All)')}</td>
+          <td><span class="badge ${u.status === 'Inactive' ? 'badge-inactive' : 'badge-active'}">${u.status || 'Active'}</span></td>
+        </tr>
+      `).join('')
+    }));
     printWindow.document.close();
     printWindow.print();
   };

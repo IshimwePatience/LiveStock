@@ -98,9 +98,9 @@ export const printOfficialPermit = async (permit) => {
             body { margin: 0; padding: 0; background: white; font-family: Arial, Helvetica, sans-serif; color: #111827; }
             .page-container { background: white; padding: 32px 32px 32px 72px; position: relative; box-sizing: border-box; width: 794px; margin: 0 auto; }
             .page-break { page-break-before: always; margin-top: 24px; padding-top: 16px; }
-            table.animal-table { width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 11px; margin-top: 10px; }
-            table.animal-table th, table.animal-table td { border: 1px solid #d1d5db; padding: 8px 10px; }
-            table.animal-table th { background: #f3f4f6; color: #111827; font-weight: bold; text-align: left; }
+            table.animal-table { width: 100%; border-collapse: collapse; border: 1.5px solid #00a0e9; font-size: 11px; margin-top: 10px; }
+            table.animal-table th, table.animal-table td { border: 1px solid #7ed6fa; padding: 8px 10px; }
+            table.animal-table th { background: #00a0e9; color: #ffffff; font-weight: bold; text-align: left; text-transform: uppercase; border-right: 1px solid rgba(255,255,255,0.4); }
           </style>
         </head>
         <body>

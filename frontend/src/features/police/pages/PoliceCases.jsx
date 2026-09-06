@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
 import ReportDropdown from '../../../components/ui/ReportDropdown';
 import PoliceCasesList from '../components/PoliceCasesList';
+import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
 
 // Helper to generate initials from name
 const getInitials = (name) => {
@@ -253,66 +254,36 @@ const PoliceCases = () => {
     }
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE CASES' : scopeParam === 'HISTORY' ? 'SOLVED HISTORY' : 'FULL REGISTRY (ACTIVE & SOLVED)';
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Police Cases Report - ${scopeLabel}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-            .header { border-bottom: 3px solid #0052cc; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .header h1 { color: #0052cc; margin: 0; font-size: 20px; font-weight: bold; }
-            .header p { margin: 4px 0 0 0; color: #4b5563; font-size: 12px; }
-            .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-size: 11px; }
-            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-            tr:nth-child(even) { background-color: #f8fafc; }
-            .badge { padding: 3px 8px; border-radius: 9999px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-            .badge-open { background: #fee2e2; color: #991b1b; }
-            .badge-solved { background: #dcfce7; color: #166534; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <h1>RWANDA NATIONAL POLICE — OFFICIAL CASE REPORT</h1>
-              <p>Livestock &amp; Transit Security Division • ${scopeLabel}</p>
-            </div>
-          </div>
-          <div class="meta">
-            <strong>Generated On:</strong> ${new Date().toLocaleString()}<br/>
-            <strong>Export Scope:</strong> ${scopeLabel}<br/>
-            <strong>Total Cases Included:</strong> ${dataset.length}
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Case ID</th>
-                <th>Vehicle Plate</th>
-                <th>Case Summary</th>
-                <th>Type</th>
-                <th>Reporter</th>
-                <th>Location</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${dataset.map(c => `
-                <tr>
-                  <td><strong>${c.id}</strong></td>
-                  <td>${c.vehiclePlate || 'N/A'}</td>
-                  <td>${c.title}</td>
-                  <td>${c.type}</td>
-                  <td>${c.reporter?.name || 'System'}</td>
-                  <td>${c.location}</td>
-                  <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : 'badge-open'}">${c.status}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
+    printWindow.document.write(generatePdfReportHTML({
+      titleMain: 'RWANDA NATIONAL POLICE',
+      titleSub: '— OFFICIAL CASE REPORT',
+      subtitle: `Livestock & Transit Security Division • ${scopeLabel}`,
+      meta: [
+        { label: 'GENERATED ON', value: new Date().toLocaleString() },
+        { label: 'EXPORT SCOPE', value: scopeLabel },
+        { label: 'TOTAL CASES INCLUDED', value: dataset.length }
+      ],
+      columns: [
+        { header: 'CASE ID', align: 'left' },
+        { header: 'VEHICLE PLATE', align: 'left' },
+        { header: 'CASE SUMMARY', align: 'left' },
+        { header: 'TYPE', align: 'left' },
+        { header: 'REPORTER', align: 'left' },
+        { header: 'LOCATION', align: 'left' },
+        { header: 'STATUS', align: 'left' }
+      ],
+      rowsHtml: dataset.map(c => `
+        <tr>
+          <td class="col-bold">${c.id}</td>
+          <td>${c.vehiclePlate || 'N/A'}</td>
+          <td>${c.title}</td>
+          <td>${c.type}</td>
+          <td>${c.reporter?.name || 'System'}</td>
+          <td>${c.location}</td>
+          <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : c.status === 'Following Up' ? 'badge-following' : 'badge-open'}">${c.status}</span></td>
+        </tr>
+      `).join('')
+    }));
     printWindow.document.close();
     printWindow.print();
   };
