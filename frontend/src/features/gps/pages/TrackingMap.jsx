@@ -1249,9 +1249,9 @@ const TrackingMap = () => {
               </div>
 
               {/* Row 4: Address (White) */}
-              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
-                <span className="font-bold text-gray-900 text-[13px] shrink-0 mr-2">Address</span>
-                <div className="text-right flex flex-col items-end max-w-[210px] truncate">
+              <div className="flex items-start justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px] shrink-0 mr-2 pt-0.5">Address</span>
+                <div className="text-right flex flex-col items-end flex-1">
                   <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
                 </div>
               </div>
