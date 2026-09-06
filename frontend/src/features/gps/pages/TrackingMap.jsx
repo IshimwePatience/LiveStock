@@ -312,16 +312,8 @@ const TopRightControls = ({ isSatellite, setIsSatellite }) => {
         <span>Back</span>
       </button>
 
-      {/* Stacked Vertical Controls: Fence, Zoom In, Zoom Out, Satellite */}
+      {/* Stacked Vertical Controls: Zoom In, Zoom Out, Satellite */}
       <div className="flex flex-col bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 overflow-hidden divide-y divide-gray-100">
-        {/* Geofence Rule Button */}
-        <button
-          onClick={() => navigate('/dashboard/geofencing')}
-          className="w-11 h-11 flex items-center justify-center text-gray-700 hover:bg-gray-50 transition-colors"
-          title="Geofencing Rules"
-        >
-          <ShieldAlert className="w-5 h-5 text-gray-600" />
-        </button>
 
         {/* Zoom In Button */}
         <button
@@ -380,6 +372,30 @@ const TrackingMap = () => {
   const [routeHistory, setRouteHistory] = useState([]);
   const navigate = useNavigate();
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
+
+  // Vehicles List panel filter states
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'ONLINE' | 'OFFLINE'
+  const [deviceSearchTerm, setDeviceSearchTerm] = useState('');
+
+  const onlineCount = React.useMemo(() => {
+    return (locations || []).filter(l => (l.status || '').toLowerCase() === 'online').length;
+  }, [locations]);
+
+  const offlineCount = React.useMemo(() => {
+    return (locations || []).filter(l => (l.status || '').toLowerCase() !== 'online').length;
+  }, [locations]);
+
+  const listVehicles = React.useMemo(() => {
+    if (!locations) return [];
+    return locations.filter(loc => {
+      const matchSearch = (loc.deviceName || '').toLowerCase().includes(deviceSearchTerm.toLowerCase());
+      if (!matchSearch) return false;
+      const isOnline = (loc.status || '').toLowerCase() === 'online';
+      if (statusFilter === 'ONLINE') return isOnline;
+      if (statusFilter === 'OFFLINE') return !isOnline;
+      return true;
+    });
+  }, [locations, deviceSearchTerm, statusFilter]);
 
 
   // Claim Vehicle & Police Side Panel States
@@ -624,17 +640,95 @@ const TrackingMap = () => {
               <X className="w-5 h-5" />
             </button>
           )}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
+          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600" title="Search">
             <Search className="w-5 h-5" />
-          </button>
-          <div className="h-6 w-px bg-gray-200 mx-1"></div>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-blue-600 flex items-center justify-center">
-            <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center transform rotate-45">
-              <CornerUpRight className="w-3.5 h-3.5 -rotate-45" />
-            </div>
           </button>
         </div>
       </div>
+
+      {/* ----------------- FLOATING VEHICLES LIST PANEL (LEFT SIDE) ----------------- */}
+      {!isSidebarOpen && !isSearchSidebarOpen && (
+        <div className="absolute top-[82px] left-[22px] z-[400] w-[392px] max-h-[calc(100vh-100px)] bg-white rounded-2xl shadow-xl border border-gray-200/90 overflow-hidden flex flex-col font-sans">
+          <div className="p-4 border-b border-gray-100 bg-white">
+            <h2 className="text-base font-bold text-gray-900">Vehicles List</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view its details on the map.</p>
+
+            {/* Search devices input */}
+            <div className="relative mt-3">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search devices..."
+                value={deviceSearchTerm}
+                onChange={(e) => setDeviceSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 mt-3 text-xs">
+              <button
+                onClick={() => setStatusFilter('ALL')}
+                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ALL' ? 'bg-[#3b82f6] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                All ({locations?.length || 0})
+              </button>
+              <button
+                onClick={() => setStatusFilter('ONLINE')}
+                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ONLINE' ? 'bg-[#22c55e] text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}
+              >
+                Online ({onlineCount})
+              </button>
+              <button
+                onClick={() => setStatusFilter('OFFLINE')}
+                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'OFFLINE' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'}`}
+              >
+                Offline ({offlineCount})
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable List of Vehicles */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[calc(100vh-270px)]">
+            {listVehicles.length === 0 ? (
+              <div className="text-center text-xs text-gray-500 py-6">No vehicles matching filter.</div>
+            ) : (
+              listVehicles.map((loc) => {
+                const isSelected = selectedDevice?.deviceId === loc.deviceId;
+                const isOnline = (loc.status || '').toLowerCase() === 'online';
+                const plateKey = (loc.deviceName || '').toUpperCase().trim();
+                const claimInfo = claimedVehiclesMap[plateKey];
+
+                return (
+                  <div
+                    key={loc.deviceId}
+                    onClick={() => handleMarkerClick(loc)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-[#dbeafe] border-blue-500 shadow-sm ring-1 ring-blue-400' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-gray-900 truncate flex items-center gap-1.5">
+                        {loc.deviceName}
+                        {claimInfo && (
+                          <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold" title="Police Claim Reported">
+                            CLAIM
+                          </span>
+                        )}
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isOnline ? 'bg-[#22c55e] text-white' : 'bg-[#ef4444] text-white'}`}>
+                        {isOnline ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+                      <span>Speed:</span>
+                      <span className="font-semibold text-gray-800">{loc.speed ? (loc.speed * 1.852).toFixed(2) : '0.00'} km/h</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ----------------- FLOATING PILLS (TOP RIGHT) ----------------- */}
       <div className="absolute top-[28px] left-[430px] z-[400] flex items-center gap-3">
