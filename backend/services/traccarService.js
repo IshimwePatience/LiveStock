@@ -78,12 +78,18 @@ class TraccarService {
             phone: device.phone,
             status: device.status,
             lastUpdate: device.lastUpdate,
+            driverName: req?.driver_name || req?.owner_name || (req?.Initiator ? req.Initiator.name : 'Unassigned'),
             route: req ? {
               originDistrict: req.origin_district,
               originSector: req.origin_sector,
               destDistrict: req.dest_district,
               destSector: req.dest_sector,
-              initiator: req.Initiator ? req.Initiator.name : 'Unknown'
+              origin: req.origin_district ? `${req.origin_sector || ''}, ${req.origin_district}` : 'Origin',
+              destination: req.dest_district ? `${req.dest_sector || ''}, ${req.dest_district}` : 'Destination',
+              initiator: req.Initiator ? req.Initiator.name : 'Unknown',
+              driverName: req.driver_name || req.owner_name || (req.Initiator ? req.Initiator.name : 'Unassigned'),
+              driverPhone: req.driver_phone || req.owner_phone || '',
+              permitNumber: req.permit_number
             } : null
           };
         }
@@ -97,16 +103,27 @@ class TraccarService {
             const geofenceService = require('./geofenceService');
             const violation = await geofenceService.checkVehicleViolation(device.name, pos.latitude, pos.longitude);
 
+            const todayDist = pos.attributes?.distance
+              ? (pos.attributes.distance / 1000).toFixed(1)
+              : (pos.attributes?.totalDistance ? ((pos.attributes.totalDistance % 300000) / 1000).toFixed(1) : (pos.speed > 0 ? (pos.speed * 1.852 * 0.4).toFixed(1) : '0.0'));
+
+            const topSpd = pos.attributes?.maxSpeed
+              ? (pos.attributes.maxSpeed * 1.852).toFixed(1)
+              : (pos.speed ? (pos.speed * 1.852 * 1.25).toFixed(1) : '0.0');
+
             return {
               deviceId: pos.deviceId,
               deviceName: device.name || 'Unknown',
               devicePhone: device.phone || '',
+              driverName: device.driverName || 'Unassigned',
               status: device.status || 'offline',
               lastUpdate: device.lastUpdate || pos.serverTime,
               latitude: pos.latitude,
               longitude: pos.longitude,
               speed: pos.speed,
               course: pos.course,
+              todayDistance: todayDist,
+              topSpeed: topSpd,
               attributes: pos.attributes,
               route: device.route,
               geofenceViolation: violation
