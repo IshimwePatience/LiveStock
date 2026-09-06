@@ -8,7 +8,8 @@ import {
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
-  ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert, PlaySquare, Play
+  ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert, PlaySquare, Play,
+  Pause, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
@@ -296,21 +297,23 @@ const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
 };
 
 // Custom Control Overlay for Top Right (Back button + Stacked Geofence, Zoom In/Out, Satellite Layers)
-const TopRightControls = ({ isSatellite, setIsSatellite }) => {
+const TopRightControls = ({ isSatellite, setIsSatellite, isPlaybackMode }) => {
   const map = useMap();
   const navigate = useNavigate();
 
   return (
-    <div className="absolute top-[22px] right-[22px] z-[500] flex flex-col items-end gap-2.5 font-sans">
+    <div className={`absolute ${isPlaybackMode ? 'top-[140px]' : 'top-[22px]'} right-[22px] z-[500] flex flex-col items-end gap-2.5 font-sans transition-all`}>
       {/* Back to Dashboard Button */}
-      <button
-        onClick={() => navigate('/dashboard/overview')}
-        className="bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm px-4 py-2.5 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 flex items-center gap-2 transition-all cursor-pointer"
-        title="Back to Dashboard"
-      >
-        <ArrowLeft className="w-4 h-4 text-gray-800 stroke-[2.5]" />
-        <span>Back</span>
-      </button>
+      {!isPlaybackMode && (
+        <button
+          onClick={() => navigate('/dashboard/overview')}
+          className="bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm px-4 py-2.5 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 flex items-center gap-2 transition-all cursor-pointer"
+          title="Back to Dashboard"
+        >
+          <ArrowLeft className="w-4 h-4 text-gray-800 stroke-[2.5]" />
+          <span>Back</span>
+        </button>
+      )}
 
       {/* Stacked Vertical Controls: Zoom In, Zoom Out, Satellite */}
       <div className="flex flex-col bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 overflow-hidden divide-y divide-gray-100">
@@ -344,6 +347,45 @@ const TopRightControls = ({ isSatellite, setIsSatellite }) => {
       </div>
     </div>
   );
+};
+
+// Custom 2D Moving Vehicle Marker Icon for Playback Mode with live speed tooltip
+const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0) => {
+  const speedKmh = (speed * 1.852).toFixed(2);
+  const html = `
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
+      <div style="background: #1e293b; border: 1.5px solid #3b82f6; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif;">
+        ${speedKmh} km/h
+      </div>
+      <div style="transform: rotate(${course || 0}deg); transition: transform 0.2s ease;">
+        <svg width="34" height="56" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(37,99,235,0.6));">
+          <rect x="2" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
+          <rect x="31" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
+          <rect x="2" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
+          <rect x="31" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
+          <rect x="4" y="20" width="28" height="36" rx="3" fill="#16a34a" stroke="#22c55e" stroke-width="1.5" />
+          <rect x="6" y="2" width="24" height="18" rx="4" fill="#15803d" stroke="#4ade80" stroke-width="1.5" />
+        </svg>
+      </div>
+    </div>
+  `;
+
+  return new L.divIcon({
+    html: html,
+    className: 'playback-vehicle-marker',
+    iconSize: [40, 65],
+    iconAnchor: [20, 32],
+  });
+};
+
+const PlaybackCenterer = ({ position }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (position && position.lat && position.lon) {
+      map.panTo([position.lat, position.lon], { animate: true });
+    }
+  }, [position, map]);
+  return null;
 };
 
 const TrackingMap = () => {
@@ -396,6 +438,83 @@ const TrackingMap = () => {
       return true;
     });
   }, [locations, deviceSearchTerm, statusFilter]);
+
+  // Playback Mode States
+  const [isPlaybackMode, setIsPlaybackMode] = useState(false);
+  const [playbackFrom, setPlaybackFrom] = useState(() => {
+    const d = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  });
+  const [playbackTo, setPlaybackTo] = useState(() => {
+    const d = new Date();
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  });
+  const [playbackPoints, setPlaybackPoints] = useState([]);
+  const [playbackIndex, setPlaybackIndex] = useState(0);
+  const [isPlayingRoute, setIsPlayingRoute] = useState(false);
+  const [playbackSpeedMultiplier, setPlaybackSpeedMultiplier] = useState(1); // 1x, 2x, 4x, 8x
+  const [isLoadingPlayback, setIsLoadingPlayback] = useState(false);
+
+  // Playback timer effect
+  useEffect(() => {
+    let timer = null;
+    if (isPlayingRoute && playbackPoints.length > 0) {
+      const intervalMs = Math.max(100, Math.floor(1000 / playbackSpeedMultiplier));
+      timer = setInterval(() => {
+        setPlaybackIndex(prev => {
+          if (prev >= playbackPoints.length - 1) {
+            setIsPlayingRoute(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, intervalMs);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isPlayingRoute, playbackPoints, playbackSpeedMultiplier]);
+
+  const handleFetchPlaybackReport = async () => {
+    if (!selectedDevice) return;
+    setIsLoadingPlayback(true);
+    try {
+      const fromISO = new Date(playbackFrom).toISOString();
+      const toISO = new Date(playbackTo).toISOString();
+      const res = await getTraccarRoute(selectedDevice.deviceId, fromISO, toISO);
+      if (res.data && res.data.length > 0) {
+        const pts = res.data.map(p => ({
+          lat: p.latitude,
+          lon: p.longitude,
+          speed: p.speed || 0,
+          course: p.course || 0,
+          fixTime: p.fixTime || p.serverTime || p.deviceTime
+        }));
+        setPlaybackPoints(pts);
+        setPlaybackIndex(0);
+        setIsPlayingRoute(true);
+        toast.success(`Loaded ${pts.length} GPS tracking points for ${selectedDevice.deviceName}!`);
+      } else {
+        setPlaybackPoints([]);
+        toast.error(`No GPS history points found for ${selectedDevice.deviceName} in selected time range.`);
+      }
+    } catch (err) {
+      toast.error("Failed to load vehicle route playback history.");
+      console.error(err);
+    } finally {
+      setIsLoadingPlayback(false);
+    }
+  };
+
+  const startPlaybackForDevice = (device) => {
+    setSelectedDevice(device);
+    setIsPlaybackMode(true);
+    setTimeout(() => {
+      handleFetchPlaybackReport();
+    }, 100);
+  };
 
 
   // Claim Vehicle & Police Side Panel States
@@ -572,9 +691,34 @@ const TrackingMap = () => {
           <MapCenterer selectedDevice={selectedDevice} />
           <SearchResultCenterer selectedSearchResult={selectedSearchResult} />
           <MapSearchManager searchQuery={activeSearchQuery} onResults={setSearchResults} setIsSearching={setIsSearching} />
-          <TopRightControls isSatellite={isSatellite} setIsSatellite={setIsSatellite} />
+          <TopRightControls isSatellite={isSatellite} setIsSatellite={setIsSatellite} isPlaybackMode={isPlaybackMode} />
 
-          {routeHistory.length > 0 && (
+          {/* PLAYBACK MODE ROUTE POLYLINE & ANIMATED MOVING VEHICLE MARKER */}
+          {isPlaybackMode && playbackPoints.length > 0 && (
+            <>
+              <Polyline
+                positions={playbackPoints.map(p => [p.lat, p.lon])}
+                color="#2563eb"
+                weight={5}
+                opacity={0.85}
+              />
+              {playbackPoints[playbackIndex] && (
+                <>
+                  <Marker
+                    position={[playbackPoints[playbackIndex].lat, playbackPoints[playbackIndex].lon]}
+                    icon={createPlaybackMarkerIcon(
+                      selectedDevice?.deviceName,
+                      playbackPoints[playbackIndex].speed,
+                      playbackPoints[playbackIndex].course
+                    )}
+                  />
+                  <PlaybackCenterer position={playbackPoints[playbackIndex]} />
+                </>
+              )}
+            </>
+          )}
+
+          {!isPlaybackMode && routeHistory.length > 0 && (
             <Polyline
               positions={routeHistory}
               color="#3b82f6"
@@ -585,7 +729,7 @@ const TrackingMap = () => {
           )}
 
           {/* Search Result Markers */}
-          {searchResults.map((res, idx) => (
+          {!isPlaybackMode && searchResults.map((res, idx) => (
             <Marker
               key={`search-${idx}`}
               position={[res.lat, res.lon]}
@@ -598,7 +742,8 @@ const TrackingMap = () => {
             </Marker>
           ))}
 
-          {filteredLocations && filteredLocations.map((loc) => {
+          {/* Live Vehicle Markers */}
+          {!isPlaybackMode && filteredLocations && filteredLocations.map((loc) => {
             const hasClaim = !!claimedVehiclesMap[loc.deviceName?.toUpperCase().trim()];
             return (
               <Marker
@@ -614,74 +759,189 @@ const TrackingMap = () => {
         </MapContainer>
       </div>
 
-      {/* ----------------- FLOATING SEARCH BAR ----------------- */}
-      <div className="absolute top-[22px] left-[22px] z-[400] flex flex-col gap-4 shadow-sm">
-        <div className="flex items-center bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.2)] w-[392px] h-[48px] px-2">
+      {/* ----------------- PLAYBACK MODE TOP LEFT HEADER (MATCHES USER IMAGE 2) ----------------- */}
+      {isPlaybackMode && (
+        <div className="absolute top-[22px] left-[22px] z-[500] flex items-center gap-3 bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-gray-200/90 font-sans">
+          <div className="flex flex-col">
+            <label className="text-[11px] font-bold text-gray-600 mb-1">From Date</label>
+            <input
+              type="datetime-local"
+              value={playbackFrom}
+              onChange={(e) => setPlaybackFrom(e.target.value)}
+              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-xs"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-[11px] font-bold text-gray-600 mb-1">To Date</label>
+            <input
+              type="datetime-local"
+              value={playbackTo}
+              onChange={(e) => setPlaybackTo(e.target.value)}
+              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-xs"
+            />
+          </div>
           <button
-            onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 cursor-pointer"
-            title="Open Menu"
+            onClick={handleFetchPlaybackReport}
+            disabled={isLoadingPlayback}
+            className="mt-5 px-5 py-2.5 bg-[#3b82f6] hover:bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
           >
-            <Menu className="w-5 h-5" />
-          </button>
-          <input
-            type="text"
-            placeholder="Search Google Maps"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearchSubmit}
-            className="flex-1 bg-transparent border-none outline-none px-2 text-[15px] text-gray-800 placeholder-gray-500 font-normal"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => { setSearchTerm(''); setSelectedDevice(null); setIsSidebarOpen(false); setIsSearchSidebarOpen(false); }}
-              className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors mr-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600" title="Search">
-            <Search className="w-5 h-5" />
+            {isLoadingPlayback ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>Get Report</span>
+              </>
+            )}
           </button>
         </div>
-      </div>
+      )}
+
+      {/* ----------------- PLAYBACK MODE TOP RIGHT CONTROLS (MATCHES USER IMAGE 3) ----------------- */}
+      {isPlaybackMode && (
+        <div className="absolute top-[22px] right-[22px] z-[500] flex items-center gap-3 font-sans">
+          {/* Step & Speed Control Bar */}
+          <div className="flex items-center bg-white/95 backdrop-blur-md px-3 py-2 rounded-2xl shadow-xl border border-gray-200/90 gap-2">
+            <button
+              onClick={() => { setIsPlayingRoute(false); setPlaybackIndex(0); }}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-700 transition cursor-pointer"
+              title="Rewind to start"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { setIsPlayingRoute(false); setPlaybackIndex(prev => Math.max(0, prev - 1)); }}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-700 transition cursor-pointer"
+              title="Previous Point"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* License Plate Badge */}
+            <span className="px-3.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-black text-gray-900 tracking-wider">
+              {selectedDevice?.deviceName || 'Vehicle'}
+            </span>
+
+            <button
+              onClick={() => { setIsPlayingRoute(false); setPlaybackIndex(prev => Math.min((playbackPoints.length || 1) - 1, prev + 1)); }}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-700 transition cursor-pointer"
+              title="Next Point"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (playbackSpeedMultiplier === 1) setPlaybackSpeedMultiplier(2);
+                else if (playbackSpeedMultiplier === 2) setPlaybackSpeedMultiplier(4);
+                else if (playbackSpeedMultiplier === 4) setPlaybackSpeedMultiplier(8);
+                else setPlaybackSpeedMultiplier(1);
+              }}
+              className="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-extrabold hover:bg-blue-100 transition cursor-pointer flex items-center gap-1"
+              title="Playback Speed Multiplier (1x, 2x, 4x, 8x)"
+            >
+              <ChevronsRight className="w-3.5 h-3.5" />
+              <span>{playbackSpeedMultiplier}x</span>
+            </button>
+          </div>
+
+          {/* Exit Playback Back Button */}
+          <button
+            onClick={() => setIsPlaybackMode(false)}
+            className="bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs px-4 py-3 rounded-2xl shadow-xl border border-gray-200/90 flex items-center gap-2 transition cursor-pointer"
+            title="Back to Live Map"
+          >
+            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Back</span>
+          </button>
+        </div>
+      )}
+
+      {/* Floating Play / Pause Control Button (Right Side) */}
+      {isPlaybackMode && (
+        <div className="absolute top-[82px] right-[22px] z-[500]">
+          <button
+            onClick={() => setIsPlayingRoute(!isPlayingRoute)}
+            className="w-11 h-11 bg-[#3b82f6] hover:bg-blue-600 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all cursor-pointer"
+            title={isPlayingRoute ? "Pause Playback" : "Play Route"}
+          >
+            {isPlayingRoute ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white ml-0.5" />}
+          </button>
+        </div>
+      )}
+
+      {/* ----------------- FLOATING SEARCH BAR ----------------- */}
+      {!isPlaybackMode && (
+        <div className="absolute top-[22px] left-[22px] z-[400] flex flex-col gap-4 shadow-sm">
+          <div className="flex items-center bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.2)] w-[392px] h-[48px] px-2">
+            <button
+              onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 cursor-pointer"
+              title="Open Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <input
+              type="text"
+              placeholder="Search Google Maps"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearchSubmit}
+              className="flex-1 bg-transparent border-none outline-none px-2 text-[15px] text-gray-800 placeholder-gray-500 font-normal"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => { setSearchTerm(''); setSelectedDevice(null); setIsSidebarOpen(false); setIsSearchSidebarOpen(false); }}
+                className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors mr-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600" title="Search">
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ----------------- FLOATING VEHICLES LIST PANEL (LEFT SIDE) ----------------- */}
-      {!isSidebarOpen && !isSearchSidebarOpen && (
-        <div className="absolute top-[82px] left-[22px] z-[400] w-[392px] max-h-[calc(100vh-100px)] bg-white rounded-2xl shadow-xl border border-gray-200/90 overflow-hidden flex flex-col font-sans">
-          <div className="p-4 border-b border-gray-100 bg-white">
-            <h2 className="text-base font-bold text-gray-900">Vehicles List</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view its details on the map.</p>
+      {!isPlaybackMode && !isSidebarOpen && !isSearchSidebarOpen && (
+        <div className="absolute top-[82px] left-[22px] z-[400] w-[370px] max-h-[calc(100vh-100px)] bg-white rounded-3xl shadow-xl border border-gray-200/90 overflow-hidden flex flex-col font-sans">
+          <div className="p-4 bg-white border-b border-gray-100">
+            <h2 className="text-lg font-bold text-gray-900">Vehicles List</h2>
+            <p className="text-xs text-gray-500 font-normal mt-0.5">Click on a vehicle to view its details on the map.</p>
 
-            {/* Search devices input */}
-            <div className="relative mt-3">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+            {/* Rounded Search devices input (Matches User Screenshot) */}
+            <div className="relative mt-3 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-xs focus-within:border-blue-500 transition-all">
+              <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
               <input
                 type="text"
                 placeholder="Search devices..."
                 value={deviceSearchTerm}
                 onChange={(e) => setDeviceSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-gray-800"
+                className="w-full bg-transparent border-none outline-none text-xs font-normal text-gray-800 placeholder-gray-400"
               />
             </div>
 
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 mt-3 text-xs">
+            {/* Filter Buttons Bar */}
+            <div className="flex items-center gap-1.5 mt-3 bg-gray-100/90 p-1.5 rounded-xl text-xs overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setStatusFilter('ALL')}
-                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ALL' ? 'bg-[#3b82f6] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`px-3.5 py-1.5 rounded-lg font-extrabold text-xs transition-all ${statusFilter === 'ALL' ? 'bg-[#3b82f6] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
               >
                 All ({locations?.length || 0})
               </button>
               <button
                 onClick={() => setStatusFilter('ONLINE')}
-                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ONLINE' ? 'bg-[#22c55e] text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}
+                className={`px-3.5 py-1.5 rounded-lg font-extrabold text-xs transition-all ${statusFilter === 'ONLINE' ? 'bg-[#22c55e] text-white shadow-xs' : 'bg-white text-emerald-700 border border-gray-200 hover:bg-emerald-50'}`}
               >
                 Online ({onlineCount})
               </button>
               <button
                 onClick={() => setStatusFilter('OFFLINE')}
-                className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'OFFLINE' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'}`}
+                className={`px-3.5 py-1.5 rounded-lg font-extrabold text-xs transition-all ${statusFilter === 'OFFLINE' ? 'bg-[#ef4444] text-white shadow-xs' : 'bg-white text-red-700 border border-gray-200 hover:bg-red-50'}`}
               >
                 Offline ({offlineCount})
               </button>
@@ -689,9 +949,9 @@ const TrackingMap = () => {
           </div>
 
           {/* Scrollable List of Vehicles */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[calc(100vh-270px)]">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[calc(100vh-270px)] no-scrollbar">
             {listVehicles.length === 0 ? (
-              <div className="text-center text-xs text-gray-500 py-6">No vehicles matching filter.</div>
+              <div className="text-center text-xs text-gray-500 py-6 font-medium">No vehicles matching filter.</div>
             ) : (
               listVehicles.map((loc) => {
                 const isSelected = selectedDevice?.deviceId === loc.deviceId;
@@ -703,7 +963,7 @@ const TrackingMap = () => {
                   <div
                     key={loc.deviceId}
                     onClick={() => handleMarkerClick(loc)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-[#dbeafe] border-blue-500 shadow-sm ring-1 ring-blue-400' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${isSelected ? 'bg-[#bfdbfe] border-2 border-[#3b82f6] shadow-sm' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm text-gray-900 truncate flex items-center gap-1.5">
@@ -714,12 +974,12 @@ const TrackingMap = () => {
                           </span>
                         )}
                       </span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isOnline ? 'bg-[#22c55e] text-white' : 'bg-[#ef4444] text-white'}`}>
+                      <span className={`px-3 py-0.5 rounded-full text-[11px] font-bold shadow-xs ${isOnline ? 'bg-[#22c55e] text-white' : 'bg-[#ef4444] text-white'}`}>
                         {isOnline ? 'Online' : 'Offline'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-                      <span>Speed:</span>
+                      <span className="font-medium text-gray-500">Speed:</span>
                       <span className="font-semibold text-gray-800">{loc.speed ? (loc.speed * 1.852).toFixed(2) : '0.00'} km/h</span>
                     </div>
                   </div>
@@ -731,160 +991,161 @@ const TrackingMap = () => {
       )}
 
       {/* ----------------- FLOATING PILLS (TOP RIGHT) ----------------- */}
-      <div className="absolute top-[28px] left-[430px] z-[400] flex items-center gap-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
-          <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
-          <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
-          <button onClick={() => handleFilterClick('Transit')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Train className="w-4 h-4 text-gray-500" /> Transit</button>
-          <button onClick={() => handleFilterClick('Parking')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CircleParking className="w-4 h-4 text-gray-500" /> Parking</button>
-          <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
-          <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
+      {!isPlaybackMode && (
+        <div className="absolute top-[28px] left-[430px] z-[400] flex items-center gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+            <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
+            <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
+            <button onClick={() => handleFilterClick('Transit')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Train className="w-4 h-4 text-gray-500" /> Transit</button>
+            <button onClick={() => handleFilterClick('Parking')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CircleParking className="w-4 h-4 text-gray-500" /> Parking</button>
+            <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
+            <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ----------------- BOTTOM ROUTE DRAWER (ITINERARY) ----------------- */}
-      <div className={`absolute bottom-0 left-[400px] right-0 bg-white z-[300] border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out ${isRouteDrawerOpen ? 'translate-y-0' : 'translate-y-[120px]'}`}>
+      {!isPlaybackMode && (
+        <div className={`absolute bottom-0 left-[400px] right-0 bg-white z-[300] border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out ${isRouteDrawerOpen ? 'translate-y-0' : 'translate-y-[120px]'}`}>
 
-        {/* Pull Tab */}
-        <button
-          onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
-          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-t-lg shadow-[0_-2px_4px_rgba(0,0,0,0.1)] border border-b-0 border-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-        >
-          {isRouteDrawerOpen ? 'Hide Route' : 'Show Route Details'}
-        </button>
-
-        <div className="h-[120px] flex items-center px-8 w-full">
-          {selectedDevice?.route ? (
-            <div className="flex items-center w-full max-w-4xl mx-auto gap-4">
-
-              {/* Origin */}
-              <div className="flex flex-col items-center flex-1">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-500 z-10">
-                  <MapPin className="w-5 h-5 text-green-600" />
-                </div>
-                <span className="text-[13px] font-semibold text-gray-800 mt-2">Origin</span>
-                <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.origin}</span>
-              </div>
-
-              {/* Line */}
-              <div className="h-1 bg-blue-500 flex-grow relative mx-2">
-                <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-medium text-blue-600 shadow-sm flex items-center gap-1">
-                  <Navigation className="w-3 h-3" />
-                  In Transit
-                </div>
-              </div>
-
-              {/* Destination */}
-              <div className="flex flex-col items-center flex-1">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center border-2 border-red-500 z-10">
-                  <MapPin className="w-5 h-5 text-red-600" />
-                </div>
-                <span className="text-[13px] font-semibold text-gray-800 mt-2">Destination</span>
-                <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.destination}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full text-center text-gray-500 text-[14px]">
-              Select a vehicle with an active permit to view its route itinerary.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ----------------- SEARCH RESULTS SIDEBAR (HOVERS OVER SEARCH) ----------------- */}
-      <div
-        className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[500] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
-      >
-        {/* Sticky Fixed Header for Search Results with Fixed Close Button */}
-        <div className="sticky top-0 z-20 bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-2 flex-1 pr-2">
-            <Search className="w-4.5 h-4.5 text-blue-600 shrink-0" />
-            <span className="font-semibold text-sm text-gray-900 truncate">Results for "{activeSearchQuery}"</span>
-          </div>
+          {/* Pull Tab */}
           <button
-            onClick={() => {
-              setIsSearchSidebarOpen(false);
-              setActiveSearchQuery('');
-              setSearchTerm('');
-              setSelectedSearchResult(null);
-            }}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-all shrink-0 shadow-sm"
-            title="Close results"
+            onClick={() => setIsRouteDrawerOpen(!isRouteDrawerOpen)}
+            className="absolute -top-7 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-t-lg shadow-[0_-2px_4px_rgba(0,0,0,0.1)] border border-b-0 border-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
           >
-            <X className="w-4.5 h-4.5" />
+            {isRouteDrawerOpen ? 'Hide Route' : 'Show Route Details'}
           </button>
-        </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="p-4">
-            {isSearching ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-                Searching places...
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="text-gray-500 text-sm py-4">No results found in this area. Try searching another location.</div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {searchResults.map((res, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setSelectedSearchResult(res)}
-                    className="flex flex-col border-b border-gray-100 pb-3.5 cursor-pointer hover:bg-blue-50/60 p-3 rounded-xl transition-all border border-transparent hover:border-blue-200"
-                  >
-                    <span className="font-bold text-[15px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
-                    <span className="text-[12px] text-gray-600 line-clamp-2">{res.display_name}</span>
+          <div className="h-[120px] flex items-center px-8 w-full">
+            {selectedDevice?.route ? (
+              <div className="flex items-center w-full max-w-4xl mx-auto gap-4">
+
+                {/* Origin */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-500 z-10">
+                    <MapPin className="w-5 h-5 text-green-600" />
                   </div>
-                ))}
+                  <span className="text-[13px] font-semibold text-gray-800 mt-2">Origin</span>
+                  <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.origin}</span>
+                </div>
+
+                {/* Line */}
+                <div className="h-1 bg-blue-500 flex-grow relative mx-2">
+                  <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-medium text-blue-600 shadow-sm flex items-center gap-1">
+                    <Navigation className="w-3 h-3" />
+                    In Transit
+                  </div>
+                </div>
+
+                {/* Destination */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center border-2 border-red-500 z-10">
+                    <MapPin className="w-5 h-5 text-red-600" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-gray-800 mt-2">Destination</span>
+                  <span className="text-[12px] text-gray-500 text-center">{selectedDevice.route.destination}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full text-center text-gray-500 text-[14px]">
+                Select a vehicle with an active permit to view its route itinerary.
               </div>
             )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ----------------- FLOATING BOTTOM VEHICLE TELEMETRY & DETAILS CARD ----------------- */}
-      {selectedDevice && (
-        <div className="absolute bottom-3 left-[430px] right-6 z-[400] bg-white rounded-2xl shadow-2xl border border-gray-200/90 p-4 font-sans text-xs animate-in slide-in-from-bottom duration-200">
-          
-          {/* Top Right Action Controls: Play Route & Close Card Buttons (Matches Image 2) */}
-          <div className="absolute -top-11 right-0 z-10 flex items-center gap-2">
+      {/* ----------------- SEARCH RESULTS SIDEBAR (HOVERS OVER SEARCH) ----------------- */}
+      {!isPlaybackMode && (
+        <div
+          className={`absolute top-0 left-0 h-full w-[400px] bg-white z-[500] shadow-2xl transition-transform duration-300 ease-in-out ${isSearchSidebarOpen && !selectedDevice ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
+        >
+          {/* Sticky Fixed Header for Search Results with Fixed Close Button */}
+          <div className="sticky top-0 z-20 bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between shadow-sm flex-shrink-0">
+            <div className="flex items-center gap-2 flex-1 pr-2">
+              <Search className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+              <span className="font-semibold text-sm text-gray-900 truncate">Results for "{activeSearchQuery}"</span>
+            </div>
             <button
               onClick={() => {
-                if (routeHistory.length > 0) {
-                  toast.success(`▶ Playing route playback history for ${selectedDevice.deviceName}`, { id: 'route-play' });
-                } else {
-                  toast.error(`No route history recorded for ${selectedDevice.deviceName} in last 24h.`);
-                }
+                setIsSearchSidebarOpen(false);
+                setActiveSearchQuery('');
+                setSearchTerm('');
+                setSelectedSearchResult(null);
               }}
-              className="w-9 h-9 bg-white hover:bg-gray-50 text-gray-800 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition-all cursor-pointer"
-              title="Play Route Playback History"
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-all shrink-0 shadow-sm"
+              title="Close results"
             >
-              <PlaySquare className="w-5 h-5 text-gray-700" />
-            </button>
-            <button
-              onClick={() => setSelectedDevice(null)}
-              className="w-9 h-9 bg-white hover:bg-gray-50 text-gray-800 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition-all cursor-pointer"
-              title="Close Vehicle Details"
-            >
-              <X className="w-5 h-5 text-gray-700" />
+              <X className="w-4.5 h-4.5" />
             </button>
           </div>
 
-          {/* Grid Layout (Matches Image 2 reference layout) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex-1 overflow-y-auto no-scrollbar">
+            <div className="p-4">
+              {isSearching ? (
+                <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                  Searching places...
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-gray-500 text-sm py-4">No results found in this area. Try searching another location.</div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {searchResults.map((res, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedSearchResult(res)}
+                      className="flex flex-col border-b border-gray-100 pb-3.5 cursor-pointer hover:bg-blue-50/60 p-3 rounded-xl transition-all border border-transparent hover:border-blue-200"
+                    >
+                      <span className="font-bold text-[15px] text-[#1a73e8] mb-1 leading-tight">{res.display_name.split(',')[0]}</span>
+                      <span className="text-[12px] text-gray-600 line-clamp-2">{res.display_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- FLOATING BOTTOM VEHICLE TELEMETRY & DETAILS CARD ----------------- */}
+      {!isPlaybackMode && selectedDevice && (
+        <div className="absolute bottom-3 left-[430px] right-6 z-[400] bg-white rounded-xl shadow-xl border border-gray-300 p-4 font-sans text-xs animate-in slide-in-from-bottom duration-200">
+          
+          {/* Top Right Action Controls: Play Route & Close Card Buttons (Matches User Screenshot) */}
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+            <button
+              onClick={() => startPlaybackForDevice(selectedDevice)}
+              className="w-7 h-7 bg-white hover:bg-gray-50 text-gray-700 rounded-md border border-gray-300 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+              title="Open Car Route Playback Mode"
+            >
+              <PlaySquare className="w-4 h-4 text-gray-700 stroke-[1.8]" />
+            </button>
+            <button
+              onClick={() => setSelectedDevice(null)}
+              className="w-7 h-7 bg-white hover:bg-gray-50 text-gray-700 rounded-md border border-gray-300 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+              title="Close Vehicle Details"
+            >
+              <X className="w-4 h-4 text-gray-700 stroke-[1.8]" />
+            </button>
+          </div>
+
+          {/* Grid Layout (Matches reference image layout) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Column 1: Identifiers & Key Stats */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Vehicle Number</span>
-                <span className="font-extrabold text-gray-900 flex items-center gap-1.5">
+            <div className="flex flex-col">
+              {/* Row 1: Vehicle Number (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Vehicle Number</span>
+                <span className="font-semibold text-gray-800 text-[13px] flex items-center gap-1.5">
                   {selectedDevice.deviceName}
                   {claimedVehiclesMap[(selectedDevice.deviceName || '').toUpperCase().trim()] ? (
                     <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold">Claimed</span>
                   ) : (
                     <button
                       onClick={() => setIsClaimModalOpen(true)}
-                      className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer"
+                      className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-1 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer ml-1"
                     >
                       <ShieldAlert className="w-3 h-3" />
                       <span>Claim</span>
@@ -893,120 +1154,87 @@ const TrackingMap = () => {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2">
-                <span className="font-bold text-gray-700">Today Distance</span>
-                <span className="font-extrabold text-gray-900">
+              {/* Row 2: Today Distance (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Today Distance</span>
+                <span className="font-medium text-gray-800 text-[13px]">
                   {selectedDevice.attributes?.distance
                     ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km`
                     : (selectedDevice.speed > 0 ? `${(selectedDevice.speed * 1.852 * 0.4).toFixed(1)} km` : '0.0 km')}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Current Speed</span>
-                <span className="font-extrabold text-gray-900">
-                  {selectedDevice.speed ? `${(selectedDevice.speed * 1.852).toFixed(2)} km/h` : '0.00 km/h'}
+              {/* Row 3: Current Speed (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Current Speed</span>
+                <span className="font-medium text-gray-800 text-[13px]">
+                  {selectedDevice.speed ? `${(selectedDevice.speed * 1.852).toFixed(1)} km/h` : 'N/A'}
                 </span>
               </div>
 
-              <div className="flex items-start justify-between p-2">
-                <span className="font-bold text-gray-700 shrink-0 mr-2">Address</span>
-                <div className="text-right flex flex-col items-end max-w-[220px]">
+              {/* Row 4: Address (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px] shrink-0 mr-2">Address</span>
+                <div className="text-right flex flex-col items-end max-w-[210px] truncate">
                   <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
-                  <span className="text-[10px] text-gray-400 font-mono mt-0.5">GPS: {selectedDevice.latitude?.toFixed(6)}, {selectedDevice.longitude?.toFixed(6)}</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Odometer</span>
-                <span className="font-extrabold text-gray-900">
-                  {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(0)} km` : 'N/A'}
+              {/* Row 5: Odometer (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Odometer</span>
+                <span className="font-medium text-gray-800 text-[13px]">
+                  {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : 'N/A'}
                 </span>
               </div>
             </div>
 
             {/* Column 2: Status & Ignition */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Device Status</span>
-                <span className="flex items-center gap-1.5 font-extrabold text-gray-900">
-                  <span className={`w-2.5 h-2.5 rounded-full ${(selectedDevice.status || '').toLowerCase() === 'online' ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
-                  {(selectedDevice.status || '').toLowerCase() === 'online' ? 'Online' : 'Offline'}
+            <div className="flex flex-col">
+              {/* Row 1: Device Status (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Device Status</span>
+                <span className={`w-3.5 h-3.5 rounded-full ${(selectedDevice.status || '').toLowerCase() === 'online' ? 'bg-[#86efac]' : 'bg-[#fca5a5]'}`}></span>
+              </div>
+
+              {/* Row 2: Ignition Status (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Ignition Status</span>
+                <span className={`w-3.5 h-3.5 rounded-full ${selectedDevice.attributes?.ignition ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}></span>
+              </div>
+
+              {/* Row 3: Current Driver (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Current Driver</span>
+                <span className="font-medium text-gray-800 text-[13px]">
+                  {selectedDevice.route?.initiator || selectedDevice.driverName || 'N/A'}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2">
-                <span className="font-bold text-gray-700">Ignition Status</span>
-                <span className="flex items-center gap-1.5 font-extrabold text-gray-900">
-                  <span className={`w-2.5 h-2.5 rounded-full ${selectedDevice.attributes?.ignition ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
-                  {selectedDevice.attributes?.ignition ? 'ON' : 'OFF'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Current Driver</span>
-                <span className="font-extrabold text-gray-900">
-                  {selectedDevice.route?.initiator || selectedDevice.driverName || 'Unassigned'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-2">
-                <span className="font-bold text-gray-700">Top Speed</span>
-                <span className="font-extrabold text-gray-900">
+              {/* Row 4: Top Speed (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Top Speed</span>
+                <span className="font-medium text-gray-800 text-[13px]">
                   {selectedDevice.attributes?.maxSpeed
                     ? `${(selectedDevice.attributes.maxSpeed * 1.852).toFixed(1)} km/h`
-                    : (selectedDevice.speed ? `${(selectedDevice.speed * 1.852 * 1.2).toFixed(1)} km/h` : '0.00 km/h')}
+                    : (selectedDevice.speed ? `${(selectedDevice.speed * 1.852 * 1.2).toFixed(1)} km/h` : 'N/A')}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
-                <span className="font-bold text-gray-700">Fuel Level</span>
-                <span className="font-extrabold text-gray-900">
-                  {selectedDevice.attributes?.fuel ? `${selectedDevice.attributes.fuel}%` : 'N/A (No Sensor)'}
+              {/* Row 5: Fuel Level (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Fuel Level</span>
+                <span className="font-medium text-gray-800 text-[13px]">
+                  {selectedDevice.attributes?.fuel ? `${selectedDevice.attributes.fuel}%` : 'N/A'}
                 </span>
               </div>
             </div>
 
-            {/* Column 3: Services & Current Trip */}
-            <div className="flex flex-col justify-between p-2 bg-gray-50/70 rounded-lg border border-gray-100">
-              <div>
-                <span className="font-bold text-gray-900 text-sm block">Services</span>
-                <span className="text-gray-500 text-xs mt-1 block">No services set for this vehicle.</span>
-              </div>
-
-              {selectedDevice.route ? (
-                <div className="mt-2 pt-2 border-t border-gray-200">
-                  <span className="font-bold text-gray-700 block text-[11px] uppercase">Current Trip</span>
-                  <span className="font-semibold text-blue-700 text-xs block truncate mt-0.5">
-                    {selectedDevice.route.origin} &rarr; {selectedDevice.route.destination}
-                  </span>
-                </div>
-              ) : (
-                <div className="mt-2 pt-2 border-t border-gray-200 text-gray-500 text-xs">
-                  No active livestock permit assigned
-                </div>
-              )}
-
-              {/* Action Buttons: Directions & WhatsApp */}
-              <div className="flex items-center gap-3 mt-3 pt-2 border-t border-gray-200">
-                <a
-                  href={`https://maps.google.com/?q=${selectedDevice.latitude},${selectedDevice.longitude}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
-                >
-                  <CornerUpRight className="w-3.5 h-3.5" />
-                  <span>Directions</span>
-                </a>
-                <a
-                  href={`https://wa.me/?text=Check out vehicle ${selectedDevice.deviceName} at https://maps.google.com/?q=${selectedDevice.latitude},${selectedDevice.longitude}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
+            {/* Column 3: Services */}
+            <div className="flex flex-col pl-2 pr-6 pt-1">
+              <span className="font-bold text-[#475569] text-xl tracking-tight">Services</span>
+              <div className="flex-1 flex items-center justify-center text-center">
+                <span className="text-gray-500 text-[14px] font-normal">No services set for this vehicle.</span>
               </div>
             </div>
 
