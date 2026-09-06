@@ -432,15 +432,15 @@ const NationalReports = () => {
                 <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
                 <div className="relative min-w-[280px]">
                   <select
-                    value={selectedPlate}
+                    value={activePlate}
                     onChange={(e) => {
                       setSelectedPlate(e.target.value);
                       handleResetReplay();
                     }}
                     className="w-full appearance-none bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-3.5 py-2 pr-9 text-xs font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] focus:border-[#0052cc] cursor-pointer transition-all"
                   >
-                    {Object.keys(VEHICLE_ROUTES).map((plate) => {
-                      const v = VEHICLE_ROUTES[plate];
+                    {Object.keys(trackedVehiclesMap).map((plate) => {
+                      const v = trackedVehiclesMap[plate];
                       return (
                         <option key={plate} value={plate}>
                           🚗 {plate} — {v.driverName} ({v.status || 'Active'})
