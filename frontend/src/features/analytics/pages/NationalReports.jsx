@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getTraccarLocations } from '../../../lib/api';
 import CustomSelect from '../../../components/ui/CustomSelect';
+import rabLogo from '../../../assets/images/RAB_Logo2.png';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -9,7 +10,7 @@ import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
   Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown,
-  MoreVertical, Download, FileSpreadsheet, Printer
+  MoreVertical, Download, FileSpreadsheet
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -103,6 +104,8 @@ const NationalReports = () => {
   const [activeTab, setActiveTab] = useState('replay');
   const [selectedPlate, setSelectedPlate] = useState('');
   const [timeRange, setTimeRange] = useState('7d');
+  const [startDate, setStartDate] = useState('2026-09-01');
+  const [endDate, setEndDate] = useState('2026-09-06');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const exportMenuRef = useRef(null);
 
@@ -116,14 +119,48 @@ const NationalReports = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Time Range options array
+// Helpers for PDF generation
+const ensureHtml2Pdf = () => {
+  return new Promise((resolve) => {
+    if (window.html2pdf) return resolve(window.html2pdf);
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => resolve(window.html2pdf);
+    script.onerror = () => resolve(null);
+    document.head.appendChild(script);
+  });
+};
+
+const getBase64FromUrl = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        resolve(url);
+      }
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+};
+
+  // Time Range options array (clean labels without emojis)
   const timeRangeOptions = [
-    { value: 'today', label: '📅 Today' },
-    { value: '7d', label: '📅 Last 7 Days' },
-    { value: '30d', label: '📅 Last 30 Days' },
-    { value: 'this_month', label: '📅 This Month' },
-    { value: 'this_year', label: '📅 This Year' },
-    { value: 'all', label: '📅 All Time' }
+    { value: 'today', label: 'Today' },
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: 'this_month', label: 'This Month' },
+    { value: 'this_year', label: 'This Year' },
+    { value: 'custom', label: 'Custom Date Range' },
+    { value: 'all', label: 'All Time' }
   ];
 
   // Replay animation states
@@ -271,14 +308,14 @@ const NationalReports = () => {
     return map;
   }, [rawMovements, traccarLocations]);
 
-  // Options array for CustomSelect vehicle dropdown
+  // Options array for CustomSelect vehicle dropdown (clean labels without emojis)
   const vehicleOptions = useMemo(() => [
-    { value: 'ALL', label: '🚗 All Tracked GPS Vehicles (Fleet Analytics)' },
+    { value: 'ALL', label: 'All Tracked GPS Vehicles (Fleet Analytics)' },
     ...Object.keys(trackedVehiclesMap).map(plate => {
       const v = trackedVehiclesMap[plate];
       return {
         value: plate,
-        label: `🚗 ${plate} — ${v.driverName} (${v.status || 'Active'})`
+        label: `${plate} — ${v.driverName} (${v.status || 'Active'})`
       };
     })
   ], [trackedVehiclesMap]);
@@ -321,7 +358,7 @@ const NationalReports = () => {
     toast.success('Vehicle telemetry Excel/CSV report downloaded!');
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExportMenuOpen(false);
 
     const list = Object.values(trackedVehiclesMap);
@@ -332,85 +369,194 @@ const NationalReports = () => {
       return;
     }
 
-    const htmlDoc = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <title>Livestock_Telemetry_Report_${selectedPlate || 'Fleet'}</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 32px; color: #1e293b; background: #fff; line-height: 1.5; }
-    .header { border-b: 2px solid #0052cc; padding-bottom: 16px; margin-bottom: 24px; }
-    .header h1 { color: #0052cc; font-size: 22px; font-weight: 800; margin: 0 0 6px 0; }
-    .header h2 { color: #475569; font-size: 13px; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 12px; display: flex; justify-content: space-between; }
-    .meta-box div { margin-bottom: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
-    th { background: #f1f5f9; color: #334155; font-weight: 700; text-transform: uppercase; font-size: 11px; padding: 10px 12px; border-bottom: 2px solid #cbd5e1; text-align: left; }
-    td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; color: #334155; }
-    tr:nth-child(even) { background-color: #f8fafc; }
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700; background: #dbeafe; color: #1e40af; }
-    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 14px; text-align: center; font-size: 11px; color: #94a3b8; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Rwanda Agriculture & Animal Resources Board (RAB)</h1>
-    <h2>National Livestock Movement & Telemetry Summary Report</h2>
-  </div>
+    const toastId = toast.loading('Generating official PDF report...');
 
-  <div class="meta-box">
-    <div><strong>Generated Date:</strong> ${new Date().toLocaleString()}</div>
-    <div><strong>Vehicle Filter:</strong> ${selectedPlate || 'All Tracked GPS Vehicles (Fleet)'}</div>
-    <div><strong>Time Range Filter:</strong> ${timeRange.toUpperCase()}</div>
-    <div><strong>Total Vehicles:</strong> ${targetList.length}</div>
-  </div>
+    try {
+      // Get logged-in user details for "Generated By"
+      let currentUser = { name: 'National RAB Auditor', role: 'System Admin' };
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          currentUser = {
+            name: parsed.name || parsed.fullName || parsed.username || 'National RAB Auditor',
+            role: parsed.role || parsed.userType || 'Inspector / Officer'
+          };
+        }
+      } catch (e) {}
 
-  <table>
-    <thead>
-      <tr>
-        <th>Vehicle Plate</th>
-        <th>Driver & Contact</th>
-        <th>Permit & Owner</th>
-        <th>Route Corridor</th>
-        <th>Cargo Type</th>
-        <th>Speed / Distance</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${targetList.map(v => `
-        <tr>
-          <td><strong style="color:#0052cc;">${v.plate}</strong></td>
-          <td>${v.driverName}<br/><span style="color:#64748b; font-size:10px;">${v.driverPhone}</span></td>
-          <td>${v.permitNumber}<br/><span style="color:#64748b; font-size:10px;">${v.farmerName}</span></td>
-          <td>${v.route}</td>
-          <td style="color:#1d4ed8; font-weight:600;">${v.cargo}</td>
-          <td>${v.avgSpeed} | ${v.distance}</td>
-          <td><span class="badge">${v.status}</span></td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
+      const coatOfArmsRaw = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png";
 
-  <div class="footer">
-    Official Confidential Summary Document — National Livestock Tracking System &copy; ${new Date().getFullYear()}
-  </div>
-</body>
-</html>
-    `;
+      const [coatOfArmsUrl, rabLogoBase64] = await Promise.all([
+        getBase64FromUrl(coatOfArmsRaw),
+        getBase64FromUrl(rabLogo)
+      ]);
 
-    const blob = new Blob([htmlDoc], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Livestock_Telemetry_Summary_${selectedPlate || 'Fleet'}_${new Date().toISOString().slice(0,10)}.doc`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '794px';
+      iframe.style.height = '1123px';
+      iframe.style.border = 'none';
+      iframe.style.zIndex = '-9999';
+      iframe.style.visibility = 'hidden';
 
-    toast.success(`Summary report downloaded immediately to your machine!`);
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Livestock_Telemetry_Report_${selectedPlate || 'Fleet'}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; background: #fff; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; font-size: 11px; }
+            .report-container { width: 794px; padding: 32px 40px; margin: 0 auto; background: #fff; }
+            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: none; }
+            .header-table td { border: none; padding: 0; vertical-align: middle; }
+            .flag-bar { height: 4px; width: 100%; background: linear-gradient(to right, #10b981, #facc15, #0284c7); border-radius: 9999px; margin: 10px 0 16px 0; }
+            .doc-title { text-align: center; border-top: 2px solid #0052cc; border-bottom: 2px solid #0052cc; padding: 8px 0; background: #f8fafc; margin-bottom: 16px; }
+            .doc-title h2 { font-size: 15px; font-weight: 800; color: #0052cc; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+            .meta-grid { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; display: table; width: 100%; box-sizing: border-box; }
+            .meta-row { display: table-row; }
+            .meta-cell { display: table-cell; padding: 4px 8px; font-size: 11px; color: #334155; }
+            .meta-cell strong { color: #0f172a; font-weight: 700; }
+            table.data-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; page-break-inside: auto; }
+            table.data-table tr { page-break-inside: avoid; page-break-after: auto; }
+            table.data-table th { background: #0052cc; color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 9.5px; padding: 8px 10px; border: 1px solid #0052cc; text-align: left; }
+            table.data-table td { border: 1px solid #e2e8f0; padding: 8px 10px; color: #1e293b; vertical-align: top; }
+            table.data-table tr:nth-child(even) { background-color: #f8fafc; }
+            .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; background: #dbeafe; color: #1e40af; }
+            .badge-active { background: #dcfce7; color: #166534; }
+            .footer-section { margin-top: 24px; border-top: 1px solid #cbd5e1; padding-top: 10px; font-size: 9px; color: #64748b; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="report-container">
+            <!-- Official Header with Logos -->
+            <table class="header-table">
+              <tr>
+                <td style="width: 70px;">
+                  <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 58px; height: 58px; object-fit: contain;" />
+                </td>
+                <td style="text-align: center; padding: 0 10px;">
+                  <h1 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0; color: #0f172a; letter-spacing: 0.5px;">REPUBULIKA Y'U RWANDA</h1>
+                  <h2 style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #0052cc;">RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)</h2>
+                  <p style="font-size: 9px; color: #475569; margin: 0;">National Livestock Tracking &amp; GPS Telemetry Audit System</p>
+                </td>
+                <td style="width: 70px; text-align: right;">
+                  <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 60px; height: 60px; object-fit: contain; float: right;" />
+                </td>
+              </tr>
+            </table>
+
+            <div class="flag-bar"></div>
+
+            <div class="doc-title">
+              <h2>Official Vehicle Telemetry &amp; Movement Audit Report</h2>
+            </div>
+
+            <!-- Metadata Box (Generated At & Generated By) -->
+            <div class="meta-grid">
+              <div class="meta-row">
+                <div class="meta-cell"><strong>Generated At:</strong> ${new Date().toLocaleString()}</div>
+                <div class="meta-cell"><strong>Generated By:</strong> ${currentUser.name} (${currentUser.role})</div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-cell"><strong>Selected Vehicle:</strong> ${selectedPlate ? selectedPlate : 'All Tracked GPS Vehicles (Fleet)'}</div>
+                <div class="meta-cell"><strong>Time Range:</strong> ${timeRange === 'custom' ? `${startDate} to ${endDate}` : timeRange.toUpperCase()}</div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-cell"><strong>Total Vehicles Logged:</strong> ${targetList.length}</div>
+                <div class="meta-cell"><strong>Document ID:</strong> RAB-RPT-${Math.floor(100000 + Math.random() * 900000)}</div>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 14%;">Plate Number</th>
+                  <th style="width: 18%;">Driver &amp; Contact</th>
+                  <th style="width: 18%;">Permit &amp; Owner</th>
+                  <th style="width: 22%;">Route Corridor</th>
+                  <th style="width: 14%;">Cargo Details</th>
+                  <th style="width: 14%;">Speed &amp; Distance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${targetList.map(v => `
+                  <tr>
+                    <td>
+                      <strong style="color:#0052cc; font-size:11px;">${v.plate}</strong><br/>
+                      <span class="badge ${v.status === 'In Transit' ? 'badge-active' : ''}">${v.status}</span>
+                    </td>
+                    <td>
+                      <strong>${v.driverName}</strong><br/>
+                      <span style="color:#64748b; font-size:9px;">Tel: ${v.driverPhone}</span><br/>
+                      <span style="color:#64748b; font-size:9px;">NID: ${v.driverNid}</span>
+                    </td>
+                    <td>
+                      <strong style="color:#0f172a;">${v.permitNumber}</strong><br/>
+                      <span style="color:#64748b; font-size:9px;">Owner: ${v.farmerName}</span>
+                    </td>
+                    <td>
+                      <strong style="color:#334155;">${v.route}</strong><br/>
+                      <span style="color:#64748b; font-size:9px;">Dep: ${v.departedTime}</span>
+                    </td>
+                    <td>
+                      <span style="color:#1d4ed8; font-weight:700;">${v.cargo}</span>
+                    </td>
+                    <td>
+                      <strong>${v.avgSpeed}</strong><br/>
+                      <span style="color:#64748b; font-size:9px;">${v.distance}</span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <!-- Page Footer with Audit Info -->
+            <div class="footer-section">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Official RAB Report &bull; Generated At: ${new Date().toLocaleString()} &bull; Generated By: ${currentUser.name}</span>
+                <span>National Livestock Tracking System &bull; Rwanda Agriculture Board</span>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      doc.close();
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const html2pdf = await ensureHtml2Pdf();
+      if (html2pdf) {
+        const fileName = `Livestock_Telemetry_Report_${selectedPlate || 'Fleet'}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        await html2pdf().set(opt).from(doc.body).save();
+        document.body.removeChild(iframe);
+        toast.success(`PDF report downloaded successfully!`, { id: toastId });
+      } else {
+        toast.error('Failed to load PDF generator library.', { id: toastId });
+        document.body.removeChild(iframe);
+      }
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error('Error generating PDF report.', { id: toastId });
+    }
   };
 
   const activePlate = selectedPlate && trackedVehiclesMap[selectedPlate] ? selectedPlate : Object.keys(trackedVehiclesMap)[0];
@@ -612,7 +758,31 @@ const NationalReports = () => {
                     value={timeRange}
                     onChange={(val) => setTimeRange(val)}
                     options={timeRangeOptions}
-                    minWidth="min-w-[180px]"
+                    minWidth="min-w-[185px]"
+                  />
+                </div>
+
+                {/* Calendar Range Inputs (From Date -> To Date) */}
+                <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-200 text-xs">
+                  <span className="font-bold text-gray-700">From:</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setTimeRange('custom');
+                    }}
+                    className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
+                  />
+                  <span className="font-bold text-gray-700">To:</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setTimeRange('custom');
+                    }}
+                    className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
                   />
                 </div>
               </div>
@@ -645,13 +815,6 @@ const NationalReports = () => {
                     >
                       <Download className="w-4 h-4 text-red-600" />
                       <span>Export PDF Report (.pdf)</span>
-                    </button>
-                    <button
-                      onClick={handleExportPDF}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer border-t border-gray-100"
-                    >
-                      <Printer className="w-4 h-4 text-gray-600" />
-                      <span>Print Summary View</span>
                     </button>
                   </div>
                 )}
@@ -959,6 +1122,7 @@ const NationalReports = () => {
                     <th className="py-2.5 px-3">Vehicle Plate</th>
                     <th className="py-2.5 px-3">Driver Name &amp; Contact</th>
                     <th className="py-2.5 px-3">Permit # &amp; Owner</th>
+                    <th className="py-2.5 px-3">Departure Date &amp; Time</th>
                     <th className="py-2.5 px-3">Route Corridor</th>
                     <th className="py-2.5 px-3">Cargo Type</th>
                     <th className="py-2.5 px-3">Speed / Distance</th>
@@ -980,6 +1144,10 @@ const NationalReports = () => {
                         <td className="py-2.5 px-3 text-gray-700 font-medium">
                           <div>{v.permitNumber}</div>
                           <div className="text-[10px] text-gray-400">{v.farmerName}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-emerald-700 font-semibold whitespace-nowrap">
+                          <div>{v.departedTime || '06 Sep 2026, 08:30 AM'}</div>
+                          <div className="text-[10px] text-gray-400 font-normal">Exp: {v.expectedArrival || '06 Sep 2026, 01:15 PM'}</div>
                         </td>
                         <td className="py-2.5 px-3 text-gray-600">{v.route}</td>
                         <td className="py-2.5 px-3 text-blue-700 font-medium">{v.cargo}</td>
