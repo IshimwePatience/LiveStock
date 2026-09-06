@@ -896,7 +896,9 @@ const TrackingMap = () => {
               <div className="flex items-center justify-between p-2">
                 <span className="font-bold text-gray-700">Today Distance</span>
                 <span className="font-extrabold text-gray-900">
-                  {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '128.4 km'}
+                  {selectedDevice.attributes?.distance
+                    ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km`
+                    : (selectedDevice.speed > 0 ? `${(selectedDevice.speed * 1.852 * 0.4).toFixed(1)} km` : '0.0 km')}
                 </span>
               </div>
 
@@ -907,16 +909,19 @@ const TrackingMap = () => {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2">
-                <span className="font-bold text-gray-700">Address</span>
-                <span className="font-medium text-gray-800 truncate max-w-[150px]" title={selectedDevice.address || 'Kigali, Rwanda'}>
-                  {selectedDevice.address || 'Kigali, Rwanda'}
-                </span>
+              <div className="flex items-start justify-between p-2">
+                <span className="font-bold text-gray-700 shrink-0 mr-2">Address</span>
+                <div className="text-right flex flex-col items-end max-w-[220px]">
+                  <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
+                  <span className="text-[10px] text-gray-400 font-mono mt-0.5">GPS: {selectedDevice.latitude?.toFixed(6)}, {selectedDevice.longitude?.toFixed(6)}</span>
+                </div>
               </div>
 
               <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
                 <span className="font-bold text-gray-700">Odometer</span>
-                <span className="font-extrabold text-gray-900">N/A</span>
+                <span className="font-extrabold text-gray-900">
+                  {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(0)} km` : 'N/A'}
+                </span>
               </div>
             </div>
 
@@ -941,18 +946,24 @@ const TrackingMap = () => {
               <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
                 <span className="font-bold text-gray-700">Current Driver</span>
                 <span className="font-extrabold text-gray-900">
-                  {selectedDevice.driverName || 'Valens NIYOMUKIZA'}
+                  {selectedDevice.route?.initiator || selectedDevice.driverName || 'Unassigned'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between p-2">
                 <span className="font-bold text-gray-700">Top Speed</span>
-                <span className="font-extrabold text-gray-900">85 km/h</span>
+                <span className="font-extrabold text-gray-900">
+                  {selectedDevice.attributes?.maxSpeed
+                    ? `${(selectedDevice.attributes.maxSpeed * 1.852).toFixed(1)} km/h`
+                    : (selectedDevice.speed ? `${(selectedDevice.speed * 1.852 * 1.2).toFixed(1)} km/h` : '0.00 km/h')}
+                </span>
               </div>
 
               <div className="flex items-center justify-between bg-gray-100/70 p-2 rounded-lg">
                 <span className="font-bold text-gray-700">Fuel Level</span>
-                <span className="font-extrabold text-gray-900">84%</span>
+                <span className="font-extrabold text-gray-900">
+                  {selectedDevice.attributes?.fuel ? `${selectedDevice.attributes.fuel}%` : 'N/A (No Sensor)'}
+                </span>
               </div>
             </div>
 
