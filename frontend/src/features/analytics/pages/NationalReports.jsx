@@ -740,25 +740,25 @@ const getBase64FromUrl = (url) => {
           <div className="flex flex-col gap-6">
 
             {/* Vehicle Selection, Time Range Filter & Export Menu */}
-            <div className="flex flex-wrap items-center justify-between gap-4 py-1">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
+            <div className="flex items-center justify-between gap-3 py-1 flex-wrap sm:flex-nowrap">
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Select Tracked GPS Vehicle:</span>
                   <CustomSelect
                     value={selectedPlate || 'ALL'}
                     onChange={(val) => setSelectedPlate(val === 'ALL' ? '' : val)}
                     options={vehicleOptions}
-                    minWidth="min-w-[320px]"
+                    minWidth="w-52 max-w-[220px]"
                   />
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-gray-900">Time Range:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Time Range:</span>
                   <CustomSelect
                     value={timeRange}
                     onChange={(val) => setTimeRange(val)}
                     options={timeRangeOptions}
-                    minWidth="min-w-[185px]"
+                    minWidth="w-36 max-w-[150px]"
                   />
                 </div>
 
@@ -788,7 +788,7 @@ const getBase64FromUrl = (url) => {
               </div>
 
               {/* Three Dots Download & Export Menu */}
-              <div className="relative" ref={exportMenuRef}>
+              <div className="relative shrink-0" ref={exportMenuRef}>
                 <button
                   onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
                   title="Export & Download Report"
