@@ -427,7 +427,7 @@ const NationalReports = () => {
           <div className="flex flex-col gap-6">
 
             {/* Vehicle Selection & Fleet Toolbar */}
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 py-1">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
                 <div className="relative min-w-[320px]">
@@ -449,39 +449,7 @@ const NationalReports = () => {
                   <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
-                <span className="px-2.5 py-1 rounded-md bg-blue-50 text-[#0052cc] border border-blue-200 flex items-center gap-1">
-                  <Activity className="w-3.5 h-3.5" /> Live GPS Analytics
-                </span>
-              </div>
             </div>
-
-            {/* Selected Vehicle Info Banner (If specific vehicle selected) */}
-            {selectedPlate && trackedVehiclesMap[selectedPlate] && (
-              <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                <div>
-                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Vehicle &amp; Driver</span>
-                  <p className="font-bold text-gray-900 text-sm">{trackedVehiclesMap[selectedPlate].plate} — {trackedVehiclesMap[selectedPlate].driverName}</p>
-                  <p className="text-gray-600">Tel: {trackedVehiclesMap[selectedPlate].driverPhone} | NID: {trackedVehiclesMap[selectedPlate].driverNid}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Permit &amp; Owner</span>
-                  <p className="font-semibold text-gray-800">{trackedVehiclesMap[selectedPlate].permitNumber} ({trackedVehiclesMap[selectedPlate].farmerName})</p>
-                  <p className="text-blue-700 font-medium">Cargo: {trackedVehiclesMap[selectedPlate].cargo}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Route Trajectory</span>
-                  <p className="font-semibold text-gray-800">{trackedVehiclesMap[selectedPlate].route}</p>
-                  <p className="text-gray-600">Origin: {trackedVehiclesMap[selectedPlate].origin}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Telemetry Stats</span>
-                  <p className="font-semibold text-emerald-700">Distance: {trackedVehiclesMap[selectedPlate].distance} | Speed: {trackedVehiclesMap[selectedPlate].avgSpeed}</p>
-                  <p className="text-gray-600">Status: <span className="font-bold text-green-700">{trackedVehiclesMap[selectedPlate].status}</span></p>
-                </div>
-              </div>
-            )}
 
             {/* Vehicle Analytics KPI Cards (Exact District & Sector / Police styling) */}
             {(() => {
