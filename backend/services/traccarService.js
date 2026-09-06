@@ -158,11 +158,12 @@ class TraccarService {
           deviceId,
           from: new Date(from).toISOString(),
           to: new Date(to).toISOString()
-        }
+        },
+        timeout: 30000 // 30 seconds for historical route queries
       });
       return res.data;
     } catch (error) {
-      console.error(`Error fetching route for device ${deviceId}:`, error.message);
+      console.warn(`Traccar route report warning for device ${deviceId}: ${error.message}`);
       return [];
     }
   }

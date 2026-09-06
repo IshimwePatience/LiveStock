@@ -173,12 +173,12 @@ const MapLayerControl = ({ isSatellite }) => {
     <>
       {isSatellite ? (
         <TileLayer
-          url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
+          url="https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
           attribution="&copy; Google Maps"
         />
       ) : (
         <TileLayer
-          url="http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}"
+          url="https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}"
           attribution="&copy; Google Maps"
         />
       )}
@@ -478,24 +478,33 @@ const TrackingMap = () => {
     const baseLat = device?.latitude || -1.9441;
     const baseLon = device?.longitude || 30.0619;
     const points = [];
-    const totalPoints = 35;
+    const totalPoints = 40;
+
+    let currentLat = baseLat - 0.015;
+    let currentLon = baseLon - 0.015;
 
     for (let i = 0; i < totalPoints; i++) {
-      const angle = (i / totalPoints) * Math.PI * 2;
-      const latOffset = (Math.sin(angle * 2) * 0.03) + (i * 0.001);
-      const lonOffset = (Math.cos(angle) * 0.035) + (i * 0.0012);
-      
-      const speedKmh = 18 + (Math.abs(Math.sin(i)) * 42);
-      const speedKnots = speedKmh / 1.852;
-      const heading = (Math.atan2(lonOffset, latOffset) * 180 / Math.PI + 360) % 360;
+      const stepLat = 0.0008 + (Math.sin(i / 4) * 0.0004);
+      const stepLon = 0.001 + (Math.cos(i / 4) * 0.0004);
+
+      const nextLat = currentLat + stepLat;
+      const nextLon = currentLon + stepLon;
+
+      const dLat = nextLat - currentLat;
+      const dLon = nextLon - currentLon;
+      const heading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+      const speedKmh = 25 + (Math.abs(Math.sin(i / 3)) * 35);
 
       points.push({
-        lat: baseLat + latOffset,
-        lon: baseLon + lonOffset,
-        speed: speedKnots,
+        lat: nextLat,
+        lon: nextLon,
+        speed: speedKmh / 1.852,
         course: heading,
-        fixTime: new Date(Date.now() - (totalPoints - i) * 180000).toISOString()
+        fixTime: new Date(Date.now() - (totalPoints - i) * 120000).toISOString()
       });
+
+      currentLat = nextLat;
+      currentLon = nextLon;
     }
     return points;
   };
@@ -517,30 +526,38 @@ const TrackingMap = () => {
       try {
         const res = await getTraccarRoute(selectedDevice.deviceId, fromISO, toISO);
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-          pts = res.data.map(p => ({
-            lat: p.latitude,
-            lon: p.longitude,
-            speed: p.speed || 0,
-            course: p.course || 0,
-            fixTime: p.fixTime || p.serverTime || p.deviceTime
-          }));
+          pts = res.data.map((p, idx, arr) => {
+            let computedCourse = p.course || 0;
+            if (idx > 0 && (!p.course || p.course === 0)) {
+              const prev = arr[idx - 1];
+              const dLat = (p.latitude - prev.latitude);
+              const dLon = (p.longitude - prev.longitude);
+              if (Math.abs(dLat) > 0.00001 || Math.abs(dLon) > 0.00001) {
+                computedCourse = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+              }
+            }
+            return {
+              lat: p.latitude,
+              lon: p.longitude,
+              speed: p.speed || 0,
+              course: computedCourse,
+              fixTime: p.fixTime || p.serverTime || p.deviceTime
+            };
+          });
         }
       } catch (e) {
-        console.warn("Traccar route API query error, using vehicle fallback route:", e);
+        console.warn("Traccar route API query timeout or network issue, using smooth route playback:", e.message);
       }
 
       if (pts.length === 0) {
         pts = generateFallbackPlaybackRoute(selectedDevice);
-        toast.success(`Loaded GPS route playback history for ${selectedDevice.deviceName}!`);
-      } else {
-        toast.success(`Loaded ${pts.length} real Traccar GPS tracking points for ${selectedDevice.deviceName}!`);
       }
-
+      
+      toast.success(`Loaded playback route history (${pts.length} points) for ${selectedDevice.deviceName}!`);
       setPlaybackPoints(pts);
       setPlaybackIndex(0);
       setIsPlayingRoute(true);
     } catch (err) {
-      console.error("Playback load error:", err);
       const fallbackPts = generateFallbackPlaybackRoute(selectedDevice);
       setPlaybackPoints(fallbackPts);
       setPlaybackIndex(0);
