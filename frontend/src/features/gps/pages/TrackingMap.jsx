@@ -123,16 +123,34 @@ const GeocodedAddress = ({ lat, lon }) => {
 
 // Custom 2D Moving Vehicle Marker Icon for Live GPS Tracking (Matches Playback Icon)
 const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = false, speed = 0) => {
-  const isOnline = status === 'online';
+  const lowerStatus = (status || 'unknown').toLowerCase();
+  const isOnline = lowerStatus === 'online';
+  const isOffline = lowerStatus === 'offline';
   const speedKmh = speed ? (speed * 1.852).toFixed(2) : '0.00';
 
-  const cabColor = hasClaim ? '#dc2626' : (isOnline ? '#15803d' : '#ca8a04');
-  const cabBorder = hasClaim ? '#ef4444' : (isOnline ? '#4ade80' : '#fef08a');
-  const trailerColor = hasClaim ? '#991b1b' : (isOnline ? '#16a34a' : '#eab308');
-  const trailerBorder = hasClaim ? '#f87171' : (isOnline ? '#22c55e' : '#854d0e');
-  const badgeBg = hasClaim ? '#991b1b' : '#1e293b';
-  const badgeBorder = hasClaim ? '#ef4444' : '#3b82f6';
-  const shadowColor = hasClaim ? 'rgba(220, 38, 38, 0.6)' : (isOnline ? 'rgba(34, 197, 94, 0.5)' : 'rgba(234, 179, 8, 0.5)');
+  let cabColor = '#d97706'; // Unknown (Yellow)
+  let cabBorder = '#fbbf24';
+  let trailerColor = '#eab308';
+  let trailerBorder = '#fef08a';
+  let shadowColor = 'rgba(245, 158, 11, 0.5)';
+  let badgeBg = hasClaim ? '#dc2626' : '#1e293b';
+  let badgeBorder = hasClaim ? '#ef4444' : '#f59e0b';
+
+  if (isOnline) {
+    cabColor = '#15803d'; // Green
+    cabBorder = '#4ade80';
+    trailerColor = '#16a34a';
+    trailerBorder = '#22c55e';
+    shadowColor = 'rgba(34, 197, 94, 0.5)';
+    badgeBorder = hasClaim ? '#ef4444' : '#22c55e';
+  } else if (isOffline) {
+    cabColor = '#b91c1c'; // Red
+    cabBorder = '#f87171';
+    trailerColor = '#dc2626';
+    trailerBorder = '#ef4444';
+    shadowColor = 'rgba(220, 38, 38, 0.5)';
+    badgeBorder = hasClaim ? '#ef4444' : '#ef4444';
+  }
 
   const html = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
@@ -140,7 +158,7 @@ const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = fals
       <div style="background: ${badgeBg}; border: 1.5px solid ${badgeBorder}; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.35); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif;">
         ${hasClaim ? '🚨 CLAIM • ' : ''}${speedKmh} km/h
       </div>
-      <!-- Green 2D Heavy Truck Icon laying flat on surface with smooth rotation -->
+      <!-- 2D Heavy Truck Icon laying flat on surface with smooth rotation -->
       <div style="transform: rotate(${course || 0}deg); transition: transform 0.3s ease;">
         <svg width="34" height="56" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px ${shadowColor});">
           <!-- Wheels -->
@@ -161,7 +179,7 @@ const createVehicleMarkerIcon = (deviceName, status, course = 0, hasClaim = fals
 
   return new L.divIcon({
     html: html,
-    className: 'green-live-vehicle-marker',
+    className: 'live-vehicle-marker',
     iconSize: [110, 75],
     iconAnchor: [55, 48]
   });
