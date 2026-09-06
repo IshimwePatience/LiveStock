@@ -607,7 +607,35 @@ const TrackingMap = () => {
 
   const userStr = localStorage.getItem('user');
   const currentUser = userStr ? JSON.parse(userStr) : null;
-  const isPolice = currentUser?.role === 'POLICE';
+  const isPolice = currentUser?.role === 'POLICE' || currentUser?.role === 'RAB';
+
+  const DEFAULT_ROLE_PERMISSIONS = {
+    RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
+    DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
+    SARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications'],
+    POLICE: ['cases', 'gps', 'national_reports', 'notifications']
+  };
+
+  const getEffectivePermissions = () => {
+    if (!currentUser) return [];
+    let perms = currentUser.permissions;
+    if (typeof perms === 'string') {
+      try {
+        perms = JSON.parse(perms);
+      } catch (e) {
+        perms = null;
+      }
+    }
+    if (Array.isArray(perms) && perms.length > 0) {
+      return perms;
+    }
+    return DEFAULT_ROLE_PERMISSIONS[currentUser.role] || DEFAULT_ROLE_PERMISSIONS.SARO;
+  };
+
+  const hasPerm = (permKey) => {
+    const perms = getEffectivePermissions();
+    return perms.includes(permKey);
+  };
 
   const { data: rawCases = [] } = useQuery({
     queryKey: ['police-cases'],
@@ -748,15 +776,15 @@ const TrackingMap = () => {
               </button>
             </div>
             <div className="flex flex-col gap-1 mt-2">
-              <Link to="/dashboard/overview" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Overview</Link>
-              <Link to="/dashboard/cases" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Police Cases</Link>
-              <Link to="/dashboard/gps" className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg">GPS Tracking</Link>
-              <Link to="/dashboard/movements" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Movements</Link>
-              <Link to="/dashboard/geofencing" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Geo-Fencing</Link>
-              <Link to="/dashboard/national-reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Analytics &amp; Reports</Link>
-              <Link to="/dashboard/notifications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Notifications</Link>
-              <Link to="/dashboard/system-settings" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">System Settings</Link>
-              <Link to="/dashboard/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">User Management</Link>
+              {hasPerm('overview') && <Link to="/dashboard/overview" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Overview</Link>}
+              {hasPerm('cases') && <Link to="/dashboard/cases" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Police Cases</Link>}
+              {hasPerm('gps') && <Link to="/dashboard/gps" className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg">GPS Tracking</Link>}
+              {hasPerm('movements') && <Link to="/dashboard/movements" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Movements</Link>}
+              {hasPerm('geofencing') && <Link to="/dashboard/geofencing" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Geo-Fencing</Link>}
+              {(hasPerm('national_reports') || hasPerm('performance_audit')) && <Link to="/dashboard/national-reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Analytics &amp; Reports</Link>}
+              {hasPerm('notifications') && <Link to="/dashboard/notifications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Notifications</Link>}
+              {hasPerm('system_settings') && <Link to="/dashboard/system-settings" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">System Settings</Link>}
+              {hasPerm('user_management') && <Link to="/dashboard/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">User Management</Link>}
             </div>
           </div>
         </div>
@@ -1220,7 +1248,7 @@ const TrackingMap = () => {
                   {selectedDevice.deviceName}
                   {claimedVehiclesMap[(selectedDevice.deviceName || '').toUpperCase().trim()] ? (
                     <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold">Claimed</span>
-                  ) : (
+                  ) : (hasPerm('cases') || isPolice) ? (
                     <button
                       onClick={() => setIsClaimModalOpen(true)}
                       className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-1 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer ml-1"
@@ -1228,7 +1256,7 @@ const TrackingMap = () => {
                       <ShieldAlert className="w-3 h-3" />
                       <span>Claim</span>
                     </button>
-                  )}
+                  ) : null}
                 </span>
               </div>
 
