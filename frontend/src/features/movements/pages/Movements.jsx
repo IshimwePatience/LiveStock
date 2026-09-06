@@ -385,19 +385,19 @@ const Movements = () => {
       titleSub: '',
       subtitle: `Official Livestock Movement Permit Registry • ${scopeLabel}`,
       meta: [
-        { label: 'GENERATED ON', value: new Date().toLocaleString() },
-        { label: 'EXPORT SCOPE', value: scopeLabel },
-        { label: 'TOTAL RECORDS', value: dataset.length }
+        { label: 'Generated On', value: new Date().toLocaleString() },
+        { label: 'Export Scope', value: scopeLabel },
+        { label: 'Total Records', value: dataset.length }
       ],
       columns: [
-        { header: 'PERMIT NO', align: 'left' },
-        { header: 'TRANSPORT MODE', align: 'left' },
-        { header: 'FARMER / OWNER', align: 'left' },
-        { header: 'DRIVER / HERDER', align: 'left' },
-        { header: 'VEHICLE / PLATE', align: 'left' },
-        { header: 'ROUTE', align: 'left' },
-        { header: 'DETAILS', align: 'left' },
-        { header: 'STATUS', align: 'left' }
+        { header: 'Permit No', align: 'left' },
+        { header: 'Transport Mode', align: 'left' },
+        { header: 'Farmer / Owner', align: 'left' },
+        { header: 'Driver / Herder', align: 'left' },
+        { header: 'Vehicle / Plate', align: 'left' },
+        { header: 'Route', align: 'left' },
+        { header: 'Details', align: 'left' },
+        { header: 'Status', align: 'left' }
       ],
       rowsHtml: dataset.map(m => {
         const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';

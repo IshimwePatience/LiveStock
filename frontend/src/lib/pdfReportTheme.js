@@ -1,8 +1,22 @@
 /**
  * PDF Report Styling Generator Utility
  * Clones the visual layout, typography, font colors, text size, and cyan table styling
- * from the reference report design while retaining 100% of your system's data and features.
+ * using RAB_Logo2.png, normal text casing (no forced uppercase/lowercase), and clean white background (no bg gray).
  */
+
+import rabLogo from '../assets/images/RAB_Logo2.png';
+
+const resolveLogoUrl = (url) => {
+  const logo = url || rabLogo;
+  if (!logo) return '';
+  if (logo.startsWith('data:') || logo.startsWith('http://') || logo.startsWith('https://')) {
+    return logo;
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin + (logo.startsWith('/') ? logo : '/' + logo);
+  }
+  return logo;
+};
 
 export const generatePdfReportHTML = ({
   titleMain = 'RWANDA LIVESTOCK SYSTEM',
@@ -13,14 +27,7 @@ export const generatePdfReportHTML = ({
   columns = [],
   rowsHtml = ''
 }) => {
-  const coatOfArmsSvg = `
-    <svg width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="48" fill="#00A0E9" fill-opacity="0.1" stroke="#00A0E9" stroke-width="2"/>
-      <path d="M50 15 L62 38 L87 40 L67 57 L73 82 L50 68 L27 82 L33 57 L13 40 L38 38 Z" fill="#00A0E9"/>
-      <circle cx="50" cy="50" r="18" fill="#FFFFFF"/>
-      <path d="M50 38 L54 46 L63 47 L56 53 L58 62 L50 57 L42 62 L44 53 L37 47 L46 46 Z" fill="#FACC15"/>
-    </svg>
-  `;
+  const finalLogoUrl = resolveLogoUrl(logoUrl);
 
   return `
     <!DOCTYPE html>
@@ -66,53 +73,55 @@ export const generatePdfReportHTML = ({
           .header-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
           }
 
           .header-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 48px;
-            height: 48px;
+            height: 54px;
             flex-shrink: 0;
           }
 
           .header-logo-img {
-            max-width: 48px;
-            max-height: 48px;
+            max-height: 54px;
+            width: auto;
             object-fit: contain;
           }
 
           .header-titles h1 {
             font-size: 20px;
-            font-weight: 800;
+            font-weight: 700;
             margin: 0;
             color: #00a0e9;
-            letter-spacing: -0.3px;
+            letter-spacing: normal;
+            text-transform: none;
           }
 
           .header-titles h1 .title-dark {
             color: #0f172a;
+            font-weight: 700;
+            text-transform: none;
           }
 
           .header-titles p {
             margin: 3px 0 0 0;
             color: #6b7280;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 400;
+            text-transform: none;
           }
 
-          /* KPI Metadata Summary Grid */
+          /* KPI Metadata Summary Grid (Clean White - No BG Gray) */
           .meta-container {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 18px;
-            margin-bottom: 20px;
+            background-color: #ffffff;
+            border: none;
+            padding: 4px 0 16px 0;
+            margin-bottom: 16px;
             display: flex;
             flex-wrap: wrap;
-            gap: 36px;
+            gap: 40px;
             align-items: center;
           }
 
@@ -125,8 +134,8 @@ export const generatePdfReportHTML = ({
             font-size: 11px;
             font-weight: 600;
             color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            text-transform: none;
+            letter-spacing: normal;
             margin-bottom: 2px;
           }
 
@@ -134,6 +143,7 @@ export const generatePdfReportHTML = ({
             font-size: 14px;
             font-weight: 700;
             color: #0f172a;
+            text-transform: none;
           }
 
           /* Cyan Table Design */
@@ -150,8 +160,8 @@ export const generatePdfReportHTML = ({
             color: #ffffff;
             font-weight: 700;
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            text-transform: none;
+            letter-spacing: normal;
             padding: 10px 12px;
             text-align: left;
             border-right: 1px solid rgba(255, 255, 255, 0.4);
@@ -168,14 +178,15 @@ export const generatePdfReportHTML = ({
             color: #1f2937;
             font-size: 11px;
             vertical-align: middle;
+            text-transform: none;
           }
 
           .report-table tr:nth-child(even) {
-            background-color: #f4fbfe;
+            background-color: #ffffff;
           }
 
           .report-table tr:hover {
-            background-color: #e0f2fe;
+            background-color: #f0f9ff;
           }
 
           /* Content Styling inside table */
@@ -207,9 +218,9 @@ export const generatePdfReportHTML = ({
             padding: 3px 10px;
             border-radius: 12px;
             font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            font-weight: 700;
+            text-transform: none;
+            letter-spacing: normal;
             text-align: center;
             border: 1px solid transparent;
           }
@@ -241,6 +252,7 @@ export const generatePdfReportHTML = ({
             font-size: 10px;
             font-weight: 700;
             border: 1px solid #cbd5e1;
+            text-transform: none;
           }
         </style>
       </head>
@@ -249,7 +261,7 @@ export const generatePdfReportHTML = ({
         <div class="report-header">
           <div class="header-left">
             <div class="header-logo-container">
-              ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="header-logo-img" />` : coatOfArmsSvg}
+              <img src="${finalLogoUrl}" alt="RAB Logo" class="header-logo-img" />
             </div>
             <div class="header-titles">
               <h1>

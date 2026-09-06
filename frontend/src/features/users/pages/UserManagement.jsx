@@ -276,15 +276,15 @@ const UserManagement = () => {
       titleSub: '— USER ACCOUNTS REGISTRY',
       subtitle: 'Official User & Role Audit Report',
       meta: [
-        { label: 'GENERATED ON', value: new Date().toLocaleString() },
-        { label: 'TOTAL USERS', value: filteredUsers.length }
+        { label: 'Generated On', value: new Date().toLocaleString() },
+        { label: 'Total Users', value: filteredUsers.length }
       ],
       columns: [
-        { header: 'NAME', align: 'left' },
-        { header: 'EMAIL', align: 'left' },
-        { header: 'ROLE', align: 'left' },
-        { header: 'JURISDICTION', align: 'left' },
-        { header: 'STATUS', align: 'left' }
+        { header: 'Name', align: 'left' },
+        { header: 'Email', align: 'left' },
+        { header: 'Role', align: 'left' },
+        { header: 'Jurisdiction', align: 'left' },
+        { header: 'Status', align: 'left' }
       ],
       rowsHtml: filteredUsers.map(u => `
         <tr>

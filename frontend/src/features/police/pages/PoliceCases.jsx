@@ -259,18 +259,18 @@ const PoliceCases = () => {
       titleSub: '— OFFICIAL CASE REPORT',
       subtitle: `Livestock & Transit Security Division • ${scopeLabel}`,
       meta: [
-        { label: 'GENERATED ON', value: new Date().toLocaleString() },
-        { label: 'EXPORT SCOPE', value: scopeLabel },
-        { label: 'TOTAL CASES INCLUDED', value: dataset.length }
+        { label: 'Generated On', value: new Date().toLocaleString() },
+        { label: 'Export Scope', value: scopeLabel },
+        { label: 'Total Cases Included', value: dataset.length }
       ],
       columns: [
-        { header: 'CASE ID', align: 'left' },
-        { header: 'VEHICLE PLATE', align: 'left' },
-        { header: 'CASE SUMMARY', align: 'left' },
-        { header: 'TYPE', align: 'left' },
-        { header: 'REPORTER', align: 'left' },
-        { header: 'LOCATION', align: 'left' },
-        { header: 'STATUS', align: 'left' }
+        { header: 'Case ID', align: 'left' },
+        { header: 'Vehicle Plate', align: 'left' },
+        { header: 'Case Summary', align: 'left' },
+        { header: 'Type', align: 'left' },
+        { header: 'Reporter', align: 'left' },
+        { header: 'Location', align: 'left' },
+        { header: 'Status', align: 'left' }
       ],
       rowsHtml: dataset.map(c => `
         <tr>
