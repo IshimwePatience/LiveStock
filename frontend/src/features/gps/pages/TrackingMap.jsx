@@ -1220,17 +1220,9 @@ const TrackingMap = () => {
                   <GeocodedAddress lat={selectedDevice.latitude} lon={selectedDevice.longitude} />
                 </div>
               </div>
-
-              {/* Row 5: Odometer (Shaded) */}
-              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
-                <span className="font-bold text-gray-900 text-[13px]">Odometer</span>
-                <span className="font-medium text-gray-800 text-[13px]">
-                  {selectedDevice.attributes?.totalDistance ? `${(selectedDevice.attributes.totalDistance / 1000).toFixed(1)} km` : 'N/A'}
-                </span>
-              </div>
             </div>
 
-            {/* Column 2: Status & Ignition */}
+            {/* Column 2: Status & Key Info */}
             <div className="flex flex-col">
               {/* Row 1: Device Status (White) */}
               <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
@@ -1238,43 +1230,62 @@ const TrackingMap = () => {
                 <span className={`w-3.5 h-3.5 rounded-full ${(selectedDevice.status || '').toLowerCase() === 'online' ? 'bg-[#86efac]' : 'bg-[#fca5a5]'}`}></span>
               </div>
 
-              {/* Row 2: Ignition Status (Shaded) */}
+              {/* Row 2: Current Driver (Shaded) */}
               <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
-                <span className="font-bold text-gray-900 text-[13px]">Ignition Status</span>
-                <span className={`w-3.5 h-3.5 rounded-full ${selectedDevice.attributes?.ignition ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}></span>
-              </div>
-
-              {/* Row 3: Current Driver (White) */}
-              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
                 <span className="font-bold text-gray-900 text-[13px]">Current Driver</span>
                 <span className="font-medium text-gray-800 text-[13px]">
                   {selectedDevice.driverName || selectedDevice.route?.driverName || selectedDevice.route?.initiator || 'N/A'}
                 </span>
               </div>
 
-              {/* Row 4: Top Speed (Shaded) */}
-              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+              {/* Row 3: Top Speed (White) */}
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
                 <span className="font-bold text-gray-900 text-[13px]">Top Speed</span>
                 <span className="font-medium text-gray-800 text-[13px]">
                   {selectedDevice.topSpeed ? `${selectedDevice.topSpeed} km/h` : (selectedDevice.attributes?.maxSpeed ? `${(selectedDevice.attributes.maxSpeed * 1.852).toFixed(1)} km/h` : 'N/A')}
                 </span>
               </div>
 
-              {/* Row 5: Fuel Level (White) */}
-              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm">
-                <span className="font-bold text-gray-900 text-[13px]">Fuel Level</span>
+              {/* Row 4: Driver Phone (Shaded) */}
+              <div className="flex items-center justify-between bg-[#e8edf2] px-3 py-1.5 rounded-sm">
+                <span className="font-bold text-gray-900 text-[13px]">Driver Phone</span>
                 <span className="font-medium text-gray-800 text-[13px]">
-                  {selectedDevice.attributes?.fuel ? `${selectedDevice.attributes.fuel}%` : 'N/A'}
+                  {selectedDevice.driverPhone || selectedDevice.route?.driverPhone || selectedDevice.devicePhone || 'N/A'}
                 </span>
               </div>
             </div>
 
-            {/* Column 3: Services */}
+            {/* Column 3: Current Trip */}
             <div className="flex flex-col pl-2 pr-6 pt-1">
-              <span className="font-bold text-[#475569] text-xl tracking-tight">Services</span>
-              <div className="flex-1 flex items-center justify-center text-center">
-                <span className="text-gray-500 text-[14px] font-normal">No services set for this vehicle.</span>
-              </div>
+              <span className="font-bold text-[#475569] text-base tracking-tight mb-2">Current Trip</span>
+              {selectedDevice.route ? (
+                <div className="flex flex-col gap-2 bg-[#f8fafc] p-3 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase">Origin</span>
+                      <span className="text-[12px] font-semibold text-gray-800">{selectedDevice.route.origin}</span>
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-dashed border-blue-400 ml-1 pl-3 my-0.5 flex items-center justify-between">
+                    <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">In Transit</span>
+                    {selectedDevice.route.permitNumber && (
+                      <span className="text-[10px] text-gray-500 font-mono">Permit #{selectedDevice.route.permitNumber}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase">Destination</span>
+                      <span className="text-[12px] font-semibold text-gray-800">{selectedDevice.route.destination}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center py-4">
+                  <span className="text-gray-500 text-[13px] font-medium">No current trip for this vehicle</span>
+                </div>
+              )}
             </div>
 
           </div>

@@ -21,14 +21,20 @@ class TraccarService {
       const isNationalPolice = user.role === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
       const isNationalUser = user.role === 'RAB' || isNationalPolice;
 
-      // 1. Get all active trips
-      const activeTrips = await Trip.findAll({
-        where: { status: 'ACTIVE' },
-        include: [{
-          model: MovementRequest,
+      // 1. Get all active trips & movement requests
+      const [activeTrips, activeRequests] = await Promise.all([
+        Trip.findAll({
+          where: { status: 'ACTIVE' },
+          include: [{
+            model: MovementRequest,
+            include: [{ model: User, as: 'Initiator' }]
+          }]
+        }),
+        MovementRequest.findAll({
+          where: { status: ['APPROVED', 'ACTIVE', 'COMPLETED'] },
           include: [{ model: User, as: 'Initiator' }]
-        }]
-      });
+        })
+      ]);
 
       // 2. Filter trips based on RBAC (RAB & National Police sees all, DARO/SARO sees origin/dest, District Police sees district)
       const allowedPlateNumbers = new Set();
@@ -68,9 +74,14 @@ class TraccarService {
       const deviceMap = {};
       devices.forEach(device => {
         if (isNationalUser || allowedPlateNumbers.has(device.name.toUpperCase())) {
-          // Find matching trip for this device
-          const trip = activeTrips.find(t => t.plate_number?.toUpperCase() === device.name.toUpperCase());
-          const req = trip?.MovementRequest;
+          const devicePlate = device.name.toUpperCase().trim();
+
+          // Find matching trip or movement request from DB for this vehicle device
+          const trip = activeTrips.find(t => t.plate_number?.toUpperCase().trim() === devicePlate);
+          const req = trip?.MovementRequest || activeRequests.find(r => r.plate_number?.toUpperCase().trim() === devicePlate);
+
+          const dName = req?.driver_name || req?.owner_name || (req?.Initiator ? req.Initiator.name : 'Unassigned');
+          const dPhone = req?.driver_phone || req?.owner_phone || (req?.Initiator ? req.Initiator.phone : (device.phone || 'N/A'));
 
           deviceMap[device.id] = {
             id: device.id,
@@ -78,7 +89,8 @@ class TraccarService {
             phone: device.phone,
             status: device.status,
             lastUpdate: device.lastUpdate,
-            driverName: req?.driver_name || req?.owner_name || (req?.Initiator ? req.Initiator.name : 'Unassigned'),
+            driverName: dName,
+            driverPhone: dPhone,
             route: req ? {
               originDistrict: req.origin_district,
               originSector: req.origin_sector,
@@ -87,8 +99,8 @@ class TraccarService {
               origin: req.origin_district ? `${req.origin_sector || ''}, ${req.origin_district}` : 'Origin',
               destination: req.dest_district ? `${req.dest_sector || ''}, ${req.dest_district}` : 'Destination',
               initiator: req.Initiator ? req.Initiator.name : 'Unknown',
-              driverName: req.driver_name || req.owner_name || (req.Initiator ? req.Initiator.name : 'Unassigned'),
-              driverPhone: req.driver_phone || req.owner_phone || '',
+              driverName: dName,
+              driverPhone: dPhone,
               permitNumber: req.permit_number
             } : null
           };
@@ -116,6 +128,7 @@ class TraccarService {
               deviceName: device.name || 'Unknown',
               devicePhone: device.phone || '',
               driverName: device.driverName || 'Unassigned',
+              driverPhone: device.driverPhone || 'N/A',
               status: device.status || 'offline',
               lastUpdate: device.lastUpdate || pos.serverTime,
               latitude: pos.latitude,
