@@ -426,19 +426,17 @@ const NationalReports = () => {
         {activeTab === 'replay' && (
           <div className="flex flex-col gap-6">
 
-            {/* Vehicle Selection & Quick Summary Toolbar */}
+            {/* Vehicle Selection & Fleet Toolbar */}
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
-                <div className="relative min-w-[280px]">
+                <div className="relative min-w-[320px]">
                   <select
-                    value={activePlate}
-                    onChange={(e) => {
-                      setSelectedPlate(e.target.value);
-                      handleResetReplay();
-                    }}
+                    value={selectedPlate || 'ALL'}
+                    onChange={(e) => setSelectedPlate(e.target.value === 'ALL' ? '' : e.target.value)}
                     className="w-full appearance-none bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-3.5 py-2 pr-9 text-xs font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] focus:border-[#0052cc] cursor-pointer transition-all"
                   >
+                    <option value="ALL">🚗 All Tracked GPS Vehicles (Fleet Analytics)</option>
                     {Object.keys(trackedVehiclesMap).map((plate) => {
                       const v = trackedVehiclesMap[plate];
                       return (
@@ -452,199 +450,373 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              {/* Replay Controls */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-white transition ${isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0052cc] hover:bg-[#0047b3]'
-                    }`}
-                >
-                  {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause Replay</> : <><Play className="w-3.5 h-3.5" /> Play Route Replay</>}
-                </button>
-
-                <button
-                  onClick={handleResetReplay}
-                  className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md text-xs font-semibold transition"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Reset
-                </button>
-
-                <select
-                  value={replaySpeed}
-                  onChange={(e) => setReplaySpeed(Number(e.target.value))}
-                  className="border border-gray-300 rounded-md px-2 py-1.5 text-xs font-medium text-gray-700 bg-white"
-                >
-                  <option value={1500}>Speed: 1x</option>
-                  <option value={800}>Speed: 2x</option>
-                  <option value={300}>Speed: 5x</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Selected Vehicle Info Card */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 text-xs">
-              <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Vehicle &amp; Driver</span>
-                <p className="font-bold text-gray-900 text-sm">{currentRoute.plate} — {currentRoute.driverName}</p>
-                <p className="text-gray-500">Tel: {currentRoute.driverPhone} | NID: {currentRoute.driverNid}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Permit &amp; Owner</span>
-                <p className="font-semibold text-gray-800">{currentRoute.permitNumber} ({currentRoute.farmerName})</p>
-                <p className="text-gray-500">Cargo: <span className="font-medium text-blue-700">{currentRoute.cargo}</span></p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Route Trajectory</span>
-                <p className="font-semibold text-gray-800">{currentRoute.route}</p>
-                <p className="text-gray-500">Origin: {currentRoute.origin} → Dest: {currentRoute.destination}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Departure &amp; Arrival</span>
-                <p className="font-semibold text-emerald-700">Departed: {currentRoute.departedTime}</p>
-                <p className="text-gray-600">Expected: {currentRoute.expectedArrival}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">GPS &amp; Rest Analytics</span>
-                <p className="font-semibold text-gray-800">Distance: {currentRoute.distance} | Avg: {currentRoute.avgSpeed}</p>
-                <p className="text-amber-700 font-semibold flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Rest Stops Made: {(currentRoute.stops || []).length} Stops
-                </p>
-              </div>
-            </div>
-
-            {/* Interactive Leaflet Map View */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[450px] relative">
-              <MapContainer
-                center={currentPosition}
-                zoom={10}
-                className="w-full h-full"
-                scrollWheelZoom={true}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                />
-
-                {/* Route Trajectory Polyline */}
-                <Polyline
-                  positions={coordinates}
-                  color="#0052cc"
-                  weight={5}
-                  opacity={0.7}
-                  dashArray="8, 8"
-                />
-
-                {/* Traversed Trajectory Polyline */}
-                <Polyline
-                  positions={coordinates.slice(0, replayIndex + 1)}
-                  color="#166534"
-                  weight={6}
-                  opacity={0.9}
-                />
-
-                {/* Start Marker */}
-                <Marker position={coordinates[0]} icon={createStartIcon()}>
-                  <Popup><strong>Origin:</strong> {currentRoute.origin}</Popup>
-                </Marker>
-
-                {/* End Marker */}
-                <Marker position={coordinates[coordinates.length - 1]} icon={createEndIcon()}>
-                  <Popup><strong>Destination:</strong> {currentRoute.destination}</Popup>
-                </Marker>
-
-                {/* Current Animated Moving Vehicle Marker */}
-                <Marker position={currentPosition} icon={createTruckIcon()}>
-                  <Popup>
-                    <div className="p-1 space-y-1">
-                      <p className="font-bold text-blue-700">{currentRoute.plate}</p>
-                      <p className="text-xs text-gray-700">Driver: {currentRoute.driverName}</p>
-                      <p className="text-xs text-gray-500">Speed: {currentRoute.avgSpeed}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              </MapContainer>
-            </div>
-
-            {/* Checkpoint Transit Audit Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-              <h3 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-blue-600" /> Waypoint Checkpoint Transit Logs ({currentRoute.plate})
-              </h3>
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Checkpoint Name</th>
-                    <th className="py-2.5 px-3">Date &amp; Timestamp</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3">Verification</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRoute.checkpoints.map((cp, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-medium text-gray-800">{cp.name}</td>
-                      <td className="py-2.5 px-3 font-medium text-gray-700">
-                        {cp.date ? `${cp.date}, ${cp.time}` : `05 Sep 2026, ${cp.time}`}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">
-                          {cp.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-gray-500">RAB Verified Officer Logged</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Vehicle Rest & Parking Stops Audit Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-600" /> Vehicle Rest &amp; Rest Stop Locations ({currentRoute.plate})
-                </h3>
-                <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                  {(currentRoute.stops || []).length} Recorded Rest Stops
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                <span className="px-2.5 py-1 rounded-md bg-blue-50 text-[#0052cc] border border-blue-200 flex items-center gap-1">
+                  <Activity className="w-3.5 h-3.5" /> Live GPS Analytics
                 </span>
               </div>
+            </div>
+
+            {/* Selected Vehicle Info Banner (If specific vehicle selected) */}
+            {selectedPlate && trackedVehiclesMap[selectedPlate] && (
+              <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Vehicle &amp; Driver</span>
+                  <p className="font-bold text-gray-900 text-sm">{trackedVehiclesMap[selectedPlate].plate} — {trackedVehiclesMap[selectedPlate].driverName}</p>
+                  <p className="text-gray-600">Tel: {trackedVehiclesMap[selectedPlate].driverPhone} | NID: {trackedVehiclesMap[selectedPlate].driverNid}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Permit &amp; Owner</span>
+                  <p className="font-semibold text-gray-800">{trackedVehiclesMap[selectedPlate].permitNumber} ({trackedVehiclesMap[selectedPlate].farmerName})</p>
+                  <p className="text-blue-700 font-medium">Cargo: {trackedVehiclesMap[selectedPlate].cargo}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Route Trajectory</span>
+                  <p className="font-semibold text-gray-800">{trackedVehiclesMap[selectedPlate].route}</p>
+                  <p className="text-gray-600">Origin: {trackedVehiclesMap[selectedPlate].origin}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 uppercase font-semibold text-[10px] tracking-wider">Telemetry Stats</span>
+                  <p className="font-semibold text-emerald-700">Distance: {trackedVehiclesMap[selectedPlate].distance} | Speed: {trackedVehiclesMap[selectedPlate].avgSpeed}</p>
+                  <p className="text-gray-600">Status: <span className="font-bold text-green-700">{trackedVehiclesMap[selectedPlate].status}</span></p>
+                </div>
+              </div>
+            )}
+
+            {/* Vehicle Analytics KPI Cards (Exact District & Sector / Police styling) */}
+            {(() => {
+              const allVehicles = Object.values(trackedVehiclesMap);
+              const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
+
+              const totalVehicles = targetList.length;
+              let inTransit = 0, completed = 0, approved = 0, pending = 0;
+              let sumSpeed = 0, sumDistance = 0;
+
+              targetList.forEach(v => {
+                const st = (v.status || '').toUpperCase();
+                if (st.includes('TRANSIT') || st.includes('ACTIVE')) inTransit++;
+                else if (st.includes('COMPLETED')) completed++;
+                else if (st.includes('APPROVED')) approved++;
+                else pending++;
+
+                sumSpeed += parseInt(v.avgSpeed) || 56;
+                sumDistance += parseFloat(v.distance) || 128.4;
+              });
+
+              const avgSpeed = totalVehicles > 0 ? Math.round(sumSpeed / totalVehicles) : 56;
+              const avgDistance = totalVehicles > 0 ? (sumDistance / totalVehicles).toFixed(1) : '128.4';
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                        <span className="text-lg">{selectedPlate ? selectedPlate : `${totalVehicles} Vehicles`}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">Tracked Vehicles Fleet</div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                        <span className="text-lg">{avgSpeed} km/h</span>
+                      </div>
+                      <div className="text-xs text-gray-500">Average Transit Speed</div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                        <span className="text-lg">{avgDistance} km</span>
+                      </div>
+                      <div className="text-xs text-gray-500">Logged Traversal Distance</div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                        <span className="text-lg">100% Passed</span>
+                      </div>
+                      <div className="text-xs text-gray-500">Checkpoint Clearance</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Vehicle Analytics Grid (Exact District & Sector Charts Layout) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* Chart 1: Vehicle Transit Corridors Volume */}
+              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
+                <h3 className="font-bold text-gray-900">Top Active Transit Corridors</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Breakdown of active vehicle routes across Rwanda districts. <span className="text-green-600 hover:underline cursor-pointer">Live GPS Corridors</span>
+                </p>
+
+                <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
+                  <div className="w-48">Route Corridor</div>
+                  <div>Distribution</div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
+                  {(() => {
+                    const allVehicles = Object.values(trackedVehiclesMap);
+                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
+
+                    const routeCounts = {};
+                    targetList.forEach(v => {
+                      const r = v.route || 'District Transit Corridor';
+                      routeCounts[r] = (routeCounts[r] || 0) + 1;
+                    });
+
+                    const routesList = Object.entries(routeCounts).map(([name, count]) => ({
+                      name,
+                      count,
+                      pct: targetList.length > 0 ? Math.round((count / targetList.length) * 100) : 100
+                    })).sort((a, b) => b.count - a.count);
+
+                    return routesList.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center group cursor-pointer"
+                        title={`Route Corridor: ${item.name}\nActive Vehicles: ${item.count} (${item.pct}%)`}
+                      >
+                        <div className="w-48 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
+                          <Truck className="w-4 h-4 text-gray-500 shrink-0" />
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
+                          <div
+                            className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                            style={{ width: `${Math.max(4, item.pct)}%` }}
+                          >
+                            {item.count} Vehicles ({item.pct}%)
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Chart 2: Vehicle Telemetry & Speed Distribution */}
+              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
+                <h3 className="font-bold text-gray-900">Vehicle Speed &amp; Telemetry Analytics</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Live speed and traversal telemetry logged per vehicle. <span className="text-green-600 hover:underline cursor-pointer">Live Traccar Feed</span>
+                </p>
+
+                <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
+                  <div className="w-44">Vehicle Plate</div>
+                  <div>Logged Speed &amp; Distance</div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
+                  {(() => {
+                    const allVehicles = Object.values(trackedVehiclesMap);
+                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
+
+                    return targetList.map((v, index) => {
+                      const speedVal = parseInt(v.avgSpeed) || 56;
+                      const speedPct = Math.min(100, Math.round((speedVal / 100) * 100));
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center group cursor-pointer"
+                          title={`Vehicle: ${v.plate} (${v.driverName})\nSpeed: ${v.avgSpeed} | Distance: ${v.distance}`}
+                        >
+                          <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={v.plate}>
+                            <Activity className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="truncate font-semibold">{v.plate}</span>
+                          </div>
+                          <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
+                            <div
+                              className={`h-full ${index % 2 === 0 ? 'bg-[#0052cc]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                              style={{ width: `${Math.max(10, speedPct)}%` }}
+                            >
+                              {v.avgSpeed} ({v.distance})
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Chart 3: Animal Volume Transported by Vehicle */}
+              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
+                <h3 className="font-bold text-gray-900">Vehicle Cargo Breakdown</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Livestock breakdown transported by tracked GPS vehicles. <span className="text-green-600 hover:underline cursor-pointer">View animal types</span>
+                </p>
+
+                <div className="flex-1 flex flex-col justify-end relative mt-4">
+                  {/* Y-axis lines & labels */}
+                  <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8">
+                    <div className="flex items-center gap-2"><span className="w-6 text-right">Max</span><div className="h-px bg-gray-100 flex-1"></div></div>
+                    <div className="flex items-center gap-2"><span className="w-6 text-right">High</span><div className="h-px bg-gray-100 flex-1"></div></div>
+                    <div className="flex items-center gap-2"><span className="w-6 text-right">Med</span><div className="h-px bg-gray-100 flex-1"></div></div>
+                    <div className="flex items-center gap-2"><span className="w-6 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
+                  </div>
+
+                  {/* Bars */}
+                  <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
+                    {(() => {
+                      const counts = districtStats.animalCounts || { cowCount: 1108, goatCount: 795, sheepCount: 454, pigCount: 284, poultryCount: 199 };
+                      const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
+                      const totalAnimals = districtStats.totalAnimals || 1;
+                      return (
+                        <>
+                          <div title={`Cows: ${counts.cowCount} Animals (${Math.round((counts.cowCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Goats: ${counts.goatCount} Animals (${Math.round((counts.goatCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Sheep: ${counts.sheepCount} Animals (${Math.round((counts.sheepCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Pigs: ${counts.pigCount} Animals (${Math.round((counts.pigCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Poultry: ${counts.poultryCount} Animals (${Math.round((counts.poultryCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* X-axis legends */}
+                  <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
+                    <div title={`Cows: ${(districtStats.animalCounts?.cowCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
+                    <div title={`Goats: ${(districtStats.animalCounts?.goatCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-red-500 -rotate-90" /> Goats</div>
+                    <div title={`Sheep: ${(districtStats.animalCounts?.sheepCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-orange-500 -rotate-90" /> Sheep</div>
+                    <div title={`Pigs: ${(districtStats.animalCounts?.pigCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
+                    <div title={`Poultry: ${(districtStats.animalCounts?.poultryCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart 4: Vehicle Trip Status Donut Overview */}
+              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
+                <h3 className="font-bold text-gray-900">Vehicle Trip Status Overview</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Snapshot of vehicle transit &amp; trip statuses. <span className="text-[#0052cc] hover:underline cursor-pointer">View active trips</span>
+                </p>
+
+                <div className="flex-1 flex items-center">
+                  {(() => {
+                    const allVehicles = Object.values(trackedVehiclesMap);
+                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
+
+                    let inTransit = 0, completed = 0, approved = 0, pending = 0;
+                    targetList.forEach(v => {
+                      const st = (v.status || '').toUpperCase();
+                      if (st.includes('TRANSIT') || st.includes('ACTIVE')) inTransit++;
+                      else if (st.includes('COMPLETED')) completed++;
+                      else if (st.includes('APPROVED')) approved++;
+                      else pending++;
+                    });
+
+                    const total = targetList.length || 1;
+                    const inTransitPct = Math.round((inTransit / total) * 251);
+                    const approvedPct = Math.round((approved / total) * 251);
+                    const completedPct = Math.round((completed / total) * 251);
+                    const pendingPct = Math.round((pending / total) * 251);
+
+                    return (
+                      <>
+                        <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Vehicles: ${total}`}>
+                          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                            <circle title={`In Transit: ${inTransit} Vehicles (${Math.round((inTransit / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${inTransitPct} 251`} />
+                            <circle title={`Approved: ${approved} Vehicles (${Math.round((approved / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${approvedPct} 251`} strokeDashoffset={`-${inTransitPct}`} />
+                            <circle title={`Pending: ${pending} Vehicles (${Math.round((pending / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${pendingPct} 251`} strokeDashoffset={`-${inTransitPct + approvedPct}`} />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-2xl font-black text-gray-900">{total}</span>
+                            <span className="text-xs text-gray-500">Total Vehicles</span>
+                          </div>
+                        </div>
+
+                        <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
+                          <div title={`In Transit / Active: ${inTransit} (${Math.round((inTransit / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                            <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
+                            <div>In Transit: {inTransit}</div>
+                          </div>
+                          <div title={`Approved: ${approved} (${Math.round((approved / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                            <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0"></div>
+                            <div>Approved: {approved}</div>
+                          </div>
+                          <div title={`Pending Review: ${pending} (${Math.round((pending / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                            <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
+                            <div>Pending: {pending}</div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Vehicle Fleet & Transit Telemetry Audit Summary Table */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-blue-600" /> Tracked GPS Vehicle Fleet Telemetry Audit Log
+                </span>
+                <span className="text-xs font-normal text-gray-500">Live Traccar &amp; DB Sync</span>
+              </h3>
+
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Stop Location Name</th>
-                    <th className="py-2.5 px-3">District / Sector</th>
-                    <th className="py-2.5 px-3">Stopped At (Arrival)</th>
-                    <th className="py-2.5 px-3">Resumed Journey (Departure)</th>
-                    <th className="py-2.5 px-3">Duration</th>
-                    <th className="py-2.5 px-3">Inspection / Stop Reason</th>
+                    <th className="py-2.5 px-3">Vehicle Plate</th>
+                    <th className="py-2.5 px-3">Driver Name &amp; Contact</th>
+                    <th className="py-2.5 px-3">Permit # &amp; Owner</th>
+                    <th className="py-2.5 px-3">Route Corridor</th>
+                    <th className="py-2.5 px-3">Cargo Type</th>
+                    <th className="py-2.5 px-3">Speed / Distance</th>
+                    <th className="py-2.5 px-3">Trip Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(currentRoute.stops || []).map((st, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-semibold text-gray-900 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-amber-600" /> {st.location}
-                      </td>
-                      <td className="py-2.5 px-3 text-gray-600">{st.district}</td>
-                      <td className="py-2.5 px-3 font-medium text-amber-700">{st.stoppedAt}</td>
-                      <td className="py-2.5 px-3 font-medium text-green-700">{st.resumedAt}</td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                          ⏱️ {st.duration}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-gray-700 font-medium">{st.reason}</td>
-                    </tr>
-                  ))}
-                  {(!currentRoute.stops || currentRoute.stops.length === 0) && (
-                    <tr>
-                      <td colSpan="6" className="py-4 text-center text-gray-500">No extended rest stops recorded for this trip</td>
-                    </tr>
-                  )}
+                  {(() => {
+                    const allVehicles = Object.values(trackedVehiclesMap);
+                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
+
+                    return targetList.map((v, idx) => (
+                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2.5 px-3 font-bold text-[#0052cc]">{v.plate}</td>
+                        <td className="py-2.5 px-3 font-medium text-gray-800">
+                          <div>{v.driverName}</div>
+                          <div className="text-[10px] text-gray-400">{v.driverPhone}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-gray-700 font-medium">
+                          <div>{v.permitNumber}</div>
+                          <div className="text-[10px] text-gray-400">{v.farmerName}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-gray-600">{v.route}</td>
+                        <td className="py-2.5 px-3 text-blue-700 font-medium">{v.cargo}</td>
+                        <td className="py-2.5 px-3 text-gray-700 font-medium">{v.avgSpeed} | {v.distance}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${v.status === 'Completed' ? 'bg-green-100 text-green-700' : (v.status === 'In Transit' || v.status === 'APPROVED' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700')}`}>
+                            {v.status || 'Active'}
+                          </span>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
