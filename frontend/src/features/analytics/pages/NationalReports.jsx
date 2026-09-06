@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getTraccarLocations } from '../../../lib/api';
+import CustomSelect from '../../../components/ui/CustomSelect';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
-  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown
+  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown,
+  MoreVertical, Download, FileSpreadsheet, Printer
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -100,6 +102,29 @@ const generateTrajectoryWaypoints = (startCoord, endCoord, traccarLat, traccarLn
 const NationalReports = () => {
   const [activeTab, setActiveTab] = useState('replay');
   const [selectedPlate, setSelectedPlate] = useState('');
+  const [timeRange, setTimeRange] = useState('7d');
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setIsExportMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Time Range options array
+  const timeRangeOptions = [
+    { value: 'today', label: '📅 Today' },
+    { value: '7d', label: '📅 Last 7 Days' },
+    { value: '30d', label: '📅 Last 30 Days' },
+    { value: 'this_month', label: '📅 This Month' },
+    { value: 'this_year', label: '📅 This Year' },
+    { value: 'all', label: '📅 All Time' }
+  ];
 
   // Replay animation states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -245,6 +270,148 @@ const NationalReports = () => {
 
     return map;
   }, [rawMovements, traccarLocations]);
+
+  // Options array for CustomSelect vehicle dropdown
+  const vehicleOptions = useMemo(() => [
+    { value: 'ALL', label: '🚗 All Tracked GPS Vehicles (Fleet Analytics)' },
+    ...Object.keys(trackedVehiclesMap).map(plate => {
+      const v = trackedVehiclesMap[plate];
+      return {
+        value: plate,
+        label: `🚗 ${plate} — ${v.driverName} (${v.status || 'Active'})`
+      };
+    })
+  ], [trackedVehiclesMap]);
+
+  const handleExportCSV = () => {
+    const list = Object.values(trackedVehiclesMap);
+    const targetList = selectedPlate ? list.filter(v => v.plate === selectedPlate) : list;
+    
+    if (!targetList || targetList.length === 0) {
+      toast.error('No vehicle telemetry data available to export');
+      return;
+    }
+
+    const exportData = targetList.map(v => ({
+      'Vehicle Plate': v.plate,
+      'Driver Name': v.driverName,
+      'Driver Phone': v.driverPhone,
+      'Permit Number': v.permitNumber,
+      'Farmer Owner': v.farmerName,
+      'Route Corridor': v.route,
+      'Origin': v.origin,
+      'Destination': v.destination,
+      'Cargo Details': v.cargo,
+      'Avg Speed': v.avgSpeed,
+      'Distance Logged': v.distance,
+      'Trip Status': v.status
+    }));
+
+    const headers = Object.keys(exportData[0]).join(',');
+    const rows = exportData.map(row => Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Vehicle_Telemetry_Report_${selectedPlate || 'Fleet'}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setIsExportMenuOpen(false);
+    toast.success('Vehicle telemetry Excel/CSV report downloaded!');
+  };
+
+  const handleExportPDF = () => {
+    setIsExportMenuOpen(false);
+
+    const list = Object.values(trackedVehiclesMap);
+    const targetList = selectedPlate ? list.filter(v => v.plate === selectedPlate) : list;
+
+    if (!targetList || targetList.length === 0) {
+      toast.error('No telemetry data available for report download');
+      return;
+    }
+
+    const htmlDoc = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Livestock_Telemetry_Report_${selectedPlate || 'Fleet'}</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 32px; color: #1e293b; background: #fff; line-height: 1.5; }
+    .header { border-b: 2px solid #0052cc; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h1 { color: #0052cc; font-size: 22px; font-weight: 800; margin: 0 0 6px 0; }
+    .header h2 { color: #475569; font-size: 13px; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 12px; display: flex; justify-content: space-between; }
+    .meta-box div { margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+    th { background: #f1f5f9; color: #334155; font-weight: 700; text-transform: uppercase; font-size: 11px; padding: 10px 12px; border-bottom: 2px solid #cbd5e1; text-align: left; }
+    td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; color: #334155; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700; background: #dbeafe; color: #1e40af; }
+    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 14px; text-align: center; font-size: 11px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Rwanda Agriculture & Animal Resources Board (RAB)</h1>
+    <h2>National Livestock Movement & Telemetry Summary Report</h2>
+  </div>
+
+  <div class="meta-box">
+    <div><strong>Generated Date:</strong> ${new Date().toLocaleString()}</div>
+    <div><strong>Vehicle Filter:</strong> ${selectedPlate || 'All Tracked GPS Vehicles (Fleet)'}</div>
+    <div><strong>Time Range Filter:</strong> ${timeRange.toUpperCase()}</div>
+    <div><strong>Total Vehicles:</strong> ${targetList.length}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle Plate</th>
+        <th>Driver & Contact</th>
+        <th>Permit & Owner</th>
+        <th>Route Corridor</th>
+        <th>Cargo Type</th>
+        <th>Speed / Distance</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${targetList.map(v => `
+        <tr>
+          <td><strong style="color:#0052cc;">${v.plate}</strong></td>
+          <td>${v.driverName}<br/><span style="color:#64748b; font-size:10px;">${v.driverPhone}</span></td>
+          <td>${v.permitNumber}<br/><span style="color:#64748b; font-size:10px;">${v.farmerName}</span></td>
+          <td>${v.route}</td>
+          <td style="color:#1d4ed8; font-weight:600;">${v.cargo}</td>
+          <td>${v.avgSpeed} | ${v.distance}</td>
+          <td><span class="badge">${v.status}</span></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    Official Confidential Summary Document — National Livestock Tracking System &copy; ${new Date().getFullYear()}
+  </div>
+</body>
+</html>
+    `;
+
+    const blob = new Blob([htmlDoc], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Livestock_Telemetry_Summary_${selectedPlate || 'Fleet'}_${new Date().toISOString().slice(0,10)}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Summary report downloaded immediately to your machine!`);
+  };
 
   const activePlate = selectedPlate && trackedVehiclesMap[selectedPlate] ? selectedPlate : Object.keys(trackedVehiclesMap)[0];
   const currentRoute = trackedVehiclesMap[activePlate] || Object.values(trackedVehiclesMap)[0];
@@ -426,28 +593,68 @@ const NationalReports = () => {
         {activeTab === 'replay' && (
           <div className="flex flex-col gap-6">
 
-            {/* Vehicle Selection & Fleet Toolbar */}
+            {/* Vehicle Selection, Time Range Filter & Export Menu */}
             <div className="flex flex-wrap items-center justify-between gap-4 py-1">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
-                <div className="relative min-w-[320px]">
-                  <select
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-900">Select Tracked GPS Vehicle:</span>
+                  <CustomSelect
                     value={selectedPlate || 'ALL'}
-                    onChange={(e) => setSelectedPlate(e.target.value === 'ALL' ? '' : e.target.value)}
-                    className="w-full appearance-none bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-3.5 py-2 pr-9 text-xs font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] focus:border-[#0052cc] cursor-pointer transition-all"
-                  >
-                    <option value="ALL">🚗 All Tracked GPS Vehicles (Fleet Analytics)</option>
-                    {Object.keys(trackedVehiclesMap).map((plate) => {
-                      const v = trackedVehiclesMap[plate];
-                      return (
-                        <option key={plate} value={plate}>
-                          🚗 {plate} — {v.driverName} ({v.status || 'Active'})
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    onChange={(val) => setSelectedPlate(val === 'ALL' ? '' : val)}
+                    options={vehicleOptions}
+                    minWidth="min-w-[320px]"
+                  />
                 </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-900">Time Range:</span>
+                  <CustomSelect
+                    value={timeRange}
+                    onChange={(val) => setTimeRange(val)}
+                    options={timeRangeOptions}
+                    minWidth="min-w-[180px]"
+                  />
+                </div>
+              </div>
+
+              {/* Three Dots Download & Export Menu */}
+              <div className="relative" ref={exportMenuRef}>
+                <button
+                  onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                  title="Export & Download Report"
+                  className="p-2.5 rounded-lg border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 shadow-sm transition-all flex items-center justify-center cursor-pointer"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+
+                {isExportMenuOpen && (
+                  <div className="absolute right-0 mt-1.5 w-56 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 text-xs font-medium">
+                    <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 tracking-wider">
+                      Export Report Options
+                    </div>
+                    <button
+                      onClick={handleExportCSV}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                      <span>Export Excel / CSV (.csv)</span>
+                    </button>
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 text-red-600" />
+                      <span>Export PDF Report (.pdf)</span>
+                    </button>
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer border-t border-gray-100"
+                    >
+                      <Printer className="w-4 h-4 text-gray-600" />
+                      <span>Print Summary View</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

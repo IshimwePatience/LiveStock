@@ -1,7 +1,15 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
 
-const CustomSelect = ({ value, onChange, options }) => {
+const CustomSelect = ({ 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "Select...", 
+  className = "",
+  buttonClassName = "",
+  minWidth = "min-w-[260px]" 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -15,25 +23,33 @@ const CustomSelect = ({ value, onChange, options }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = options.find(opt => String(opt.value) === String(value));
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className={`relative ${minWidth} ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 bg-white border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 ${
-          isOpen ? 'border-green-600 ring-1 ring-green-600' : 'border-gray-300'
-        }`}
+        className={`w-full flex items-center justify-between px-3.5 py-2 bg-white border text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer ${
+          isOpen
+            ? 'border-2 border-[#0052cc] ring-2 ring-blue-100 text-gray-900'
+            : 'border-gray-300 hover:border-gray-400 text-gray-800'
+        } ${buttonClassName}`}
       >
-        <span className="text-gray-900">{selectedOption ? selectedOption.label : 'Select...'}</span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="truncate pr-2">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${
+            isOpen ? 'rotate-180 text-[#0052cc]' : ''
+          }`}
+        />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 max-h-60 overflow-y-auto">
+        <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 max-h-64 overflow-y-auto min-w-full">
           {options.map((option) => {
-            const isSelected = option.value === value;
+            const isSelected = String(option.value) === String(value);
             return (
               <div
                 key={option.value}
@@ -41,11 +57,23 @@ const CustomSelect = ({ value, onChange, options }) => {
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer text-sm ${
-                  isSelected ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
+                className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer text-xs transition-colors ${
+                  isSelected
+                    ? 'border-l-4 border-[#0052cc] bg-blue-50/70 text-[#0052cc] font-bold'
+                    : 'text-gray-700 hover:bg-blue-50/40 hover:text-[#0052cc]'
                 }`}
               >
-                <span>{option.label}</span>
+                {/* Square checkbox icon matching screenshot */}
+                <div
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
+                    isSelected
+                      ? 'border-[#0052cc] bg-blue-50'
+                      : 'border-gray-300 bg-white'
+                  }`}
+                >
+                  {isSelected && <Check className="w-3 h-3 text-[#0052cc] stroke-[2.5]" />}
+                </div>
+                <span className="truncate">{option.label}</span>
               </div>
             );
           })}
