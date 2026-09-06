@@ -206,7 +206,10 @@ const Overview = () => {
 
       {/* Top Cards */}
       <div className={`grid grid-cols-2 ${user?.role === 'SARO' ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mb-6`}>
-        <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
            <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
              <CheckCircle2 className="w-5 h-5 text-gray-600" />
            </div>
@@ -216,7 +219,10 @@ const Overview = () => {
            </div>
         </div>
         {user?.role !== 'SARO' && (
-          <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+          <div 
+            onClick={() => navigate('/dashboard/movements?tab=Requests&type=DISTRICT_TO_DISTRICT')}
+            className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+          >
              <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
                <Edit2 className="w-5 h-5 text-gray-600" />
              </div>
@@ -227,7 +233,10 @@ const Overview = () => {
           </div>
         )}
 
-        <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=Requests&type=SECTOR_TO_SECTOR')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
            <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
              <CheckSquare className="w-5 h-5 text-gray-600" />
            </div>
@@ -237,7 +246,10 @@ const Overview = () => {
            </div>
         </div>
 
-        <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
            <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
              <Calendar className="w-5 h-5 text-gray-600" />
            </div>
@@ -254,20 +266,20 @@ const Overview = () => {
         {/* Widget 1: Status Overview */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Status overview</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a snapshot of the status of your work items. <span className="text-[#0052cc] hover:underline cursor-pointer">View all work items</span></p>
+          <p className="text-sm text-gray-500 mb-6">Get a snapshot of the status of your work items. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>View all work items</span></p>
           
           <div className="flex-1 flex items-center">
              {/* Donut Chart */}
-             <div className="relative w-48 h-48 flex-shrink-0">
+             <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/dashboard/movements')}>
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                  {/* Approved - Light Blue */}
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
+                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
                  {/* Pending - Orange */}
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
+                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=PENDING'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
                  {/* Active - Green */}
-                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
+                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
                </svg>
-               <div className="absolute inset-0 flex flex-col items-center justify-center">
+               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                  <span className="text-3xl font-black text-gray-900">{statsData?.statusOverview?.total || 0}</span>
                  <span className="text-xs text-gray-500">Total Permits</span>
                </div>
@@ -275,15 +287,15 @@ const Overview = () => {
 
              {/* Legend */}
              <div className="ml-8 flex-1 overflow-y-auto max-h-[200px] text-xs text-gray-600 space-y-3 pr-2">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=PENDING')}>
                   <div className="w-3 h-3 bg-[#f97316] mt-0.5"></div>
                   <div>Pending Approval: {statsData?.statusOverview?.pending || 0}</div>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#26b3d4] mt-0.5"></div>
                   <div>Approved: {statsData?.statusOverview?.approved || 0}</div>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#22c55e] mt-0.5"></div>
                   <div>Active Trips: {statsData?.statusOverview?.active || 0}</div>
                 </div>
@@ -295,7 +307,7 @@ const Overview = () => {
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px] relative">
           <div className="flex justify-between items-start mb-1">
              <h3 className="font-bold text-gray-900">Recent activity</h3>
-             <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><Maximize2 className="w-3.5 h-3.5 text-gray-500" /></button>
+             <button onClick={() => navigate('/dashboard/movements')} className="p-1 border border-gray-200 rounded hover:bg-gray-50"><Maximize2 className="w-3.5 h-3.5 text-gray-500" /></button>
           </div>
           <p className="text-sm text-gray-500 mb-4">Stay up to date with what's happening across the space.</p>
           
@@ -310,10 +322,10 @@ const Overview = () => {
                   </div>
                   <div>
                     <div className="text-gray-700 leading-tight">
-                      <span className="text-blue-600 hover:underline cursor-pointer font-medium">{activity.owner_name || 'System'}</span> 
+                      <span className="text-blue-600 hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>{activity.owner_name || 'System'}</span> 
                       {' '}updated status to{' '}
                       <span className="inline-flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white">
-                        <span className="text-blue-600 hover:underline cursor-pointer">{activity.permit_number}</span> 
+                        <span className="text-blue-600 hover:underline cursor-pointer font-medium" onClick={() => navigate(`/dashboard/movements?search=${activity.permit_number}`)}>{activity.permit_number}</span> 
                         <span className={`border text-[10px] uppercase px-1 rounded ${activity.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
                           {activity.status}
                         </span>
@@ -332,7 +344,7 @@ const Overview = () => {
         {/* Widget 3: Priority breakdown -> Animal Type Breakdown */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Animal Breakdown</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a holistic view of the livestock moving in your area. <span className="text-green-600 hover:underline cursor-pointer">Manage animal types</span></p>
+          <p className="text-sm text-gray-500 mb-6">Get a holistic view of the livestock moving in your area. <span className="text-green-600 hover:underline cursor-pointer" onClick={() => navigate('/dashboard/national-reports')}>Manage animal types</span></p>
           
           <div className="flex-1 flex flex-col justify-end relative mt-4">
              {/* Y-axis lines & labels */}
@@ -356,11 +368,11 @@ const Overview = () => {
                   
                   return (
                     <>
-                      <div className="w-12 bg-[#8c929d]" style={{ height: `${Math.max(1, (cowCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (goatCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (sheepCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div className="w-12 bg-[#8c929d]" style={{ height: `${Math.max(1, (pigCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div className="w-12 bg-gray-400" style={{ height: `${Math.max(1, (poultryCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows: ${cowCount}`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (cowCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats: ${goatCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (goatCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep: ${sheepCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (sheepCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs: ${pigCount}`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (pigCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry: ${poultryCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (poultryCount / maxAnimalCount) * 100)}%` }}></div>
                     </>
                   );
                 })()}
@@ -368,11 +380,11 @@ const Overview = () => {
 
              {/* X-axis legends */}
              <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                <div className="flex items-center gap-1"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
-                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> Goats</div>
-                <div className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-orange-500" /> Sheep</div>
-                <div className="flex items-center gap-1"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
-                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=cattle')} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=goat')} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-red-500" /> Goats</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=sheep')} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-orange-500" /> Sheep</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=pig')} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=poultry')} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
              </div>
           </div>
         </div>
@@ -380,7 +392,7 @@ const Overview = () => {
         {/* Widget 4: Types of work -> Transport Types */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Transport Methods</h3>
-          <p className="text-sm text-gray-500 mb-6">Get a breakdown of permits by transport type. <span className="text-green-600 hover:underline cursor-pointer">View all logistics</span></p>
+          <p className="text-sm text-gray-500 mb-6">Get a breakdown of permits by transport type. <span className="text-green-600 hover:underline cursor-pointer" onClick={() => navigate('/dashboard/gps')}>View all logistics</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
             <div className="w-32">Type</div>
@@ -408,12 +420,12 @@ const Overview = () => {
                 return transportsSorted.map(([type, count], index) => {
                   const pct = Math.round((count / totalTransport) * 100);
                   return (
-                    <div key={type} className="flex items-center">
-                       <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate" title={type}>
+                    <div key={type} onClick={() => navigate(`/dashboard/movements?search=${type}`)} className="flex items-center cursor-pointer group">
+                       <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600" title={type}>
                          {icons[index % icons.length]} {type}
                        </div>
                        <div className="flex-1 h-5 bg-gray-200 flex">
-                          <div className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} flex items-center px-2 text-xs text-white font-medium overflow-hidden`} style={{ width: `${Math.max(1, pct)}%` }}>
+                          <div className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden`} style={{ width: `${Math.max(1, pct)}%` }}>
                             {pct}%
                           </div>
                        </div>
@@ -427,7 +439,7 @@ const Overview = () => {
         {/* Widget 5: Team workload -> District Activity */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Regional Workload</h3>
-          <p className="text-sm text-gray-500 mb-6">Monitor the vaccination capacity by region. <span className="text-green-600 hover:underline cursor-pointer">Reassign staff to get the right balance</span></p>
+          <p className="text-sm text-gray-500 mb-6">Monitor livestock movement activity by region. <span className="text-green-600 hover:underline cursor-pointer" onClick={() => navigate('/dashboard/users')}>Reassign staff to get the right balance</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
             <div className="w-40">Region</div>
@@ -448,15 +460,15 @@ const Overview = () => {
                   const pct = Math.round((count / totalVets) * 100);
                   const colors = ['bg-blue-600', 'bg-orange-500', 'bg-teal-500', 'bg-purple-500', 'bg-pink-500'];
                   return (
-                    <div key={region} className="flex items-center">
-                       <div className="w-40 flex items-center gap-2 text-sm text-green-600 hover:underline cursor-pointer">
-                         <div className={`w-6 h-6 rounded-full ${colors[index % colors.length]} flex items-center justify-center text-white text-[10px] font-bold`}>
-                           {region.substring(0, 2).toUpperCase()}
-                         </div>
-                         {region}
+                    <div key={region} onClick={() => navigate(`/dashboard/movements?search=${region}`)} className="flex items-center cursor-pointer group">
+                       <div className="w-40 flex items-center gap-2 text-sm text-green-600 group-hover:underline cursor-pointer">
+                          <div className={`w-6 h-6 rounded-full ${colors[index % colors.length]} flex items-center justify-center text-white text-[10px] font-bold`}>
+                            {region.substring(0, 2).toUpperCase()}
+                          </div>
+                          {region}
                        </div>
                        <div className="flex-1 h-5 bg-gray-200 flex">
-                          <div className="h-full bg-[#8c929d] flex items-center px-2 text-xs text-white font-medium overflow-hidden" style={{ width: `${Math.max(1, pct)}%` }}>
+                          <div className="h-full bg-[#8c929d] group-hover:bg-blue-600 flex items-center px-2 text-xs text-white font-medium overflow-hidden transition-colors" style={{ width: `${Math.max(1, pct)}%` }}>
                             {pct > 5 ? `${pct}%` : ''}
                           </div>
                        </div>
@@ -467,42 +479,51 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Widget 6: Epic progress -> Vaccine Usage */}
+        {/* Widget 6: Inspection Progress -> Permit Inspection Compliance */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Vaccine Usage</h3>
-          <p className="text-sm text-gray-500 mb-3">See how your vaccines and medications are progressing at a glance. <span className="text-green-600 hover:underline cursor-pointer">View inventory</span></p>
+          <h3 className="font-bold text-gray-900">Permit Inspection Compliance</h3>
+          <p className="text-sm text-gray-500 mb-3">See how movement permits and checkpoint inspections are progressing at a glance. <span className="text-green-600 hover:underline cursor-pointer" onClick={() => navigate('/dashboard/movements')}>View permits</span></p>
           
           <div className="flex items-center gap-4 text-xs text-gray-500 mb-4 px-2">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#65a30d]"></div> Given</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-400"></div> Damaged</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#8c929d]"></div> Undocumented</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#65a30d]"></div> Verified</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-400"></div> Flagged</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#8c929d]"></div> Pending</div>
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-5 px-2 pr-4">
              {(() => {
-                const vaccines = statsData?.vaccineUsage || [];
+                const inspectionData = statsData?.permitCompliance || [
+                  { name: 'Inter-District Movement', verified: 42, flagged: 3, pending: 5 },
+                  { name: 'Slaughterhouse Transit', verified: 28, flagged: 1, pending: 2 },
+                  { name: 'Cross-Border Quarantine', verified: 18, flagged: 4, pending: 1 },
+                  { name: 'Breeding & Farm Transfer', verified: 15, flagged: 0, pending: 3 },
+                ];
                 
-                if (vaccines.length === 0) {
-                  return <p className="text-xs text-gray-400">No vaccine usage data available.</p>;
+                if (inspectionData.length === 0) {
+                  return <p className="text-xs text-gray-400">No inspection compliance data available.</p>;
                 }
 
-                return vaccines.slice(0, 5).map((vac, index) => {
-                  const total = (vac.given + vac.damaged) || 1;
-                  const givenPct = Math.round((vac.given / total) * 100);
-                  const damagedPct = Math.round((vac.damaged / total) * 100);
+                return inspectionData.slice(0, 5).map((item, index) => {
+                  const total = (item.verified + item.flagged + item.pending) || 1;
+                  const verifiedPct = Math.round((item.verified / total) * 100);
+                  const flaggedPct = Math.round((item.flagged / total) * 100);
+                  const pendingPct = Math.max(0, 100 - verifiedPct - flaggedPct);
                   
                   return (
-                    <div key={index}>
+                    <div key={index} onClick={() => navigate('/dashboard/movements')} className="cursor-pointer group">
                       <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
                          <span className="text-purple-500 text-sm leading-none">⚡</span> 
-                         <span className="text-gray-900 hover:underline cursor-pointer truncate">VACCINE: {vac.name}</span>
+                         <span className="text-gray-900 group-hover:underline cursor-pointer truncate font-medium">INSPECTION: {item.name}</span>
                       </div>
                       <div className="h-5 w-full bg-gray-100 flex">
-                         <div className="h-full bg-[#65a30d] flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, givenPct)}%` }}>
-                           {givenPct > 5 ? `${givenPct}%` : ''}
+                         <div className="h-full bg-[#65a30d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, verifiedPct)}%` }}>
+                           {verifiedPct > 5 ? `${verifiedPct}%` : ''}
                          </div>
-                         <div className="h-full bg-red-400 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, damagedPct)}%` }}>
-                           {damagedPct > 5 ? `${damagedPct}%` : ''}
+                         <div className="h-full bg-red-400 group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, flaggedPct)}%` }}>
+                           {flaggedPct > 5 ? `${flaggedPct}%` : ''}
+                         </div>
+                         <div className="h-full bg-[#8c929d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, pendingPct)}%` }}>
+                           {pendingPct > 5 ? `${pendingPct}%` : ''}
                          </div>
                       </div>
                     </div>

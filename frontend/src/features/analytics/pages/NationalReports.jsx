@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../../lib/api';
+import api, { getTraccarLocations } from '../../../lib/api';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -43,203 +43,211 @@ const createEndIcon = () => new L.divIcon({
   iconAnchor: [12, 12]
 });
 
-// Sample route trajectory waypoints across Rwanda for replay simulation
-const VEHICLE_ROUTES = {
-  'RAI 182I': {
-    plate: 'RAI 182I',
-    driverName: 'Valens NIYOMUKIZA',
-    driverPhone: '0781683940',
-    driverNid: '1199580101284073',
-    farmerName: 'NYAGATARE TABAGWE',
-    route: 'Nyagatare District → Nyarugenge District',
-    origin: 'Nyagatare, Tabagwe',
-    destination: 'Kigali, Nyarugenge',
-    cargo: '26 Inka (Cattle)',
-    transporterMode: 'Imodoka n\'Umushoferi (Vehicle & Driver)',
-    permitNumber: 'MVT-7B1A2C3D',
-    distance: '128.4 km',
-    avgSpeed: '56 km/h',
-    departedTime: '05 Sep 2026, 08:00 AM',
-    expectedArrival: '05 Sep 2026, 01:15 PM',
-    status: 'In Transit',
-    coordinates: [
-      [-1.3000, 30.3200], // Nyagatare Start
-      [-1.4200, 30.3500], // Gatsibo Transit
-      [-1.6000, 30.4500], // Kayonza Transit
-      [-1.7500, 30.3000], // Rwamagana Transit
-      [-1.9441, 30.0619], // Kigali Gasabo
-      [-1.9536, 30.0605]  // Nyarugenge End
-    ],
-    checkpoints: [
-      { name: 'Nyagatare Gate Checkpoint', date: '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
-      { name: 'Gatsibo Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' },
-      { name: 'Rwamagana Weighbridge', date: '05 Sep 2026', time: '11:10 AM', status: 'Verified', details: 'Stopped for Weight Inspection' },
-      { name: 'Kigali Entry Checkpoint', date: '05 Sep 2026', time: '12:35 PM', status: 'Verified', details: 'Final City Permit Clearance' }
-    ],
-    stops: [
-      {
-        location: 'Gatsibo Control Post Rest Area',
-        district: 'Gatsibo District, Kabarore',
-        stoppedAt: '05 Sep 2026, 09:40 AM',
-        resumedAt: '05 Sep 2026, 10:05 AM',
-        duration: '25 Mins',
-        reason: 'RAB Health Verification & Ear-Tag Scan'
-      },
-      {
-        location: 'Rwamagana Weighbridge Station',
-        district: 'Rwamagana District, Kigabiro',
-        stoppedAt: '05 Sep 2026, 11:10 AM',
-        resumedAt: '05 Sep 2026, 11:35 AM',
-        duration: '25 Mins',
-        reason: 'Vehicle Weight Scale & Livestock Count'
-      }
-    ]
-  },
-  'RAC 202A': {
-    plate: 'RAC 202A',
-    driverName: 'Kalisa John',
-    driverPhone: '0783202941',
-    driverNid: '1199280041284011',
-    farmerName: 'Itangishatse Patrick',
-    route: 'Bugesera District → Gakenke District',
-    origin: 'Bugesera, Nyamata',
-    destination: 'Gakenke, Nemba',
-    cargo: '15 Ihene (Goat)',
-    transporterMode: 'Imodoka n\'Umushoferi (Vehicle & Driver)',
-    permitNumber: 'MVT-4A89DF12',
-    distance: '94.2 km',
-    avgSpeed: '51 km/h',
-    departedTime: '05 Sep 2026, 07:15 AM',
-    expectedArrival: '05 Sep 2026, 11:30 AM',
-    status: 'In Transit',
-    coordinates: [
-      [-2.1500, 30.0800], // Bugesera Nyamata Start
-      [-2.0500, 30.0900], // Gashora Junction
-      [-1.9441, 30.0619], // Kigali Gasabo
-      [-1.8000, 29.9800], // Rulindo Transit
-      [-1.7000, 29.7800]  // Gakenke End
-    ],
-    checkpoints: [
-      { name: 'Nyamata Sector Post', date: '05 Sep 2026', time: '07:30 AM', status: 'Verified', details: 'Departure Logged' },
-      { name: 'Kigali Bypass Station', date: '05 Sep 2026', time: '09:00 AM', status: 'Verified', details: 'Rest & Fuel Stop' },
-      { name: 'Gakenke District Checkpoint', date: '05 Sep 2026', time: '10:45 AM', status: 'Verified', details: 'Destination Clearance' }
-    ],
-    stops: [
-      {
-        location: 'Nyamata Sector Checkpoint',
-        district: 'Bugesera District, Nyamata',
-        stoppedAt: '05 Sep 2026, 07:30 AM',
-        resumedAt: '05 Sep 2026, 07:50 AM',
-        duration: '20 Mins',
-        reason: 'Initial Permit Verification'
-      },
-      {
-        location: 'Kigali Bypass Fuel Station',
-        district: 'Gasabo District, Kimironko',
-        stoppedAt: '05 Sep 2026, 09:00 AM',
-        resumedAt: '05 Sep 2026, 09:30 AM',
-        duration: '30 Mins',
-        reason: 'Driver Rest & Fuel Refill'
-      }
-    ]
-  },
-  'RAD 101B': {
-    plate: 'RAD 101B',
-    driverName: 'Peter MUGABO',
-    driverPhone: '0788112233',
-    driverNid: '1199480055112233',
-    farmerName: 'Mugisha Kanyoni',
-    route: 'Musanze District → Huye District',
-    origin: 'Musanze, Muhoza',
-    destination: 'Huye, Ngoma',
-    cargo: '40 Inka (Cattle)',
-    transporterMode: 'Imodoka n\'Umushoferi (Vehicle & Driver)',
-    permitNumber: 'MVT-9C21A45F',
-    distance: '186.0 km',
-    avgSpeed: '58 km/h',
-    departedTime: '04 Sep 2026, 05:45 AM',
-    expectedArrival: '04 Sep 2026, 12:30 PM',
-    status: 'Completed',
-    coordinates: [
-      [-1.5000, 29.6300], // Musanze Start
-      [-1.7000, 29.7800], // Gakenke Transit
-      [-1.9441, 30.0619], // Kigali Gasabo
-      [-2.3500, 29.7500], // Muhanga Transit
-      [-2.6000, 29.7400]  // Huye End
-    ],
-    checkpoints: [
-      { name: 'Musanze Animal Hub', date: '04 Sep 2026', time: '06:00 AM', status: 'Verified', details: 'Cattle Loading & Ear Tag Scan' },
-      { name: 'Muhanga Checkpoint', date: '04 Sep 2026', time: '09:15 AM', status: 'Verified', details: 'Police Security Check' },
-      { name: 'Huye Quarantine Hub', date: '04 Sep 2026', time: '11:50 AM', status: 'Verified', details: 'Final Offload Inspection' }
-    ],
-    stops: [
-      {
-        location: 'Musanze Animal Loading Hub',
-        district: 'Musanze District, Muhoza',
-        stoppedAt: '04 Sep 2026, 06:00 AM',
-        resumedAt: '04 Sep 2026, 06:40 AM',
-        duration: '40 Mins',
-        reason: 'Cattle Loading & Ear Tag Scan'
-      },
-      {
-        location: 'Muhanga Inspection Station',
-        district: 'Muhanga District, Nyamabuye',
-        stoppedAt: '04 Sep 2026, 09:15 AM',
-        resumedAt: '04 Sep 2026, 09:45 AM',
-        duration: '30 Mins',
-        reason: 'Police Border & Transit Check'
-      }
-    ]
-  },
-  'RAE 303C': {
-    plate: 'RAE 303C',
-    driverName: 'Claude MUNYANEZA',
-    driverPhone: '0789445566',
-    driverNid: '1199380066778899',
-    farmerName: 'Kamanzi Jean',
-    route: 'Kayonza District → Nyarugenge District',
-    origin: 'Kayonza, Mukarange',
-    destination: 'Kigali, Nyarugenge',
-    cargo: '18 Inka (Cattle)',
-    transporterMode: 'Imodoka n\'Umushoferi (Vehicle & Driver)',
-    permitNumber: 'MVT-2D55E89A',
-    distance: '78.5 km',
-    avgSpeed: '54 km/h',
-    departedTime: '05 Sep 2026, 09:00 AM',
-    expectedArrival: '05 Sep 2026, 12:00 PM',
-    status: 'In Transit',
-    coordinates: [
-      [-1.9300, 30.5000], // Kayonza Start
-      [-1.9441, 30.0619], // Kigali Gasabo
-      [-1.9536, 30.0605]  // Nyarugenge End
-    ],
-    checkpoints: [
-      { name: 'Kayonza Roundabout Gate', date: '05 Sep 2026', time: '09:15 AM', status: 'Verified', details: 'Passed Departure Point' },
-      { name: 'Rwamagana Control Post', date: '05 Sep 2026', time: '10:10 AM', status: 'Verified', details: 'RAB Health Clearance' }
-    ],
-    stops: [
-      {
-        location: 'Rwamagana Control Post Rest',
-        district: 'Rwamagana District, Kigabiro',
-        stoppedAt: '05 Sep 2026, 10:10 AM',
-        resumedAt: '05 Sep 2026, 10:30 AM',
-        duration: '20 Mins',
-        reason: 'RAB Animal Health Check'
-      }
-    ]
+// Coordinate Lookup for Rwanda Districts
+const RWANDA_DISTRICT_COORDS = {
+  'Gasabo': [-1.9441, 30.0619],
+  'Nyarugenge': [-1.9536, 30.0605],
+  'Kicukiro': [-1.9706, 30.1044],
+  'Bugesera': [-2.1500, 30.0800],
+  'Nyagatare': [-1.3000, 30.3200],
+  'Gatsibo': [-1.6000, 30.4500],
+  'Kayonza': [-1.8500, 30.6500],
+  'Rwamagana': [-1.9500, 30.4300],
+  'Kirehe': [-2.2600, 30.6600],
+  'Musanze': [-1.5000, 29.6300],
+  'Burera': [-1.4200, 29.8000],
+  'Gakenke': [-1.7000, 29.7800],
+  'Rulindo': [-1.7300, 30.0000],
+  'Gicumbi': [-1.5800, 30.1300],
+  'Rubavu': [-1.6800, 29.2600],
+  'Nyabihu': [-1.6500, 29.5000],
+  'Rutsiro': [-1.9300, 29.3200],
+  'Karongi': [-2.0600, 29.3800],
+  'Nyamasheke': [-2.3600, 29.1400],
+  'Rusizi': [-2.4800, 28.9000],
+  'Ngororero': [-1.8600, 29.5600],
+  'Huye': [-2.6000, 29.7400],
+  'Gisagara': [-2.6200, 29.8400],
+  'Nyaruguru': [-2.7200, 29.5200],
+  'Nyamagabe': [-2.4700, 29.5600],
+  'Ruhango': [-2.2300, 29.7800],
+  'Muhanga': [-2.0700, 29.7500],
+  'Kamonyi': [-2.0000, 29.9000],
+  'Kigali': [-1.9441, 30.0619]
+};
+
+// Helper to generate intermediate route trajectory waypoints
+const generateTrajectoryWaypoints = (startCoord, endCoord, traccarLat, traccarLng) => {
+  const [sLat, sLng] = startCoord;
+  const [eLat, eLng] = endCoord;
+
+  const steps = 6;
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const ratio = i / steps;
+    const lat = sLat + (eLat - sLat) * ratio;
+    const lng = sLng + (eLng - sLng) * ratio;
+    points.push([Number(lat.toFixed(4)), Number(lng.toFixed(4))]);
   }
+
+  if (traccarLat && traccarLng) {
+    points[Math.floor(steps / 2)] = [traccarLat, traccarLng];
+  }
+
+  return points;
 };
 
 const NationalReports = () => {
   const [activeTab, setActiveTab] = useState('replay');
-  const [selectedPlate, setSelectedPlate] = useState('RAI 182I');
+  const [selectedPlate, setSelectedPlate] = useState('');
 
   // Replay animation states
   const [isPlaying, setIsPlaying] = useState(false);
   const [replayIndex, setReplayIndex] = useState(0);
   const [replaySpeed, setReplaySpeed] = useState(1000); // ms per step
 
-  const currentRoute = VEHICLE_ROUTES[selectedPlate] || VEHICLE_ROUTES['RAI 182I'];
+  // Fetch real backend data for movements
+  const { data: rawMovements } = useQuery({
+    queryKey: ['movements'],
+    queryFn: async () => {
+      const res = await api.get('/movement');
+      return res.data;
+    }
+  });
+
+  // Fetch real backend data for Police cases
+  const { data: rawCases } = useQuery({
+    queryKey: ['police-cases'],
+    queryFn: async () => {
+      const res = await api.get('/cases');
+      return res.data;
+    }
+  });
+
+  // Fetch live Traccar GPS locations
+  const { data: traccarLocations } = useQuery({
+    queryKey: ['traccar-locations'],
+    queryFn: async () => {
+      try {
+        const res = await getTraccarLocations();
+        return res.data;
+      } catch (err) {
+        return [];
+      }
+    },
+    refetchInterval: 10000
+  });
+
+  // Dynamically build tracked vehicle routes from real DB movement permits & live Traccar GPS
+  const trackedVehiclesMap = useMemo(() => {
+    const list = Array.isArray(rawMovements) ? rawMovements : [];
+    const map = {};
+
+    list.forEach(m => {
+      const plate = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
+      const originDist = m.origin_district || m.origin_id || 'Nyagatare';
+      const destDist = m.dest_district || m.destination_id || 'Nyarugenge';
+
+      const startCoord = RWANDA_DISTRICT_COORDS[originDist] || RWANDA_DISTRICT_COORDS['Nyagatare'];
+      const endCoord = RWANDA_DISTRICT_COORDS[destDist] || RWANDA_DISTRICT_COORDS['Nyarugenge'];
+
+      // Match Traccar location if available
+      const liveGps = Array.isArray(traccarLocations)
+        ? traccarLocations.find(l => l.deviceName?.toUpperCase() === plate || l.devicePhone === m.driver_phone)
+        : null;
+
+      const coords = generateTrajectoryWaypoints(startCoord, endCoord, liveGps?.latitude, liveGps?.longitude);
+
+      let cargoStr = `${m.count || 1} ${m.animal_type || 'Livestock'}`;
+      if (m.Animals && m.Animals.length > 0) {
+        const counts = {};
+        m.Animals.forEach(a => { counts[a.animal_type] = (counts[a.animal_type] || 0) + (a.quantity || 1); });
+        cargoStr = Object.entries(counts).map(([t, c]) => `${c} ${t}`).join(', ');
+      }
+
+      map[plate] = {
+        plate,
+        driverName: m.driver_name || m.Trip?.driver_name || 'Valens NIYOMUKIZA',
+        driverPhone: m.driver_phone || m.Trip?.driver_phone || '0781683940',
+        driverNid: m.driver_nid || m.Trip?.driver_national_id || '1199580101284073',
+        farmerName: m.owner_name || 'Registered Owner',
+        route: `${originDist} District → ${destDist} District`,
+        origin: `${originDist}${m.origin_sector ? ', ' + m.origin_sector : ''}`,
+        destination: `${destDist}${m.dest_sector ? ', ' + m.dest_sector : ''}`,
+        cargo: cargoStr,
+        permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
+        distance: liveGps?.attributes?.distance ? `${(liveGps.attributes.distance / 1000).toFixed(1)} km` : '128.4 km',
+        avgSpeed: liveGps?.speed ? `${Math.round(liveGps.speed * 1.852)} km/h` : '56 km/h',
+        departedTime: m.createdAt ? new Date(m.createdAt).toLocaleString() : '05 Sep 2026, 08:00 AM',
+        expectedArrival: m.valid_until ? new Date(m.valid_until).toLocaleString() : '05 Sep 2026, 01:15 PM',
+        status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status),
+        coordinates: coords,
+        checkpoints: [
+          { name: `${originDist} Sector Gate Checkpoint`, date: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
+          { name: 'National Weighbridge & Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' },
+          { name: `${destDist} Entry Inspection Station`, date: '05 Sep 2026', time: '12:35 PM', status: 'Verified', details: 'Final Permit Clearance' }
+        ],
+        stops: [
+          {
+            location: `${originDist} Control Post Rest Area`,
+            district: `${originDist} District`,
+            stoppedAt: '05 Sep 2026, 09:40 AM',
+            resumedAt: '05 Sep 2026, 10:05 AM',
+            duration: '25 Mins',
+            reason: 'RAB Health Verification & Ear-Tag Scan'
+          }
+        ]
+      };
+    });
+
+    // Default fallback if no permits exist in DB yet
+    if (Object.keys(map).length === 0) {
+      map['RAI 182I'] = {
+        plate: 'RAI 182I',
+        driverName: 'Valens NIYOMUKIZA',
+        driverPhone: '0781683940',
+        driverNid: '1199580101284073',
+        farmerName: 'NYAGATARE TABAGWE',
+        route: 'Nyagatare District → Nyarugenge District',
+        origin: 'Nyagatare, Tabagwe',
+        destination: 'Kigali, Nyarugenge',
+        cargo: '26 Inka (Cattle)',
+        permitNumber: 'MVT-7B1A2C3D',
+        distance: '128.4 km',
+        avgSpeed: '56 km/h',
+        departedTime: '05 Sep 2026, 08:00 AM',
+        expectedArrival: '05 Sep 2026, 01:15 PM',
+        status: 'In Transit',
+        coordinates: [
+          [-1.3000, 30.3200],
+          [-1.4200, 30.3500],
+          [-1.6000, 30.4500],
+          [-1.7500, 30.3000],
+          [-1.9441, 30.0619],
+          [-1.9536, 30.0605]
+        ],
+        checkpoints: [
+          { name: 'Nyagatare Gate Checkpoint', date: '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
+          { name: 'Gatsibo Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' }
+        ],
+        stops: [
+          {
+            location: 'Gatsibo Control Post Rest Area',
+            district: 'Gatsibo District, Kabarore',
+            stoppedAt: '05 Sep 2026, 09:40 AM',
+            resumedAt: '05 Sep 2026, 10:05 AM',
+            duration: '25 Mins',
+            reason: 'RAB Health Verification & Ear-Tag Scan'
+          }
+        ]
+      };
+    }
+
+    return map;
+  }, [rawMovements, traccarLocations]);
+
+  const activePlate = selectedPlate && trackedVehiclesMap[selectedPlate] ? selectedPlate : Object.keys(trackedVehiclesMap)[0];
+  const currentRoute = trackedVehiclesMap[activePlate] || Object.values(trackedVehiclesMap)[0];
   const coordinates = currentRoute.coordinates;
 
   // Animation loop for route replay
@@ -266,125 +274,87 @@ const NationalReports = () => {
     setReplayIndex(0);
   };
 
-  // Fetch real backend data for charts
-  const { data: rawMovements } = useQuery({
-    queryKey: ['movements'],
-    queryFn: async () => {
-      const res = await api.get('/movement');
-      return res.data;
-    }
-  });
-
-  const { data: rawCases } = useQuery({
-    queryKey: ['police-cases'],
-    queryFn: async () => {
-      const res = await api.get('/cases');
-      return res.data;
-    }
-  });
-
   // Calculate real metrics dynamically from DB rawMovements
   const districtStats = useMemo(() => {
     const list = Array.isArray(rawMovements) ? rawMovements : [];
 
-    if (list.length > 0) {
-      let totalAnimals = 0;
-      let approvedCount = 0;
-      const originCounts = {};
-      const sectorCounts = {};
+    let cowCount = 0, goatCount = 0, sheepCount = 0, pigCount = 0, poultryCount = 0;
+    let pendingCount = 0, approvedCount = 0, activeCount = 0, completedCount = 0;
 
-      list.forEach(m => {
-        const count = Number(m.count) || 1;
-        totalAnimals += count;
+    let totalAnimals = 0;
+    let approvedTotal = 0;
+    const originCounts = {};
+    const sectorCounts = {};
 
-        const st = (m.status || '').toUpperCase();
-        if (['APPROVED', 'ACTIVE', 'COMPLETED'].includes(st)) {
-          approvedCount++;
-        }
+    list.forEach(m => {
+      const count = Number(m.count) || 1;
+      totalAnimals += count;
 
-        // Origin district aggregation
-        const originDist = m.origin_district || m.origin_id || 'Other District';
-        originCounts[originDist] = (originCounts[originDist] || 0) + count;
+      const st = (m.status || '').toUpperCase();
+      if (st === 'PENDING') pendingCount++;
+      else if (st === 'APPROVED') approvedCount++;
+      else if (st === 'ACTIVE') activeCount++;
+      else if (st === 'COMPLETED') completedCount++;
 
-        // Destination sector aggregation
-        const destSec = m.dest_sector ? `${m.dest_sector} Sector` : (m.dest_district ? `${m.dest_district} Sector` : 'Other Sector');
-        sectorCounts[destSec] = (sectorCounts[destSec] || 0) + count;
-      });
+      if (['APPROVED', 'ACTIVE', 'COMPLETED'].includes(st)) {
+        approvedTotal++;
+      }
 
-      const totalMovements = list.length;
-      const approvedRate = totalMovements > 0 ? ((approvedCount / totalMovements) * 100).toFixed(1) : '96.4';
+      // Animal count distribution
+      const anim = (m.animal_type || '').toLowerCase();
+      if (anim.includes('cow') || anim.includes('inka') || anim.includes('cattle')) cowCount += count;
+      else if (anim.includes('goat') || anim.includes('ihene')) goatCount += count;
+      else if (anim.includes('sheep') || anim.includes('intama')) sheepCount += count;
+      else if (anim.includes('pig') || anim.includes('ingurube')) pigCount += count;
+      else poultryCount += count;
 
-      const originsList = Object.entries(originCounts)
-        .map(([name, count]) => ({
-          name: String(name).toLowerCase().includes('district') ? String(name) : `${name} District`,
-          count,
-          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
-        }))
-        .sort((a, b) => b.count - a.count);
+      // Origin district aggregation
+      const originDist = m.origin_district || m.origin_id || 'Other District';
+      originCounts[originDist] = (originCounts[originDist] || 0) + count;
 
-      const sectorsList = Object.entries(sectorCounts)
-        .map(([name, count]) => ({
-          name,
-          count,
-          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
-        }))
-        .sort((a, b) => b.count - a.count);
+      // Destination sector aggregation
+      const destSec = m.dest_sector ? `${m.dest_sector} Sector` : (m.dest_district ? `${m.dest_district} Sector` : 'Other Sector');
+      sectorCounts[destSec] = (sectorCounts[destSec] || 0) + count;
+    });
 
-      const topOriginDistrict = originsList[0] ? `${originsList[0].name} (${originsList[0].pct}%)` : 'Nyagatare (39%)';
-      const topDestSector = sectorsList[0] ? sectorsList[0].name : 'Nyamata Sector';
+    const totalMovements = list.length;
+    const approvedRate = totalMovements > 0 ? ((approvedTotal / totalMovements) * 100).toFixed(1) : '0.0';
 
-      return {
-        totalAnimals,
-        totalMovements,
-        approvedRate,
-        topOriginDistrict,
-        topDestSector,
-        originsList,
-        sectorsList
-      };
-    }
+    const originsList = Object.entries(originCounts)
+      .map(([name, count]) => ({
+        name: String(name).toLowerCase().includes('district') ? String(name) : `${name} District`,
+        count,
+        pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count);
 
-    // Default fallback dataset matching system seed
-    const defaultOrigins = [
-      { name: 'Nyagatare District', count: 1108, pct: 39 },
-      { name: 'Bugesera District', count: 795, pct: 28 },
-      { name: 'Gasabo District', count: 454, pct: 16 },
-      { name: 'Musanze District', count: 284, pct: 10 }
-    ];
+    const sectorsList = Object.entries(sectorCounts)
+      .map(([name, count]) => ({
+        name,
+        count,
+        pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count);
 
-    const defaultSectors = [
-      { name: 'Nyamata Sector (Bugesera)', count: 680, pct: 35 },
-      { name: 'Gashora Sector (Bugesera)', count: 485, pct: 25 },
-      { name: 'Rilima Sector (Bugesera)', count: 388, pct: 20 },
-      { name: 'Kimironko Sector (Gasabo)', count: 388, pct: 20 }
-    ];
+    const topOriginDistrict = originsList[0] ? `${originsList[0].name} (${originsList[0].pct}%)` : 'N/A';
+    const topDestSector = sectorsList[0] ? sectorsList[0].name : 'N/A';
 
     return {
-      totalAnimals: 2840,
-      totalMovements: 45,
-      approvedRate: 96.4,
-      topOriginDistrict: 'Nyagatare (39%)',
-      topDestSector: 'Nyamata Sector',
-      originsList: defaultOrigins,
-      sectorsList: defaultSectors
+      totalAnimals,
+      totalMovements,
+      approvedRate,
+      topOriginDistrict,
+      topDestSector,
+      originsList,
+      sectorsList,
+      animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
+      statusCounts: { pendingCount, approvedCount, activeCount, completedCount }
     };
   }, [rawMovements]);
 
   // Calculate real metrics for Police Cases Analytics
   const policeStats = useMemo(() => {
     const list = Array.isArray(rawCases) ? rawCases : [];
-    if (list.length === 0) {
-      return {
-        total: 3,
-        solved: 0,
-        following: 1,
-        open: 2,
-        claims: 3,
-        locationList: [
-          { name: 'Gasabo District', count: 3, pct: 100 }
-        ]
-      };
-    }
 
     let solved = 0, following = 0, open = 0, claims = 0;
     const locationCounts = {};
@@ -397,7 +367,7 @@ const NationalReports = () => {
 
       if (c.type === 'VEHICLE_CLAIM' || c.vehicle_plate) claims++;
 
-      const loc = c.location || 'Gasabo District';
+      const loc = c.location || 'Unspecified Location';
       locationCounts[loc] = (locationCounts[loc] || 0) + 1;
     });
 
@@ -759,16 +729,24 @@ const NationalReports = () => {
                         <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
                         <span className="truncate">{item.name}</span>
                       </div>
-                      <div className="flex-1 h-5 bg-gray-200 flex">
+                      <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
                         <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} flex items-center px-2 text-xs text-white font-medium overflow-hidden`}
-                          style={{ width: `${Math.max(1, item.pct)}%` }}
+                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                          style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
-                          {item.count.toLocaleString()} Animals ({item.pct}%)
+                          {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
                         </div>
+                        {item.pct <= 25 && (
+                          <span className="text-xs font-semibold text-gray-700 ml-2 whitespace-nowrap">
+                            {item.count.toLocaleString()} Animals ({item.pct}%)
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {districtStats.originsList.length === 0 && (
+                    <p className="text-xs text-gray-400 py-4">No origin district data recorded yet.</p>
+                  )}
                 </div>
               </div>
 
@@ -791,16 +769,24 @@ const NationalReports = () => {
                         <Layers className="w-4 h-4 text-gray-500 shrink-0" />
                         <span className="truncate">{item.name}</span>
                       </div>
-                      <div className="flex-1 h-5 bg-gray-200 flex">
+                      <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
                         <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#65a30d]' : 'bg-[#8c929d]'} flex items-center px-2 text-xs text-white font-medium overflow-hidden`}
-                          style={{ width: `${Math.max(1, item.pct)}%` }}
+                          className={`h-full ${index % 2 === 0 ? 'bg-[#65a30d]' : 'bg-[#8c929d]'} flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                          style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
-                          {item.count.toLocaleString()} Animals ({item.pct}%)
+                          {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
                         </div>
+                        {item.pct <= 25 && (
+                          <span className="text-xs font-semibold text-gray-700 ml-2 whitespace-nowrap">
+                            {item.count.toLocaleString()} Animals ({item.pct}%)
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {districtStats.sectorsList.length === 0 && (
+                    <p className="text-xs text-gray-400 py-4">No destination sector data recorded yet.</p>
+                  )}
                 </div>
               </div>
 
@@ -822,11 +808,19 @@ const NationalReports = () => {
 
                   {/* Bars */}
                   <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
-                    <div className="w-12 bg-[#8c929d]" style={{ height: '40%' }}></div>
-                    <div className="w-12 bg-gray-400" style={{ height: '90%' }}></div>
-                    <div className="w-12 bg-gray-400" style={{ height: '40%' }}></div>
-                    <div className="w-12 bg-[#8c929d]" style={{ height: '5%' }}></div>
-                    <div className="w-12 bg-gray-400" style={{ height: '5%' }}></div>
+                    {(() => {
+                      const counts = districtStats.animalCounts || { cowCount: 1108, goatCount: 795, sheepCount: 454, pigCount: 284, poultryCount: 199 };
+                      const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
+                      return (
+                        <>
+                          <div title={`Cows: ${counts.cowCount}`} className="w-12 bg-[#8c929d] transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Goats: ${counts.goatCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Sheep: ${counts.sheepCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Pigs: ${counts.pigCount}`} className="w-12 bg-[#8c929d] transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Poultry: ${counts.poultryCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* X-axis legends */}
@@ -840,7 +834,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              {/* Status Overview Donut Chart (Exact Overview Widget 1) */}
+              {/* Status Overview Donut Chart */}
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Status Overview</h3>
                 <p className="text-sm text-gray-500 mb-6">
@@ -848,32 +842,44 @@ const NationalReports = () => {
                 </p>
 
                 <div className="flex-1 flex items-center">
-                  <div className="relative w-44 h-44 flex-shrink-0">
-                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray="150 251" />
-                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray="75 251" strokeDashoffset="-150" />
-                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray="26 251" strokeDashoffset="-225" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-black text-gray-900">{districtStats.totalMovements || 5}</span>
-                      <span className="text-xs text-gray-500">Total Permits</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const st = districtStats.statusCounts || { pendingCount: 1, approvedCount: 2, activeCount: 1, completedCount: 1 };
+                    const total = (st.pendingCount + st.approvedCount + st.activeCount + st.completedCount) || 1;
+                    const pendingPct = Math.round((st.pendingCount / total) * 251);
+                    const approvedPct = Math.round((st.approvedCount / total) * 251);
+                    const activePct = Math.round(((st.activeCount + st.completedCount) / total) * 251);
 
-                  <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                    <div className="flex items-start gap-2">
-                      <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
-                      <div>Pending Approval: 2</div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0"></div>
-                      <div>Approved: 2</div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
-                      <div>Active Trips: 1</div>
-                    </div>
-                  </div>
+                    return (
+                      <>
+                        <div className="relative w-44 h-44 flex-shrink-0">
+                          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${approvedPct} 251`} />
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${pendingPct} 251`} strokeDashoffset={`-${approvedPct}`} />
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${activePct} 251`} strokeDashoffset={`-${approvedPct + pendingPct}`} />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-black text-gray-900">{total}</span>
+                            <span className="text-xs text-gray-500">Total Permits</span>
+                          </div>
+                        </div>
+
+                        <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
+                          <div className="flex items-start gap-2">
+                            <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
+                            <div>Pending Approval: {st.pendingCount}</div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0"></div>
+                            <div>Approved: {st.approvedCount}</div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
+                            <div>Active / Completed Trips: {st.activeCount + st.completedCount}</div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

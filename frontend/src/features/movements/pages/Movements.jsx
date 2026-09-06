@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
@@ -38,6 +38,26 @@ const Movements = () => {
   const [timeRange, setTimeRange] = useState('ALL');
   const [recordScope, setRecordScope] = useState('BOTH');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    const typeParam = searchParams.get('type');
+    const animalParam = searchParams.get('animal');
+    const searchParam = searchParams.get('search');
+    
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+    
+    const newFilters = {};
+    if (statusParam) newFilters['Status'] = [statusParam];
+    if (typeParam) newFilters['Type'] = [typeParam];
+    if (animalParam) newFilters['Animal'] = [animalParam];
+    
+    if (Object.keys(newFilters).length > 0) {
+      setSelectedFilters(prev => ({ ...prev, ...newFilters }));
+    }
+  }, [searchParams]);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
