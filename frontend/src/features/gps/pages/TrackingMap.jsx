@@ -295,6 +295,65 @@ const MapSearchManager = ({ searchQuery, onResults, setIsSearching }) => {
   return null;
 };
 
+// Custom Control Overlay for Top Right (Back button + Stacked Geofence, Zoom In/Out, Satellite Layers)
+const TopRightControls = ({ isSatellite, setIsSatellite }) => {
+  const map = useMap();
+  const navigate = useNavigate();
+
+  return (
+    <div className="absolute top-[22px] right-[22px] z-[500] flex flex-col items-end gap-2.5 font-sans">
+      {/* Back to Dashboard Button */}
+      <button
+        onClick={() => navigate('/dashboard/overview')}
+        className="bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm px-4 py-2.5 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 flex items-center gap-2 transition-all cursor-pointer"
+        title="Back to Dashboard"
+      >
+        <ArrowLeft className="w-4 h-4 text-gray-800 stroke-[2.5]" />
+        <span>Back</span>
+      </button>
+
+      {/* Stacked Vertical Controls: Fence, Zoom In, Zoom Out, Satellite */}
+      <div className="flex flex-col bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-gray-200/90 overflow-hidden divide-y divide-gray-100">
+        {/* Geofence Rule Button */}
+        <button
+          onClick={() => navigate('/dashboard/geofencing')}
+          className="w-11 h-11 flex items-center justify-center text-gray-700 hover:bg-gray-50 transition-colors"
+          title="Geofencing Rules"
+        >
+          <ShieldAlert className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {/* Zoom In Button */}
+        <button
+          onClick={() => map.zoomIn()}
+          className="w-11 h-11 flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors text-xl font-bold"
+          title="Zoom In"
+        >
+          +
+        </button>
+
+        {/* Zoom Out Button */}
+        <button
+          onClick={() => map.zoomOut()}
+          className="w-11 h-11 flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors text-xl font-bold"
+          title="Zoom Out"
+        >
+          -
+        </button>
+
+        {/* Satellite / Layers Toggle Button */}
+        <button
+          onClick={() => setIsSatellite(!isSatellite)}
+          className={`w-11 h-11 flex items-center justify-center transition-colors ${isSatellite ? 'bg-blue-50 text-blue-600 font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+          title="Toggle Satellite Imagery"
+        >
+          <Layers className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const TrackingMap = () => {
   const queryClient = useQueryClient();
   const { data: locations, isLoading, isError, error } = useQuery({
@@ -497,6 +556,7 @@ const TrackingMap = () => {
           <MapCenterer selectedDevice={selectedDevice} />
           <SearchResultCenterer selectedSearchResult={selectedSearchResult} />
           <MapSearchManager searchQuery={activeSearchQuery} onResults={setSearchResults} setIsSearching={setIsSearching} />
+          <TopRightControls isSatellite={isSatellite} setIsSatellite={setIsSatellite} />
 
           {routeHistory.length > 0 && (
             <Polyline
@@ -586,17 +646,6 @@ const TrackingMap = () => {
           <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
           <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
         </div>
-      </div>
-
-      {/* ----------------- LAYERS BUTTON (BOTTOM LEFT) ----------------- */}
-      <div className={`absolute z-[400] transition-all duration-300 ${isRouteDrawerOpen ? 'bottom-[140px]' : 'bottom-[40px]'} ${isSidebarOpen || isSearchSidebarOpen ? 'left-[420px]' : 'left-6'}`}>
-        <button
-          onClick={() => setIsSatellite(!isSatellite)}
-          className="w-12 h-12 bg-white rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center gap-0.5 hover:bg-gray-50 transition-colors"
-        >
-          <Layers className="w-5 h-5 text-gray-600" />
-          <span className="text-[10px] font-medium text-gray-700">Layers</span>
-        </button>
       </div>
 
       {/* ----------------- BOTTOM ROUTE DRAWER (ITINERARY) ----------------- */}
