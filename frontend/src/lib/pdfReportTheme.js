@@ -1,10 +1,11 @@
 /**
  * PDF Report Styling Generator Utility
  * Clones the visual layout, typography, font colors, text size, and cyan table styling
- * using RAB_Logo2.png, normal text casing (no forced uppercase/lowercase), and clean white background (no bg gray).
+ * using RAB_Logo2.png, normal text casing, clean white background, and direct file download (no new tab).
  */
 
 import rabLogo from '../assets/images/RAB_Logo2.png';
+import toast from 'react-hot-toast';
 
 const resolveLogoUrl = (url) => {
   const logo = url || rabLogo;
@@ -38,7 +39,7 @@ export const generatePdfReportHTML = ({
         <style>
           @page {
             size: A4 landscape;
-            margin: 10mm 12mm;
+            margin: 8mm 10mm;
           }
           @media print {
             body {
@@ -53,7 +54,7 @@ export const generatePdfReportHTML = ({
 
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            padding: 20px 24px;
+            padding: 16px 20px;
             color: #111827;
             background-color: #ffffff;
             margin: 0;
@@ -66,32 +67,32 @@ export const generatePdfReportHTML = ({
             align-items: center;
             justify-content: space-between;
             border-bottom: 2px solid #00a0e9;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
           }
 
           .header-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
           }
 
           .header-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 54px;
+            height: 48px;
             flex-shrink: 0;
           }
 
           .header-logo-img {
-            max-height: 54px;
+            max-height: 48px;
             width: auto;
             object-fit: contain;
           }
 
           .header-titles h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             margin: 0;
             color: #00a0e9;
@@ -106,22 +107,22 @@ export const generatePdfReportHTML = ({
           }
 
           .header-titles p {
-            margin: 3px 0 0 0;
+            margin: 2px 0 0 0;
             color: #6b7280;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 400;
             text-transform: none;
           }
 
-          /* KPI Metadata Summary Grid (Clean White - No BG Gray) */
+          /* KPI Metadata Summary Grid */
           .meta-container {
             background-color: #ffffff;
             border: none;
-            padding: 4px 0 16px 0;
-            margin-bottom: 16px;
+            padding: 2px 0 12px 0;
+            margin-bottom: 12px;
             display: flex;
             flex-wrap: wrap;
-            gap: 40px;
+            gap: 36px;
             align-items: center;
           }
 
@@ -131,16 +132,16 @@ export const generatePdfReportHTML = ({
           }
 
           .meta-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: #64748b;
             text-transform: none;
             letter-spacing: normal;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
 
           .meta-value {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #0f172a;
             text-transform: none;
@@ -151,7 +152,7 @@ export const generatePdfReportHTML = ({
             width: 100%;
             border-collapse: collapse;
             border: 1.5px solid #00a0e9;
-            font-size: 11px;
+            font-size: 10.5px;
             background: #ffffff;
           }
 
@@ -159,10 +160,10 @@ export const generatePdfReportHTML = ({
             background-color: #00a0e9;
             color: #ffffff;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 10.5px;
             text-transform: none;
             letter-spacing: normal;
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: left;
             border-right: 1px solid rgba(255, 255, 255, 0.4);
             border-bottom: 1.5px solid #00a0e9;
@@ -174,9 +175,9 @@ export const generatePdfReportHTML = ({
 
           .report-table td {
             border: 1px solid #7ed6fa;
-            padding: 9px 12px;
+            padding: 7px 10px;
             color: #1f2937;
-            font-size: 11px;
+            font-size: 10.5px;
             vertical-align: middle;
             text-transform: none;
           }
@@ -196,9 +197,9 @@ export const generatePdfReportHTML = ({
           }
 
           .sub-text {
-            font-size: 10px;
+            font-size: 9.5px;
             color: #64748b;
-            margin-top: 2px;
+            margin-top: 1px;
             display: block;
           }
 
@@ -215,9 +216,9 @@ export const generatePdfReportHTML = ({
           /* Badges */
           .badge {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 2px 8px;
             border-radius: 12px;
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 700;
             text-transform: none;
             letter-spacing: normal;
@@ -249,7 +250,7 @@ export const generatePdfReportHTML = ({
             background-color: #f1f5f9;
             color: #334155;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 700;
             border: 1px solid #cbd5e1;
             text-transform: none;
@@ -298,4 +299,65 @@ export const generatePdfReportHTML = ({
       </body>
     </html>
   `;
+};
+
+const ensureHtml2Pdf = () => {
+  return new Promise((resolve) => {
+    if (window.html2pdf) return resolve(window.html2pdf);
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => resolve(window.html2pdf);
+    script.onerror = () => resolve(null);
+    document.head.appendChild(script);
+  });
+};
+
+/**
+ * Downloads the PDF directly to user's laptop downloads without opening a new tab
+ */
+export const downloadPdfReport = async (htmlContent, filename = 'Report.pdf') => {
+  const toastId = toast.loading('Downloading PDF report...');
+
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '1050px';
+    iframe.style.height = '800px';
+    iframe.style.border = 'none';
+    iframe.style.zIndex = '-9999';
+    iframe.style.visibility = 'hidden';
+
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const html2pdf = await ensureHtml2Pdf();
+    if (html2pdf) {
+      const opt = {
+        margin: [6, 6, 6, 6],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+      await html2pdf().set(opt).from(doc.body).save();
+      document.body.removeChild(iframe);
+      toast.success(`${filename} downloaded!`, { id: toastId });
+    } else {
+      // Fallback
+      iframe.contentWindow.print();
+      document.body.removeChild(iframe);
+      toast.success(`PDF file processing completed`, { id: toastId });
+    }
+  } catch (err) {
+    console.error('PDF download error:', err);
+    toast.error('Failed to download PDF report.', { id: toastId });
+  }
 };

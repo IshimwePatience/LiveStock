@@ -8,7 +8,7 @@ import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 import CustomSelect from '../../../components/ui/CustomSelect';
 import Pagination from '../../../components/ui/Pagination';
-import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
+import { generatePdfReportHTML, downloadPdfReport } from '../../../lib/pdfReportTheme';
 
 const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,8 +270,7 @@ const UserManagement = () => {
       toast.error('No users available to print report');
       return;
     }
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(generatePdfReportHTML({
+    const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA LIVESTOCK SYSTEM',
       titleSub: '— USER ACCOUNTS REGISTRY',
       subtitle: 'Official User & Role Audit Report',
@@ -295,9 +294,8 @@ const UserManagement = () => {
           <td><span class="badge ${u.status === 'Inactive' ? 'badge-inactive' : 'badge-active'}">${u.status || 'Active'}</span></td>
         </tr>
       `).join('')
-    }));
-    printWindow.document.close();
-    printWindow.print();
+    });
+    downloadPdfReport(htmlContent, 'User_Accounts_Registry.pdf');
   };
 
   const filteredUsers = useMemo(() => {

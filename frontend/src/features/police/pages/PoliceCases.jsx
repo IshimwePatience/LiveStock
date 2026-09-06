@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
 import ReportDropdown from '../../../components/ui/ReportDropdown';
 import PoliceCasesList from '../components/PoliceCasesList';
-import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
+import { generatePdfReportHTML, downloadPdfReport } from '../../../lib/pdfReportTheme';
 
 // Helper to generate initials from name
 const getInitials = (name) => {
@@ -253,8 +253,7 @@ const PoliceCases = () => {
       return;
     }
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE CASES' : scopeParam === 'HISTORY' ? 'SOLVED HISTORY' : 'FULL REGISTRY (ACTIVE & SOLVED)';
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(generatePdfReportHTML({
+    const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA NATIONAL POLICE',
       titleSub: '— OFFICIAL CASE REPORT',
       subtitle: `Livestock & Transit Security Division • ${scopeLabel}`,
@@ -283,9 +282,8 @@ const PoliceCases = () => {
           <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : c.status === 'Following Up' ? 'badge-following' : 'badge-open'}">${c.status}</span></td>
         </tr>
       `).join('')
-    }));
-    printWindow.document.close();
-    printWindow.print();
+    });
+    downloadPdfReport(htmlContent, `Police_Cases_Report_${scopeParam}.pdf`);
   };
 
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars

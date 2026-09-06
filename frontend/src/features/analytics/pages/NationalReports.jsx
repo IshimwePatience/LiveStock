@@ -100,6 +100,25 @@ const generateTrajectoryWaypoints = (startCoord, endCoord, traccarLat, traccarLn
   return points;
 };
 
+// Calculate Haversine distance in KM between coordinate waypoints (with 25% road curvature factor)
+const calculateRouteDistanceKm = (coords) => {
+  if (!coords || coords.length < 2) return 45.0;
+  let totalKm = 0;
+  for (let i = 0; i < coords.length - 1; i++) {
+    const [lat1, lon1] = coords[i];
+    const [lat2, lon2] = coords[i + 1];
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    totalKm += R * c;
+  }
+  return (totalKm * 1.25).toFixed(1);
+};
+
 const NationalReports = () => {
   const [activeTab, setActiveTab] = useState('replay');
   const [selectedPlate, setSelectedPlate] = useState('');
@@ -219,6 +238,10 @@ const NationalReports = () => {
         : null;
 
       const coords = generateTrajectoryWaypoints(startCoord, endCoord, liveGps?.latitude, liveGps?.longitude);
+      const computedDist = calculateRouteDistanceKm(coords);
+      const computedSpeed = liveGps?.speed
+        ? Math.round(liveGps.speed * 1.852)
+        : Math.min(65, Math.max(42, Math.round(parseFloat(computedDist) / 2.2)));
 
       let cargoStr = `${m.count || 1} ${m.animal_type || 'Livestock'}`;
       if (m.Animals && m.Animals.length > 0) {
@@ -229,17 +252,17 @@ const NationalReports = () => {
 
       map[plate] = {
         plate,
-        driverName: m.driver_name || m.Trip?.driver_name || 'Valens NIYOMUKIZA',
-        driverPhone: m.driver_phone || m.Trip?.driver_phone || '0781683940',
-        driverNid: m.driver_nid || m.Trip?.driver_national_id || '1199580101284073',
+        driverName: m.driver_name || m.Trip?.driver_name || 'Driver',
+        driverPhone: m.driver_phone || m.Trip?.driver_phone || 'N/A',
+        driverNid: m.driver_nid || m.Trip?.driver_national_id || 'N/A',
         farmerName: m.owner_name || 'Registered Owner',
         route: `${originDist} District → ${destDist} District`,
         origin: `${originDist}${m.origin_sector ? ', ' + m.origin_sector : ''}`,
         destination: `${destDist}${m.dest_sector ? ', ' + m.dest_sector : ''}`,
         cargo: cargoStr,
         permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
-        distance: liveGps?.attributes?.distance ? `${(liveGps.attributes.distance / 1000).toFixed(1)} km` : '128.4 km',
-        avgSpeed: liveGps?.speed ? `${Math.round(liveGps.speed * 1.852)} km/h` : '56 km/h',
+        distance: liveGps?.attributes?.distance ? `${(liveGps.attributes.distance / 1000).toFixed(1)} km` : `${computedDist} km`,
+        avgSpeed: `${computedSpeed} km/h`,
         departedTime: m.createdAt ? new Date(m.createdAt).toLocaleString() : '05 Sep 2026, 08:00 AM',
         expectedArrival: m.valid_until ? new Date(m.valid_until).toLocaleString() : '05 Sep 2026, 01:15 PM',
         status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status),

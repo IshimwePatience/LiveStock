@@ -10,7 +10,7 @@ import MovementsList from '../components/MovementsList';
 import MovementsMap from '../components/MovementsMap';
 import MovementsHistory from '../components/MovementsHistory';
 import { useNavigate } from 'react-router-dom';
-import { generatePdfReportHTML } from '../../../lib/pdfReportTheme';
+import { generatePdfReportHTML, downloadPdfReport } from '../../../lib/pdfReportTheme';
 
 // Helper to generate initials from name
 const getInitials = (name) => {
@@ -377,10 +377,9 @@ const Movements = () => {
       toast.error('No movement records available to print report');
       return;
     }
-    const printWindow = window.open('', '_blank');
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY (REQUESTS & HISTORY)';
     
-    printWindow.document.write(generatePdfReportHTML({
+    const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)',
       titleSub: '',
       subtitle: `Official Livestock Movement Permit Registry • ${scopeLabel}`,
@@ -414,9 +413,8 @@ const Movements = () => {
           </tr>
         `;
       }).join('')
-    }));
-    printWindow.document.close();
-    printWindow.print();
+    });
+    downloadPdfReport(htmlContent, `RAB_Movement_Permits_${scopeParam}.pdf`);
   };
 
   // Helper to check if movement is incoming to current user's jurisdiction
