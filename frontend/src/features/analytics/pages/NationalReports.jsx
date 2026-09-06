@@ -724,14 +724,18 @@ const NationalReports = () => {
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
                   {districtStats.originsList.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate" title={item.name}>
+                    <div
+                      key={index}
+                      className="flex items-center group cursor-pointer"
+                      title={`Origin District: ${item.name}\nTotal Animals Moved: ${item.count.toLocaleString()} (${item.pct}%)`}
+                    >
+                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
                         <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
                         <span className="truncate">{item.name}</span>
                       </div>
                       <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
                         <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
                           style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
                           {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
@@ -764,14 +768,18 @@ const NationalReports = () => {
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
                   {districtStats.sectorsList.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate" title={item.name}>
+                    <div
+                      key={index}
+                      className="flex items-center group cursor-pointer"
+                      title={`Destination Sector: ${item.name}\nTotal Animals Received: ${item.count.toLocaleString()} (${item.pct}%)`}
+                    >
+                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
                         <Layers className="w-4 h-4 text-gray-500 shrink-0" />
                         <span className="truncate">{item.name}</span>
                       </div>
                       <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
                         <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#65a30d]' : 'bg-[#8c929d]'} flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
+                          className={`h-full ${index % 2 === 0 ? 'bg-[#65a30d]' : 'bg-[#8c929d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
                           style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
                           {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
@@ -811,13 +819,14 @@ const NationalReports = () => {
                     {(() => {
                       const counts = districtStats.animalCounts || { cowCount: 1108, goatCount: 795, sheepCount: 454, pigCount: 284, poultryCount: 199 };
                       const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
+                      const totalAnimals = districtStats.totalAnimals || 1;
                       return (
                         <>
-                          <div title={`Cows: ${counts.cowCount}`} className="w-12 bg-[#8c929d] transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Goats: ${counts.goatCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Sheep: ${counts.sheepCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Pigs: ${counts.pigCount}`} className="w-12 bg-[#8c929d] transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Poultry: ${counts.poultryCount}`} className="w-12 bg-gray-400 transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Cows: ${counts.cowCount} Animals (${Math.round((counts.cowCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Goats: ${counts.goatCount} Animals (${Math.round((counts.goatCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Sheep: ${counts.sheepCount} Animals (${Math.round((counts.sheepCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Pigs: ${counts.pigCount} Animals (${Math.round((counts.pigCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
+                          <div title={`Poultry: ${counts.poultryCount} Animals (${Math.round((counts.poultryCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
                         </>
                       );
                     })()}
@@ -825,11 +834,11 @@ const NationalReports = () => {
 
                   {/* X-axis legends */}
                   <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                    <div className="flex items-center gap-1"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
-                    <div className="flex items-center gap-1"><ArrowRight className="w-3 h-3 text-red-500 -rotate-90" /> Goats</div>
-                    <div className="flex items-center gap-1"><ArrowRight className="w-3 h-3 text-orange-500 -rotate-90" /> Sheep</div>
-                    <div className="flex items-center gap-1"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
-                    <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
+                    <div title={`Cows: ${(districtStats.animalCounts?.cowCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
+                    <div title={`Goats: ${(districtStats.animalCounts?.goatCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-red-500 -rotate-90" /> Goats</div>
+                    <div title={`Sheep: ${(districtStats.animalCounts?.sheepCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-orange-500 -rotate-90" /> Sheep</div>
+                    <div title={`Pigs: ${(districtStats.animalCounts?.pigCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
+                    <div title={`Poultry: ${(districtStats.animalCounts?.poultryCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
                   </div>
                 </div>
               </div>
@@ -851,28 +860,28 @@ const NationalReports = () => {
 
                     return (
                       <>
-                        <div className="relative w-44 h-44 flex-shrink-0">
+                        <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Permits: ${total}`}>
                           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${approvedPct} 251`} />
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${pendingPct} 251`} strokeDashoffset={`-${approvedPct}`} />
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${activePct} 251`} strokeDashoffset={`-${approvedPct + pendingPct}`} />
+                            <circle title={`Approved Permits: ${st.approvedCount} (${Math.round((st.approvedCount / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${approvedPct} 251`} />
+                            <circle title={`Pending Approval: ${st.pendingCount} (${Math.round((st.pendingCount / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${pendingPct} 251`} strokeDashoffset={`-${approvedPct}`} />
+                            <circle title={`Active / Completed Trips: ${st.activeCount + st.completedCount} (${Math.round(((st.activeCount + st.completedCount) / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${activePct} 251`} strokeDashoffset={`-${approvedPct + pendingPct}`} />
                           </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-2xl font-black text-gray-900">{total}</span>
                             <span className="text-xs text-gray-500">Total Permits</span>
                           </div>
                         </div>
 
                         <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                          <div className="flex items-start gap-2">
+                          <div title={`Pending Approval: ${st.pendingCount} Permits (${Math.round((st.pendingCount / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                             <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
                             <div>Pending Approval: {st.pendingCount}</div>
                           </div>
-                          <div className="flex items-start gap-2">
+                          <div title={`Approved: ${st.approvedCount} Permits (${Math.round((st.approvedCount / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                             <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0"></div>
                             <div>Approved: {st.approvedCount}</div>
                           </div>
-                          <div className="flex items-start gap-2">
+                          <div title={`Active / Completed Trips: ${st.activeCount + st.completedCount} Permits (${Math.round(((st.activeCount + st.completedCount) / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                             <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
                             <div>Active / Completed Trips: {st.activeCount + st.completedCount}</div>
                           </div>
@@ -954,10 +963,12 @@ const NationalReports = () => {
                 </p>
 
                 <div className="flex-1 flex items-center">
-                  <div className="relative w-44 h-44 flex-shrink-0">
+                  <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Reported Cases: ${policeStats.total}`}>
                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                       {/* Solved - Green */}
                       <circle
+                        title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%)`}
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
                         r="40"
@@ -968,6 +979,8 @@ const NationalReports = () => {
                       />
                       {/* Following Up - Orange */}
                       <circle
+                        title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%)`}
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
                         r="40"
@@ -979,6 +992,8 @@ const NationalReports = () => {
                       />
                       {/* Open - Red */}
                       <circle
+                        title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%)`}
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
                         r="40"
@@ -989,22 +1004,22 @@ const NationalReports = () => {
                         strokeDashoffset={`-${policeStats.total > 0 ? ((policeStats.solved + policeStats.following) / policeStats.total) * 251 : 83}`}
                       />
                     </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                       <span className="text-2xl font-black text-gray-900">{policeStats.total}</span>
                       <span className="text-xs text-gray-500">Total Cases</span>
                     </div>
                   </div>
 
                   <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                    <div className="flex items-start gap-2">
+                    <div title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
                       <div>Case Solved: {policeStats.solved}</div>
                     </div>
-                    <div className="flex items-start gap-2">
+                    <div title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
                       <div>Following Up: {policeStats.following}</div>
                     </div>
-                    <div className="flex items-start gap-2">
+                    <div title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#ef4444] mt-0.5 shrink-0"></div>
                       <div>Open / Active: {policeStats.open}</div>
                     </div>
@@ -1026,14 +1041,18 @@ const NationalReports = () => {
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
                   {(policeStats.locationList || []).map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate" title={item.name}>
+                    <div
+                      key={index}
+                      className="flex items-center group cursor-pointer"
+                      title={`Security Hotspot Location: ${item.name}\nTotal Reported Cases: ${item.count} (${item.pct}%)`}
+                    >
+                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
                         <ShieldAlert className="w-4 h-4 text-gray-500 shrink-0" />
                         <span className="truncate">{item.name}</span>
                       </div>
-                      <div className="flex-1 h-5 bg-gray-200 flex">
+                      <div className="flex-1 h-5 bg-gray-200 flex rounded overflow-hidden">
                         <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-red-500'} flex items-center px-2 text-xs text-white font-medium overflow-hidden`}
+                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-red-500'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden transition-all`}
                           style={{ width: `${Math.max(4, item.pct)}%` }}
                         >
                           {item.count} Cases ({item.pct}%)

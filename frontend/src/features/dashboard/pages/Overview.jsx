@@ -270,14 +270,14 @@ const Overview = () => {
           
           <div className="flex-1 flex items-center">
              {/* Donut Chart */}
-             <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/dashboard/movements')}>
+             <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Permits: ${statsData?.statusOverview?.total || 0}`} onClick={() => navigate('/dashboard/movements')}>
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                  {/* Approved - Light Blue */}
-                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
+                 <circle title={`Approved Permits: ${statsData?.statusOverview?.approved || 0} - Authorized & Issued`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
                  {/* Pending - Orange */}
-                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=PENDING'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
+                 <circle title={`Pending Approval: ${statsData?.statusOverview?.pending || 0} - Awaiting Review`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=PENDING'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
                  {/* Active - Green */}
-                 <circle onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
+                 <circle title={`Active Trips: ${statsData?.statusOverview?.active || 0} - Currently En Route`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                  <span className="text-3xl font-black text-gray-900">{statsData?.statusOverview?.total || 0}</span>
@@ -287,15 +287,15 @@ const Overview = () => {
 
              {/* Legend */}
              <div className="ml-8 flex-1 overflow-y-auto max-h-[200px] text-xs text-gray-600 space-y-3 pr-2">
-                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=PENDING')}>
+                <div title={`Pending Approval: ${statsData?.statusOverview?.pending || 0} Permits awaiting officer review`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=PENDING')}>
                   <div className="w-3 h-3 bg-[#f97316] mt-0.5"></div>
                   <div>Pending Approval: {statsData?.statusOverview?.pending || 0}</div>
                 </div>
-                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
+                <div title={`Approved: ${statsData?.statusOverview?.approved || 0} Permits approved & issued`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#26b3d4] mt-0.5"></div>
                   <div>Approved: {statsData?.statusOverview?.approved || 0}</div>
                 </div>
-                <div className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
+                <div title={`Active Trips: ${statsData?.statusOverview?.active || 0} Livestock vehicles currently in transit`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#22c55e] mt-0.5"></div>
                   <div>Active Trips: {statsData?.statusOverview?.active || 0}</div>
                 </div>
@@ -368,11 +368,11 @@ const Overview = () => {
                   
                   return (
                     <>
-                      <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows: ${cowCount}`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (cowCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats: ${goatCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (goatCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep: ${sheepCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (sheepCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs: ${pigCount}`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (pigCount / maxAnimalCount) * 100)}%` }}></div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry: ${poultryCount}`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (poultryCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows (Inka): ${cowCount} Animals`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (cowCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats (Ihene): ${goatCount} Animals`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (goatCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep (Intama): ${sheepCount} Animals`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (sheepCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs (Ingurube): ${pigCount} Animals`} className="w-12 bg-[#8c929d] hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (pigCount / maxAnimalCount) * 100)}%` }}></div>
+                      <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry (Inkoko): ${poultryCount} Animals`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer" style={{ height: `${Math.max(1, (poultryCount / maxAnimalCount) * 100)}%` }}></div>
                     </>
                   );
                 })()}
@@ -380,11 +380,11 @@ const Overview = () => {
 
              {/* X-axis legends */}
              <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                <div onClick={() => navigate('/dashboard/movements?animal=cattle')} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
-                <div onClick={() => navigate('/dashboard/movements?animal=goat')} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-red-500" /> Goats</div>
-                <div onClick={() => navigate('/dashboard/movements?animal=sheep')} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-orange-500" /> Sheep</div>
-                <div onClick={() => navigate('/dashboard/movements?animal=pig')} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
-                <div onClick={() => navigate('/dashboard/movements?animal=poultry')} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows: ${statsData?.animalDistribution?.['COW'] || 0} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats: ${statsData?.animalDistribution?.['GOAT'] || 0} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-red-500" /> Goats</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep: ${statsData?.animalDistribution?.['Sheep'] || 0} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-orange-500" /> Sheep</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs: ${statsData?.animalDistribution?.['Pig'] || 0} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
+                <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry: ${statsData?.animalDistribution?.['Poultry'] || 0} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
              </div>
           </div>
         </div>
@@ -420,7 +420,7 @@ const Overview = () => {
                 return transportsSorted.map(([type, count], index) => {
                   const pct = Math.round((count / totalTransport) * 100);
                   return (
-                    <div key={type} onClick={() => navigate(`/dashboard/movements?search=${type}`)} className="flex items-center cursor-pointer group">
+                    <div key={type} onClick={() => navigate(`/dashboard/movements?search=${type}`)} title={`Transport Method: ${type} — ${count} Permits (${pct}%)`} className="flex items-center cursor-pointer group">
                        <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600" title={type}>
                          {icons[index % icons.length]} {type}
                        </div>
@@ -460,7 +460,7 @@ const Overview = () => {
                   const pct = Math.round((count / totalVets) * 100);
                   const colors = ['bg-blue-600', 'bg-orange-500', 'bg-teal-500', 'bg-purple-500', 'bg-pink-500'];
                   return (
-                    <div key={region} onClick={() => navigate(`/dashboard/movements?search=${region}`)} className="flex items-center cursor-pointer group">
+                    <div key={region} onClick={() => navigate(`/dashboard/movements?search=${region}`)} title={`Region: ${region} — ${count} Movement Permits (${pct}%)`} className="flex items-center cursor-pointer group">
                        <div className="w-40 flex items-center gap-2 text-sm text-green-600 group-hover:underline cursor-pointer">
                           <div className={`w-6 h-6 rounded-full ${colors[index % colors.length]} flex items-center justify-center text-white text-[10px] font-bold`}>
                             {region.substring(0, 2).toUpperCase()}
@@ -510,19 +510,19 @@ const Overview = () => {
                   const pendingPct = Math.max(0, 100 - verifiedPct - flaggedPct);
                   
                   return (
-                    <div key={index} onClick={() => navigate('/dashboard/movements')} className="cursor-pointer group">
+                    <div key={index} onClick={() => navigate('/dashboard/movements')} title={`Inspection: ${item.name} — Verified: ${item.verified} (${verifiedPct}%), Flagged: ${item.flagged} (${flaggedPct}%), Pending: ${item.pending} (${pendingPct}%)`} className="cursor-pointer group">
                       <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
                          <span className="text-purple-500 text-sm leading-none">⚡</span> 
                          <span className="text-gray-900 group-hover:underline cursor-pointer truncate font-medium">INSPECTION: {item.name}</span>
                       </div>
                       <div className="h-5 w-full bg-gray-100 flex">
-                         <div className="h-full bg-[#65a30d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, verifiedPct)}%` }}>
+                         <div title={`Verified: ${item.verified} (${verifiedPct}%)`} className="h-full bg-[#65a30d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, verifiedPct)}%` }}>
                            {verifiedPct > 5 ? `${verifiedPct}%` : ''}
                          </div>
-                         <div className="h-full bg-red-400 group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, flaggedPct)}%` }}>
+                         <div title={`Flagged: ${item.flagged} (${flaggedPct}%)`} className="h-full bg-red-400 group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, flaggedPct)}%` }}>
                            {flaggedPct > 5 ? `${flaggedPct}%` : ''}
                          </div>
-                         <div className="h-full bg-[#8c929d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, pendingPct)}%` }}>
+                         <div title={`Pending: ${item.pending} (${pendingPct}%)`} className="h-full bg-[#8c929d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, pendingPct)}%` }}>
                            {pendingPct > 5 ? `${pendingPct}%` : ''}
                          </div>
                       </div>
