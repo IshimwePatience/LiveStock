@@ -111,18 +111,18 @@ export const printOfficialPermit = async (permit) => {
                 <!-- Header Logos Table -->
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border: none;">
                   <tr>
-                    <td style="width: 80px; vertical-align: middle; border: none; padding: 0;">
-                      <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 64px; height: 64px; object-fit: contain;" />
+                    <td style="width: 60px; vertical-align: middle; border: none; padding: 0;">
+                      <img src="${coatOfArmsUrl}" alt="Rwanda Coat of Arms" style="width: 48px; height: 48px; object-fit: contain;" />
                     </td>
                     <td style="text-align: center; vertical-align: middle; border: none; padding: 0 12px;">
-                      <h1 style="font-size: 15px; font-weight: bold; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">REPUBULIKA Y'U RWANDA</h1>
+                      <h1 style="font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">REPUBULIKA Y'U RWANDA</h1>
                       <h2 style="font-size: 11px; font-weight: bold; margin: 3px 0; color: #1f2937;">IKIGO GISHINZWE ITERAMBERE RY'UBUHINZI N'UBWOROZI MU RWANDA (RAB)</h2>
                       <p style="font-size: 9px; color: #4b5563; margin: 0;">
                         Ubuyobozi bwa serivisi z'ubuvuzi bw'amatungo Agasanduku k'Iposita 5016 Kigali / Nomero itishyuzwa: 4673
                       </p>
                     </td>
-                    <td style="width: 80px; text-align: right; vertical-align: middle; border: none; padding: 0;">
-                      <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 68px; height: 68px; object-fit: contain; float: right;" />
+                    <td style="width: 60px; text-align: right; vertical-align: middle; border: none; padding: 0;">
+                      <img src="${rabLogoBase64}" alt="RAB Logo" style="height: 48px; width: auto; max-width: 90px; object-fit: contain; float: right;" />
                     </td>
                   </tr>
                 </table>

@@ -219,9 +219,73 @@ const NationalReports = () => {
     refetchInterval: 10000
   });
 
-  // Dynamically build tracked vehicle routes from real DB movement permits & live Traccar GPS
+  // Filter raw movements based on timeRange / startDate / endDate
+  const filteredRawMovements = useMemo(() => {
+    if (!Array.isArray(rawMovements)) return [];
+    if (timeRange === 'all') return rawMovements;
+
+    const now = new Date();
+    return rawMovements.filter(m => {
+      const dateStr = m.createdAt || m.created_at || m.date;
+      if (!dateStr) return true;
+      const mDate = new Date(dateStr);
+      if (isNaN(mDate.getTime())) return true;
+
+      if (timeRange === 'today') {
+        return mDate.toDateString() === now.toDateString();
+      } else if (timeRange === '7d') {
+        const past7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return mDate >= past7;
+      } else if (timeRange === '30d') {
+        const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return mDate >= past30;
+      } else if (timeRange === 'this_month') {
+        return mDate.getMonth() === now.getMonth() && mDate.getFullYear() === now.getFullYear();
+      } else if (timeRange === 'this_year') {
+        return mDate.getFullYear() === now.getFullYear();
+      } else if (timeRange === 'custom') {
+        const s = startDate ? new Date(startDate) : new Date(0);
+        const e = endDate ? new Date(endDate + 'T23:59:59') : new Date();
+        return mDate >= s && mDate <= e;
+      }
+      return true;
+    });
+  }, [rawMovements, timeRange, startDate, endDate]);
+
+  // Filter raw police cases based on timeRange / startDate / endDate
+  const filteredRawCases = useMemo(() => {
+    if (!Array.isArray(rawCases)) return [];
+    if (timeRange === 'all') return rawCases;
+
+    const now = new Date();
+    return rawCases.filter(c => {
+      const dateStr = c.createdAt || c.created_at || c.date;
+      if (!dateStr) return true;
+      const cDate = new Date(dateStr);
+      if (isNaN(cDate.getTime())) return true;
+
+      if (timeRange === 'today') {
+        return cDate.toDateString() === now.toDateString();
+      } else if (timeRange === '7d') {
+        const past7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return cDate >= past7;
+      } else if (timeRange === '30d') {
+        const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return cDate >= past30;
+      } else if (timeRange === 'this_month') {
+        return cDate.getMonth() === now.getMonth() && cDate.getFullYear() === now.getFullYear();
+      } else if (timeRange === 'this_year') {
+        return cDate.getFullYear() === now.getFullYear();
+      } else if (timeRange === 'custom') {
+        const s = startDate ? new Date(startDate) : new Date(0);
+        const e = endDate ? new Date(endDate + 'T23:59:59') : new Date();
+        return cDate >= s && cDate <= e;
+      }
+      return true;
+    });
+  }, [rawCases, timeRange, startDate, endDate]);
   const trackedVehiclesMap = useMemo(() => {
-    const list = Array.isArray(rawMovements) ? rawMovements : [];
+    const list = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
     const map = {};
 
     list.forEach(m => {
@@ -329,7 +393,7 @@ const NationalReports = () => {
     }
 
     return map;
-  }, [rawMovements, traccarLocations]);
+  }, [filteredRawMovements, traccarLocations]);
 
   // Options array for CustomSelect vehicle dropdown (clean labels without emojis)
   const vehicleOptions = useMemo(() => [
@@ -621,7 +685,7 @@ const NationalReports = () => {
 
   // Calculate real metrics dynamically from DB rawMovements
   const districtStats = useMemo(() => {
-    const list = Array.isArray(rawMovements) ? rawMovements : [];
+    const list = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
 
     let cowCount = 0, goatCount = 0, sheepCount = 0, pigCount = 0, poultryCount = 0;
     let pendingCount = 0, approvedCount = 0, activeCount = 0, completedCount = 0;
@@ -695,11 +759,11 @@ const NationalReports = () => {
       animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
       statusCounts: { pendingCount, approvedCount, activeCount, completedCount }
     };
-  }, [rawMovements]);
+  }, [filteredRawMovements]);
 
   // Calculate real metrics for Police Cases Analytics
   const policeStats = useMemo(() => {
-    const list = Array.isArray(rawCases) ? rawCases : [];
+    const list = Array.isArray(filteredRawCases) ? filteredRawCases : [];
 
     let solved = 0, following = 0, open = 0, claims = 0;
     const locationCounts = {};
@@ -725,7 +789,7 @@ const NationalReports = () => {
       .sort((a, b) => b.count - a.count);
 
     return { total: list.length, solved, following, open, claims, locationList };
-  }, [rawCases]);
+  }, [filteredRawCases]);
 
   const tabs = [
     { id: 'replay', label: 'Movement GPS & Route Replay' },

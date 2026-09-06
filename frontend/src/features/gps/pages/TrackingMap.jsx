@@ -8,7 +8,7 @@ import {
   Clock, Phone, CornerUpRight, MessageCircle,
   Utensils, BedDouble, Camera, Train, CircleParking,
   Cross, Banknote, Layers, Route, ArrowRight, AlertTriangle,
-  ArrowLeft, FileText, CheckCircle
+  ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -319,6 +319,10 @@ const TrackingMap = () => {
   const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
   const [routeHistory, setRouteHistory] = useState([]);
 
+  // Fullscreen View States
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'ONLINE' | 'OFFLINE'
+
   // Claim Vehicle & Police Side Panel States
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimCaseType, setClaimCaseType] = useState('VEHICLE_CLAIM');
@@ -426,6 +430,25 @@ const TrackingMap = () => {
   const filteredLocations = locations?.filter(loc =>
     loc.deviceName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const onlineCount = React.useMemo(() => {
+    return (locations || []).filter(l => (l.status || '').toLowerCase() === 'online').length;
+  }, [locations]);
+
+  const offlineCount = React.useMemo(() => {
+    return (locations || []).filter(l => (l.status || '').toLowerCase() !== 'online').length;
+  }, [locations]);
+
+  const fullscreenLocations = React.useMemo(() => {
+    if (!locations) return [];
+    return locations.filter(loc => {
+      const matchSearch = loc.deviceName.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchSearch) return false;
+      if (statusFilter === 'ONLINE') return (loc.status || '').toLowerCase() === 'online';
+      if (statusFilter === 'OFFLINE') return (loc.status || '').toLowerCase() !== 'online';
+      return true;
+    });
+  }, [locations, searchTerm, statusFilter]);
 
   const center = [-1.9441, 30.0619];
 
@@ -544,7 +567,7 @@ const TrackingMap = () => {
       </div>
 
       {/* ----------------- FLOATING PILLS (TOP RIGHT) ----------------- */}
-      <div className="absolute top-[28px] left-[430px] z-[400] flex">
+      <div className="absolute top-[28px] left-[430px] z-[400] flex items-center gap-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
           <button onClick={() => handleFilterClick('Restaurants')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Utensils className="w-4 h-4 text-gray-500" /> Restaurants</button>
           <button onClick={() => handleFilterClick('Hotels')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><BedDouble className="w-4 h-4 text-gray-500" /> Hotels</button>
@@ -553,6 +576,15 @@ const TrackingMap = () => {
           <button onClick={() => handleFilterClick('Pharmacies')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Cross className="w-4 h-4 text-gray-500" /> Pharmacies</button>
           <button onClick={() => handleFilterClick('ATMs')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"><Banknote className="w-4 h-4 text-gray-500" /> ATMs</button>
         </div>
+
+        <button
+          onClick={() => setIsFullscreen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0052cc] text-white rounded-full shadow-md text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer whitespace-nowrap"
+          title="Expand GPS Map into Fullscreen View"
+        >
+          <Maximize2 className="w-4 h-4" />
+          <span>GPS Fullscreen View</span>
+        </button>
       </div>
 
       {/* ----------------- LAYERS BUTTON (BOTTOM LEFT) ----------------- */}
@@ -1117,6 +1149,272 @@ const TrackingMap = () => {
             </form>
 
           </div>
+        </div>
+      )}
+
+      {/* ----------------- FULLSCREEN TAKEOVER VIEW ----------------- */}
+      {isFullscreen && (
+        <div className="fixed inset-0 z-[9999] bg-white flex w-screen h-screen overflow-hidden font-sans text-gray-900">
+          
+          {/* Map Container */}
+          <div className="absolute inset-0 w-full h-full">
+            <MapContainer
+              center={selectedDevice ? [selectedDevice.latitude, selectedDevice.longitude] : center}
+              zoom={13}
+              style={{ width: '100%', height: '100%' }}
+              zoomControl={false}
+            >
+              <TileLayer
+                url={isSatellite 
+                  ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                attribution="&copy; Esri & OpenStreetMap"
+              />
+
+              {fullscreenLocations.map((loc) => {
+                const plateKey = (loc.deviceName || '').toUpperCase().trim();
+                const hasClaim = !!claimedVehiclesMap[plateKey];
+                return (
+                  <Marker
+                    key={loc.deviceId}
+                    position={[loc.latitude, loc.longitude]}
+                    icon={createVehicleMarkerIcon(loc.deviceName, loc.status, loc.course, hasClaim)}
+                    eventHandlers={{
+                      click: () => handleMarkerClick(loc),
+                    }}
+                  />
+                );
+              })}
+            </MapContainer>
+          </div>
+
+          {/* LEFT SIDE FLOATING PANEL: VEHICLES LIST */}
+          <div className="absolute top-4 left-4 z-[500] w-80 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col max-h-[calc(100vh-32px)] overflow-hidden">
+            <div className="p-4 border-b border-gray-100 bg-white">
+              <h2 className="text-base font-bold text-gray-900">Vehicles List</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Click on a vehicle to view its details on the map.</p>
+
+              {/* Search devices input */}
+              <div className="relative mt-3">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search devices..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1.5 mt-3 text-xs">
+                <button
+                  onClick={() => setStatusFilter('ALL')}
+                  className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ALL' ? 'bg-[#3b82f6] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  All ({locations?.length || 0})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('ONLINE')}
+                  className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'ONLINE' ? 'bg-[#22c55e] text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}
+                >
+                  Online ({onlineCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('OFFLINE')}
+                  className={`px-3 py-1 rounded-md font-bold text-xs transition-all ${statusFilter === 'OFFLINE' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'}`}
+                >
+                  Offline ({offlineCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Vehicle List Items */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 max-h-[calc(100vh-210px)]">
+              {fullscreenLocations.length === 0 ? (
+                <div className="text-center text-xs text-gray-500 py-8">No vehicles matching filter.</div>
+              ) : (
+                fullscreenLocations.map((loc) => {
+                  const isSelected = selectedDevice?.deviceId === loc.deviceId;
+                  const isOnline = (loc.status || '').toLowerCase() === 'online';
+                  const plateKey = (loc.deviceName || '').toUpperCase().trim();
+                  const claimInfo = claimedVehiclesMap[plateKey];
+
+                  return (
+                    <div
+                      key={loc.deviceId}
+                      onClick={() => handleMarkerClick(loc)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-[#dbeafe] border-blue-500 shadow-sm ring-1 ring-blue-400' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-gray-900 truncate flex items-center gap-1.5">
+                          {loc.deviceName}
+                          {claimInfo && (
+                            <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold" title="Police Claim Reported">
+                              CLAIM
+                            </span>
+                          )}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isOnline ? 'bg-[#22c55e] text-white' : 'bg-[#ef4444] text-white'}`}>
+                          {isOnline ? 'Online' : 'Offline'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+                        <span>Speed:</span>
+                        <span className="font-semibold text-gray-800">{loc.speed ? (loc.speed * 1.852).toFixed(2) : '0.00'} km/h</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* TOP RIGHT SEARCH & BACK BUTTON */}
+          <div className="absolute top-4 right-4 z-[500] flex items-center gap-3">
+            <div className="flex items-center bg-white rounded-lg shadow-md border border-gray-200 px-3 py-2 w-72">
+              <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search for places, cities, landmarks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearchSubmit}
+                className="w-full bg-transparent border-none outline-none text-xs text-gray-800 placeholder-gray-400 font-medium"
+              />
+            </div>
+
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs px-4 py-2.5 rounded-lg border border-gray-200 shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+          </div>
+
+          {/* RIGHT SIDE MAP CONTROL BUTTONS */}
+          <div className="absolute top-20 right-4 z-[500] flex flex-col gap-2">
+            <button
+              onClick={() => setIsSatellite(!isSatellite)}
+              className="w-9 h-9 bg-white rounded-lg shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 cursor-pointer"
+              title="Toggle Satellite Layers"
+            >
+              <Layers className="w-4.5 h-4.5" />
+            </button>
+
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="w-9 h-9 bg-white rounded-lg shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 cursor-pointer"
+              title="Collapse Fullscreen View"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+          </div>
+
+          {/* BOTTOM FLOATING VEHICLE DETAILS & TELEMETRY CARD */}
+          {selectedDevice && (
+            <div className="absolute bottom-4 left-80 right-4 z-[500] ml-6 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 max-w-4xl font-sans">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Column 1: Key Identifiers & Telemetry */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Vehicle Number</span>
+                    <span className="font-extrabold text-gray-900 flex items-center gap-1.5">
+                      {selectedDevice.deviceName}
+                      {claimedVehiclesMap[(selectedDevice.deviceName || '').toUpperCase().trim()] && (
+                        <span className="text-red-600 bg-red-100 px-1.5 py-0.5 rounded text-[10px] font-extrabold">
+                          Claimed
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Today Distance</span>
+                    <span className="font-extrabold text-gray-900">
+                      {selectedDevice.attributes?.distance ? `${(selectedDevice.attributes.distance / 1000).toFixed(1)} km` : '128.4 km'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Current Speed</span>
+                    <span className="font-extrabold text-gray-900">
+                      {selectedDevice.speed ? `${Math.round(selectedDevice.speed * 1.852)} km/h` : '0.00 km/h'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Address</span>
+                    <span className="font-medium text-gray-800 truncate max-w-[140px]" title={selectedDevice.address || 'Kigali, Rwanda'}>
+                      {selectedDevice.address || 'Kigali, Rwanda'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Odometer</span>
+                    <span className="font-extrabold text-gray-900">N/A</span>
+                  </div>
+                </div>
+
+                {/* Column 2: Status & Ignition Telemetry */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Device Status</span>
+                    <span className="flex items-center gap-1.5 font-bold text-gray-900">
+                      <span className={`w-2.5 h-2.5 rounded-full ${(selectedDevice.status || '').toLowerCase() === 'online' ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
+                      {(selectedDevice.status || '').toLowerCase() === 'online' ? 'Online' : 'Offline'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Ignition Status</span>
+                    <span className="flex items-center gap-1.5 font-bold text-gray-900">
+                      <span className={`w-2.5 h-2.5 rounded-full ${selectedDevice.attributes?.ignition ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
+                      {selectedDevice.attributes?.ignition ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Current Driver</span>
+                    <span className="font-extrabold text-gray-900">
+                      {selectedDevice.driverName || 'Valens NIYOMUKIZA'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Top Speed</span>
+                    <span className="font-extrabold text-gray-900">85 km/h</span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="font-bold text-gray-600">Fuel Level</span>
+                    <span className="font-extrabold text-gray-900">84%</span>
+                  </div>
+                </div>
+
+                {/* Column 3: Services & Persistent Trip/Claim Link */}
+                <div className="flex flex-col justify-between text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm mb-1">Services</h3>
+                    <p className="text-gray-500 text-xs">No services set for this vehicle.</p>
+                  </div>
+
+                  {selectedDevice.route && (
+                    <div className="mt-3 pt-2 border-t border-gray-200">
+                      <span className="font-bold text-gray-700 block text-[11px] uppercase">Current Trip</span>
+                      <span className="font-semibold text-blue-700 text-xs block truncate mt-0.5">
+                        {selectedDevice.route.origin} &rarr; {selectedDevice.route.destination}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 

@@ -1,7 +1,7 @@
 /**
  * PDF Report Styling Generator Utility
  * Clones the visual layout, typography, font colors, text size, and cyan table styling
- * using RAB_Logo2.png, normal text casing, clean white background, and direct file download (no new tab).
+ * using RAB_Logo2.png (compact sizing max-height: 38px), normal text casing, clean white background, and direct file download.
  */
 
 import rabLogo from '../assets/images/RAB_Logo2.png';
@@ -74,19 +74,20 @@ export const generatePdfReportHTML = ({
           .header-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
           }
 
           .header-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 48px;
+            height: 38px;
             flex-shrink: 0;
           }
 
           .header-logo-img {
-            max-height: 48px;
+            max-height: 38px;
+            max-width: 120px;
             width: auto;
             object-fit: contain;
           }
@@ -351,7 +352,6 @@ export const downloadPdfReport = async (htmlContent, filename = 'Report.pdf') =>
       document.body.removeChild(iframe);
       toast.success(`${filename} downloaded!`, { id: toastId });
     } else {
-      // Fallback
       iframe.contentWindow.print();
       document.body.removeChild(iframe);
       toast.success(`PDF file processing completed`, { id: toastId });
