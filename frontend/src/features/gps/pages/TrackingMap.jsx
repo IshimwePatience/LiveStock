@@ -11,6 +11,7 @@ import {
   ArrowLeft, FileText, CheckCircle, Maximize2, Minimize2, ShieldAlert
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 // Fix Leaflet's default icon path issues in React
@@ -318,6 +319,8 @@ const TrackingMap = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
   const [routeHistory, setRouteHistory] = useState([]);
+  const navigate = useNavigate();
+  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
 
 
   // Claim Vehicle & Police Side Panel States
@@ -460,7 +463,32 @@ const TrackingMap = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] w-full bg-gray-100 relative overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[400] w-screen h-screen bg-gray-100 overflow-hidden font-sans">
+
+      {/* ----------------- SYSTEM NAVIGATION SLIDE-OVER DRAWER ----------------- */}
+      {isNavMenuOpen && (
+        <div className="fixed inset-0 z-[600] bg-black/40 backdrop-blur-xs flex" onClick={() => setIsNavMenuOpen(false)}>
+          <div className="w-64 bg-white h-full shadow-2xl p-4 flex flex-col gap-2 font-sans animate-in slide-in-from-left duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <span className="font-bold text-gray-900 text-base">Livestock app</span>
+              <button onClick={() => setIsNavMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-100 text-gray-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-1 mt-2">
+              <Link to="/dashboard/overview" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Overview</Link>
+              <Link to="/dashboard/cases" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Police Cases</Link>
+              <Link to="/dashboard/gps" className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg">GPS Tracking</Link>
+              <Link to="/dashboard/movements" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Movements</Link>
+              <Link to="/dashboard/geofencing" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Geo-Fencing</Link>
+              <Link to="/dashboard/national-reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Analytics &amp; Reports</Link>
+              <Link to="/dashboard/notifications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Notifications</Link>
+              <Link to="/dashboard/system-settings" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">System Settings</Link>
+              <Link to="/dashboard/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">User Management</Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ----------------- MAP CONTAINER ----------------- */}
       <div className="absolute inset-0 z-0">
@@ -513,7 +541,11 @@ const TrackingMap = () => {
       {/* ----------------- FLOATING SEARCH BAR ----------------- */}
       <div className="absolute top-[22px] left-[22px] z-[400] flex flex-col gap-4 shadow-sm">
         <div className="flex items-center bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.2)] w-[392px] h-[48px] px-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700">
+          <button
+            onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 cursor-pointer"
+            title="Open Menu"
+          >
             <Menu className="w-5 h-5" />
           </button>
           <input
