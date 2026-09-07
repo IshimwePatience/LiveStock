@@ -130,7 +130,7 @@ const SystemSettings = () => {
 
       {/* Main Title & Description */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Permissions & Access Control</h1>
+        <h1 className="text-xl font-bold text-gray-900">Permissions & Access Control</h1>
         <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">
           Control which features and navigation modules RAB users can see in the app.
           You can change these settings at any time.

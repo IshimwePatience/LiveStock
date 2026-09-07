@@ -3,10 +3,15 @@ import { User, ChevronDown, Syringe, Clipboard, ArrowUp, MoreVertical } from 'lu
 import { Link } from 'react-router-dom';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
+import Pagination from '../../../components/ui/Pagination';
 
 const VetRecordsList = ({ records, isLoading, isError, activeTab, user }) => {
   const [selected, setSelected] = useState([]);
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil((records?.length || 0) / itemsPerPage);
+  const paginatedRecords = (records || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const toggleSelectAll = (e) => {
     if (e.target.checked) setSelected(records.map(m => m.id));
@@ -72,7 +77,7 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab, user }) => {
           </tr>
         </thead>
         <tbody>
-          {records.map((item) => (
+          {paginatedRecords.map((item) => (
             <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
               <td className="py-2 px-4">
                 <input 
@@ -184,13 +189,14 @@ const VetRecordsList = ({ records, isLoading, isError, activeTab, user }) => {
         </tbody>
       </table>
 
-      {/* Footer actions */}
-      <div className="py-4 flex justify-end text-sm text-gray-500 items-center mt-auto">
-          <div className="flex items-center gap-2">
-            {records.length} of <span className="text-green-600">{records.length}</span> 
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          </div>
-      </div>
+      {/* Pagination */}
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={records.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

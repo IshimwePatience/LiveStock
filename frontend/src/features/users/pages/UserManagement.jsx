@@ -610,7 +610,13 @@ const UserManagement = () => {
       </div>
 
       {/* Pagination */}
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        totalItems={filteredUsers.length} 
+        itemsPerPage={itemsPerPage} 
+        onPageChange={setCurrentPage} 
+      />
 
       {/* CREATE / EDIT USER MODAL */}
       {isModalOpen && (

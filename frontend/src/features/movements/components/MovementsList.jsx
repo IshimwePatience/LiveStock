@@ -8,6 +8,7 @@ import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
 import { printOfficialPermit } from '../../../lib/printPermit';
 import EmptyState from '../../../components/ui/EmptyState';
+import Pagination from '../../../components/ui/Pagination';
 
 const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, reason: '' });
   const [assignModal, setAssignModal] = useState({ isOpen: false, requestId: null });
   const [confirmArrivalModal, setConfirmArrivalModal] = useState({ isOpen: false, request: null });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil((movements?.length || 0) / itemsPerPage);
+  const paginatedMovements = (movements || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const queryClient = useQueryClient();
   
   const userStr = localStorage.getItem('user');
@@ -157,7 +162,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
             </tr>
           </thead>
           <tbody>
-            {movements.map((item) => (
+            {paginatedMovements.map((item) => (
               <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
                 <td className="py-2 px-4">
                   <input 
@@ -396,14 +401,14 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
         </table>
       )}
 
-      {/* Footer actions */}
-      <div className="py-4 flex justify-between text-sm text-gray-500 items-center mt-auto">
-          <div></div>
-          <div className="flex items-center gap-2">
-            {movements.length} of <span className="text-green-600">1000+</span> 
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          </div>
-      </div>
+      {/* Pagination */}
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={movements.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Reject Reason Modal */}
       {rejectModal.isOpen && (
