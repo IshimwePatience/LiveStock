@@ -93,6 +93,22 @@ class MovementService {
       include: [{ model: MovementAnimal, as: 'Animals' }]
     });
 
+    // Send notifications to RAB and relevant DARO/SARO officers
+    try {
+      const isDistrict = type === 'DISTRICT_TO_DISTRICT';
+      const notifMsg = `📋 NEW MOVEMENT REQUEST: Permit #${permit_number} submitted by ${user.name} for ${count} ${animal_type}(s) [${origin_district || origin_sector || 'Origin'} ➔ ${dest_district || dest_sector || 'Destination'}]. Status: PENDING approval.`;
+      
+      // Always notify RAB & ADMIN
+      await notificationService.notifyRoles(['RAB', 'ADMIN'], notifMsg, 'SYSTEM');
+
+      // Also notify DARO if sector-to-sector
+      if (!isDistrict) {
+        await notificationService.notifyRoles(['DARO'], notifMsg, 'SYSTEM');
+      }
+    } catch (err) {
+      console.error('Failed to send permit creation notification:', err.message);
+    }
+
     return request;
   }
 
@@ -213,6 +229,14 @@ class MovementService {
       console.log(`[SMS MOCK] To: ${request.driver_phone}, Message: You have been assigned a trip. Open this link to share GPS and see OTP: https://yourdomain.com/driver/trip/${driverToken}`);
     }
 
+    // Notify RAB & ADMIN of permit approval
+    try {
+      const rabMsg = `✅ PERMIT APPROVED: Movement permit #${request.permit_number} (${request.animal_type}) approved by ${user.name}. Active trip tracking enabled for plate ${request.plate_number || 'N/A'}.`;
+      await notificationService.notifyRoles(['RAB', 'ADMIN'], rabMsg, 'APPROVAL');
+    } catch (err) {
+      console.error('Failed to notify RAB of approval:', err.message);
+    }
+
     return { request, trip };
   }
 
@@ -244,6 +268,14 @@ class MovementService {
       'SYSTEM'
     );
 
+    // Notify RAB & ADMIN of trip arrival
+    try {
+      const rabMsg = `🏁 TRIP COMPLETED: Movement permit #${request.permit_number} (${request.animal_type}) arrived safely at destination (${request.dest_district || request.dest_sector || 'Destination'}).`;
+      await notificationService.notifyRoles(['RAB', 'ADMIN'], rabMsg, 'ARRIVAL');
+    } catch (err) {
+      console.error('Failed to notify RAB of arrival:', err.message);
+    }
+
     return request.Trip;
   }
 
@@ -270,6 +302,14 @@ class MovementService {
       `Your movement request for ${request.animal_type} has been rejected. Reason: ${reason}`, 
       'REJECTION'
     );
+
+    // Notify RAB & ADMIN of rejection
+    try {
+      const rabMsg = `❌ PERMIT REJECTED: Movement permit #${request.permit_number} (${request.animal_type}) rejected by ${user.name}. Reason: ${reason}`;
+      await notificationService.notifyRoles(['RAB', 'ADMIN'], rabMsg, 'ALERT');
+    } catch (err) {
+      console.error('Failed to notify RAB of rejection:', err.message);
+    }
 
     return request;
   }
