@@ -776,15 +776,15 @@ const TrackingMap = () => {
               </button>
             </div>
             <div className="flex flex-col gap-1 mt-2">
-              {hasPerm('overview') && <Link to="/dashboard/overview" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Overview</Link>}
-              {hasPerm('cases') && <Link to="/dashboard/cases" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Police Cases</Link>}
-              {hasPerm('gps') && <Link to="/dashboard/gps" className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg">GPS Tracking</Link>}
-              {hasPerm('movements') && <Link to="/dashboard/movements" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Movements</Link>}
-              {hasPerm('geofencing') && <Link to="/dashboard/geofencing" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Geo-Fencing</Link>}
-              {(hasPerm('national_reports') || hasPerm('performance_audit')) && <Link to="/dashboard/national-reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Analytics &amp; Reports</Link>}
-              {hasPerm('notifications') && <Link to="/dashboard/notifications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">Notifications</Link>}
-              {hasPerm('system_settings') && <Link to="/dashboard/system-settings" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">System Settings</Link>}
-              {hasPerm('user_management') && <Link to="/dashboard/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">User Management</Link>}
+              {hasPerm('overview') && <Link to="/dashboard/overview" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Overview</Link>}
+              {hasPerm('cases') && <Link to="/dashboard/cases" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Police Cases</Link>}
+              {hasPerm('gps') && <Link to="/dashboard/gps" className="px-4 py-2 text-sm font-semibold text-[#001d35] bg-[#c2e7ff] rounded-full">GPS Tracking</Link>}
+              {hasPerm('movements') && <Link to="/dashboard/movements" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Movements</Link>}
+              {hasPerm('geofencing') && <Link to="/dashboard/geofencing" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Geo-Fencing</Link>}
+              {(hasPerm('national_reports') || hasPerm('performance_audit')) && <Link to="/dashboard/national-reports" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Analytics &amp; Reports</Link>}
+              {hasPerm('notifications') && <Link to="/dashboard/notifications" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">Notifications</Link>}
+              {hasPerm('system_settings') && <Link to="/dashboard/system-settings" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">System Settings</Link>}
+              {hasPerm('user_management') && <Link to="/dashboard/users" className="px-4 py-2 text-sm font-medium text-[#444746] hover:bg-[#f0f4f9] rounded-full">User Management</Link>}
             </div>
           </div>
         </div>

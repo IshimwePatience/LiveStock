@@ -124,279 +124,277 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
 
   return (
     <div className="flex flex-col h-full px-6">
-      <table className="w-full border-collapse text-left">
-        <thead>
-          <tr className="border-y border-gray-200 bg-white">
-            <th className="py-2.5 px-4 w-10">
-              <input 
-                type="checkbox" 
-                className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                onChange={toggleSelectAll}
-                checked={selected.length === movements.length && movements.length > 0}
-              />
-            </th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request By</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Farmer</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Driver</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-56">Route</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Priority</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Status</th>
-            <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {movements.map((item) => (
-            <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
-              <td className="py-2 px-4">
+      {movements.length === 0 ? (
+        <div className="py-16 flex-1 flex flex-col items-center justify-center">
+          <EmptyState
+            illustration="movements"
+            title="No livestock movements found"
+            description="Movement permit requests and active transport routes registered in your jurisdiction will show up here."
+          />
+        </div>
+      ) : (
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-y border-gray-200 bg-white">
+              <th className="py-2.5 px-4 w-10">
                 <input 
                   type="checkbox" 
                   className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  checked={selected.includes(item.id)}
-                  onChange={() => toggleSelect(item.id)}
+                  onChange={toggleSelectAll}
+                  checked={selected.length === movements.length && movements.length > 0}
                 />
-              </td>
-              <td className="py-2 px-4">
-                <div className="flex items-center gap-2">
-                  {getTypeIcon(item.type)}
-                  <span onClick={() => navigate(`/dashboard/movements/view/${item.dbId}`)} className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
-                </div>
-              </td>
-              <td className="py-2 px-4">
-                <span className="text-gray-700 truncate max-w-[150px] block font-medium text-[13px]" title={item.farmerName}>{item.farmerName}</span>
-              </td>
-              <td className="py-2 px-4">
-                {item.driverName && item.driverName !== 'Unknown' ? (
-                  <span 
-                    className="text-black truncate max-w-[200px] block font-medium text-[13px]" 
-                    title={`${item.driverName}, ${item.plateNumber}, ${item.driverPhone}`}
-                  >
-                    {item.driverName}, {item.plateNumber}, {item.driverPhone}
-                  </span>
-                ) : (
-                  <span className="text-gray-400 text-[12px] italic whitespace-nowrap">Not Assigned</span>
-                )}
-              </td>
-              <td className="py-2 px-4">
-                <span className="text-black truncate max-w-sm block font-medium text-[13px]" title={item.title}>{item.title}</span>
-              </td>
-              <td className="py-2 px-4">
-                <div className="flex items-center gap-2">
-                  {item.assignee.initials === 'U' ? (
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                        <User className="w-3.5 h-3.5" />
-                      </div>
-                  ) : (
-                      <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
-                        {item.assignee.initials}
-                      </div>
-                  )}
-                  <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.assignee.name}</span>
-                </div>
-              </td>
-              <td className="py-2 px-4">
-                <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full ${item.reporter.color} flex items-center justify-center text-white text-[10px] font-bold`}>
-                      {item.reporter.initials}
-                    </div>
-                  <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.reporter.name}</span>
-                </div>
-              </td>
-              <td className="py-2 px-4">
-                <span className="text-gray-700 truncate max-w-[200px] block font-medium text-[12px]">{item.route}</span>
-              </td>
-              <td className="py-2 px-4">
-                <div className="flex items-center gap-1.5">
-                  {getPriorityIcon(item.priority)}
-                  <span className="text-black font-medium text-[13px]">{item.priority}</span>
-                </div>
-              </td>
-              <td className="py-2 px-4">
-                {item.rawStatus === 'APPROVED' ? (
-                  isApprover(user, item) ? (
-                    <div className="relative">
-                      <div 
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
-                        }}
-                        className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
-                      >
-                        <div className="flex items-center text-[11px] tracking-wide">
-                          Approved <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
-                        </div>
-                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      {openStatusDropdown === item.id && (
-                        <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
-                          {item.tripStatus === 'ACTIVE' && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setConfirmArrivalModal({ isOpen: true, request: item }); setOpenStatusDropdown(null); }} 
-                              className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-medium hover:bg-green-50 transition-colors"
-                            >
-                              Mark Arrived
-                            </button>
-                          )}
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
-                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
-                          >
-                            Revert to Pending
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="inline-flex flex-col text-black font-medium p-1">
-                      <span className="text-[11px] tracking-wide">Approved</span>
-                      <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  )
-                ) : item.rawStatus === 'REJECTED' ? (
-                  isApprover(user, item) ? (
-                    <div className="relative">
-                      <div 
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
-                        }}
-                        className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
-                      >
-                        <div className="flex items-center text-[11px] tracking-wide">
-                          Rejected <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
-                        </div>
-                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      {openStatusDropdown === item.id && (
-                        <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
-                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
-                          >
-                            Revert to Pending
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="inline-flex flex-col text-black font-medium p-1">
-                      <span className="text-[11px] tracking-wide">Rejected</span>
-                      <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  )
-                ) : item.rawStatus === 'COMPLETED' ? (
-                  <div className="inline-flex flex-col text-black font-medium p-1">
-                    <span className="text-[11px] tracking-wide text-green-700">Completed</span>
-                    <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                       {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Request By</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Farmer</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-40">Driver</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black min-w-[200px]">Details</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Approver</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Initiator</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-56">Route</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Priority</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Status</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movements.map((item) => (
+              <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
+                <td className="py-2 px-4">
+                  <input 
+                    type="checkbox" 
+                    className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    checked={selected.includes(item.id)}
+                    onChange={() => toggleSelect(item.id)}
+                  />
+                </td>
+                <td className="py-2 px-4">
+                  <div className="flex items-center gap-2">
+                    {getTypeIcon(item.type)}
+                    <span onClick={() => navigate(`/dashboard/movements/view/${item.dbId}`)} className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.requestByTitle}</span>
+                  </div>
+                </td>
+                <td className="py-2 px-4">
+                  <span className="text-gray-700 truncate max-w-[150px] block font-medium text-[13px]" title={item.farmerName}>{item.farmerName}</span>
+                </td>
+                <td className="py-2 px-4">
+                  {item.driverName && item.driverName !== 'Unknown' ? (
+                    <span 
+                      className="text-black truncate max-w-[200px] block font-medium text-[13px]" 
+                      title={`${item.driverName}, ${item.plateNumber}, ${item.driverPhone}`}
+                    >
+                      {item.driverName}, {item.plateNumber}, {item.driverPhone}
                     </span>
+                  ) : (
+                    <span className="text-gray-400 text-[12px] italic whitespace-nowrap">Not Assigned</span>
+                  )}
+                </td>
+                <td className="py-2 px-4">
+                  <span className="text-black truncate max-w-sm block font-medium text-[13px]" title={item.title}>{item.title}</span>
+                </td>
+                <td className="py-2 px-4">
+                  <div className="flex items-center gap-2">
+                    {item.assignee.initials === 'U' ? (
+                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          <User className="w-3.5 h-3.5" />
+                        </div>
+                    ) : (
+                        <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                          {item.assignee.initials}
+                        </div>
+                    )}
+                    <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.assignee.name}</span>
                   </div>
-                ) : item.status === 'Closed' ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
-                    Closed
-                  </div>
-                ) : isApprover(user, item) ? (
-                  <div className="relative">
-                    <div 
-                      onClick={(e) => {
-                         e.stopPropagation();
-                         setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
-                      }}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium hover:bg-gray-100 cursor-pointer tracking-wide"
-                    >
-                      Pending <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
-                    </div>
-                    {openStatusDropdown === item.id && (
-                      <div className="absolute right-0 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleApproveClick(item.dbId); }} 
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleRejectClick(item.dbId); }} 
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                          Reject
-                        </button>
+                </td>
+                <td className="py-2 px-4">
+                  <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full ${item.reporter.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                        {item.reporter.initials}
                       </div>
-                    )}
+                    <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.reporter.name}</span>
                   </div>
-                ) : (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
-                    Pending
+                </td>
+                <td className="py-2 px-4">
+                  <span className="text-gray-700 truncate max-w-[200px] block font-medium text-[12px]">{item.route}</span>
+                </td>
+                <td className="py-2 px-4">
+                  <div className="flex items-center gap-1.5">
+                    {getPriorityIcon(item.priority)}
+                    <span className="text-black font-medium text-[13px]">{item.priority}</span>
                   </div>
-                )}
-              </td>
-              <td className="py-2 px-4 text-right relative">
-                <button 
-                  onClick={() => setOpenActionDropdown(openActionDropdown === item.id ? null : item.id)}
-                  className="p-1 text-gray-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-                {openActionDropdown === item.id && (
-                  <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                    {isIncomingTab && item.rawStatus !== 'COMPLETED' && (item.rawStatus === 'APPROVED' || item.tripStatus === 'ACTIVE') && (
-                      <button 
-                        onClick={() => { setConfirmArrivalModal({ isOpen: true, request: item }); setOpenActionDropdown(null); }}
-                        className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-semibold hover:bg-green-50 transition-colors"
+                </td>
+                <td className="py-2 px-4">
+                  {item.rawStatus === 'APPROVED' ? (
+                    isApprover(user, item) ? (
+                      <div className="relative">
+                        <div 
+                          onClick={(e) => {
+                             e.stopPropagation();
+                             setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                          }}
+                          className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
+                        >
+                          <div className="flex items-center text-[11px] tracking-wide">
+                            Approved <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                          </div>
+                          <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                             {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        {openStatusDropdown === item.id && (
+                          <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                            {item.tripStatus === 'ACTIVE' && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setConfirmArrivalModal({ isOpen: true, request: item }); setOpenStatusDropdown(null); }} 
+                                className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-medium hover:bg-green-50 transition-colors"
+                              >
+                                Mark Arrived
+                              </button>
+                            )}
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                              Revert to Pending
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="inline-flex flex-col text-black font-medium p-1">
+                        <span className="text-[11px] tracking-wide">Approved</span>
+                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    )
+                  ) : item.rawStatus === 'REJECTED' ? (
+                    isApprover(user, item) ? (
+                      <div className="relative">
+                        <div 
+                          onClick={(e) => {
+                             e.stopPropagation();
+                             setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                          }}
+                          className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
+                        >
+                          <div className="flex items-center text-[11px] tracking-wide">
+                            Rejected <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                          </div>
+                          <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                             {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        {openStatusDropdown === item.id && (
+                          <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                              Revert to Pending
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="inline-flex flex-col text-black font-medium p-1">
+                        <span className="text-[11px] tracking-wide">Rejected</span>
+                        <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    )
+                  ) : item.rawStatus === 'COMPLETED' ? (
+                    <div className="inline-flex flex-col text-black font-medium p-1">
+                      <span className="text-[11px] tracking-wide text-green-700">Completed</span>
+                      <span className="text-[10px] text-gray-500 font-normal leading-tight">
+                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ) : item.status === 'Closed' ? (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
+                      Closed
+                    </div>
+                  ) : isApprover(user, item) ? (
+                    <div className="relative">
+                      <div 
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium hover:bg-gray-100 cursor-pointer tracking-wide"
                       >
-                        Confirm Arrival (OTP)
-                      </button>
-                    )}
-                    {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
+                        Pending <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                      </div>
+                      {openStatusDropdown === item.id && (
+                        <div className="absolute right-0 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleApproveClick(item.dbId); }} 
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRejectClick(item.dbId); }} 
+                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium tracking-wide">
+                      Pending
+                    </div>
+                  )}
+                </td>
+                <td className="py-2 px-4 text-right relative">
+                  <button 
+                    onClick={() => setOpenActionDropdown(openActionDropdown === item.id ? null : item.id)}
+                    className="p-1 text-gray-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {openActionDropdown === item.id && (
+                    <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                      {isIncomingTab && item.rawStatus !== 'COMPLETED' && (item.rawStatus === 'APPROVED' || item.tripStatus === 'ACTIVE') && (
+                        <button 
+                          onClick={() => { setConfirmArrivalModal({ isOpen: true, request: item }); setOpenActionDropdown(null); }}
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-semibold hover:bg-green-50 transition-colors"
+                        >
+                          Confirm Arrival (OTP)
+                        </button>
+                      )}
+                      {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
+                        <button 
+                          onClick={() => { handleDownloadPermit(item.dbId); setOpenActionDropdown(null); }}
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
+                        >
+                          📄 Download Permit
+                        </button>
+                      )}
                       <button 
-                        onClick={() => { handleDownloadPermit(item.dbId); setOpenActionDropdown(null); }}
-                        className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
-                      >
-                        📄 Download Permit
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => { navigate(`/dashboard/movements/view/${item.dbId}`); setOpenActionDropdown(null); }}
-                      className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                    >
-                      View Details
-                    </button>
-                    {item.rawStatus === 'PENDING' && user?.role === 'DARO' && (
-                      <button 
-                        onClick={() => navigate(`/dashboard/movements/edit/${item.dbId}`)}
+                        onClick={() => { navigate(`/dashboard/movements/view/${item.dbId}`); setOpenActionDropdown(null); }}
                         className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                       >
-                        Edit
+                        View Details
                       </button>
-                    )}
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-          
-          {movements.length === 0 && (
-            <tr>
-              <td colSpan="11" className="py-8 text-center">
-                <EmptyState
-                  illustration="movements"
-                  title="No livestock movements found"
-                  description="Movement permit requests and active transport routes registered in your jurisdiction will show up here."
-                />
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                      {item.rawStatus === 'PENDING' && user?.role === 'DARO' && (
+                        <button 
+                          onClick={() => navigate(`/dashboard/movements/edit/${item.dbId}`)}
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {/* Footer actions */}
       <div className="py-4 flex justify-between text-sm text-gray-500 items-center mt-auto">

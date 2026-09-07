@@ -93,11 +93,9 @@ const DashboardLayout = () => {
   };
 
   const getInitials = (name) => {
-    if (!name) return 'SA';
+    if (!name) return 'u';
     const cleanName = name.replace(/\([^)]*\)/g, '').trim();
-    const parts = cleanName.split(' ');
-    if (parts.length > 1) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return cleanName.substring(0, 2).toUpperCase();
+    return cleanName ? cleanName[0].toLowerCase() : 'u';
   };
 
   const getCleanName = (name) => {
@@ -225,14 +223,14 @@ const DashboardLayout = () => {
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="w-9 h-9 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[12px] font-bold hover:opacity-90 transition tracking-wide ml-1"
+              className="w-8 h-8 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[15px] font-normal hover:opacity-90 transition ml-1"
             >
               {getInitials(user?.name)}
             </button>
             {isProfileOpen && (
               <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 py-4 px-4 z-50 text-gray-800">
                 <div className="flex items-start gap-4 mb-3">
-                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-xl font-bold tracking-wide">
+                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-normal">
                     {getInitials(user?.name)}
                   </div>
                   <div className="flex flex-col pt-0.5 overflow-hidden">
@@ -267,47 +265,75 @@ const DashboardLayout = () => {
 
             {/* Overview */}
             {hasPerm('overview') && (
-              <Link to="/dashboard/overview" className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 ${isActive('/dashboard/overview') ? 'bg-[#e9f2ff] text-[#0052cc]' : 'text-gray-700 hover:bg-gray-100'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+              <Link 
+                to="/dashboard/overview" 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
+                  isActive('/dashboard/overview') 
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                    : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                }`}
+              >
+                <svg className={`w-5 h-5 ${isActive('/dashboard/overview') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 Overview
               </Link>
             )}
 
             {/* Police Cases */}
             {hasPerm('cases') && (
-              <Link to="/dashboard/cases" className={`px-6 py-2.5 text-sm flex items-center gap-4 rounded-r-full mr-4 mt-2 ${isActive('/dashboard/cases') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              <Link 
+                to="/dashboard/cases" 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
+                  isActive('/dashboard/cases') 
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                    : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                }`}
+              >
+                <svg className={`w-5 h-5 ${isActive('/dashboard/cases') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 Police Cases
               </Link>
             )}
 
             {/* Core Modules */}
             {(hasPerm('gps') || hasPerm('movements')) && (
-              <div className="mt-4">
+              <div className="mt-2">
                 <div
-                  className="flex items-center gap-2 px-4 py-2 cursor-pointer group"
+                  className="flex items-center gap-2 mx-3 px-3 py-2 cursor-pointer group rounded-full hover:bg-[#f0f4f9]"
                   onClick={() => setEditorsChoiceOpen(!editorsChoiceOpen)}
                 >
                   {editorsChoiceOpen ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+                    <ChevronDown className="w-4 h-4 text-[#444746]" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+                    <ChevronRight className="w-4 h-4 text-[#444746]" />
                   )}
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <PlaySquare className="w-4 h-4 text-gray-500" />
+                  <div className="flex items-center gap-3 text-sm font-medium text-[#444746]">
+                    <PlaySquare className="w-4 h-4 text-[#444746]" />
                     Core Modules
                   </div>
                 </div>
 
                 {editorsChoiceOpen && (
-                  <div className="pl-12 pr-4 space-y-1">
+                  <div className="pl-6 pr-3 space-y-1 mt-1">
                     {hasPerm('gps') && (
-                      <Link to="/dashboard/gps" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/gps') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      <Link 
+                        to="/dashboard/gps" 
+                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${
+                          isActive('/dashboard/gps') 
+                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                            : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                        }`}
+                      >
                         GPS Tracking
                       </Link>
                     )}
                     {hasPerm('movements') && (
-                      <Link to="/dashboard/movements" className={`block px-4 py-2 text-sm rounded-r-full ${isActive('/dashboard/movements') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      <Link 
+                        to="/dashboard/movements" 
+                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${
+                          isActive('/dashboard/movements') 
+                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                            : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                        }`}
+                      >
                         Movements
                       </Link>
                     )}
@@ -318,22 +344,30 @@ const DashboardLayout = () => {
 
             {/* Geo-Fencing */}
             {hasPerm('geofencing') && (
-              <Link to="/dashboard/geofencing" className={`px-6 py-2.5 text-sm flex items-center gap-4 rounded-r-full mr-4 mt-2 ${isActive('/dashboard/geofencing') ? 'bg-[#e9f2ff] text-[#0052cc] font-medium' : 'text-gray-700 hover:bg-gray-100'}`}>
-                <span className={`font-bold text-lg ml-0.5 ${isActive('/dashboard/geofencing') ? 'text-[#0052cc]' : 'text-gray-500'}`}>G</span> Geo-Fencing
+              <Link 
+                to="/dashboard/geofencing" 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
+                  isActive('/dashboard/geofencing') 
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                    : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                }`}
+              >
+                <span className={`font-bold text-lg ml-0.5 ${isActive('/dashboard/geofencing') ? 'text-[#001d35]' : 'text-[#444746]'}`}>G</span> Geo-Fencing
               </Link>
             )}
 
             {/* Analytics & Reports */}
             {(hasPerm('national_reports') || hasPerm('performance_audit')) && (
-              <div className="mt-4 space-y-1">
+              <div className="mt-1 space-y-1">
                 <Link
                   to="/dashboard/national-reports"
-                  className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 mt-2 ${isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
-                      ? 'bg-[#e9f2ff] text-[#0052cc]'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
+                    isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
+                      : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                  }`}
                 >
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  <svg className={`w-5 h-5 ${isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                   Analytics & Reports
                 </Link>
               </div>
@@ -341,9 +375,16 @@ const DashboardLayout = () => {
 
             {/* Notifications */}
             {hasPerm('notifications') && (
-              <div className="mt-4 space-y-1">
-                <Link to="/dashboard/notifications" className={`flex items-center gap-4 px-6 py-2.5 text-sm font-medium rounded-r-full mr-4 mt-2 ${isActive('/dashboard/notifications') ? 'bg-[#e9f2ff] text-[#0052cc]' : 'text-gray-700 hover:bg-gray-100'}`}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+              <div className="mt-1 space-y-1">
+                <Link 
+                  to="/dashboard/notifications" 
+                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
+                    isActive('/dashboard/notifications') 
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                      : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                  }`}
+                >
+                  <svg className={`w-5 h-5 ${isActive('/dashboard/notifications') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                   Notifications
                 </Link>
               </div>
@@ -351,16 +392,30 @@ const DashboardLayout = () => {
 
             {/* System Settings & User Management */}
             {(hasPerm('system_settings') || hasPerm('user_management')) && (
-              <div className="mt-4 space-y-1">
+              <div className="mt-1 space-y-1">
                 {hasPerm('system_settings') && (
-                  <Link to="/dashboard/system-settings" className={`flex items-center gap-3 px-8 py-2 text-sm font-medium rounded-r-full mr-4 cursor-pointer ${isActive('/dashboard/system-settings') ? 'bg-[#e9f2ff] text-[#0052cc]' : 'text-gray-700 hover:bg-gray-100'}`}>
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h2a2 2 0 011 1v2m-6 0h6"></path></svg>
+                  <Link 
+                    to="/dashboard/system-settings" 
+                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
+                      isActive('/dashboard/system-settings') 
+                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                        : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                    }`}
+                  >
+                    <svg className={`w-4 h-4 ${isActive('/dashboard/system-settings') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h2a2 2 0 011 1v2m-6 0h6"></path></svg>
                     System Settings
                   </Link>
                 )}
                 {hasPerm('user_management') && (
-                  <Link to="/dashboard/users" className={`flex items-center gap-3 px-8 py-2 text-sm font-medium rounded-r-full mr-4 cursor-pointer ${isActive('/dashboard/users') ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-100'}`}>
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                  <Link 
+                    to="/dashboard/users" 
+                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
+                      isActive('/dashboard/users') 
+                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                        : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
+                    }`}
+                  >
+                    <svg className={`w-4 h-4 ${isActive('/dashboard/users') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     User Management
                   </Link>
                 )}

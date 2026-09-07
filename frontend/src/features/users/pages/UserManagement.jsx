@@ -510,38 +510,36 @@ const UserManagement = () => {
 
       {/* Table Area */}
       <div className="flex-1 overflow-auto px-6">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-y border-gray-200 bg-white">
-              <th className="py-2.5 px-4 w-10">
-                <input
-                  type="checkbox"
-                  className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  onChange={toggleSelectAll}
-                  checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
-                />
-              </th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Name</th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Email</th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Role</th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Jurisdiction</th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Status</th>
-              {isRAB && <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedUsers.length === 0 ? (
-              <tr>
-                <td colSpan={isRAB ? "7" : "6"} className="py-8 text-center">
-                  <EmptyState
-                    illustration="drive"
-                    title="No users matching filter"
-                    description="User accounts and permissions registered in your system scope will show up here."
+        {paginatedUsers.length === 0 ? (
+          <div className="py-16 flex-1 flex flex-col items-center justify-center">
+            <EmptyState
+              illustration="drive"
+              title="No users matching filter"
+              description="User accounts and permissions registered in your system scope will show up here."
+            />
+          </div>
+        ) : (
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-y border-gray-200 bg-white">
+                <th className="py-2.5 px-4 w-10">
+                  <input
+                    type="checkbox"
+                    className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    onChange={toggleSelectAll}
+                    checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
                   />
-                </td>
+                </th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Name</th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Email</th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Role</th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Jurisdiction</th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Status</th>
+                {isRAB && <th className="py-2.5 px-4 font-medium text-[13px] text-black text-right w-24">Actions</th>}
               </tr>
-            ) : (
-              paginatedUsers.map((user, idx) => (
+            </thead>
+            <tbody>
+              {paginatedUsers.map((user, idx) => (
                 <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
                   <td className="py-2 px-4">
                     <input
@@ -605,10 +603,10 @@ const UserManagement = () => {
                     </td>
                   )}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Pagination */}
