@@ -70,16 +70,22 @@ const CreatePermit = () => {
   };
 
   // ==========================
-  // DESKTOP: SHEETS STATE
+  // DESKTOP: SHEETS STATE & PAGINATION (30 ROWS PER PAGE)
   // ==========================
+  const PAGE_SIZE = 30;
+  const [sheetPage, setSheetPage] = useState(1);
 
   const [gridData, setGridData] = useState(() => {
     const saved = localStorage.getItem('movementFormDraft');
     if (saved && !editId) {
       try { 
         const parsed = JSON.parse(saved);
-        // Ensure old drafts have the new columns
-        return parsed.map(row => {
+        const rowsNeeded = Math.max(NUM_ROWS, Math.ceil(parsed.length / PAGE_SIZE) * PAGE_SIZE);
+        const expanded = [...parsed];
+        while (expanded.length < rowsNeeded) {
+          expanded.push(Array(NUM_COLS).fill(''));
+        }
+        return expanded.map(row => {
           const newRow = [...row];
           while (newRow.length < NUM_COLS) newRow.push('');
           return newRow;
@@ -116,9 +122,11 @@ const CreatePermit = () => {
           const data = res.data;
           setPermitDetails(data);
           
+          const mode = data.transporter_mode || (data.plate_number === 'ON_FOOT' ? 'PERSON_ON_FOOT' : 'DRIVER_VEHICLE');
+
           // Populate header form for driver & cargo info card
           setHeaderForm({
-            transporter_mode: data.transporter_mode || (data.plate_number === 'ON_FOOT' ? 'PERSON_ON_FOOT' : 'DRIVER_VEHICLE'),
+            transporter_mode: mode,
             cargo_photo: data.cargo_photo || '',
             transport_type: data.transport_type || 'Imodoka',
             plate_number: data.plate_number || '',
@@ -139,7 +147,11 @@ const CreatePermit = () => {
             dest_district: data.dest_district || '', dest_sector: data.dest_sector || '',
             dest_cell: data.dest_cell || '', dest_village: data.dest_village || '',
             valid_until: data.valid_until ? data.valid_until.split('T')[0] : today,
-            reason: data.reason || ''
+            reason: data.reason || '',
+            buyer_type: data.buyer_type || 'Person (Umuntu)',
+            buyer_name: data.buyer_name || '',
+            buyer_phone: data.buyer_phone || '',
+            buyer_id_tin: data.buyer_id_tin || ''
           });
 
           // Populate mobile animals
@@ -150,15 +162,19 @@ const CreatePermit = () => {
               tag_number: a.tag_number || '',
               sex: a.sex || 'F',
               breed: a.breed || '',
-              color: a.color || ''
+              color: a.color || '',
+              vaccines: a.vaccines || '',
+              medication: a.medication || ''
             })));
           }
 
-          // Populate grid data
-          const newGrid = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
+          // Populate grid data dynamically based on loaded animals count
+          const animalCount = data.Animals?.length || 1;
+          const totalRowsNeeded = Math.max(NUM_ROWS, Math.ceil(animalCount / PAGE_SIZE) * PAGE_SIZE);
+          const newGrid = Array(totalRowsNeeded).fill(null).map(() => Array(NUM_COLS).fill(''));
+
           if (data.Animals && data.Animals.length > 0) {
             data.Animals.forEach((a, r) => {
-              if (r >= NUM_ROWS) return;
               newGrid[r][0] = data.owner_name || '';
               newGrid[r][1] = data.owner_id_number || '';
               newGrid[r][2] = data.owner_phone || '';
@@ -282,6 +298,16 @@ const CreatePermit = () => {
     }, 10);
   };
 
+  const ensureRowExists = (targetRow) => {
+    if (targetRow >= gridData.length) {
+      const rowsToAdd = Math.max(PAGE_SIZE, targetRow - gridData.length + 1);
+      setGridData(prev => [
+        ...prev,
+        ...Array(rowsToAdd).fill(null).map(() => Array(NUM_COLS).fill(''))
+      ]);
+    }
+  };
+
   const handleCellKeyDown = (e, row, col) => {
     if (isViewMode) return;
     const readOnly = [3].includes(col); // Only Date is read-only
@@ -289,13 +315,12 @@ const CreatePermit = () => {
       if (e.key === 'Enter') {
         e.preventDefault();
         setIsEditing(false);
-        const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.toString().trim() !== '')) {
-          setSelectedCell({ row: nextRow, col });
-          setSelectionEnd({ row: nextRow, col });
-        } else {
-          toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
-        }
+        const nextRow = row + 1;
+        ensureRowExists(nextRow);
+        const targetPage = Math.floor(nextRow / PAGE_SIZE) + 1;
+        if (targetPage !== sheetPage) setSheetPage(targetPage);
+        setSelectedCell({ row: nextRow, col });
+        setSelectionEnd({ row: nextRow, col });
       } else if (e.key === 'Tab') {
         e.preventDefault();
         setIsEditing(false);
@@ -307,18 +332,20 @@ const CreatePermit = () => {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        const nextRow = Math.min(row + 1, NUM_ROWS - 1);
-        if (nextRow === 0 || gridData[nextRow - 1].some(c => c.toString().trim() !== '')) {
-          setSelectedCell({ row: nextRow, col });
-          setSelectionEnd({ row: nextRow, col });
-        } else {
-          toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
-        }
+        const nextRow = row + 1;
+        ensureRowExists(nextRow);
+        const targetPageDown = Math.floor(nextRow / PAGE_SIZE) + 1;
+        if (targetPageDown !== sheetPage) setSheetPage(targetPageDown);
+        setSelectedCell({ row: nextRow, col });
+        setSelectionEnd({ row: nextRow, col });
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedCell({ row: Math.max(row - 1, 0), col });
-        setSelectionEnd({ row: Math.max(row - 1, 0), col });
+        const prevRow = Math.max(row - 1, 0);
+        const targetPageUp = Math.floor(prevRow / PAGE_SIZE) + 1;
+        if (targetPageUp !== sheetPage) setSheetPage(targetPageUp);
+        setSelectedCell({ row: prevRow, col });
+        setSelectionEnd({ row: prevRow, col });
         break;
       case 'ArrowRight':
       case 'Tab':
@@ -339,7 +366,7 @@ const CreatePermit = () => {
       case 'Delete':
         e.preventDefault();
         if (selectedCell.row === 'ALL' && selectedCell.col === 'ALL') {
-          setGridData(Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill('')));
+          setGridData(Array(gridData.length).fill(null).map(() => Array(NUM_COLS).fill('')));
         } else if (selectedCell.row === 'ALL') {
           setGridData(prev => prev.map(r => {
             const newR = [...r];
@@ -645,7 +672,7 @@ const CreatePermit = () => {
       fetchTagStatus(value.toString().trim());
     }
   };
-  const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }]);
+  const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '', vaccines: '', medication: '' }]);
   const removeMobileAnimal = (id) => {
     if(mobileAnimals.length > 1) setMobileAnimals(mobileAnimals.filter(a => a.id !== id));
   };
@@ -660,16 +687,26 @@ const CreatePermit = () => {
       initial[0][9] = user.sector_id || '';
     }
     setGridData(initial);
+    setHeaderForm({
+      transporter_mode: 'DRIVER_VEHICLE',
+      cargo_photo: '',
+      transport_type: 'Imodoka',
+      plate_number: 'RAB 195F',
+      driver_name: '',
+      driver_phone: '',
+      driver_nid: '',
+    });
     
     setMobileForm({
       owner_name: '', owner_id_number: '', owner_phone: '', priority: '',
-      transport_type: '', plate_number: '', driver_name: '', driver_phone: '', driver_nid: '',
+      transport_type: '', plate_number: '', driver_name: '', driver_phone: '', driver_nid: '', cargo_photo: '',
       origin_district: '', origin_sector: '',
       origin_cell: '', origin_village: '', dest_district: '', dest_sector: '',
-      dest_cell: '', dest_village: '', valid_until: today, reason: ''
+      dest_cell: '', dest_village: '', valid_until: today, reason: '',
+      buyer_type: 'Person (Umuntu)', buyer_name: '', buyer_phone: '', buyer_id_tin: ''
     });
     setMobileAnimals([
-      { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }
+      { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '', vaccines: '', medication: '' }
     ]);
     if (!editId) setLastSaved(null);
   };
@@ -680,7 +717,7 @@ const CreatePermit = () => {
     try {
       const validAnimals = mobileAnimals.filter(a => a.tag_number.trim());
       if (validAnimals.length === 0) {
-        toast.error('Add at least one animal');
+        toast.error('Uzuza nibura itungo 1 (Tag Number)');
         setLoading(false);
         return;
       }
@@ -694,24 +731,56 @@ const CreatePermit = () => {
         setLoading(false);
         return;
       }
-      if (mobileForm.driver_nid.trim().length !== 16 || !/^\d+$/.test(mobileForm.driver_nid.trim())) {
-        toast.error('Indangamuntu (ID) y\'umushoferi igomba kuba imibare 16 gusa.');
+
+      const mode = headerForm.transporter_mode || 'DRIVER_VEHICLE';
+      const dName = mobileForm.driver_name || headerForm.driver_name;
+      const dPhone = mobileForm.driver_phone || headerForm.driver_phone;
+      const dNid = mobileForm.driver_nid || headerForm.driver_nid;
+      const plate = mobileForm.plate_number || headerForm.plate_number;
+      const photo = headerForm.cargo_photo || mobileForm.cargo_photo;
+
+      if (!dName?.trim()) {
+        toast.error(mode === 'DRIVER_VEHICLE' ? "Banza wuzuze Amazina y'Umushoferi." : "Banza wuzuze Amazina y'Umunyamaguru.");
         setLoading(false);
         return;
       }
-      if (mobileForm.driver_phone.trim().length !== 10 || !/^\d+$/.test(mobileForm.driver_phone.trim())) {
-        toast.error('Nimero ya telephoni y\'umushoferi igomba kuba imibare 10 gusa.');
+      if (!dPhone?.trim() || dPhone.trim().length !== 10) {
+        toast.error("Telephoni y'utwara amatungo igomba kuba imibare 10 (e.g. 0788000000).");
         setLoading(false);
         return;
       }
+      if (!dNid?.trim() || dNid.trim().length !== 16) {
+        toast.error("Indangamuntu y'utwara amatungo igomba kuba imibare 16.");
+        setLoading(false);
+        return;
+      }
+      if (mode === 'DRIVER_VEHICLE' && !plate?.trim()) {
+        toast.error("Banza wuzuze Pulaki y'Imodoka (Plate Number).");
+        setLoading(false);
+        return;
+      }
+      if (!photo) {
+        toast.error("Banza wohoze Ifoto 1 y'amatungo yapakijwe/kwimuka (Cargo Photo).");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         ...mobileForm,
+        transporter_mode: mode,
+        cargo_photo: photo,
+        transport_type: mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (mobileForm.transport_type || headerForm.transport_type || 'Imodoka'),
+        plate_number: mode === 'PERSON_ON_FOOT' ? 'ON_FOOT' : (plate || 'RAB 195F'),
+        driver_name: dName,
+        driver_phone: dPhone,
+        driver_nid: dNid,
         type: requestType,
         count: validAnimals.length,
         origin_id: user?.sector_id || user?.district_id || user?.id,
         destination_id: mobileForm.dest_sector || mobileForm.dest_district || user?.id,
-        animals: validAnimals.map(({id, ...rest}) => ({ ...rest, quantity: 1 }))
+        animals: validAnimals.map(({ id, ...rest }) => ({ ...rest, quantity: 1 }))
       };
+
       if (editId) {
         await api.put(`/movement/${editId}`, payload);
         toast.success('Uruhushya rwavuguruwe neza!');
@@ -720,8 +789,8 @@ const CreatePermit = () => {
         toast.success('Uruhushya rwoherejwe neza!');
       }
       if (!editId) {
-        setMobileAnimals([{ id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }]);
-        setMobileForm(prev => ({ ...prev, owner_name: '', owner_id_number: '', owner_phone: '', plate_number: '' }));
+        setMobileAnimals([{ id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '', vaccines: '', medication: '' }]);
+        setMobileForm(prev => ({ ...prev, owner_name: '', owner_id_number: '', owner_phone: '', plate_number: '', cargo_photo: '' }));
       } else {
         navigate('/dashboard/movements');
       }
@@ -1144,9 +1213,10 @@ const CreatePermit = () => {
                   </th>
                 ) : null)}
               </tr>
-            </thead>
-            <tbody>
-              {gridData.map((row, rIdx) => ({ row, originalIndex: rIdx }))
+            </thead>            <tbody>
+              {gridData
+                .map((row, rIdx) => ({ row, originalIndex: rIdx }))
+                .slice((sheetPage - 1) * PAGE_SIZE, sheetPage * PAGE_SIZE)
                 .filter(({ row }) => {
                   if (!searchTerm) return true;
                   const term = searchTerm.toLowerCase();
@@ -1236,9 +1306,9 @@ const CreatePermit = () => {
                                   if (e.key === 'Enter' || e.key === 'Escape') {
                                      setIsEditing(false);
                                       if (e.key === 'Enter') {
-                                        if (originalIndex + 1 < NUM_ROWS && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![5,8,9].includes(idx) && c.trim() !== ''))) {
-                                          setSelectedCell({ row: originalIndex + 1, col: cIdx });
-                                        }
+                                         if (originalIndex + 1 < gridData.length && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![5,8,9].includes(idx) && c.trim() !== ''))) {
+                                           setSelectedCell({ row: originalIndex + 1, col: cIdx });
+                                         }
                                      }
                                   } else if (e.key === 'Tab') {
                                      e.preventDefault();
@@ -1343,6 +1413,59 @@ const CreatePermit = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Spreadsheet Pagination Footer */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-t border-gray-300 font-sans text-xs text-gray-700 shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setGridData(prev => [
+                  ...prev,
+                  ...Array(PAGE_SIZE).fill(null).map(() => Array(NUM_COLS).fill(''))
+                ]);
+                toast.success('Added 30 new rows');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition"
+            >
+              <Plus className="w-3.5 h-3.5" /> + 30 Rows
+            </button>
+            <span className="text-gray-500 ml-2">
+              Total rows: <strong className="text-gray-700">{gridData.length}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={sheetPage === 1}
+              onClick={() => setSheetPage(p => Math.max(1, p - 1))}
+              className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              ‹ Previous 30
+            </button>
+
+            <span className="font-medium text-gray-700">
+              Rows {(sheetPage - 1) * PAGE_SIZE + 1} – {Math.min(sheetPage * PAGE_SIZE, gridData.length)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (sheetPage * PAGE_SIZE >= gridData.length) {
+                  setGridData(prev => [
+                    ...prev,
+                    ...Array(PAGE_SIZE).fill(null).map(() => Array(NUM_COLS).fill(''))
+                  ]);
+                }
+                setSheetPage(p => p + 1);
+              }}
+              className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+            >
+              Next 30 ›
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ==================================================== */}
@@ -1389,6 +1512,101 @@ const CreatePermit = () => {
 
             return (
               <>
+                {/* Transporter Mode Card */}
+                <FormCard title="Uburyo bw'Utwara Amatungo (Transporter Mode)" required>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="mobile_transporter_mode"
+                        value="DRIVER_VEHICLE"
+                        checked={headerForm.transporter_mode === 'DRIVER_VEHICLE'}
+                        onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
+                        className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
+                      />
+                      <span className="text-sm font-medium text-gray-800">Imodoka n'Umushoferi (Vehicle & Driver)</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="mobile_transporter_mode"
+                        value="PERSON_ON_FOOT"
+                        checked={headerForm.transporter_mode === 'PERSON_ON_FOOT'}
+                        onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
+                        className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
+                      />
+                      <span className="text-sm font-medium text-gray-800">Umunyamaguru / Omushumba (Person on Foot)</span>
+                    </label>
+                  </div>
+                </FormCard>
+
+                {/* Transporter Details & Vehicle Info */}
+                {headerForm.transporter_mode === 'DRIVER_VEHICLE' ? (
+                  <>
+                    <FormCard title="Amazina y'Umushoferi" required>
+                      <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umushoferi" />
+                    </FormCard>
+                    <FormCard title="Telephoni y'Umushoferi" required>
+                      <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
+                    </FormCard>
+                    <FormCard title="Indangamuntu y'Umushoferi" required>
+                      <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                    </FormCard>
+                    <FormCard title="Pulaki y'Imodoka (Plate Number)" required>
+                      <input type="text" name="plate_number" required value={mobileForm.plate_number || headerForm.plate_number} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, plate_number: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="RAB 195F" />
+                    </FormCard>
+                  </>
+                ) : (
+                  <>
+                    <FormCard title="Amazina y'Umunyamaguru" required>
+                      <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umunyamaguru" />
+                    </FormCard>
+                    <FormCard title="Telephoni y'Umunyamaguru" required>
+                      <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
+                    </FormCard>
+                    <FormCard title="Indangamuntu y'Umunyamaguru" required>
+                      <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                    </FormCard>
+                    <FormCard title="Uburyo bwo Kwimura">
+                      <input type="text" readOnly value="Umunyamaguru / Person" className="w-full border-b border-gray-300 py-1 bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+                    </FormCard>
+                  </>
+                )}
+
+                {/* Cargo Photo Upload Card */}
+                <FormCard title="Ifoto y'amatungo yapakijwe / arimo kwimuka (Cargo Photo)" required>
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-500">
+                      Ohoza ifoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
+                    </p>
+                    {headerForm.cargo_photo ? (
+                      <div className="relative inline-block border border-gray-300 rounded overflow-hidden">
+                        <img src={headerForm.cargo_photo} alt="Cargo Preview" className="w-36 h-28 object-cover" />
+                        {!isViewMode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHeaderForm(prev => ({ ...prev, cargo_photo: '' }));
+                              setMobileForm(prev => ({ ...prev, cargo_photo: '' }));
+                            }}
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 shadow"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      !isViewMode && (
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#673AB7] text-white rounded text-sm font-medium cursor-pointer hover:bg-[#5E35B1] transition shadow-sm">
+                          <UploadCloud className="w-4 h-4" />
+                          <span>Upload Photo</span>
+                          <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                        </label>
+                      )
+                    )}
+                  </div>
+                </FormCard>
+
                 <FormCard title="Amazina ya Nyir'amatungo" required>
                   <input type="text" name="owner_name" required value={mobileForm.owner_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
                 </FormCard>
@@ -1407,26 +1625,6 @@ const CreatePermit = () => {
 
                 <FormCard title="Priority" required>
                   <CustomSelect value={mobileForm.priority} onChange={(v) => handleMobileSelect('priority', v)} options={[{value: 'Minor', label: 'Minor'}, {value: 'Urgency', label: 'Urgency'}]} />
-                </FormCard>
-
-                <FormCard title="Uburyo bwo kugenda" required>
-                  <input type="text" name="transport_type" required value={mobileForm.transport_type} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
-                </FormCard>
-
-                <FormCard title="Pulaki (Plate)" required>
-                  <CustomSelect value={mobileForm.plate_number} onChange={(v) => handleMobileSelect('plate_number', v)} options={[{value: 'RAB 195F', label: 'RAB 195F'}]} />
-                </FormCard>
-
-                <FormCard title="Amazina y'Utwara Amatungo" required>
-                  <input type="text" name="driver_name" required value={mobileForm.driver_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
-                </FormCard>
-
-                <FormCard title="Telephoni y'Utwara Amatungo" required>
-                  <input type="text" name="driver_phone" required value={mobileForm.driver_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
-                </FormCard>
-
-                <FormCard title="Indangamuntu y'Utwara Amatungo" required>
-                  <input type="text" name="driver_nid" required value={mobileForm.driver_nid} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
                 </FormCard>
 
                 <FormCard title="Ubwoko bw'Umuguzi (Buyer Type)" required>
@@ -1520,7 +1718,7 @@ const CreatePermit = () => {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
-                   <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Amatungo (Animals)</h2>
+                   <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Amatungo (Animals & Medical)</h2>
                    {mobileAnimals.map((animal, idx) => (
                      <div key={animal.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 relative space-y-4">
                        <h3 className="font-medium text-gray-700">Animal #{idx + 1}</h3>
@@ -1529,14 +1727,14 @@ const CreatePermit = () => {
                            <Trash2 className="w-4 h-4"/>
                          </button>
                        )}
-                       <div>
+                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm text-gray-600 mb-1">Animal Type *</label>
                           <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(animal.id, 'animal_type', v)} options={[{value: 'Inka (Cow)', label: 'Inka (Cow)'}, {value: 'Ihene (Goat)', label: 'Ihene (Goat)'}, {value: 'Intama (Sheep)', label: 'Intama (Sheep)'}]} />
                         </div>
                         <div>
                            <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
-                           <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
+                           <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Tag number" />
                            {/* Vet status badges */}
                            {animal.tag_number && (() => {
                              const status = tagStatuses[animal.tag_number.trim()];
@@ -1567,11 +1765,21 @@ const CreatePermit = () => {
                        <div className="grid grid-cols-2 gap-4">
                          <div>
                            <label className="block text-sm text-gray-600 mb-1">Breed</label>
-                           <input type="text" value={animal.breed} onChange={(e) => handleMobileAnimalChange(animal.id, 'breed', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
+                           <input type="text" value={animal.breed} onChange={(e) => handleMobileAnimalChange(animal.id, 'breed', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ubwoko" />
                          </div>
                          <div>
                            <label className="block text-sm text-gray-600 mb-1">Color</label>
-                           <input type="text" value={animal.color} onChange={(e) => handleMobileAnimalChange(animal.id, 'color', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" />
+                           <input type="text" value={animal.color} onChange={(e) => handleMobileAnimalChange(animal.id, 'color', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ibara" />
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4 pt-2">
+                         <div>
+                           <label className="block text-sm text-gray-600 mb-1">Inkingo (Vaccines)</label>
+                           <input type="text" value={animal.vaccines || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'vaccines', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. FMD" />
+                         </div>
+                         <div>
+                           <label className="block text-sm text-gray-600 mb-1">Imiti (Medication)</label>
+                           <input type="text" value={animal.medication || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'medication', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. Oxytetracycline" />
                          </div>
                        </div>
                      </div>
