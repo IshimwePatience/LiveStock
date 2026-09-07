@@ -58,8 +58,24 @@ const DashboardLayout = () => {
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   const getJurisdictionLabel = () => {
     if (!user) return 'Loading...';
@@ -90,6 +106,12 @@ const DashboardLayout = () => {
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
+  };
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const getInitials = (name) => {
@@ -141,7 +163,8 @@ const DashboardLayout = () => {
         <div className="flex items-center gap-2 min-w-[220px]">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition text-gray-600"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition text-gray-600 focus:outline-none"
+            aria-label="Toggle navigation menu"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -256,10 +279,24 @@ const DashboardLayout = () => {
       </header>
 
       {/* Main Layout Area */}
-      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)] relative">
 
-        {/* Sidebar */}
-        <aside className={`${isSidebarOpen ? 'w-64 border-r border-gray-100' : 'w-0 overflow-hidden'} bg-white flex flex-col hidden md:flex overflow-y-auto py-4 transition-all duration-200 shrink-0`}>
+        {/* Mobile Backdrop Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar (Responsive Desktop & Mobile Drawer) */}
+        <aside className={`
+          fixed md:static top-16 bottom-0 left-0 z-40 bg-white flex flex-col overflow-y-auto py-4 transition-all duration-300 shrink-0 border-r border-gray-200/80 shadow-xl md:shadow-none
+          ${isSidebarOpen 
+            ? 'w-64 translate-x-0' 
+            : '-translate-x-full md:translate-x-0 md:w-0 md:border-none'
+          }
+        `}>
 
           <div className="min-w-[256px]">
 
@@ -267,6 +304,7 @@ const DashboardLayout = () => {
             {hasPerm('overview') && (
               <Link 
                 to="/dashboard/overview" 
+                onClick={handleNavClick}
                 className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
                   isActive('/dashboard/overview') 
                     ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -282,6 +320,7 @@ const DashboardLayout = () => {
             {hasPerm('cases') && (
               <Link 
                 to="/dashboard/cases" 
+                onClick={handleNavClick}
                 className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
                   isActive('/dashboard/cases') 
                     ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -316,6 +355,7 @@ const DashboardLayout = () => {
                     {hasPerm('gps') && (
                       <Link 
                         to="/dashboard/gps" 
+                        onClick={handleNavClick}
                         className={`block px-4 py-2 text-sm rounded-full transition-colors ${
                           isActive('/dashboard/gps') 
                             ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -328,6 +368,7 @@ const DashboardLayout = () => {
                     {hasPerm('movements') && (
                       <Link 
                         to="/dashboard/movements" 
+                        onClick={handleNavClick}
                         className={`block px-4 py-2 text-sm rounded-full transition-colors ${
                           isActive('/dashboard/movements') 
                             ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -346,6 +387,7 @@ const DashboardLayout = () => {
             {hasPerm('geofencing') && (
               <Link 
                 to="/dashboard/geofencing" 
+                onClick={handleNavClick}
                 className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
                   isActive('/dashboard/geofencing') 
                     ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -361,6 +403,7 @@ const DashboardLayout = () => {
               <div className="mt-1 space-y-1">
                 <Link
                   to="/dashboard/national-reports"
+                  onClick={handleNavClick}
                   className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
                     isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
                       ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
@@ -378,6 +421,7 @@ const DashboardLayout = () => {
               <div className="mt-1 space-y-1">
                 <Link 
                   to="/dashboard/notifications" 
+                  onClick={handleNavClick}
                   className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
                     isActive('/dashboard/notifications') 
                       ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -396,6 +440,7 @@ const DashboardLayout = () => {
                 {hasPerm('system_settings') && (
                   <Link 
                     to="/dashboard/system-settings" 
+                    onClick={handleNavClick}
                     className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
                       isActive('/dashboard/system-settings') 
                         ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
@@ -409,6 +454,7 @@ const DashboardLayout = () => {
                 {hasPerm('user_management') && (
                   <Link 
                     to="/dashboard/users" 
+                    onClick={handleNavClick}
                     className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
                       isActive('/dashboard/users') 
                         ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 

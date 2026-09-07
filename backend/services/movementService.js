@@ -95,15 +95,37 @@ class MovementService {
 
     // Send notifications to RAB and relevant DARO/SARO officers
     try {
-      const isDistrict = type === 'DISTRICT_TO_DISTRICT';
+      const { Op } = require('sequelize');
       const notifMsg = `📋 NEW MOVEMENT REQUEST: Permit #${permit_number} submitted by ${user.name} for ${count} ${animal_type}(s) [${origin_district || origin_sector || 'Origin'} ➔ ${dest_district || dest_sector || 'Destination'}]. Status: PENDING approval.`;
       
       // Always notify RAB & ADMIN
       await notificationService.notifyRoles(['RAB', 'ADMIN'], notifMsg, 'SYSTEM');
 
-      // Also notify DARO if sector-to-sector
-      if (!isDistrict) {
-        await notificationService.notifyRoles(['DARO'], notifMsg, 'SYSTEM');
+      // Target specific DARO / SARO officers in origin or destination jurisdictions
+      if (type === 'SECTOR_TO_SECTOR') {
+        const saroUsers = await User.findAll({
+          where: {
+            role: 'SARO',
+            sector_id: { [Op.in]: [origin_sector, dest_sector].filter(Boolean) }
+          }
+        });
+        for (const u of saroUsers) {
+          if (u.id !== user.id) {
+            await notificationService.notifyUser(u.id, notifMsg, 'SYSTEM');
+          }
+        }
+      } else if (type === 'DISTRICT_TO_DISTRICT') {
+        const daroUsers = await User.findAll({
+          where: {
+            role: 'DARO',
+            district_id: { [Op.in]: [origin_district, dest_district].filter(Boolean) }
+          }
+        });
+        for (const u of daroUsers) {
+          if (u.id !== user.id) {
+            await notificationService.notifyUser(u.id, notifMsg, 'SYSTEM');
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to send permit creation notification:', err.message);

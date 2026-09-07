@@ -6,21 +6,71 @@ const { NotificationLog, Case } = require('../models');
 // Get all notifications for the user
 router.get('/', protect, async (req, res) => {
   try {
+    const { Op } = require('sequelize');
+
+    // Build role-based scope filter for movement permits backfill
+    let scopeFilter = {};
+    if (req.user.role === 'SARO' && req.user.sector_id) {
+      scopeFilter = {
+        [Op.or]: [
+          { origin_sector: req.user.sector_id },
+          { dest_sector: req.user.sector_id },
+          { origin_id: req.user.sector_id },
+          { destination_id: req.user.sector_id },
+          { initiator_id: req.user.id }
+        ]
+      };
+    } else if (req.user.role === 'DARO' && req.user.district_id) {
+      scopeFilter = {
+        [Op.or]: [
+          { origin_district: req.user.district_id },
+          { dest_district: req.user.district_id },
+          { origin_id: req.user.district_id },
+          { destination_id: req.user.district_id },
+          { initiator_id: req.user.id }
+        ]
+      };
+    }
+
     let notifications = await NotificationLog.findAll({
       where: { user_id: req.user.id },
       order: [['createdAt', 'DESC']],
-      limit: 50 // Limit to last 50 for performance
+      limit: 50
     });
 
-    // Auto-populate past notifications for Police / RAB / Admin / Officers if no notification logs exist yet
+    // If existing notifications contain out-of-scope backfill data for SARO/DARO, purge them so they get re-backfilled cleanly
+    if (notifications.length > 0 && (req.user.role === 'SARO' || req.user.role === 'DARO')) {
+      const userLoc = req.user.role === 'SARO' ? req.user.sector_id : req.user.district_id;
+      const isIrrelevant = notifications.some(n => {
+        if (!n.message) return false;
+        const match = n.message.match(/\[(.*?)(?:➔|->|\s+to\s+)(.*?)\]/);
+        if (match && userLoc) {
+          const origin = match[1];
+          const dest = match[2];
+          return !origin.includes(userLoc) && !dest.includes(userLoc);
+        }
+        return false;
+      });
+
+      if (isIrrelevant) {
+        await NotificationLog.destroy({ where: { user_id: req.user.id } });
+        notifications = [];
+      }
+    }
+
+    // Auto-populate past notifications for officers if no notification logs exist yet
     if (notifications.length === 0) {
       try {
         const { MovementRequest } = require('../models');
         
-        // 1. Backfill Movement Permits
-        const movements = await MovementRequest.findAll({ order: [['createdAt', 'DESC']], limit: 30 });
+        // 1. Backfill Movement Permits matching user's jurisdiction scope
+        const movements = await MovementRequest.findAll({
+          where: scopeFilter,
+          order: [['createdAt', 'DESC']],
+          limit: 30
+        });
+
         for (const m of movements) {
-          const typeLabel = m.type === 'DISTRICT_TO_DISTRICT' ? 'District-to-District' : 'Sector-to-Sector';
           const notifMsg = `📋 MOVEMENT PERMIT ${m.permit_number || '#' + m.id}: ${m.animal_type} (${m.count} head) [${m.origin_district || m.origin_sector || 'Origin'} ➔ ${m.dest_district || m.dest_sector || 'Destination'}]. Status: ${m.status}`;
           const notifType = m.status === 'APPROVED' ? 'APPROVAL' : m.status === 'COMPLETED' ? 'ARRIVAL' : 'SYSTEM';
           await NotificationLog.create({

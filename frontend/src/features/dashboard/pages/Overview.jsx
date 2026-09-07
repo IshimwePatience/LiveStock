@@ -197,7 +197,9 @@ const Overview = () => {
       )}
 
       {/* Top Cards */}
-      <div className={`grid grid-cols-2 ${user?.role === 'SARO' ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mb-6`}>
+      {/* Top Cards */}
+      <div className={`grid grid-cols-2 ${(user?.role === 'RAB' || user?.role === 'admin' || user?.role === 'SuperAdmin') ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6`}>
+        {/* Card 1: Completed Permits */}
         <div 
           onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
@@ -210,34 +212,57 @@ const Overview = () => {
              <div className="text-xs text-gray-500">in the last 7 days</div>
            </div>
         </div>
-        {user?.role !== 'SARO' && (
+
+        {/* RAB / National Level: Separate District Permits and Sector Permits */}
+        {(user?.role === 'RAB' || user?.role === 'admin' || user?.role === 'SuperAdmin') ? (
+          <>
+            <div 
+              onClick={() => navigate('/dashboard/movements?tab=Requests&type=DISTRICT_TO_DISTRICT')}
+              className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+            >
+               <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                 <Edit2 className="w-5 h-5 text-gray-600" />
+               </div>
+               <div>
+                 <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.districtToDistrict || 0}</span> District Permits</div>
+                 <div className="text-xs text-gray-500">requested in the last 7 days</div>
+               </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/dashboard/movements?tab=Requests&type=SECTOR_TO_SECTOR')}
+              className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+            >
+               <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                 <CheckSquare className="w-5 h-5 text-gray-600" />
+               </div>
+               <div>
+                 <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.sectorToSector || 0}</span> Sector Permits</div>
+                 <div className="text-xs text-gray-500">requested in the last 7 days</div>
+               </div>
+            </div>
+          </>
+        ) : (
+          /* DARO & SARO Local Level: Out Permits */
           <div 
-            onClick={() => navigate('/dashboard/movements?tab=Requests&type=DISTRICT_TO_DISTRICT')}
+            onClick={() => navigate('/dashboard/movements?tab=Requests')}
             className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
           >
              <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
                <Edit2 className="w-5 h-5 text-gray-600" />
              </div>
              <div>
-               <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.districtToDistrict || 0}</span> District Permits</div>
+               <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                 <span className="text-lg">
+                   {user?.role === 'DARO' ? (statsData?.districtToDistrict || 0) : (statsData?.sectorToSector || 0)}
+                 </span> Out Permits
+               </div>
                <div className="text-xs text-gray-500">requested in the last 7 days</div>
              </div>
           </div>
         )}
 
-        <div 
-          onClick={() => navigate('/dashboard/movements?tab=Requests&type=SECTOR_TO_SECTOR')}
-          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-        >
-           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-             <CheckSquare className="w-5 h-5 text-gray-600" />
-           </div>
-           <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.sectorToSector || 0}</span> Sector Permits</div>
-             <div className="text-xs text-gray-500">requested in the last 7 days</div>
-           </div>
-        </div>
-
+        {/* Card: Trips Starting Soon */}
         <div 
           onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
