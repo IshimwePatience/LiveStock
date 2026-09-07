@@ -80,7 +80,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
                   checked={selected.length === cases.length && cases.length > 0}
                 />
               </th>
-              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Case & Details</th>
+              <th className="py-2.5 px-4 font-medium text-[13px] text-black">Case Details</th>
               <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Assigned Officer</th>
               <th className="py-2.5 px-4 font-medium text-[13px] text-black w-48">Reporter</th>
               <th className="py-2.5 px-4 font-medium text-[13px] text-black w-32">Severity</th>
@@ -100,11 +100,7 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
                   />
                 </td>
                 <td className="py-2 px-4">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon(item.type)}
-                    <span className="text-black hover:underline cursor-pointer font-medium text-[13px]">{item.id}</span>
-                    <span className="text-black truncate max-w-sm font-medium text-[13px]">{item.title}</span>
-                  </div>
+                  <span className="text-black truncate max-w-md block font-medium text-[13px]">{item.title}</span>
                 </td>
                 <td className="py-2 px-4">
                   <div className="flex items-center gap-2">

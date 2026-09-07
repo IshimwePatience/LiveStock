@@ -164,9 +164,9 @@ const Overview = () => {
         </div>
       )}
 
-      {/* Filters Toolbar */}
-      <div className="flex items-center gap-3 mb-6 relative z-50">
-         {user?.role !== 'SARO' && (
+      {/* Active Users Bar */}
+      {user?.role !== 'SARO' && (
+        <div className="flex items-center gap-3 mb-6">
            <div className="flex -space-x-2">
               <div 
                 className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-2 border-white relative"
@@ -193,16 +193,8 @@ const Overview = () => {
                 <div className="text-xs text-gray-400 pl-4 pt-1 font-medium italic">No active users</div>
               )}
            </div>
-         )}
-         <div className="ml-2">
-           <FilterDropdown 
-             selectedFilters={selectedFilters}
-             onFilterChange={handleFilterChange}
-             categories={overviewCategories}
-             optionsMap={overviewOptionsMap}
-           />
-         </div>
-      </div>
+        </div>
+      )}
 
       {/* Top Cards */}
       <div className={`grid grid-cols-2 ${user?.role === 'SARO' ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mb-6`}>
@@ -479,59 +471,7 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Widget 6: Inspection Progress -> Permit Inspection Compliance */}
-        <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-          <h3 className="font-bold text-gray-900">Permit Inspection Compliance</h3>
-          <p className="text-sm text-gray-500 mb-3">See how movement permits and checkpoint inspections are progressing at a glance. <span className="text-green-600 hover:underline cursor-pointer" onClick={() => navigate('/dashboard/movements')}>View permits</span></p>
-          
-          <div className="flex items-center gap-4 text-xs text-gray-500 mb-4 px-2">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#65a30d]"></div> Verified</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-400"></div> Flagged</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[#8c929d]"></div> Pending</div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto space-y-5 px-2 pr-4">
-             {(() => {
-                const inspectionData = statsData?.permitCompliance || [
-                  { name: 'Inter-District Movement', verified: 42, flagged: 3, pending: 5 },
-                  { name: 'Slaughterhouse Transit', verified: 28, flagged: 1, pending: 2 },
-                  { name: 'Cross-Border Quarantine', verified: 18, flagged: 4, pending: 1 },
-                  { name: 'Breeding & Farm Transfer', verified: 15, flagged: 0, pending: 3 },
-                ];
-                
-                if (inspectionData.length === 0) {
-                  return <p className="text-xs text-gray-400">No inspection compliance data available.</p>;
-                }
 
-                return inspectionData.slice(0, 5).map((item, index) => {
-                  const total = (item.verified + item.flagged + item.pending) || 1;
-                  const verifiedPct = Math.round((item.verified / total) * 100);
-                  const flaggedPct = Math.round((item.flagged / total) * 100);
-                  const pendingPct = Math.max(0, 100 - verifiedPct - flaggedPct);
-                  
-                  return (
-                    <div key={index} onClick={() => navigate('/dashboard/movements')} title={`Inspection: ${item.name} — Verified: ${item.verified} (${verifiedPct}%), Flagged: ${item.flagged} (${flaggedPct}%), Pending: ${item.pending} (${pendingPct}%)`} className="cursor-pointer group">
-                      <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
-                         <span className="text-purple-500 text-sm leading-none">⚡</span> 
-                         <span className="text-gray-900 group-hover:underline cursor-pointer truncate font-medium">INSPECTION: {item.name}</span>
-                      </div>
-                      <div className="h-5 w-full bg-gray-100 flex">
-                         <div title={`Verified: ${item.verified} (${verifiedPct}%)`} className="h-full bg-[#65a30d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(1, verifiedPct)}%` }}>
-                           {verifiedPct > 5 ? `${verifiedPct}%` : ''}
-                         </div>
-                         <div title={`Flagged: ${item.flagged} (${flaggedPct}%)`} className="h-full bg-red-400 group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, flaggedPct)}%` }}>
-                           {flaggedPct > 5 ? `${flaggedPct}%` : ''}
-                         </div>
-                         <div title={`Pending: ${item.pending} (${pendingPct}%)`} className="h-full bg-[#8c929d] group-hover:brightness-110 flex items-center px-1.5 text-white text-xs font-medium overflow-hidden" style={{ width: `${Math.max(0, pendingPct)}%` }}>
-                           {pendingPct > 5 ? `${pendingPct}%` : ''}
-                         </div>
-                      </div>
-                    </div>
-                  );
-                });
-             })()}
-          </div>
-        </div>
 
       </div>
     </div>
