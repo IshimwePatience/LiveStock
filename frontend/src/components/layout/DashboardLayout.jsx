@@ -148,7 +148,7 @@ const DashboardLayout = () => {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 cursor-pointer mr-2" onClick={() => navigate('/dashboard')}>
-            <span className="text-[18px] font-normal text-gray-700 tracking-wide ml-1">Livestock app</span>
+            <span className="text-[22px] font-normal text-[#444746] tracking-tight leading-none select-none pl-1">Livestock app</span>
           </div>
 
           {/* Project Selector */}

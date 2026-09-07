@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const PoliceCasesList = ({ cases, isLoading, isError }) => {
   const navigate = useNavigate();
@@ -177,9 +178,13 @@ const PoliceCasesList = ({ cases, isLoading, isError }) => {
           
           {cases.length === 0 && (
             <tr>
-                <td colSpan="7" className="p-8 text-center text-gray-500">
-                  No police cases found.
-                </td>
+              <td colSpan="7" className="py-8 text-center">
+                <EmptyState
+                  illustration="drive"
+                  title="No police security cases found"
+                  description="Police security cases, impoundment logs, and reported vehicle violations will show up here."
+                />
+              </td>
             </tr>
           )}
         </tbody>

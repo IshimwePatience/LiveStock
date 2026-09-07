@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import AssignDriverModal from './AssignDriverModal';
 import ConfirmArrivalModal from './ConfirmArrivalModal';
 import { printOfficialPermit } from '../../../lib/printPermit';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const navigate = useNavigate();
@@ -385,9 +386,13 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
           
           {movements.length === 0 && (
             <tr>
-                <td colSpan="9" className="p-8 text-center text-gray-500">
-                  No livestock movements found.
-                </td>
+              <td colSpan="11" className="py-8 text-center">
+                <EmptyState
+                  illustration="movements"
+                  title="No livestock movements found"
+                  description="Movement permit requests and active transport routes registered in your jurisdiction will show up here."
+                />
+              </td>
             </tr>
           )}
         </tbody>

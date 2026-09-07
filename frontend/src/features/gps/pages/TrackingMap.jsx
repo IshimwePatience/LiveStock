@@ -770,7 +770,7 @@ const TrackingMap = () => {
         <div className="fixed inset-0 z-[600] bg-black/40 backdrop-blur-xs flex" onClick={() => setIsNavMenuOpen(false)}>
           <div className="w-64 bg-white h-full shadow-2xl p-4 flex flex-col gap-2 font-sans animate-in slide-in-from-left duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <span className="font-bold text-gray-900 text-base">Livestock app</span>
+              <span className="text-[22px] font-normal text-[#444746] tracking-tight leading-none">Livestock app</span>
               <button onClick={() => setIsNavMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-100 text-gray-500">
                 <X className="w-5 h-5" />
               </button>

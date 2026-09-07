@@ -10,6 +10,7 @@ import {
   Search, RefreshCw, Briefcase, Menu, Layers, Filter, Truck
 } from 'lucide-react';
 import CustomSelect from '../../../components/ui/CustomSelect';
+import EmptyState from '../../../components/ui/EmptyState';
 import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 // Sample active drivers for map display
@@ -344,8 +345,12 @@ const Geofencing = () => {
         {/* Fence List */}
         <div className="flex-1 overflow-y-auto no-scrollbar">
           {filteredFences.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 text-sm">
-              No geofence zones found.
+            <div className="py-8 px-4 text-center">
+              <EmptyState
+                illustration="drive"
+                title="No geofence zones found"
+                description="Allowed livestock transport corridors and forbidden quarantine zones will show up here."
+              />
             </div>
           ) : (
             <div className="flex flex-col">

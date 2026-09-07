@@ -9,6 +9,7 @@ import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 import CustomSelect from '../../../components/ui/CustomSelect';
 import Pagination from '../../../components/ui/Pagination';
 import { generatePdfReportHTML, downloadPdfReport } from '../../../lib/pdfReportTheme';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -531,8 +532,12 @@ const UserManagement = () => {
           <tbody>
             {paginatedUsers.length === 0 ? (
               <tr>
-                <td colSpan={isRAB ? "7" : "6"} className="p-8 text-center text-gray-500">
-                  No users found.
+                <td colSpan={isRAB ? "7" : "6"} className="py-8 text-center">
+                  <EmptyState
+                    illustration="drive"
+                    title="No users matching filter"
+                    description="User accounts and permissions registered in your system scope will show up here."
+                  />
                 </td>
               </tr>
             ) : (

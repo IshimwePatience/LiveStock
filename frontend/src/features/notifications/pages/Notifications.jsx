@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flag, Check, Info, AlertTriangle, Hexagon } from 'lucide-react';
 import api from '../../../lib/api';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -112,13 +113,12 @@ const Notifications = () => {
           {/* List or Empty State */}
           <div className="flex-1">
             {filteredNotifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full pt-12 pb-24">
-                <div className="w-48 h-48 mb-8 text-blue-600 opacity-90 flex items-center justify-center">
-                   <Flag className="w-32 h-32 stroke-1 fill-blue-500" />
-                </div>
-                <p className="text-[15px] text-gray-700 font-medium text-center leading-relaxed">
-                  You have no notifications
-                </p>
+              <div className="flex flex-col items-center justify-center flex-1 py-8">
+                <EmptyState
+                  illustration="drive"
+                  title="You have no notifications"
+                  description="Real-time security alerts, movement permit updates, and system notifications will show up here."
+                />
               </div>
             ) : (
               <div className="space-y-4">
