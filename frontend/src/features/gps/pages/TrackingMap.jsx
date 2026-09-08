@@ -352,7 +352,7 @@ const formatPlaybackTime = (isoTimeStr) => {
   try {
     const d = new Date(isoTimeStr);
     if (isNaN(d.getTime())) return { timeStr: '', dateStr: '' };
-    
+
     const hours = String(d.getHours()).padStart(2, '0');
     const mins = String(d.getMinutes()).padStart(2, '0');
     const timeStr = `${hours}:${mins}`;
@@ -647,7 +647,7 @@ const TrackingMap = () => {
       }
 
       pts = computeStoppedTimes(pts);
-      
+
       toast.success(`Loaded playback route history (${pts.length} points) for ${selectedDevice.deviceName}!`);
       setPlaybackPoints(pts);
       setPlaybackIndex(0);
@@ -1240,7 +1240,7 @@ const TrackingMap = () => {
                 <div className="h-1 bg-blue-500 flex-grow relative mx-2">
                   <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-semibold text-blue-700 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                     <Navigation className="w-3 h-3 text-blue-600 animate-pulse" />
-                    {selectedDevice?.speed > 0 
+                    {selectedDevice?.speed > 0
                       ? `En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
                       : (selectedDevice?.route?.status === 'ARRIVED' ? 'Arrived at Destination' : 'At Origin / Loading')}
                   </div>
@@ -1320,7 +1320,7 @@ const TrackingMap = () => {
       {/* ----------------- FLOATING BOTTOM VEHICLE TELEMETRY & DETAILS CARD ----------------- */}
       {!isPlaybackMode && selectedDevice && (
         <div className="absolute bottom-3 left-[430px] right-6 z-[400] bg-white rounded-xl shadow-xl border border-gray-300 p-4 font-sans text-xs animate-in slide-in-from-bottom duration-200">
-          
+
           {/* Top Right Action Controls: Play Route & Close Card Buttons (Matches User Screenshot) */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
             <button
@@ -1341,7 +1341,7 @@ const TrackingMap = () => {
 
           {/* Grid Layout (Matches reference image layout) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+
             {/* Column 1: Identifiers & Key Stats */}
             <div className="flex flex-col">
               {/* Row 1: Vehicle Number (Shaded) */}
@@ -1434,12 +1434,11 @@ const TrackingMap = () => {
                     </div>
                   </div>
                   <div className="border-l-2 border-dashed border-blue-400 ml-1 pl-3 my-0.5 flex items-center justify-between">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
-                      selectedDevice?.speed > 0
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : (selectedDevice?.route?.status === 'ARRIVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200')
-                    }`}>
-                      {selectedDevice?.speed > 0 
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${selectedDevice?.speed > 0
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : (selectedDevice?.route?.status === 'ARRIVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200')
+                      }`}>
+                      {selectedDevice?.speed > 0
                         ? `🚚 En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
                         : (selectedDevice?.route?.status === 'ARRIVED' ? '🏁 Arrived at Destination' : '🅿️ At Origin / Loading')}
                     </span>

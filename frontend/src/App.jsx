@@ -20,6 +20,7 @@ import Geofencing from './features/geofencing/pages/Geofencing';
 import Notifications from './features/notifications/pages/Notifications';
 import SystemSettings from './features/settings/pages/SystemSettings';
 import DriverTripPage from './features/driver/DriverTripPage';
+import LiveTripToastManager from './components/ui/LiveTripToastManager';
 import api from './lib/api';
 import { connectSocket } from './lib/socket';
 
@@ -32,16 +33,16 @@ const DEFAULT_ROLE_PERMISSIONS = {
 
 // Ordered list: first match for a permission wins
 const PERM_ROUTES = [
-  { perm: 'overview',          path: '/dashboard/overview' },
-  { perm: 'cases',             path: '/dashboard/cases' },
-  { perm: 'gps',               path: '/dashboard/gps' },
-  { perm: 'movements',         path: '/dashboard/movements' },
-  { perm: 'geofencing',        path: '/dashboard/geofencing' },
-  { perm: 'national_reports',  path: '/dashboard/national-reports' },
+  { perm: 'overview', path: '/dashboard/overview' },
+  { perm: 'cases', path: '/dashboard/cases' },
+  { perm: 'gps', path: '/dashboard/gps' },
+  { perm: 'movements', path: '/dashboard/movements' },
+  { perm: 'geofencing', path: '/dashboard/geofencing' },
+  { perm: 'national_reports', path: '/dashboard/national-reports' },
   { perm: 'performance_audit', path: '/dashboard/performance-audit' },
-  { perm: 'notifications',     path: '/dashboard/notifications' },
-  { perm: 'user_management',   path: '/dashboard/users' },
-  { perm: 'system_settings',   path: '/dashboard/system-settings' },
+  { perm: 'notifications', path: '/dashboard/notifications' },
+  { perm: 'user_management', path: '/dashboard/users' },
+  { perm: 'system_settings', path: '/dashboard/system-settings' },
 ];
 
 const getFirstPermittedRoute = (user) => {
@@ -106,12 +107,12 @@ function App() {
     const userStr = localStorage.getItem('user');
     if (!userStr) return;
     const user = JSON.parse(userStr);
-    
+
     const socket = connectSocket();
     socket.on('connect', () => {
       socket.emit('joinRoom', `user_${user.id}`);
     });
-    
+
     socket.on('notification', (data) => {
       toast.success(
         (t) => (
@@ -119,7 +120,7 @@ function App() {
             <span className="font-semibold text-sm">New Update</span>
             <span className="text-xs">{data.message.split('/dashboard/gps')[0]}</span>
             {data.message.includes('/dashboard/gps') && (
-              <a 
+              <a
                 href={data.message.substring(data.message.indexOf('/dashboard/gps'))}
                 className="text-white underline font-medium mt-1 text-xs"
                 onClick={() => toast.dismiss(t.id)}
@@ -138,6 +139,7 @@ function App() {
 
   return (
     <>
+      <LiveTripToastManager />
       <Toaster
         position="top-right"
         toastOptions={{
