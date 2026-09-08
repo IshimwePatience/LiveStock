@@ -83,7 +83,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-4 py-1.5 bg-[#0052cc] hover:bg-blue-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+              className="px-4 py-1.5 bg-[#2187e0] hover:bg-[#1b72be] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" /> Print / Save PDF
             </button>
@@ -253,7 +253,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                   </div>
                   <div>
                     <span className="text-gray-500 block">Nomero y'icyemezo:</span>
-                    <span className="font-bold text-[#0052cc] text-sm tracking-wider">{permitCode}</span>
+                    <span className="font-bold text-[#2187e0] text-sm tracking-wider">{permitCode}</span>
                   </div>
                 </div>
 
@@ -303,7 +303,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
 
                 <div className="flex justify-between items-center text-xs py-2 border-b border-gray-200">
                   <div><span className="text-gray-500">Ubwoko:</span> <span className="font-bold text-black text-sm ml-1">{permit.animal_type || 'Inka'}</span></div>
-                  <div><span className="text-gray-500">Nomero y'icyemezo:</span> <span className="font-bold text-[#0052cc] text-sm ml-1">{permitCode}</span></div>
+                  <div><span className="text-gray-500">Nomero y'icyemezo:</span> <span className="font-bold text-[#2187e0] text-sm ml-1">{permitCode}</span></div>
                 </div>
 
                 {/* Animals Table */}

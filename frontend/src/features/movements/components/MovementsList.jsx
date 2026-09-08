@@ -373,7 +373,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                       {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
                         <button 
                           onClick={() => { handleDownloadPermit(item.dbId); setOpenActionDropdown(null); }}
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-[#2187e0] font-semibold hover:bg-blue-50 transition-colors"
                         >
                           📄 Download Permit
                         </button>
@@ -417,7 +417,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
             <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Movement Request</h3>
             <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this request. This will be sent to the initiator.</p>
             <textarea
-              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] mb-4"
+              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2187e0] mb-4"
               rows="4"
               placeholder="Enter rejection reason..."
               value={rejectModal.reason}

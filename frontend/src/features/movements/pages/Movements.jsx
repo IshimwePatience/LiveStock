@@ -501,7 +501,7 @@ const Movements = () => {
         {canCreateRequest && (
           <button 
             onClick={() => navigate('/dashboard/movements/new')}
-            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
              New permission
           </button>
@@ -516,7 +516,7 @@ const Movements = () => {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${
               activeTab === tab 
-                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
+                ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]' 
                 : 'hover:text-gray-900'
             }`}
           >
@@ -534,7 +534,7 @@ const Movements = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search requests" 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
+              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#2187e0]"
             />
          </div>
          

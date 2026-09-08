@@ -229,7 +229,7 @@ export const printOfficialPermit = async (permit) => {
                     <tr>
                       <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Rutanzwe ku wa:</span><span style="font-weight: bold; font-size: 13px;">${issueDate}</span></td>
                       <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Inyandiko ifite agaciro kugeza:</span><span style="font-weight: bold; font-size: 13px;">${validUntilDate}</span></td>
-                      <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #0052cc;">${permitCode}</span></td>
+                      <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #2187e0;">${permitCode}</span></td>
                     </tr>
                   </table>
                 </div>
@@ -270,7 +270,7 @@ export const printOfficialPermit = async (permit) => {
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 12px;">
                   <tr>
                     <td style="border: none; padding: 4px 0;"><span style="color: #6b7280;">Ubwoko bw'Amatungo:</span> <span style="font-weight: bold; font-size: 12px; margin-left: 4px;">${permit.animal_type || 'Inka'}</span></td>
-                    <td style="text-align: right; border: none; padding: 4px 0;"><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 12px; color: #0052cc; margin-left: 4px;">${permitCode}</span></td>
+                    <td style="text-align: right; border: none; padding: 4px 0;"><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 12px; color: #2187e0; margin-left: 4px;">${permitCode}</span></td>
                   </tr>
                 </table>
 

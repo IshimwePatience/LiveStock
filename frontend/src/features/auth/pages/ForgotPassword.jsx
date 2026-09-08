@@ -116,14 +116,14 @@ const ForgotPassword = () => {
                 <button
                   type="submit"
                   disabled={forgotMutation.isPending}
-                  className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
+                  className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
                 >
                   {forgotMutation.isPending ? 'Sending...' : 'Send Reset Link'}
                 </button>
               </div>
 
               <div className="text-center mt-6">
-                <Link to="/login" className="text-[#0052cc] hover:underline text-[14px] font-medium">Return to log in</Link>
+                <Link to="/login" className="text-[#2187e0] hover:underline text-[14px] font-medium">Return to log in</Link>
               </div>
 
               <div className="border-t border-gray-200 mt-6 pt-6 text-center">
@@ -169,7 +169,7 @@ const ForgotPassword = () => {
                 <button
                   type="submit"
                   disabled={resetMutation.isPending}
-                  className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
+                  className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
                 >
                   {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
                 </button>

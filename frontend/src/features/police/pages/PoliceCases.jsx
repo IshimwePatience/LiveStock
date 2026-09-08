@@ -330,7 +330,7 @@ const PoliceCases = () => {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${
               activeTab === tab 
-                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]' 
+                ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]' 
                 : 'hover:text-gray-900'
             }`}
           >

@@ -1021,17 +1021,6 @@ const TrackingMap = () => {
               </span>
             )}
 
-            {/* Route Itinerary: From -> To Badge */}
-            {selectedDevice?.route && (
-              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-extrabold text-emerald-900 tracking-tight flex items-center gap-1.5 shadow-xs">
-                <span className="text-emerald-700">FROM:</span>
-                <span>{selectedDevice.route.origin}</span>
-                <span className="text-emerald-400">➔</span>
-                <span className="text-emerald-700">TO:</span>
-                <span>{selectedDevice.route.destination}</span>
-              </span>
-            )}
-
             <button
               onClick={() => { setIsPlayingRoute(false); setPlaybackIndex(prev => Math.min((playbackPoints.length || 1) - 1, prev + 1)); }}
               className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-700 transition cursor-pointer"
@@ -1585,7 +1574,7 @@ const TrackingMap = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingClaim}
-                  className="bg-[#0052cc] hover:bg-[#0040a8] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
+                  className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
                 >
                   {isSubmittingClaim ? 'Submitting Claim...' : 'Claim Vehicle'}
                 </button>

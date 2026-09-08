@@ -81,7 +81,7 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
                     placeholder="e.g. 123456"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-lg font-mono tracking-widest text-center focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-lg font-mono tracking-widest text-center focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0]"
                   />
                 </div>
               </div>
@@ -97,7 +97,7 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                 <button 
                   type="submit"
                   disabled={submitting || otpInput.length < 6}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#0052cc] rounded-md hover:bg-[#0047b3] transition-colors disabled:opacity-50"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#2187e0] rounded-md hover:bg-[#1b72be] transition-colors disabled:opacity-50"
                 >
                   {submitting ? 'Verifying...' : 'Confirm Arrival'}
                 </button>
@@ -113,7 +113,7 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
 
               <button 
                 onClick={onClose}
-                className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#0052cc] rounded-md hover:bg-[#0047b3] transition-colors"
+                className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#2187e0] rounded-md hover:bg-[#1b72be] transition-colors"
               >
                 Close
               </button>

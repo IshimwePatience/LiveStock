@@ -190,7 +190,7 @@ const VetRecords = () => {
           {user?.role === 'SARO' && (
             <Link
               to={`/dashboard/vet-records/create?type=${activeTab?.toLowerCase()}`}
-              className="bg-[#0052cc] hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
+              className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
             >
               <span className="text-lg leading-none">+</span> Add {activeTab}
             </Link>
@@ -205,7 +205,7 @@ const VetRecords = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
-              ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+              ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]'
               : 'hover:text-gray-900'
               }`}
           >
@@ -223,7 +223,7 @@ const VetRecords = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search records"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#2187e0]"
           />
         </div>
 

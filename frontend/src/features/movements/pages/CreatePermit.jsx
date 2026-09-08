@@ -955,7 +955,7 @@ const CreatePermit = () => {
               >
                 <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
                   headerForm.transporter_mode === 'DRIVER_VEHICLE'
-                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
+                    ? 'bg-[#2187e0] border border-[#2187e0] text-white'
                     : 'border border-gray-300 bg-white'
                 }`}>
                   {headerForm.transporter_mode === 'DRIVER_VEHICLE' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
@@ -969,7 +969,7 @@ const CreatePermit = () => {
               >
                 <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
                   headerForm.transporter_mode === 'PERSON_ON_FOOT'
-                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
+                    ? 'bg-[#2187e0] border border-[#2187e0] text-white'
                     : 'border border-gray-300 bg-white'
                 }`}>
                   {headerForm.transporter_mode === 'PERSON_ON_FOOT' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}

@@ -80,13 +80,13 @@ const Notifications = () => {
         <div className="flex flex-col gap-1 mb-8">
           <button 
             onClick={() => setActiveTab('Direct')}
-            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Direct' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Direct' ? 'bg-[#e9f2ff] text-[#2187e0] border-l-2 border-[#2187e0] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Direct
           </button>
           <button 
             onClick={() => setActiveTab('Recents')}
-            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Recents' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Recents' ? 'bg-[#e9f2ff] text-[#2187e0] border-l-2 border-[#2187e0] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Recents
           </button>

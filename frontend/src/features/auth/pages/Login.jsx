@@ -110,16 +110,16 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
+                className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
               >
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
 
             <div className="text-center mt-6">
-              <a href="#" className="text-[#0052cc] hover:underline text-[14px] font-medium">Can't log in?</a>
+              <a href="#" className="text-[#2187e0] hover:underline text-[14px] font-medium">Can't log in?</a>
               <span className="mx-2 text-gray-300">•</span>
-              <Link to="/forgot-password" className="text-[#0052cc] hover:underline text-[14px] font-medium">Forgot password?</Link>
+              <Link to="/forgot-password" className="text-[#2187e0] hover:underline text-[14px] font-medium">Forgot password?</Link>
             </div>
 
             <div className="border-t border-gray-200 mt-6 pt-6 text-center">

@@ -418,7 +418,7 @@ const UserManagement = () => {
               setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
             Create User
           </button>
@@ -434,7 +434,7 @@ const UserManagement = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search users"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#2187e0]"
           />
         </div>
 
@@ -651,7 +651,7 @@ const UserManagement = () => {
                   <input
                     type="text" name="name" required value={formData.name}
                     onChange={handleInputChange}
-                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] transition-colors"
                   />
                 </div>
 
@@ -663,7 +663,7 @@ const UserManagement = () => {
                   <input
                     type="email" name="email" required value={formData.email}
                     onChange={handleInputChange}
-                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] transition-colors"
                   />
                 </div>
 
@@ -676,7 +676,7 @@ const UserManagement = () => {
                     type="password" name="password" required={!isEditMode} value={formData.password}
                     onChange={handleInputChange}
                     placeholder={isEditMode ? 'Leave blank to keep current' : ''}
-                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] transition-colors"
                   />
                 </div>
 
@@ -763,7 +763,7 @@ const UserManagement = () => {
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggleModalPermission(mod.id)}
-                            className="rounded border-gray-300 text-[#0052cc] focus:ring-[#0052cc]"
+                            className="rounded border-gray-300 text-[#2187e0] focus:ring-[#2187e0]"
                           />
                           <span className={isChecked ? 'font-semibold text-gray-900' : 'text-gray-500'}>
                             {mod.label}
@@ -780,14 +780,14 @@ const UserManagement = () => {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-5 py-2 text-sm font-medium text-[#0052cc] hover:bg-blue-50 rounded-full transition"
+                  className="px-5 py-2 text-sm font-medium text-[#2187e0] hover:bg-blue-50 rounded-full transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full transition disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#2187e0] hover:bg-[#1b72be] rounded-full transition disabled:opacity-50"
                 >
                   {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Create')}
                 </button>

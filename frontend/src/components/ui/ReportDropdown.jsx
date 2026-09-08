@@ -76,7 +76,7 @@ const ReportDropdown = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${
           isOpen || timeRange !== 'ALL' || recordScope !== 'BOTH'
-            ? 'bg-blue-50 text-[#0052cc] border-[#0052cc]' 
+            ? 'bg-blue-50 text-[#2187e0] border-[#2187e0]' 
             : 'border-gray-300 text-gray-700 hover:bg-gray-50'
         }`}
       >
@@ -85,7 +85,7 @@ const ReportDropdown = ({
         </svg>
         <span>Report</span>
         {(timeRange !== 'ALL' || recordScope !== 'BOTH') && (
-          <span className="ml-1 px-1.5 py-0.5 bg-[#0052cc] text-white text-[10px] rounded-full">!</span>
+          <span className="ml-1 px-1.5 py-0.5 bg-[#2187e0] text-white text-[10px] rounded-full">!</span>
         )}
       </button>
 
@@ -116,16 +116,16 @@ const ReportDropdown = ({
                     }}
                     className={`w-full text-left flex items-center justify-between px-4 py-2.5 text-sm ${
                       activeCategory === cat 
-                        ? 'bg-blue-50 text-[#0052cc] font-semibold border-l-4 border-[#0052cc]' 
+                        ? 'bg-blue-50 text-[#2187e0] font-semibold border-l-4 border-[#2187e0]' 
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                     }`}
                   >
                     <span>{cat}</span>
                     {cat === 'Record Scope' && recordScope !== 'BOTH' && (
-                      <span className="bg-blue-100 text-[#0052cc] text-[10px] px-1.5 py-0.5 rounded-full font-bold">Scope</span>
+                      <span className="bg-blue-100 text-[#2187e0] text-[10px] px-1.5 py-0.5 rounded-full font-bold">Scope</span>
                     )}
                     {cat === 'Date Range' && timeRange !== 'ALL' && (
-                      <span className="bg-blue-100 text-[#0052cc] text-[10px] px-1.5 py-0.5 rounded-full font-bold">Active</span>
+                      <span className="bg-blue-100 text-[#2187e0] text-[10px] px-1.5 py-0.5 rounded-full font-bold">Active</span>
                     )}
                   </button>
                 ))}
@@ -135,7 +135,7 @@ const ReportDropdown = ({
             {/* Right Column: Options */}
             <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative">
               <div className="pr-3 pb-3">
-                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#0052cc] focus-within:ring-1 focus-within:ring-[#0052cc] transition overflow-hidden">
+                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#2187e0] focus-within:ring-1 focus-within:ring-[#2187e0] transition overflow-hidden">
                   <div className="pl-2.5 text-gray-500">
                     <Search className="w-4 h-4" strokeWidth={2} />
                   </div>
@@ -166,15 +166,15 @@ const ReportDropdown = ({
                           name="reportRecordScope"
                           checked={isSelected}
                           onChange={() => handleSelectOption(opt.id)}
-                          className="mt-0.5 border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-4 h-4 cursor-pointer" 
+                          className="mt-0.5 border-gray-300 text-[#2187e0] focus:ring-[#2187e0] w-4 h-4 cursor-pointer" 
                         />
                         <div className="flex flex-col flex-1">
-                          <span className={`text-sm leading-tight ${isSelected ? 'font-semibold text-[#0052cc]' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                          <span className={`text-sm leading-tight ${isSelected ? 'font-semibold text-[#2187e0]' : 'text-gray-700 group-hover:text-gray-900'}`}>
                             {opt.title}
                           </span>
                           {opt.subtitle && <span className="text-xs text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#0052cc]" />}
+                        {isSelected && <Check className="w-4 h-4 text-[#2187e0]" />}
                       </label>
                     );
                   })
@@ -196,15 +196,15 @@ const ReportDropdown = ({
                           name="reportDateRange"
                           checked={isSelected}
                           onChange={() => handleSelectOption(opt.id)}
-                          className="mt-0.5 border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-4 h-4 cursor-pointer" 
+                          className="mt-0.5 border-gray-300 text-[#2187e0] focus:ring-[#2187e0] w-4 h-4 cursor-pointer" 
                         />
                         <div className="flex flex-col flex-1">
-                          <span className={`text-sm leading-tight ${isSelected ? 'font-semibold text-[#0052cc]' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                          <span className={`text-sm leading-tight ${isSelected ? 'font-semibold text-[#2187e0]' : 'text-gray-700 group-hover:text-gray-900'}`}>
                             {opt.title}
                           </span>
                           {opt.subtitle && <span className="text-xs text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#0052cc]" />}
+                        {isSelected && <Check className="w-4 h-4 text-[#2187e0]" />}
                       </label>
                     );
                   })
@@ -217,13 +217,13 @@ const ReportDropdown = ({
                       <div 
                         key={opt.id} 
                         onClick={() => handleSelectOption(opt.id)}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-[#0052cc] hover:bg-blue-50/30 cursor-pointer group transition"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-[#2187e0] hover:bg-blue-50/30 cursor-pointer group transition"
                       >
-                        <div className="p-2 rounded-md bg-gray-100 group-hover:bg-blue-100 text-gray-700 group-hover:text-[#0052cc]">
+                        <div className="p-2 rounded-md bg-gray-100 group-hover:bg-blue-100 text-gray-700 group-hover:text-[#2187e0]">
                           <IconComp className="w-5 h-5" />
                         </div>
                         <div className="flex flex-col flex-1">
-                          <span className="text-sm font-semibold text-gray-800 group-hover:text-[#0052cc]">
+                          <span className="text-sm font-semibold text-gray-800 group-hover:text-[#2187e0]">
                             {opt.title}
                           </span>
                           <span className="text-xs text-gray-500 mt-0.5">{opt.subtitle}</span>
@@ -269,7 +269,7 @@ const ReportDropdown = ({
                    onPrintPDF(recordScope);
                    setIsOpen(false);
                  }}
-                 className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm"
+                 className="flex items-center gap-1.5 bg-[#2187e0] hover:bg-[#1b72be] text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm"
                >
                  <Printer className="w-3.5 h-3.5" /> Print PDF
                </button>
