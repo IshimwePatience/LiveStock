@@ -119,6 +119,10 @@ const Geofencing = () => {
     return getSectors(prov, selectedDistrict).sort().map(s => ({ value: s, label: s }));
   }, [selectedDistrict]);
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isRABUser = user?.role === 'RAB' || user?.role === 'ADMIN' || user?.role === 'SuperAdmin';
+
   const createMutation = useMutation({
     mutationFn: async (payload) => {
       const res = await api.post('/geofence', payload);
@@ -150,6 +154,10 @@ const Geofencing = () => {
 
   const handleCreateSubmit = (e) => {
     e.preventDefault();
+    if (!isRABUser) {
+      toast.error('Only RAB Officers can create geofence zones.');
+      return;
+    }
     if (zoneType === 'DISTRICT' && !selectedDistrict) { toast.error('Select District'); return; }
     if (zoneType === 'SECTOR' && !selectedSector) { toast.error('Select Sector'); return; }
     const autoName = zoneName || (zoneType === 'DISTRICT' ? `${selectedDistrict} District` : `${selectedSector} Sector`);
@@ -297,12 +305,14 @@ const Geofencing = () => {
           >
             Forbidden Zones
           </button>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0052cc] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-white hover:bg-[#0047b3] whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4" /> Add Zone
-          </button>
+          {isRABUser && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0052cc] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-white hover:bg-[#0047b3] whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" /> Add Zone
+            </button>
+          )}
         </div>
       </div>
 
@@ -371,17 +381,27 @@ const Geofencing = () => {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={(e) => { e.stopPropagation(); toggleMutation.mutate(fence.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isRABUser) {
+                              toast.error('Only RAB Officers can toggle geofences.');
+                              return;
+                            }
+                            toggleMutation.mutate(fence.id);
+                          }}
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition ${fence.active ? (isAllowed ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-[#0052cc]') : 'bg-gray-100 text-gray-500'}`}
                         >
                           {fence.active ? 'Active' : 'Off'}
                         </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(fence.id); }}
-                          className="p-1 text-gray-300 hover:text-red-500 rounded transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isRABUser && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(fence.id); }}
+                            className="p-1 text-gray-300 hover:text-red-500 rounded transition"
+                            title="Delete Zone"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 

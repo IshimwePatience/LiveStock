@@ -13,6 +13,10 @@ exports.getGeofences = async (req, res) => {
 
 exports.createGeofence = async (req, res) => {
   try {
+    const isRABUser = req.user && (req.user.role === 'RAB' || req.user.role === 'ADMIN' || req.user.role === 'SuperAdmin');
+    if (!isRABUser) {
+      return res.status(403).json({ message: 'Only RAB Officers can create geofence zones.' });
+    }
     await Geofence.sync();
     const fence = await geofenceService.createGeofence({
       ...req.body,
@@ -26,6 +30,10 @@ exports.createGeofence = async (req, res) => {
 
 exports.deleteGeofence = async (req, res) => {
   try {
+    const isRABUser = req.user && (req.user.role === 'RAB' || req.user.role === 'ADMIN' || req.user.role === 'SuperAdmin');
+    if (!isRABUser) {
+      return res.status(403).json({ message: 'Only RAB Officers can delete geofence zones.' });
+    }
     await geofenceService.deleteGeofence(req.params.id);
     res.json({ message: 'Geofence zone deleted successfully' });
   } catch (error) {
@@ -35,6 +43,10 @@ exports.deleteGeofence = async (req, res) => {
 
 exports.toggleGeofence = async (req, res) => {
   try {
+    const isRABUser = req.user && (req.user.role === 'RAB' || req.user.role === 'ADMIN' || req.user.role === 'SuperAdmin');
+    if (!isRABUser) {
+      return res.status(403).json({ message: 'Only RAB Officers can toggle geofence zones.' });
+    }
     const fence = await geofenceService.toggleGeofence(req.params.id);
     res.json(fence);
   } catch (error) {
