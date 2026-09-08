@@ -1176,8 +1176,8 @@ const TrackingMap = () => {
                       <span className="font-bold text-sm text-gray-900 truncate flex items-center gap-1.5">
                         {loc.deviceName}
                         {claimInfo && (
-                          <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold" title="Police Claim Reported">
-                            CLAIM
+                          <span className="text-[#2187e0] text-xs font-bold ml-1" title="Police Claim Reported">
+                            Claimed
                           </span>
                         )}
                       </span>
@@ -1350,14 +1350,13 @@ const TrackingMap = () => {
                 <span className="font-semibold text-gray-800 text-[13px] flex items-center gap-1.5">
                   {selectedDevice.deviceName}
                   {claimedVehiclesMap[(selectedDevice.deviceName || '').toUpperCase().trim()] ? (
-                    <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-extrabold">Claimed</span>
+                    <span className="text-[#2187e0] font-bold text-[12px] ml-1">Claimed</span>
                   ) : (hasPerm('cases') || isPolice) ? (
                     <button
                       onClick={() => setIsClaimModalOpen(true)}
-                      className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-1 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer ml-1"
+                      className="text-[#2187e0] hover:underline font-bold text-[12px] cursor-pointer ml-1"
                     >
-                      <ShieldAlert className="w-3 h-3" />
-                      <span>Claim</span>
+                      Claim
                     </button>
                   ) : null}
                 </span>
@@ -1425,7 +1424,7 @@ const TrackingMap = () => {
             <div className="flex flex-col pl-2 pr-6 pt-1">
               <span className="font-bold text-[#475569] text-base tracking-tight mb-2">Current Trip</span>
               {selectedDevice.route ? (
-                <div className="flex flex-col gap-2 bg-[#f8fafc] p-3 rounded-lg border border-slate-200">
+                <div className="flex flex-col gap-2 py-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                     <div className="flex flex-col">
@@ -1434,13 +1433,10 @@ const TrackingMap = () => {
                     </div>
                   </div>
                   <div className="border-l-2 border-dashed border-blue-400 ml-1 pl-3 my-0.5 flex items-center justify-between">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${selectedDevice?.speed > 0
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : (selectedDevice?.route?.status === 'ARRIVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200')
-                      }`}>
+                    <span className="text-[11px] font-medium text-gray-600">
                       {selectedDevice?.speed > 0
-                        ? `🚚 En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
-                        : (selectedDevice?.route?.status === 'ARRIVED' ? '🏁 Arrived at Destination' : '🅿️ At Origin / Loading')}
+                        ? `En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
+                        : (selectedDevice?.route?.status === 'ARRIVED' ? 'Arrived at Destination' : 'At Origin / Loading')}
                     </span>
                     {selectedDevice.route.permitNumber && (
                       <span className="text-[10px] text-gray-500 font-mono">Permit #{selectedDevice.route.permitNumber}</span>

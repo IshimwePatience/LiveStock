@@ -3,18 +3,47 @@ import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { getTraccarLocations } from '../../lib/api';
 
-// Custom Toast Renderer matching user's green toast UI (#15803d, #14532d shadow, white text, (x) close icon, no emojis, right-side slide-in)
+// Cache reverse-geocoded locations to minimize Nominatim API calls
+const addressCache = new Map();
+
+const getReverseLocationName = async (lat, lon) => {
+  if (!lat || !lon) return 'Aho igeze ntihazwi';
+  const roundedKey = `${Number(lat).toFixed(3)},${Number(lon).toFixed(3)}`;
+  if (addressCache.has(roundedKey)) return addressCache.get(roundedKey);
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=17&addressdetails=1`);
+    const data = await res.json();
+    if (data && data.address) {
+      const addr = data.address;
+      const landmark = addr.amenity || addr.building || addr.shop || addr.road || addr.neighbourhood || addr.village || addr.suburb || addr.city_district;
+      const admin = addr.city || addr.town || addr.county || addr.state;
+      const placeStr = [landmark, admin].filter(Boolean).join(', ') || (data.display_name ? data.display_name.split(',')[0] : '');
+      if (placeStr) {
+        addressCache.set(roundedKey, placeStr);
+        return placeStr;
+      }
+    }
+  } catch (e) {
+    // fallback to coordinates if network fails
+  }
+  const coordsStr = `${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`;
+  addressCache.set(roundedKey, coordsStr);
+  return coordsStr;
+};
+
+// Custom Toast Renderer matching top navbar blue UI (#2187e0, #1b72be shadow, white text, (x) close icon, no emojis, right-side slide-in)
 const showRightSlideToast = (id, messageText, duration = 6000) => {
   toast.custom(
     (t) => (
       <div
         className={`${
           t.visible ? 'animate-in slide-in-from-right duration-300 ease-out' : 'animate-out fade-out duration-200'
-        } max-w-md w-full bg-[#15803d] text-white shadow-[0_4px_0_0_#14532d] rounded-xl p-4 flex items-center gap-3 font-sans pointer-events-auto border border-emerald-600/30 transition-all`}
+        } max-w-md w-full bg-[#2187e0] text-white shadow-[0_4px_0_0_#1b72be] rounded-xl p-4 flex items-center gap-3 font-sans pointer-events-auto border border-blue-300/30 transition-all`}
       >
         <button
           onClick={() => toast.dismiss(t.id)}
-          className="p-1 text-white hover:bg-emerald-800/50 rounded-full transition-colors shrink-0 cursor-pointer"
+          className="p-1 text-white hover:bg-blue-700/50 rounded-full transition-colors shrink-0 cursor-pointer"
           title="Close notification"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,7 +80,7 @@ const LiveTripToastManager = () => {
 
     const now = Date.now();
 
-    locations.forEach(loc => {
+    locations.forEach(async (loc) => {
       if (!loc.route) return;
 
       const deviceId = loc.deviceId || loc.deviceName;
@@ -67,6 +96,7 @@ const LiveTripToastManager = () => {
         lastOriginToastTime: 0,
         lastEnRouteToastTime: 0,
         lastStopWarningTime: 0,
+        lastDeviationToastTime: 0,
         lastMovingTime: now,
         originStartTime: now,
         wasMoving: false,
@@ -105,33 +135,47 @@ const LiveTripToastManager = () => {
       }
 
       // --------------------------------------------------------------------------
-      // 3. RULE: While car is on the way — Keep showing "Car is here" toast every 3 minutes (180,000 ms)
+      // 3. RULE: While car is on the way — Keep showing "Car is here" toast + live location ("aho igeze")
       // --------------------------------------------------------------------------
       if (isMoving && (tripStatus === 'ACTIVE' || tripStatus === 'IN_TRANSIT' || prevState.hasNotifiedDeparted)) {
         if (now - prevState.lastEnRouteToastTime >= 180000 || prevState.lastEnRouteToastTime === 0) {
-          const msg = `Imodoka ${plate} iri mu nzira yerekeza (${dest}) ku muvuduko wa ${speedKmh} km/h.`;
-          showRightSlideToast(`enroute-${deviceId}`, msg, 6000);
+          const currLocation = await getReverseLocationName(loc.latitude, loc.longitude);
+          const msg = `Imodoka ${plate} iri mu nzira yerekeza (${dest}) ku muvuduko wa ${speedKmh} km/h, aho igeze ni: ${currLocation}.`;
+          showRightSlideToast(`enroute-${deviceId}`, msg, 8000);
           prevState.lastEnRouteToastTime = now;
         }
         prevState.lastMovingTime = now;
       }
 
       // --------------------------------------------------------------------------
-      // 4. RULE: Car stops for > 5 minutes (300,000 ms) en route — Show Warning Toast!
+      // 4. RULE: Car stops for > 5 minutes (300,000 ms) en route — Show Warning Toast + location ("aho ihagaze ni")
       // --------------------------------------------------------------------------
       if (!isMoving && prevState.hasNotifiedDeparted && tripStatus !== 'ARRIVED' && tripStatus !== 'COMPLETED') {
         const stoppedDurationMs = now - prevState.lastMovingTime;
         const stoppedMins = Math.floor(stoppedDurationMs / 60000);
 
         if (stoppedDurationMs >= 300000 && (now - prevState.lastStopWarningTime >= 300000 || prevState.lastStopWarningTime === 0)) {
-          const msg = `Imodoka ${plate} imaze iminota ${stoppedMins} ihagaze mu nzira yerekeza (${dest}).`;
+          const currLocation = await getReverseLocationName(loc.latitude, loc.longitude);
+          const msg = `Imodoka ${plate} imaze iminota ${stoppedMins} ihagaze mu nzira yerekeza (${dest}), aho ihagaze ni: ${currLocation}.`;
           showRightSlideToast(`stop-warn-${deviceId}`, msg, 10000);
           prevState.lastStopWarningTime = now;
         }
       }
 
       // --------------------------------------------------------------------------
-      // 5. RULE: Car reaches destination — Show toast notification to give driver OTP code!
+      // 5. RULE: Route Deviation / Geofence Breach Notification ("yayobye inzira yashyizweho")
+      // --------------------------------------------------------------------------
+      if (loc.geofenceViolation?.violation) {
+        if (now - prevState.lastDeviationToastTime >= 180000 || prevState.lastDeviationToastTime === 0) {
+          const currLocation = await getReverseLocationName(loc.latitude, loc.longitude);
+          const msg = `Imodoka ${plate} yayobye inzira yashyizweho yerekeza (${dest}), aho igeze ubu ni: ${currLocation}.`;
+          showRightSlideToast(`route-deviation-${deviceId}`, msg, 12000);
+          prevState.lastDeviationToastTime = now;
+        }
+      }
+
+      // --------------------------------------------------------------------------
+      // 6. RULE: Car reaches destination — Show toast notification to give driver OTP code!
       // --------------------------------------------------------------------------
       if (tripStatus === 'ARRIVED' && !prevState.hasNotifiedArrived) {
         const msg = `Imodoka ${plate} yageze aho yajyaga (${dest}). Tangira umushoferi kode ya OTP: [ ${otp} ].`;

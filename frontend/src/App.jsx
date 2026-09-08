@@ -145,17 +145,17 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#15803d',
+            background: '#2187e0',
             color: '#fff',
-            borderRadius: '4px',
-            boxShadow: '0px 4px 0px 0px #14532d',
+            borderRadius: '6px',
+            boxShadow: '0px 4px 0px 0px #1b72be',
             padding: '16px 24px',
             fontSize: '14px',
             fontWeight: '600',
           },
           iconTheme: {
             primary: '#fff',
-            secondary: '#15803d',
+            secondary: '#2187e0',
           },
         }}
       />
