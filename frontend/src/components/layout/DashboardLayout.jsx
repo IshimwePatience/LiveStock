@@ -158,30 +158,30 @@ const DashboardLayout = () => {
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-800">
 
       {/* Top Header — Google Drive style */}
-      <header className="h-16 bg-[#f8fafd] border-b border-gray-200/80 flex items-center justify-between px-4 sticky top-0 z-50 text-gray-800">
+      <header className="h-16 bg-[#2187e0] border-b border-[#1b72be] flex items-center justify-between px-4 sticky top-0 z-50 text-white shadow-sm">
 
         {/* Left: Menu & Logo */}
         <div className="flex items-center gap-2 min-w-[220px]">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition text-gray-600 focus:outline-none"
+            className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white focus:outline-none"
             aria-label="Toggle navigation menu"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 cursor-pointer mr-2" onClick={() => navigate('/dashboard')}>
-            <span className="text-[22px] font-normal text-[#444746] tracking-tight leading-none select-none pl-1">Livestock app</span>
+            <span className="text-[22px] font-medium text-white tracking-tight leading-none select-none pl-1">Livestock app</span>
           </div>
 
           {/* Project Selector */}
           <div className="relative">
             <div
               onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50 cursor-pointer transition"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/40 bg-white/10 hover:bg-white/20 cursor-pointer transition text-white"
             >
-              <Hexagon className="w-4 h-4 text-[#0052cc] fill-[#0052cc]/20" />
-              <span className="text-sm text-gray-700">{getJurisdictionLabel()}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+              <Hexagon className="w-4 h-4 text-white fill-white/20" />
+              <span className="text-sm font-medium text-white">{getJurisdictionLabel()}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-white" />
             </div>
 
             {isProjectDropdownOpen && (
@@ -203,12 +203,12 @@ const DashboardLayout = () => {
 
         {/* Center: Search Bar — Google Drive pill style */}
         <div className="flex-1 max-w-2xl px-4 hidden md:block">
-          <div className="relative flex items-center bg-[#eaf0fb] hover:bg-[#dce7f9] focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-blue-400 rounded-full px-4 py-2.5 transition-all">
-            <Search className="w-5 h-5 text-gray-500 mr-3 shrink-0" />
+          <div className="relative flex items-center bg-white/20 hover:bg-white/25 focus-within:bg-white focus-within:shadow-md rounded-full px-4 py-2.5 transition-all group">
+            <Search className="w-5 h-5 text-white group-focus-within:text-gray-500 mr-3 shrink-0 transition-colors" />
             <input
               type="text"
               placeholder="Search (/) for resources, districts, reports, and more"
-              className="bg-transparent border-none outline-none w-full text-sm text-gray-800 placeholder-gray-500"
+              className="bg-transparent border-none outline-none w-full text-sm text-white placeholder-white/80 group-focus-within:text-gray-900 group-focus-within:placeholder-gray-400"
             />
           </div>
         </div>
@@ -223,7 +223,7 @@ const DashboardLayout = () => {
           <div className="relative">
             <button
               onClick={() => setIsHelpOpen(!isHelpOpen)}
-              className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition text-gray-600"
+              className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white"
             >
               <HelpCircle className="w-5 h-5" />
             </button>
@@ -239,7 +239,7 @@ const DashboardLayout = () => {
             )}
           </div>
 
-          <button className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition text-gray-600">
+          <button className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white">
             <MoreVertical className="w-5 h-5" />
           </button>
 

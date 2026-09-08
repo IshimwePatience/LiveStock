@@ -368,27 +368,34 @@ const formatPlaybackTime = (isoTimeStr) => {
   }
 };
 
-// Custom 2D Moving Vehicle Marker Icon for Playback Mode with live speed & timestamp tooltip
-const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0, fixTime = null) => {
+// Custom 2D Moving Vehicle Marker Icon for Playback Mode with live speed, stopped duration & timestamp tooltip
+const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0, fixTime = null, isStopped = false, stoppedText = null) => {
   const speedKmh = (speed * 1.852).toFixed(1);
   const { timeStr, dateStr } = formatPlaybackTime(fixTime);
 
+  const isCarStopped = isStopped || parseFloat(speedKmh) <= 1.0;
+  const badgeBg = isCarStopped ? '#7c2d12' : '#0f172a';
+  const badgeBorder = isCarStopped ? '#f97316' : '#3b82f6';
+  const shadowColor = isCarStopped ? 'rgba(249,115,22,0.6)' : 'rgba(37,99,235,0.6)';
+
+  const speedOrStopHtml = isCarStopped
+    ? `<div style="color: #fdba74; font-size: 11px; font-weight: 900; margin-top: 1px;">🅿️ Stopped for ${stoppedText || '0 mins'}</div>`
+    : `<div style="color: #ffffff; font-size: 12px; font-weight: 900; margin-top: 1px;">⚡ ${speedKmh} km/h</div>`;
+
   const html = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
-      <div style="background: #0f172a; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 4px 10px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.45); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif; text-align: center;">
+      <div style="background: ${badgeBg}; border: 1.5px solid ${badgeBorder}; border-radius: 8px; padding: 4px 10px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.5); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif; text-align: center;">
         ${dateStr ? `<div style="color: #93c5fd; font-size: 10px; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.2px;">📅 ${dateStr} • 🕒 ${timeStr}</div>` : ''}
-        <div style="color: #ffffff; font-size: 12px; font-weight: 900;">
-          ⚡ ${speedKmh} km/h
-        </div>
+        ${speedOrStopHtml}
       </div>
       <div style="transform: rotate(${course || 0}deg); transition: transform 0.2s ease;">
-        <svg width="34" height="56" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(37,99,235,0.6));">
+        <svg width="34" height="56" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px ${shadowColor});">
           <rect x="2" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
           <rect x="31" y="8" width="3" height="7" rx="1.5" fill="#0f172a" />
           <rect x="2" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
           <rect x="31" y="38" width="3" height="12" rx="1.5" fill="#0f172a" />
-          <rect x="4" y="20" width="28" height="36" rx="3" fill="#16a34a" stroke="#22c55e" stroke-width="1.5" />
-          <rect x="6" y="2" width="24" height="18" rx="4" fill="#15803d" stroke="#4ade80" stroke-width="1.5" />
+          <rect x="4" y="20" width="28" height="36" rx="3" fill="${isCarStopped ? '#d97706' : '#16a34a'}" stroke="${isCarStopped ? '#f59e0b' : '#22c55e'}" stroke-width="1.5" />
+          <rect x="6" y="2" width="24" height="18" rx="4" fill="${isCarStopped ? '#b45309' : '#15803d'}" stroke="${isCarStopped ? '#fbbf24' : '#4ade80'}" stroke-width="1.5" />
         </svg>
       </div>
     </div>
@@ -397,8 +404,8 @@ const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0, fixTime = n
   return new L.divIcon({
     html: html,
     className: 'playback-vehicle-marker',
-    iconSize: [140, 85],
-    iconAnchor: [70, 52],
+    iconSize: [160, 90],
+    iconAnchor: [80, 56],
   });
 };
 
@@ -553,6 +560,48 @@ const TrackingMap = () => {
     return points;
   };
 
+  const computeStoppedTimes = (pts) => {
+    if (!pts || !Array.isArray(pts) || pts.length === 0) return [];
+    let stoppedStartPoint = null;
+
+    return pts.map((p) => {
+      const speedKmh = ((p.speed || 0) * 1.852);
+      const isStopped = speedKmh <= 1.0;
+
+      if (isStopped) {
+        if (!stoppedStartPoint) {
+          stoppedStartPoint = p;
+        }
+        const startTimeMs = new Date(stoppedStartPoint.fixTime).getTime();
+        const currTimeMs = new Date(p.fixTime).getTime();
+        const stoppedDiffMs = Math.max(0, currTimeMs - startTimeMs);
+        const stoppedMins = Math.floor(stoppedDiffMs / 60000);
+
+        let stoppedText = '0 mins';
+        if (stoppedMins < 60) {
+          stoppedText = `${stoppedMins} mins`;
+        } else {
+          const hrs = Math.floor(stoppedMins / 60);
+          const remMins = stoppedMins % 60;
+          stoppedText = `${hrs}h ${remMins}m`;
+        }
+
+        return {
+          ...p,
+          isStopped: true,
+          stoppedText
+        };
+      } else {
+        stoppedStartPoint = null;
+        return {
+          ...p,
+          isStopped: false,
+          stoppedText: null
+        };
+      }
+    });
+  };
+
   const handleFetchPlaybackReport = async () => {
     if (!selectedDevice) return;
     setIsLoadingPlayback(true);
@@ -596,13 +645,16 @@ const TrackingMap = () => {
       if (pts.length === 0) {
         pts = generateFallbackPlaybackRoute(selectedDevice);
       }
+
+      pts = computeStoppedTimes(pts);
       
       toast.success(`Loaded playback route history (${pts.length} points) for ${selectedDevice.deviceName}!`);
       setPlaybackPoints(pts);
       setPlaybackIndex(0);
       setIsPlayingRoute(true);
     } catch (err) {
-      const fallbackPts = generateFallbackPlaybackRoute(selectedDevice);
+      let fallbackPts = generateFallbackPlaybackRoute(selectedDevice);
+      fallbackPts = computeStoppedTimes(fallbackPts);
       setPlaybackPoints(fallbackPts);
       setPlaybackIndex(0);
       setIsPlayingRoute(true);
@@ -842,7 +894,9 @@ const TrackingMap = () => {
                       selectedDevice?.deviceName,
                       playbackPoints[playbackIndex].speed,
                       playbackPoints[playbackIndex].course,
-                      playbackPoints[playbackIndex].fixTime
+                      playbackPoints[playbackIndex].fixTime,
+                      playbackPoints[playbackIndex].isStopped,
+                      playbackPoints[playbackIndex].stoppedText
                     )}
                   />
                   <PlaybackCenterer position={playbackPoints[playbackIndex]} />
@@ -964,6 +1018,17 @@ const TrackingMap = () => {
                 <span>📅 {formatPlaybackTime(playbackPoints[playbackIndex].fixTime).dateStr}</span>
                 <span className="text-blue-300">|</span>
                 <span>🕒 {formatPlaybackTime(playbackPoints[playbackIndex].fixTime).timeStr}</span>
+              </span>
+            )}
+
+            {/* Route Itinerary: From -> To Badge */}
+            {selectedDevice?.route && (
+              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-extrabold text-emerald-900 tracking-tight flex items-center gap-1.5 shadow-xs">
+                <span className="text-emerald-700">FROM:</span>
+                <span>{selectedDevice.route.origin}</span>
+                <span className="text-emerald-400">➔</span>
+                <span className="text-emerald-700">TO:</span>
+                <span>{selectedDevice.route.destination}</span>
               </span>
             )}
 

@@ -123,11 +123,11 @@ const NotificationDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={toggleDropdown}
-        className="relative p-1.5 hover:bg-gray-100 rounded-full transition text-gray-600"
+        className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white relative"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-5 h-5 text-white" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-2 w-2">
+          <span className="absolute top-2 right-2 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-white"></span>
           </span>
