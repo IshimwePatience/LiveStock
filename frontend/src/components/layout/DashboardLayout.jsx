@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power } from 'lucide-react';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
+import LiveTripToastManager from '../ui/LiveTripToastManager';
 import { useQuery } from '@tanstack/react-query';
 import { getTraccarLocations } from '../../lib/api';
 import toast from 'react-hot-toast';

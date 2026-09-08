@@ -101,7 +101,9 @@ class TraccarService {
               initiator: req.Initiator ? req.Initiator.name : 'Unknown',
               driverName: dName,
               driverPhone: dPhone,
-              permitNumber: req.permit_number
+              permitNumber: req.permit_number,
+              tripStatus: trip?.status || req?.status || 'SCHEDULED',
+              otp: trip?.otp || 'N/A'
             } : null
           };
         }

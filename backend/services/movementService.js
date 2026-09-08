@@ -215,7 +215,7 @@ class MovementService {
 
     const trip = await Trip.create({
       request_id: request.id,
-      status: 'ACTIVE',
+      status: 'SCHEDULED',
       driver_name: request.driver_name,
       driver_phone: request.driver_phone,
       driver_national_id: request.driver_nid,
@@ -271,13 +271,42 @@ class MovementService {
     return { request, trip };
   }
 
+  async startTrip(user, requestId) {
+    const request = await MovementRequest.findByPk(requestId, {
+      include: [{ model: Trip }]
+    });
+    if (!request) throw new Error('Request not found');
+    if (!request.Trip) throw new Error('Trip not found');
+
+    request.Trip.status = 'ACTIVE';
+    await request.Trip.save();
+
+    request.status = 'ACTIVE';
+    await request.save();
+
+    const origin = request.origin_sector || request.origin_district || 'Origin';
+    const dest = request.dest_sector || request.dest_district || 'Destination';
+    const notifMsg = `🚚 TRIP STARTED / DEPARTED: Vehicle ${request.plate_number || 'N/A'} (Driver: ${request.driver_name || 'Driver'}) has departed from ${origin} heading to ${dest}!`;
+
+    try {
+      await notificationService.notifyRoles(['RAB', 'ADMIN'], notifMsg, 'TRIP_DEPARTED');
+      if (request.initiator_id) {
+        await notificationService.notifyUser(request.initiator_id, notifMsg, 'TRIP_DEPARTED');
+      }
+    } catch (err) {
+      console.error('Failed to send trip departure notification:', err.message);
+    }
+
+    return request.Trip;
+  }
+
   async arriveTrip(user, requestId, otp) {
     const request = await MovementRequest.findByPk(requestId, {
       include: [{ model: Trip }]
     });
     if (!request) throw new Error('Request not found');
     if (!request.Trip) throw new Error('Trip not found');
-    if (request.Trip.status !== 'ACTIVE' && request.Trip.status !== 'IN_PROGRESS') throw new Error('Trip is not active');
+    if (request.Trip.status !== 'ACTIVE' && request.Trip.status !== 'IN_PROGRESS' && request.Trip.status !== 'SCHEDULED') throw new Error('Trip is not active');
 
     if (user.role !== 'DARO' && user.role !== 'SARO' && user.role !== 'RAB') {
       throw new Error('Only authorized officers can confirm arrival');

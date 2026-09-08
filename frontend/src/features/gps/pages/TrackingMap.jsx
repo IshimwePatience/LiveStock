@@ -347,13 +347,39 @@ const TopRightControls = ({ isSatellite, setIsSatellite, isPlaybackMode }) => {
   );
 };
 
-// Custom 2D Moving Vehicle Marker Icon for Playback Mode with live speed tooltip
-const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0) => {
-  const speedKmh = (speed * 1.852).toFixed(2);
+const formatPlaybackTime = (isoTimeStr) => {
+  if (!isoTimeStr) return { timeStr: '', dateStr: '' };
+  try {
+    const d = new Date(isoTimeStr);
+    if (isNaN(d.getTime())) return { timeStr: '', dateStr: '' };
+    
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${mins}`;
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = d.getFullYear();
+    const dateStr = `${day} ${month} ${year}`;
+
+    return { timeStr, dateStr };
+  } catch (e) {
+    return { timeStr: '', dateStr: '' };
+  }
+};
+
+// Custom 2D Moving Vehicle Marker Icon for Playback Mode with live speed & timestamp tooltip
+const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0, fixTime = null) => {
+  const speedKmh = (speed * 1.852).toFixed(1);
+  const { timeStr, dateStr } = formatPlaybackTime(fixTime);
+
   const html = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); cursor: pointer;">
-      <div style="background: #1e293b; border: 1.5px solid #3b82f6; border-radius: 6px; padding: 2px 7px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif;">
-        ${speedKmh} km/h
+      <div style="background: #0f172a; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 4px 10px; font-weight: 800; font-size: 11px; color: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.45); white-space: nowrap; margin-bottom: 4px; font-family: system-ui, -apple-system, sans-serif; text-align: center;">
+        ${dateStr ? `<div style="color: #93c5fd; font-size: 10px; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.2px;">📅 ${dateStr} • 🕒 ${timeStr}</div>` : ''}
+        <div style="color: #ffffff; font-size: 12px; font-weight: 900;">
+          ⚡ ${speedKmh} km/h
+        </div>
       </div>
       <div style="transform: rotate(${course || 0}deg); transition: transform 0.2s ease;">
         <svg width="34" height="56" viewBox="0 0 36 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(37,99,235,0.6));">
@@ -371,8 +397,8 @@ const createPlaybackMarkerIcon = (deviceName, speed = 0, course = 0) => {
   return new L.divIcon({
     html: html,
     className: 'playback-vehicle-marker',
-    iconSize: [40, 65],
-    iconAnchor: [20, 32],
+    iconSize: [140, 85],
+    iconAnchor: [70, 52],
   });
 };
 
@@ -815,7 +841,8 @@ const TrackingMap = () => {
                     icon={createPlaybackMarkerIcon(
                       selectedDevice?.deviceName,
                       playbackPoints[playbackIndex].speed,
-                      playbackPoints[playbackIndex].course
+                      playbackPoints[playbackIndex].course,
+                      playbackPoints[playbackIndex].fixTime
                     )}
                   />
                   <PlaybackCenterer position={playbackPoints[playbackIndex]} />
@@ -865,7 +892,7 @@ const TrackingMap = () => {
         </MapContainer>
       </div>
 
-      {/* ----------------- PLAYBACK MODE TOP LEFT HEADER (MATCHES USER IMAGE 2) ----------------- */}
+      {/* ----------------- PLAYBACK MODE TOP LEFT HEADER ----------------- */}
       {isPlaybackMode && (
         <div className="absolute top-[22px] left-[22px] z-[500] flex items-center gap-3 bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-gray-200/90 font-sans">
           <div className="flex flex-col">
@@ -927,9 +954,18 @@ const TrackingMap = () => {
             </button>
 
             {/* License Plate Badge */}
-            <span className="px-3.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-black text-gray-900 tracking-wider">
+            <span className="px-3 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-black text-gray-900 tracking-wider">
               {selectedDevice?.deviceName || 'Vehicle'}
             </span>
+
+            {/* Dynamic Playback Date & Time Badge */}
+            {playbackPoints[playbackIndex] && (
+              <span className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-extrabold text-blue-900 tracking-tight flex items-center gap-1.5 shadow-xs">
+                <span>📅 {formatPlaybackTime(playbackPoints[playbackIndex].fixTime).dateStr}</span>
+                <span className="text-blue-300">|</span>
+                <span>🕒 {formatPlaybackTime(playbackPoints[playbackIndex].fixTime).timeStr}</span>
+              </span>
+            )}
 
             <button
               onClick={() => { setIsPlayingRoute(false); setPlaybackIndex(prev => Math.min((playbackPoints.length || 1) - 1, prev + 1)); }}

@@ -362,12 +362,12 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                   </button>
                   {openActionDropdown === item.id && (
                     <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                      {isIncomingTab && item.rawStatus !== 'COMPLETED' && (item.rawStatus === 'APPROVED' || item.tripStatus === 'ACTIVE') && (
+                      {item.rawStatus !== 'COMPLETED' && ['APPROVED', 'ACTIVE', 'ARRIVED'].includes(item.rawStatus) && (
                         <button 
                           onClick={() => { setConfirmArrivalModal({ isOpen: true, request: item }); setOpenActionDropdown(null); }}
                           className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-semibold hover:bg-green-50 transition-colors"
                         >
-                          Confirm Arrival (OTP)
+                          🏁 Confirm Arrival (OTP)
                         </button>
                       )}
                       {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
