@@ -23,7 +23,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   const totalPages = Math.ceil((movements?.length || 0) / itemsPerPage);
   const paginatedMovements = (movements || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const queryClient = useQueryClient();
-  
+
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
 
@@ -33,7 +33,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   };
 
   const toggleSelect = (id) => {
-    setSelected(prev => 
+    setSelected(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
@@ -112,7 +112,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-4 py-4 animate-pulse px-6">
-        {[1,2,3,4,5].map(i => (
+        {[1, 2, 3, 4, 5].map(i => (
           <div key={i} className="h-10 bg-gray-100 rounded-md w-full"></div>
         ))}
       </div>
@@ -142,8 +142,8 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
           <thead>
             <tr className="border-y border-gray-200 bg-white">
               <th className="py-2.5 px-4 w-10">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   onChange={toggleSelectAll}
                   checked={selected.length === movements.length && movements.length > 0}
@@ -165,8 +165,8 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
             {paginatedMovements.map((item) => (
               <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
                 <td className="py-2 px-4">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     checked={selected.includes(item.id)}
                     onChange={() => toggleSelect(item.id)}
@@ -183,8 +183,8 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                 </td>
                 <td className="py-2 px-4">
                   {item.driverName && item.driverName !== 'Unknown' ? (
-                    <span 
-                      className="text-black truncate max-w-[200px] block font-medium text-[13px]" 
+                    <span
+                      className="text-black truncate max-w-[200px] block font-medium text-[13px]"
                       title={`${item.driverName}, ${item.plateNumber}, ${item.driverPhone}`}
                     >
                       {item.driverName}, {item.plateNumber}, {item.driverPhone}
@@ -199,22 +199,22 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                 <td className="py-2 px-4">
                   <div className="flex items-center gap-2">
                     {item.assignee.initials === 'U' ? (
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                          <User className="w-3.5 h-3.5" />
-                        </div>
+                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                        <User className="w-3.5 h-3.5" />
+                      </div>
                     ) : (
-                        <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
-                          {item.assignee.initials}
-                        </div>
+                      <div className={`w-6 h-6 rounded-full ${item.assignee.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                        {item.assignee.initials}
+                      </div>
                     )}
                     <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.assignee.name}</span>
                   </div>
                 </td>
                 <td className="py-2 px-4">
                   <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full ${item.reporter.color} flex items-center justify-center text-white text-[10px] font-bold`}>
-                        {item.reporter.initials}
-                      </div>
+                    <div className={`w-6 h-6 rounded-full ${item.reporter.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                      {item.reporter.initials}
+                    </div>
                     <span className="text-black truncate max-w-[120px] font-medium text-[13px]">{item.reporter.name}</span>
                   </div>
                 </td>
@@ -231,10 +231,10 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                   {item.rawStatus === 'APPROVED' ? (
                     isApprover(user, item) ? (
                       <div className="relative">
-                        <div 
+                        <div
                           onClick={(e) => {
-                             e.stopPropagation();
-                             setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                            e.stopPropagation();
+                            setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
                           }}
                           className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
                         >
@@ -242,21 +242,21 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                             Approved <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
                           </div>
                           <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                             {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         {openStatusDropdown === item.id && (
                           <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
                             {item.tripStatus === 'ACTIVE' && (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setConfirmArrivalModal({ isOpen: true, request: item }); setOpenStatusDropdown(null); }} 
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmArrivalModal({ isOpen: true, request: item }); setOpenStatusDropdown(null); }}
                                 className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-medium hover:bg-green-50 transition-colors"
                               >
                                 Mark Arrived
                               </button>
                             )}
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }}
                               className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
                             >
                               Revert to Pending
@@ -268,17 +268,17 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                       <div className="inline-flex flex-col text-black font-medium p-1">
                         <span className="text-[11px] tracking-wide">Approved</span>
                         <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     )
                   ) : item.rawStatus === 'REJECTED' ? (
                     isApprover(user, item) ? (
                       <div className="relative">
-                        <div 
+                        <div
                           onClick={(e) => {
-                             e.stopPropagation();
-                             setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                            e.stopPropagation();
+                            setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
                           }}
                           className="inline-flex flex-col rounded text-black font-medium hover:bg-gray-100 cursor-pointer p-1"
                         >
@@ -286,13 +286,13 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                             Rejected <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
                           </div>
                           <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                             {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         {openStatusDropdown === item.id && (
                           <div className="absolute right-0 top-10 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }} 
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRevert(item.dbId); }}
                               className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
                             >
                               Revert to Pending
@@ -304,7 +304,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                       <div className="inline-flex flex-col text-black font-medium p-1">
                         <span className="text-[11px] tracking-wide">Rejected</span>
                         <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                           {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     )
@@ -312,7 +312,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                     <div className="inline-flex flex-col text-black font-medium p-1">
                       <span className="text-[11px] tracking-wide text-green-700">Completed</span>
                       <span className="text-[10px] text-gray-500 font-normal leading-tight">
-                         {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(item.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   ) : item.status === 'Closed' ? (
@@ -321,10 +321,10 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                     </div>
                   ) : isApprover(user, item) ? (
                     <div className="relative">
-                      <div 
+                      <div
                         onClick={(e) => {
-                           e.stopPropagation();
-                           setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
+                          e.stopPropagation();
+                          setOpenStatusDropdown(openStatusDropdown === item.id ? null : item.id);
                         }}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-black text-[11px] font-medium hover:bg-gray-100 cursor-pointer tracking-wide"
                       >
@@ -332,14 +332,14 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                       </div>
                       {openStatusDropdown === item.id && (
                         <div className="absolute right-0 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 rounded-md text-left">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleApproveClick(item.dbId); }} 
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleApproveClick(item.dbId); }}
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             Approve
                           </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleRejectClick(item.dbId); }} 
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleRejectClick(item.dbId); }}
                             className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             Reject
@@ -354,7 +354,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                   )}
                 </td>
                 <td className="py-2 px-4 text-right relative">
-                  <button 
+                  <button
                     onClick={() => setOpenActionDropdown(openActionDropdown === item.id ? null : item.id)}
                     className="p-1 text-gray-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   >
@@ -363,7 +363,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                   {openActionDropdown === item.id && (
                     <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
                       {item.rawStatus !== 'COMPLETED' && ['APPROVED', 'ACTIVE', 'ARRIVED'].includes(item.rawStatus) && (
-                        <button 
+                        <button
                           onClick={() => { setConfirmArrivalModal({ isOpen: true, request: item }); setOpenActionDropdown(null); }}
                           className="w-full text-left px-4 py-1.5 text-[13px] text-green-700 font-semibold hover:bg-green-50 transition-colors"
                         >
@@ -371,21 +371,21 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
                         </button>
                       )}
                       {['APPROVED', 'ACTIVE', 'COMPLETED'].includes(item.rawStatus) && (
-                        <button 
+                        <button
                           onClick={() => { handleDownloadPermit(item.dbId); setOpenActionDropdown(null); }}
-                          className="w-full text-left px-4 py-1.5 text-[13px] text-[#2187e0] font-semibold hover:bg-blue-50 transition-colors"
+                          className="w-full text-left px-4 py-1.5 text-[13px] text-[#0052cc] font-semibold hover:bg-blue-50 transition-colors"
                         >
                           📄 Download Permit
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => { navigate(`/dashboard/movements/view/${item.dbId}`); setOpenActionDropdown(null); }}
                         className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                       >
                         View Details
                       </button>
                       {item.rawStatus === 'PENDING' && user?.role === 'DARO' && (
-                        <button 
+                        <button
                           onClick={() => navigate(`/dashboard/movements/edit/${item.dbId}`)}
                           className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
                         >
@@ -402,7 +402,7 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
       )}
 
       {/* Pagination */}
-      <Pagination 
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={movements.length}
@@ -417,20 +417,20 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
             <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Movement Request</h3>
             <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this request. This will be sent to the initiator.</p>
             <textarea
-              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2187e0] mb-4"
+              className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052cc] mb-4"
               rows="4"
               placeholder="Enter rejection reason..."
               value={rejectModal.reason}
               onChange={(e) => setRejectModal(prev => ({ ...prev, reason: e.target.value }))}
             ></textarea>
             <div className="flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setRejectModal({ isOpen: false, requestId: null, reason: '' })}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={submitReject}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
               >
@@ -440,8 +440,8 @@ const MovementsList = ({ movements, isLoading, isError, isIncomingTab }) => {
           </div>
         </div>
       )}
-      <ConfirmArrivalModal 
-        isOpen={confirmArrivalModal.isOpen} 
+      <ConfirmArrivalModal
+        isOpen={confirmArrivalModal.isOpen}
         request={confirmArrivalModal.request}
         onClose={() => setConfirmArrivalModal({ isOpen: false, request: null })}
         onConfirmSuccess={() => queryClient.invalidateQueries(['movements'])}

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ListFilter, Search, Plus, ChevronDown } from 'lucide-react';
 
-const FilterDropdown = ({ 
-  selectedFilters = {}, 
-  onFilterChange = () => {},
+const FilterDropdown = ({
+  selectedFilters = {},
+  onFilterChange = () => { },
   categories = ['Type', 'Status', 'Animal'],
   optionsMap = {
     'Type': [
@@ -47,13 +47,13 @@ const FilterDropdown = ({
   const handleCheckboxChange = (categoryId, optionId) => {
     const currentFilters = selectedFilters[categoryId] || [];
     let newFilters;
-    
+
     if (currentFilters.includes(optionId)) {
       newFilters = currentFilters.filter(id => id !== optionId);
     } else {
       newFilters = [...currentFilters, optionId];
     }
-    
+
     onFilterChange(categoryId, newFilters);
   };
 
@@ -78,19 +78,18 @@ const FilterDropdown = ({
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${
-          isOpen || hasActiveFilters ? 'bg-blue-50 text-[#2187e0] border-[#2187e0]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-        }`}
+        className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm font-medium transition ${isOpen || hasActiveFilters ? 'bg-blue-50 text-[#0052cc] border-[#0052cc]' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+          }`}
       >
-        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#2187e0] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
+        <ListFilter className="w-4 h-4" /> Filter {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 bg-[#0052cc] text-white text-[10px] rounded-full">{Object.values(selectedFilters).flat().length}</span>}
       </button>
 
       {/* Popover Menu */}
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-[550px] bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col font-sans">
-          
+
           {/* Header Row */}
           <div className="flex items-center justify-between p-3 border-b border-gray-200">
             <h3 className="font-semibold text-gray-800 text-sm">Filter Criteria</h3>
@@ -101,7 +100,7 @@ const FilterDropdown = ({
 
           {/* Main Content */}
           <div className="flex h-[350px]">
-            
+
             {/* Left Column: Categories */}
             <div className="w-[180px] border-r border-gray-200 flex flex-col py-2">
               <div className="flex-1 overflow-y-auto space-y-0.5">
@@ -112,11 +111,10 @@ const FilterDropdown = ({
                       setActiveCategory(cat);
                       setSearchQuery('');
                     }}
-                    className={`w-full text-left flex items-center justify-between px-4 py-2 text-sm ${
-                      activeCategory === cat 
-                        ? 'bg-blue-50 text-[#2187e0] font-semibold border-l-4 border-[#2187e0]' 
+                    className={`w-full text-left flex items-center justify-between px-4 py-2 text-sm ${activeCategory === cat
+                        ? 'bg-blue-50 text-[#0052cc] font-semibold border-l-4 border-[#0052cc]'
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
-                    }`}
+                      }`}
                   >
                     <span>{cat}</span>
                     {selectedFilters[cat]?.length > 0 && (
@@ -130,7 +128,7 @@ const FilterDropdown = ({
             {/* Right Column: Options */}
             <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative">
               <div className="pr-3 pb-3">
-                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#2187e0] focus-within:ring-1 focus-within:ring-[#2187e0] transition overflow-hidden">
+                <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#0052cc] focus-within:ring-1 focus-within:ring-[#0052cc] transition overflow-hidden">
                   <div className="pl-2.5 text-gray-500">
                     <Search className="w-4 h-4" strokeWidth={2} />
                   </div>
@@ -143,17 +141,17 @@ const FilterDropdown = ({
                   />
                 </div>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto pr-2 space-y-1 pb-2">
                 {currentOptions.map((opt) => {
                   const isChecked = (selectedFilters[activeCategory] || []).includes(opt.id);
                   return (
                     <label key={opt.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer group relative">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={isChecked}
                         onChange={() => handleCheckboxChange(activeCategory, opt.id)}
-                        className="mt-1 border-gray-300 rounded text-[#2187e0] focus:ring-[#2187e0] w-4 h-4 cursor-pointer" 
+                        className="mt-1 border-gray-300 rounded text-[#0052cc] focus:ring-[#0052cc] w-4 h-4 cursor-pointer"
                       />
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-tight">{opt.title}</span>
@@ -172,10 +170,10 @@ const FilterDropdown = ({
 
           {/* Footer Row */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-             <button onClick={handleClearAll} className="text-sm text-gray-600 hover:underline font-medium">Clear all</button>
-             <button onClick={handleClearCategory} className="text-sm text-gray-400 hover:text-gray-600 font-medium">Clear {activeCategory}</button>
+            <button onClick={handleClearAll} className="text-sm text-gray-600 hover:underline font-medium">Clear all</button>
+            <button onClick={handleClearCategory} className="text-sm text-gray-400 hover:text-gray-600 font-medium">Clear {activeCategory}</button>
           </div>
-          
+
         </div>
       )}
     </div>

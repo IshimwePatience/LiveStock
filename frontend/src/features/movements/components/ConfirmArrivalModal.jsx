@@ -41,14 +41,14 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-6">
           {!isCompleted ? (
             <form onSubmit={handleConfirm}>
               <p className="text-sm text-gray-600 mb-4">
                 Enter the 6-digit OTP code provided by the driver to confirm livestock arrival at destination.
               </p>
-              
+
               <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm mb-5 border border-gray-100">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Permit #</span>
@@ -81,23 +81,23 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
                     placeholder="e.g. 123456"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-lg font-mono tracking-widest text-center focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0]"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-lg font-mono tracking-widest text-center focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end gap-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={onClose}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={submitting || otpInput.length < 6}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#2187e0] rounded-md hover:bg-[#1b72be] transition-colors disabled:opacity-50"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#0052cc] rounded-md hover:bg-[#0047b3] transition-colors disabled:opacity-50"
                 >
                   {submitting ? 'Verifying...' : 'Confirm Arrival'}
                 </button>
@@ -111,9 +111,9 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                 The livestock permit has arrived and the trip is marked as completed.
               </p>
 
-              <button 
+              <button
                 onClick={onClose}
-                className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#2187e0] rounded-md hover:bg-[#1b72be] transition-colors"
+                className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#0052cc] rounded-md hover:bg-[#0047b3] transition-colors"
               >
                 Close
               </button>

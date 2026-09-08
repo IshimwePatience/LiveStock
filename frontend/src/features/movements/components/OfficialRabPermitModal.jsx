@@ -24,13 +24,13 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
   const animals = permit.Animals && permit.Animals.length > 0
     ? permit.Animals
     : [{
-        tag_number: permit.tag_number || '1079000',
-        sex: permit.sex || 'F',
-        breed: permit.breed || 'Cross',
-        color: permit.color || 'Ikibamba',
-        quantity: 1,
-        vaccines: permit.vaccines || '-'
-      }];
+      tag_number: permit.tag_number || '1079000',
+      sex: permit.sex || 'F',
+      breed: permit.breed || 'Cross',
+      color: permit.color || 'Ikibamba',
+      quantity: 1,
+      vaccines: permit.vaccines || '-'
+    }];
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -83,7 +83,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-4 py-1.5 bg-[#2187e0] hover:bg-[#1b72be] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+              className="px-4 py-1.5 bg-[#0052cc] hover:bg-blue-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" /> Print / Save PDF
             </button>
@@ -253,7 +253,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                   </div>
                   <div>
                     <span className="text-gray-500 block">Nomero y'icyemezo:</span>
-                    <span className="font-bold text-[#2187e0] text-sm tracking-wider">{permitCode}</span>
+                    <span className="font-bold text-[#0052cc] text-sm tracking-wider">{permitCode}</span>
                   </div>
                 </div>
 
@@ -295,7 +295,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
 
             {/* PAGE 2: ANIMAL SPECIFICATIONS LIST (CLEAN PAGE: NO LOGOS, NO QR CODE, NO BANNER) */}
             <div className="bg-white p-8 pl-16 rounded-sm shadow-md border border-gray-200 relative overflow-hidden min-h-[1120px] flex flex-col justify-between">
-              
+
               <div className="relative z-10 space-y-5">
                 <h3 className="text-sm font-bold text-gray-900 uppercase border-b-2 border-gray-900 pb-1">
                   Ibisobanuro by'Amatungo (Animal Specifications)
@@ -303,7 +303,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
 
                 <div className="flex justify-between items-center text-xs py-2 border-b border-gray-200">
                   <div><span className="text-gray-500">Ubwoko:</span> <span className="font-bold text-black text-sm ml-1">{permit.animal_type || 'Inka'}</span></div>
-                  <div><span className="text-gray-500">Nomero y'icyemezo:</span> <span className="font-bold text-[#2187e0] text-sm ml-1">{permitCode}</span></div>
+                  <div><span className="text-gray-500">Nomero y'icyemezo:</span> <span className="font-bold text-[#0052cc] text-sm ml-1">{permitCode}</span></div>
                 </div>
 
                 {/* Animals Table */}
@@ -323,7 +323,7 @@ const OfficialRabPermitModal = ({ isOpen, onClose, permit }) => {
                     {animals.map((anim, idx) => (
                       <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="border border-gray-300 p-2 text-center font-medium text-gray-500">{idx + 1}</td>
-                        <td className="border border-gray-300 p-2 font-bold text-black">{anim.tag_number || `TAG-${idx+1}`}</td>
+                        <td className="border border-gray-300 p-2 font-bold text-black">{anim.tag_number || `TAG-${idx + 1}`}</td>
                         <td className="border border-gray-300 p-2 text-center uppercase font-semibold">{anim.sex || 'F'}</td>
                         <td className="border border-gray-300 p-2 text-center">1</td>
                         <td className="border border-gray-300 p-2 capitalize">{anim.breed || 'Cross'}</td>

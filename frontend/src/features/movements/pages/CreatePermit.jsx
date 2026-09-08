@@ -78,7 +78,7 @@ const CreatePermit = () => {
   const [gridData, setGridData] = useState(() => {
     const saved = localStorage.getItem('movementFormDraft');
     if (saved && !editId) {
-      try { 
+      try {
         const parsed = JSON.parse(saved);
         const rowsNeeded = Math.max(NUM_ROWS, Math.ceil(parsed.length / PAGE_SIZE) * PAGE_SIZE);
         const expanded = [...parsed];
@@ -90,7 +90,7 @@ const CreatePermit = () => {
           while (newRow.length < NUM_COLS) newRow.push('');
           return newRow;
         });
-      } catch(e) {}
+      } catch (e) { }
     }
     const today = new Date().toISOString().split('T')[0];
     const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
@@ -121,7 +121,7 @@ const CreatePermit = () => {
           const res = await api.get(`/movement/${editId}`);
           const data = res.data;
           setPermitDetails(data);
-          
+
           const mode = data.transporter_mode || (data.plate_number === 'ON_FOOT' ? 'PERSON_ON_FOOT' : 'DRIVER_VEHICLE');
 
           // Populate header form for driver & cargo info card
@@ -283,11 +283,11 @@ const CreatePermit = () => {
     // Hide transporter columns from table since they are set in the top header card for all animals
     if ([6, 7, 23, 24, 25].includes(idx)) return false;
     if (user?.role === 'SARO' && (idx === 8 || idx === 12)) return false;
-    if ([0,1,2,3,4,5].includes(idx)) return visibleGroups.owner;
-    if ([8,9,10,11].includes(idx)) return visibleGroups.origin;
-    if ([12,13,14,15].includes(idx)) return visibleGroups.dest;
-    if ([16,17,18,19,20,21,22].includes(idx)) return visibleGroups.animal;
-    if ([26,27,28,29].includes(idx)) return visibleGroups.buyer ?? true;
+    if ([0, 1, 2, 3, 4, 5].includes(idx)) return visibleGroups.owner;
+    if ([8, 9, 10, 11].includes(idx)) return visibleGroups.origin;
+    if ([12, 13, 14, 15].includes(idx)) return visibleGroups.dest;
+    if ([16, 17, 18, 19, 20, 21, 22].includes(idx)) return visibleGroups.animal;
+    if ([26, 27, 28, 29].includes(idx)) return visibleGroups.buyer ?? true;
     return true;
   };
 
@@ -390,9 +390,9 @@ const CreatePermit = () => {
               const minC = Math.min(selectedCell.col, selectionEnd.col);
               const maxC = Math.max(selectedCell.col, selectionEnd.col);
               for (let r = minR; r <= maxR; r++) {
-                 for (let c = minC; c <= maxC; c++) {
-                    if (c !== 3) newData[r][c] = '';
-                 }
+                for (let c = minC; c <= maxC; c++) {
+                  if (c !== 3) newData[r][c] = '';
+                }
               }
               return newData;
             });
@@ -410,30 +410,30 @@ const CreatePermit = () => {
   const updateGridCell = (r, c, value) => {
     if (isViewMode) return;
     if (c === 17 && value.toString().trim() !== '') {
-       const isDuplicate = gridData.some((row, rIdx) => rIdx !== r && row[17].toString().trim() === value.toString().trim());
-       if (isDuplicate) {
-          toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
-          return;
-       }
-       // Check vet status for this tag
-       fetchTagStatus(value.toString().trim());
+      const isDuplicate = gridData.some((row, rIdx) => rIdx !== r && row[17].toString().trim() === value.toString().trim());
+      if (isDuplicate) {
+        toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
+        return;
+      }
+      // Check vet status for this tag
+      fetchTagStatus(value.toString().trim());
     }
 
     setGridData(prev => {
       const newData = [...prev];
       newData[r] = [...newData[r]];
-      
+
       // AUTO-FILL LOGIC: If adding any Animal detail (cols 16-20) and the current row has no Owner Name, copy owner data from the row above
       if (c >= 16 && c <= 20 && r > 0 && newData[r][0] === '' && value.toString().trim() !== '') {
-         const prevRow = newData[r - 1];
-         // Copy Owner, Phone, Reason, Priority, Date, Transport, Plate, and Locations (Cols 0 to 15)
-         for (let i = 0; i <= 15; i++) {
-            newData[r][i] = prevRow[i];
-         }
+        const prevRow = newData[r - 1];
+        // Copy Owner, Phone, Reason, Priority, Date, Transport, Plate, and Locations (Cols 0 to 15)
+        for (let i = 0; i <= 15; i++) {
+          newData[r][i] = prevRow[i];
+        }
       }
 
       newData[r][c] = value;
-      
+
       const hasDefaults = newData[r][5] === new Date().toISOString().split('T')[0];
       if (!hasDefaults && value.toString().trim() !== '') {
         const today = new Date().toISOString().split('T')[0];
@@ -495,21 +495,21 @@ const CreatePermit = () => {
       }
     }
 
-    let validRows = gridData.filter(r => r[17].trim() !== ''); 
+    let validRows = gridData.filter(r => r[17].trim() !== '');
     if (validRows.length === 0) {
       toast.error('Nta tungo ririmo. Uzuza Column R (Tag).');
       return;
     }
-    
+
     for (let i = 0; i < validRows.length; i++) {
-       if (validRows[i][1].trim().length !== 16 || !/^\d+$/.test(validRows[i][1].trim())) {
-          toast.error(`Indangamuntu (ID) ku murongo wa ${i + 1} igomba kuba imibare 16 gusa.`);
-          return;
-       }
-       if (validRows[i][2].trim().length !== 10 || !/^\d+$/.test(validRows[i][2].trim())) {
-          toast.error(`Nimero ya telephoni ku murongo wa ${i + 1} igomba kuba imibare 10 gusa.`);
-          return;
-       }
+      if (validRows[i][1].trim().length !== 16 || !/^\d+$/.test(validRows[i][1].trim())) {
+        toast.error(`Indangamuntu (ID) ku murongo wa ${i + 1} igomba kuba imibare 16 gusa.`);
+        return;
+      }
+      if (validRows[i][2].trim().length !== 10 || !/^\d+$/.test(validRows[i][2].trim())) {
+        toast.error(`Nimero ya telephoni ku murongo wa ${i + 1} igomba kuba imibare 10 gusa.`);
+        return;
+      }
     }
 
     const firstRow = validRows[0];
@@ -554,7 +554,7 @@ const CreatePermit = () => {
         medication: r[22]
       }))
     };
-    
+
     payload.count = payload.animals.reduce((s, a) => s + a.quantity, 0);
 
     try {
@@ -566,9 +566,9 @@ const CreatePermit = () => {
         await api.post('/movement', payload);
         toast.success('Permit requests submitted successfully!');
       }
-      
+
       localStorage.removeItem('movementFormDraft');
-      
+
       const today = new Date().toISOString().split('T')[0];
       const initial = Array(NUM_ROWS).fill(null).map(() => Array(NUM_COLS).fill(''));
       initial[0][5] = today;
@@ -577,7 +577,7 @@ const CreatePermit = () => {
         initial[0][9] = user.sector_id || '';
       }
       setGridData(initial);
-      
+
       navigate('/dashboard/movements');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit permit.');
@@ -624,7 +624,7 @@ const CreatePermit = () => {
     dest_district: '', dest_sector: '', dest_cell: '', dest_village: '',
     valid_until: today, reason: ''
   });
-  
+
   const [mobileAnimals, setMobileAnimals] = useState([
     { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '' }
   ]);
@@ -635,7 +635,7 @@ const CreatePermit = () => {
         const newDistrict = user.district_id || prev.origin_district;
         const newSector = user.sector_id || prev.origin_sector;
         if (prev.origin_district === newDistrict && prev.origin_sector === newSector) {
-           return prev;
+          return prev;
         }
         return {
           ...prev,
@@ -661,11 +661,11 @@ const CreatePermit = () => {
 
   const handleMobileAnimalChange = (id, field, value) => {
     if (field === 'tag_number' && value.toString().trim() !== '') {
-       const isDuplicate = mobileAnimals.some(a => a.id !== id && a.tag_number.toString().trim() === value.toString().trim());
-       if (isDuplicate) {
-          toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
-          return;
-       }
+      const isDuplicate = mobileAnimals.some(a => a.id !== id && a.tag_number.toString().trim() === value.toString().trim());
+      if (isDuplicate) {
+        toast.error(`Nomero (Tag) '${value}' yamaze kwinjizwa!`);
+        return;
+      }
     }
     setMobileAnimals(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
     if (field === 'tag_number' && value.toString().trim() !== '') {
@@ -674,7 +674,7 @@ const CreatePermit = () => {
   };
   const addMobileAnimal = () => setMobileAnimals([...mobileAnimals, { id: Date.now(), animal_type: 'COW', tag_number: '', sex: 'F', breed: '', color: '', vaccines: '', medication: '' }]);
   const removeMobileAnimal = (id) => {
-    if(mobileAnimals.length > 1) setMobileAnimals(mobileAnimals.filter(a => a.id !== id));
+    if (mobileAnimals.length > 1) setMobileAnimals(mobileAnimals.filter(a => a.id !== id));
   };
 
   const handleClearForm = () => {
@@ -696,7 +696,7 @@ const CreatePermit = () => {
       driver_phone: '',
       driver_nid: '',
     });
-    
+
     setMobileForm({
       owner_name: '', owner_id_number: '', owner_phone: '', priority: '',
       transport_type: '', plate_number: '', driver_name: '', driver_phone: '', driver_nid: '', cargo_photo: '',
@@ -830,7 +830,7 @@ const CreatePermit = () => {
     }
     return opts.map(s => ({ value: s, label: s }));
   }, [mobileForm.dest_district, mobileForm.origin_sector, user]);
-  
+
   const originCellOptions = useMemo(() => {
     const dist = user?.role === 'SARO' ? user?.district_id : mobileForm.origin_district;
     if (!dist || !mobileForm.origin_sector) return [];
@@ -883,7 +883,7 @@ const CreatePermit = () => {
                 </h1>
                 {!editId && !isViewMode && lastSaved && (
                   <span className="text-xs text-gray-400 font-normal ml-2">
-                    Autosaved at {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    Autosaved at {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}
               </div>
@@ -891,45 +891,45 @@ const CreatePermit = () => {
           </div>
           <div className="flex items-center gap-4">
             {(isViewMode || editId) && permitDetails?.status === 'APPROVED' && (
-              <button 
+              <button
                 onClick={async () => {
                   try {
                     const res = await api.get(`/movement/${editId}`);
                     printOfficialPermit(res.data);
-                  } catch(e) {
+                  } catch (e) {
                     toast.error('Failed to download permit.');
                   }
-                }} 
+                }}
                 className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 <Download className="w-3.5 h-3.5" /> Download Permit
               </button>
             )}
             {isViewMode ? (
-              <button 
-                onClick={() => navigate('/dashboard/movements')} 
+              <button
+                onClick={() => navigate('/dashboard/movements')}
                 className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors"
               >
                 Back to Movements
               </button>
             ) : (
               <>
-                <a 
+                <a
                   href="/dashboard/movements"
                   className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   Cancel
                 </a>
                 {!editId && (
-                  <button 
+                  <button
                     onClick={handleClearForm}
                     className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   >
                     Clear draft
                   </button>
                 )}
-                <button 
-                  onClick={handleSubmitSheets} 
+                <button
+                  onClick={handleSubmitSheets}
                   disabled={loading}
                   className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
                 >
@@ -946,18 +946,17 @@ const CreatePermit = () => {
             <h3 className="text-[13.5px] font-semibold text-gray-800 tracking-normal">
               Amakuru y'ubwikorezi n'ifoto y'amatungo yapakijwe (Trip & Cargo Info)
             </h3>
-            
+
             {/* Transporter Mode Selector with Ticks (No Outer Border) */}
             <div className="flex items-center gap-6 bg-white py-1">
               <label
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
                 className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
-                  headerForm.transporter_mode === 'DRIVER_VEHICLE'
-                    ? 'bg-[#2187e0] border border-[#2187e0] text-white'
+                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${headerForm.transporter_mode === 'DRIVER_VEHICLE'
+                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
                     : 'border border-gray-300 bg-white'
-                }`}>
+                  }`}>
                   {headerForm.transporter_mode === 'DRIVER_VEHICLE' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                 </div>
                 <span>Imodoka n'Umushoferi (Vehicle & Driver)</span>
@@ -967,11 +966,10 @@ const CreatePermit = () => {
                 onClick={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
                 className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 select-none"
               >
-                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
-                  headerForm.transporter_mode === 'PERSON_ON_FOOT'
-                    ? 'bg-[#2187e0] border border-[#2187e0] text-white'
+                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${headerForm.transporter_mode === 'PERSON_ON_FOOT'
+                    ? 'bg-[#0052cc] border border-[#0052cc] text-white'
                     : 'border border-gray-300 bg-white'
-                }`}>
+                  }`}>
                   {headerForm.transporter_mode === 'PERSON_ON_FOOT' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                 </div>
                 <span>Umunyamaguru / Omushumba (Person on Foot)</span>
@@ -1086,7 +1084,7 @@ const CreatePermit = () => {
                 Ohoza ifoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {headerForm.cargo_photo && (
                 <div className="relative group">
@@ -1123,46 +1121,45 @@ const CreatePermit = () => {
         <div className="flex items-center gap-4 px-4 py-1.5 border-b border-gray-300 bg-[#F5F9FF]">
           <div className="flex items-center gap-4 flex-1">
             <div className="flex items-center gap-2 pr-4 bg-transparent relative">
-              <Search 
-                className="w-4 h-4 text-gray-600 cursor-pointer" 
-                onClick={handleSearchIconClick} 
+              <Search
+                className="w-4 h-4 text-gray-600 cursor-pointer"
+                onClick={handleSearchIconClick}
               />
-              <input 
+              <input
                 ref={searchInputRef}
-                type="text" 
-                placeholder="Search records..." 
+                type="text"
+                placeholder="Search records..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onBlur={() => {
                   if (!searchTerm) setIsSearchExpanded(false);
                 }}
-                className={`bg-transparent outline-none text-sm transition-all duration-300 ease-in-out ${
-                  isSearchExpanded || searchTerm ? 'w-48 opacity-100' : 'w-0 opacity-0 cursor-pointer'
-                }`}
+                className={`bg-transparent outline-none text-sm transition-all duration-300 ease-in-out ${isSearchExpanded || searchTerm ? 'w-48 opacity-100' : 'w-0 opacity-0 cursor-pointer'
+                  }`}
               />
             </div>
-            
+
             {/* Column Groups Toggle */}
             <div className="relative">
-               <button onClick={() => setShowColumnDropdown(!showColumnDropdown)} className="flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors border border-gray-300 bg-white">
-                  <Menu className="w-4 h-4" /> Columns
-               </button>
-               {showColumnDropdown && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded p-2 z-50 w-56">
-                     <p className="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase tracking-wider">Show/Hide Columns</p>
-                     {COLUMN_GROUPS.map(g => (
-                        <label key={g.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-800 rounded">
-                          <input 
-                            type="checkbox" 
-                            checked={visibleGroups[g.id]} 
-                            onChange={() => setVisibleGroups(prev => ({...prev, [g.id]: !prev[g.id]}))} 
-                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                          />
-                          {g.label}
-                        </label>
-                     ))}
-                  </div>
-               )}
+              <button onClick={() => setShowColumnDropdown(!showColumnDropdown)} className="flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors border border-gray-300 bg-white">
+                <Menu className="w-4 h-4" /> Columns
+              </button>
+              {showColumnDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.15)] rounded p-2 z-50 w-56">
+                  <p className="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase tracking-wider">Show/Hide Columns</p>
+                  {COLUMN_GROUPS.map(g => (
+                    <label key={g.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-800 rounded">
+                      <input
+                        type="checkbox"
+                        checked={visibleGroups[g.id]}
+                        onChange={() => setVisibleGroups(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      {g.label}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1171,18 +1168,18 @@ const CreatePermit = () => {
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-gray-300 bg-white shadow-sm z-10">
           <div className="w-12 text-center text-gray-500 font-medium border-r border-gray-300 truncate px-1">
             {selectedCell.row === 'ALL' && selectedCell.col === 'ALL' ? 'ALL' :
-             selectedCell.row === 'ALL' ? COLUMNS[selectedCell.col]?.title :
-             selectedCell.col === 'ALL' ? `Row ${selectedCell.row + 1}` :
-             `${selectedCell.col}${selectedCell.row + 1}`}
+              selectedCell.row === 'ALL' ? COLUMNS[selectedCell.col]?.title :
+                selectedCell.col === 'ALL' ? `Row ${selectedCell.row + 1}` :
+                  `${selectedCell.col}${selectedCell.row + 1}`}
           </div>
           <div className="text-gray-400 font-serif italic text-lg px-2">fx</div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             className="flex-1 outline-none text-[13px] px-2"
             value={selectedCell.row === 'ALL' || selectedCell.col === 'ALL' ? '' : gridData[selectedCell.row][selectedCell.col]}
             onChange={(e) => {
               if (selectedCell.row !== 'ALL' && selectedCell.col !== 'ALL') {
-                 updateGridCell(selectedCell.row, selectedCell.col, e.target.value);
+                updateGridCell(selectedCell.row, selectedCell.col, e.target.value);
               }
             }}
           />
@@ -1193,19 +1190,19 @@ const CreatePermit = () => {
           <table className="border-collapse table-fixed bg-white" style={{ minWidth: 'max-content' }}>
             <thead className="sticky top-0 z-20 bg-[#F8F9FA] shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
               <tr>
-                <th 
+                <th
                   className={`w-12 border border-[#C0C0C0] cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.row === 'ALL' && selectedCell.col === 'ALL' ? 'bg-[#E8F0FE]' : 'bg-[#F8F9FA]'}`}
                   onClick={() => { setSelectedCell({ row: 'ALL', col: 'ALL' }); setSelectionEnd({ row: 'ALL', col: 'ALL' }); }}
                   tabIndex={0}
                   onKeyDown={(e) => handleCellKeyDown(e, 'ALL', 'ALL')}
                 ></th>
                 {COLUMNS.map((col, idx) => isColVisible(idx) ? (
-                  <th 
-                    key={idx} 
-                    className={`border border-[#C0C0C0] font-medium text-gray-800 py-2 px-2 text-[12px] text-center truncate cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.row === 'ALL' && (selectedCell.col === idx || (selectedCell.col !== 'ALL' && idx >= Math.min(selectedCell.col, selectionEnd.col) && idx <= Math.max(selectedCell.col, selectionEnd.col))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA]'}`} 
+                  <th
+                    key={idx}
+                    className={`border border-[#C0C0C0] font-medium text-gray-800 py-2 px-2 text-[12px] text-center truncate cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.row === 'ALL' && (selectedCell.col === idx || (selectedCell.col !== 'ALL' && idx >= Math.min(selectedCell.col, selectionEnd.col) && idx <= Math.max(selectedCell.col, selectionEnd.col))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA]'}`}
                     style={{ width: col.width }}
                     onMouseDown={() => { setSelectedCell({ row: 'ALL', col: idx }); setSelectionEnd({ row: 'ALL', col: idx }); setIsDragging(true); }}
-                    onMouseEnter={() => { if(isDragging && selectedCell.row === 'ALL') setSelectionEnd({ row: 'ALL', col: idx }); }}
+                    onMouseEnter={() => { if (isDragging && selectedCell.row === 'ALL') setSelectionEnd({ row: 'ALL', col: idx }); }}
                     tabIndex={0}
                     onKeyDown={(e) => handleCellKeyDown(e, 'ALL', idx)}
                   >
@@ -1224,192 +1221,192 @@ const CreatePermit = () => {
                   return row.some(cell => cell && cell.toLowerCase().includes(term));
                 })
                 .map(({ row, originalIndex }) => (
-                <tr key={originalIndex}>
-                  <td 
-                    className={`border border-[#C0C0C0] text-center font-normal sticky left-0 z-10 w-12 cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.col === 'ALL' && (selectedCell.row === originalIndex || (selectedCell.row !== 'ALL' && originalIndex >= Math.min(selectedCell.row, selectionEnd.row) && originalIndex <= Math.max(selectedCell.row, selectionEnd.row))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA] text-gray-500'}`}
-                    onMouseDown={() => { setSelectedCell({ row: originalIndex, col: 'ALL' }); setSelectionEnd({ row: originalIndex, col: 'ALL' }); setIsDragging(true); }}
-                    onMouseEnter={() => { if(isDragging && selectedCell.col === 'ALL') setSelectionEnd({ row: originalIndex, col: 'ALL' }); }}
-                    tabIndex={0}
-                    onKeyDown={(e) => handleCellKeyDown(e, originalIndex, 'ALL')}
-                  >
-                    {originalIndex + 1}
-                  </td>
-                  {row.map((val, cIdx) => {
-                    if (!isColVisible(cIdx)) return null;
-                    
-                    let isSelected = false;
-                    let isPrimarySelected = false;
+                  <tr key={originalIndex}>
+                    <td
+                      className={`border border-[#C0C0C0] text-center font-normal sticky left-0 z-10 w-12 cursor-pointer hover:bg-gray-200 transition-colors ${selectedCell.col === 'ALL' && (selectedCell.row === originalIndex || (selectedCell.row !== 'ALL' && originalIndex >= Math.min(selectedCell.row, selectionEnd.row) && originalIndex <= Math.max(selectedCell.row, selectionEnd.row))) ? 'bg-[#E8F0FE] text-[#1A73E8]' : 'bg-[#F8F9FA] text-gray-500'}`}
+                      onMouseDown={() => { setSelectedCell({ row: originalIndex, col: 'ALL' }); setSelectionEnd({ row: originalIndex, col: 'ALL' }); setIsDragging(true); }}
+                      onMouseEnter={() => { if (isDragging && selectedCell.col === 'ALL') setSelectionEnd({ row: originalIndex, col: 'ALL' }); }}
+                      tabIndex={0}
+                      onKeyDown={(e) => handleCellKeyDown(e, originalIndex, 'ALL')}
+                    >
+                      {originalIndex + 1}
+                    </td>
+                    {row.map((val, cIdx) => {
+                      if (!isColVisible(cIdx)) return null;
 
-                    if (selectedCell.row === 'ALL' && selectedCell.col === 'ALL') {
-                      isSelected = true;
-                    } else if (selectedCell.row === 'ALL') {
-                      const minC = Math.min(selectedCell.col, selectionEnd.col);
-                      const maxC = Math.max(selectedCell.col, selectionEnd.col);
-                      isSelected = cIdx >= minC && cIdx <= maxC;
-                    } else if (selectedCell.col === 'ALL') {
-                      const minR = Math.min(selectedCell.row, selectionEnd.row);
-                      const maxR = Math.max(selectedCell.row, selectionEnd.row);
-                      isSelected = originalIndex >= minR && originalIndex <= maxR;
-                    } else {
-                      const minR = Math.min(selectedCell.row, selectionEnd.row);
-                      const maxR = Math.max(selectedCell.row, selectionEnd.row);
-                      const minC = Math.min(selectedCell.col, selectionEnd.col);
-                      const maxC = Math.max(selectedCell.col, selectionEnd.col);
-                      isSelected = originalIndex >= minR && originalIndex <= maxR && cIdx >= minC && cIdx <= maxC;
-                      isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
-                    }
+                      let isSelected = false;
+                      let isPrimarySelected = false;
 
-                    const isDropdownCol = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 26].includes(cIdx);
-                    
-                    return (
-                      <td 
-                        key={cIdx} 
-                        onMouseDown={() => {
-                          if (originalIndex === 0 || gridData[originalIndex - 1].some(c => c.toString().trim() !== '')) {
-                            setSelectedCell({ row: originalIndex, col: cIdx });
-                            setSelectionEnd({ row: originalIndex, col: cIdx });
-                            setIsDragging(true);
-                          } else {
-                            toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
-                          }
-                        }}
-                        onMouseEnter={() => {
-                          if (isDragging) {
-                            setSelectionEnd({ row: originalIndex, col: cIdx });
-                          }
-                        }}
-                        className={`border border-[#C0C0C0] relative h-[25px] overflow-visible text-[13px] text-gray-800 ${isSelected ? 'bg-[#E8F0FE]' : 'bg-white'} ${isPrimarySelected ? 'ring-2 ring-[#1A73E8] z-20' : ''}`}
-                        style={{ width: COLUMNS[cIdx].width, height: '24px' }}
-                      >
-                        {isSelected && isEditing ? (
-                          isDropdownCol ? (
-                            <select
-                               ref={inputRef}
-                               className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white border-0 text-gray-800"
-                               value={val}
-                               onChange={(e) => {
-                                 const newVal = e.target.value;
-                                 updateGridCell(originalIndex, cIdx, newVal);
-                                 if (cIdx === 8 || cIdx === 12) {
+                      if (selectedCell.row === 'ALL' && selectedCell.col === 'ALL') {
+                        isSelected = true;
+                      } else if (selectedCell.row === 'ALL') {
+                        const minC = Math.min(selectedCell.col, selectionEnd.col);
+                        const maxC = Math.max(selectedCell.col, selectionEnd.col);
+                        isSelected = cIdx >= minC && cIdx <= maxC;
+                      } else if (selectedCell.col === 'ALL') {
+                        const minR = Math.min(selectedCell.row, selectionEnd.row);
+                        const maxR = Math.max(selectedCell.row, selectionEnd.row);
+                        isSelected = originalIndex >= minR && originalIndex <= maxR;
+                      } else {
+                        const minR = Math.min(selectedCell.row, selectionEnd.row);
+                        const maxR = Math.max(selectedCell.row, selectionEnd.row);
+                        const minC = Math.min(selectedCell.col, selectionEnd.col);
+                        const maxC = Math.max(selectedCell.col, selectionEnd.col);
+                        isSelected = originalIndex >= minR && originalIndex <= maxR && cIdx >= minC && cIdx <= maxC;
+                        isPrimarySelected = selectedCell.row === originalIndex && selectedCell.col === cIdx;
+                      }
+
+                      const isDropdownCol = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 26].includes(cIdx);
+
+                      return (
+                        <td
+                          key={cIdx}
+                          onMouseDown={() => {
+                            if (originalIndex === 0 || gridData[originalIndex - 1].some(c => c.toString().trim() !== '')) {
+                              setSelectedCell({ row: originalIndex, col: cIdx });
+                              setSelectionEnd({ row: originalIndex, col: cIdx });
+                              setIsDragging(true);
+                            } else {
+                              toast.error('Uzuza umurongo ubanza mbere yo gukomeza.', { id: 'row-jump' });
+                            }
+                          }}
+                          onMouseEnter={() => {
+                            if (isDragging) {
+                              setSelectionEnd({ row: originalIndex, col: cIdx });
+                            }
+                          }}
+                          className={`border border-[#C0C0C0] relative h-[25px] overflow-visible text-[13px] text-gray-800 ${isSelected ? 'bg-[#E8F0FE]' : 'bg-white'} ${isPrimarySelected ? 'ring-2 ring-[#1A73E8] z-20' : ''}`}
+                          style={{ width: COLUMNS[cIdx].width, height: '24px' }}
+                        >
+                          {isSelected && isEditing ? (
+                            isDropdownCol ? (
+                              <select
+                                ref={inputRef}
+                                className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white border-0 text-gray-800"
+                                value={val}
+                                onChange={(e) => {
+                                  const newVal = e.target.value;
+                                  updateGridCell(originalIndex, cIdx, newVal);
+                                  if (cIdx === 8 || cIdx === 12) {
                                     updateGridCell(originalIndex, cIdx + 1, '');
                                     updateGridCell(originalIndex, cIdx + 2, '');
                                     updateGridCell(originalIndex, cIdx + 3, '');
-                                 } else if (cIdx === 9 || cIdx === 13) {
+                                  } else if (cIdx === 9 || cIdx === 13) {
                                     updateGridCell(originalIndex, cIdx + 2, '');
                                     updateGridCell(originalIndex, cIdx + 3, '');
-                                 } else if (cIdx === 10 || cIdx === 14) {
+                                  } else if (cIdx === 10 || cIdx === 14) {
                                     updateGridCell(originalIndex, cIdx + 3, '');
-                                 }
-                               }}
-                               onBlur={() => setIsEditing(false)}
-                               onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === 'Escape') {
-                                     setIsEditing(false);
-                                      if (e.key === 'Enter') {
-                                         if (originalIndex + 1 < gridData.length && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![5,8,9].includes(idx) && c.trim() !== ''))) {
-                                           setSelectedCell({ row: originalIndex + 1, col: cIdx });
-                                         }
-                                     }
-                                  } else if (e.key === 'Tab') {
-                                     e.preventDefault();
-                                     setIsEditing(false);
-                                     setSelectedCell({ row: originalIndex, col: Math.min(cIdx + 1, NUM_COLS - 1) });
                                   }
-                               }}
-                            >
-                              <option value="">-- Hitamo --</option>
-                              {(() => {
-                                 let opts = [];
-                                 if (cIdx === 8) {
+                                }}
+                                onBlur={() => setIsEditing(false)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === 'Escape') {
+                                    setIsEditing(false);
+                                    if (e.key === 'Enter') {
+                                      if (originalIndex + 1 < gridData.length && (originalIndex === 0 || gridData[originalIndex].some((c, idx) => ![5, 8, 9].includes(idx) && c.trim() !== ''))) {
+                                        setSelectedCell({ row: originalIndex + 1, col: cIdx });
+                                      }
+                                    }
+                                  } else if (e.key === 'Tab') {
+                                    e.preventDefault();
+                                    setIsEditing(false);
+                                    setSelectedCell({ row: originalIndex, col: Math.min(cIdx + 1, NUM_COLS - 1) });
+                                  }
+                                }}
+                              >
+                                <option value="">-- Hitamo --</option>
+                                {(() => {
+                                  let opts = [];
+                                  if (cIdx === 8) {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
-                                 } else if (cIdx === 12) {
+                                  } else if (cIdx === 12) {
                                     opts = getProvinces().flatMap(p => getDistricts(p)).sort();
                                     const originDist = gridData[originalIndex][8];
                                     if (originDist) opts = opts.filter(d => d !== originDist);
-                                 } else if (cIdx === 9 || cIdx === 13) {
+                                  } else if (cIdx === 9 || cIdx === 13) {
                                     const dist = row[cIdx - 1]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist) opts = getSectors(prov, dist).sort();
                                     if (cIdx === 13 && user?.role === 'SARO') {
-                                        const origSec = row[9]?.trim();
-                                        if (origSec) opts = opts.filter(s => s !== origSec);
+                                      const origSec = row[9]?.trim();
+                                      if (origSec) opts = opts.filter(s => s !== origSec);
                                     }
-                                 } else if (cIdx === 10 || cIdx === 14) {
+                                  } else if (cIdx === 10 || cIdx === 14) {
                                     const dist = row[cIdx - 2]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const sec = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist && sec) opts = getCells(prov, dist, sec).sort();
-                                 } else if (cIdx === 11 || cIdx === 15) {
+                                  } else if (cIdx === 11 || cIdx === 15) {
                                     const dist = row[cIdx - 3]?.trim() || (user?.role === 'SARO' ? user?.district_id : null);
                                     const sec = row[cIdx - 2]?.trim();
                                     const cell = row[cIdx - 1]?.trim();
                                     const prov = dist ? getProvinces().find(p => getDistricts(p).includes(dist)) : null;
                                     if (prov && dist && sec && cell) opts = getVillages(prov, dist, sec, cell).sort();
-                                 } else if (cIdx === 18) {
+                                  } else if (cIdx === 18) {
                                     opts = ['M', 'F'];
-                                 } else if (cIdx === 16) {
+                                  } else if (cIdx === 16) {
                                     opts = ['Inka (Cow)', 'Ihene (Goat)', 'Intama (Sheep)'];
-                                 } else if (cIdx === 4) {
+                                  } else if (cIdx === 4) {
                                     opts = ['Minor', 'Urgency'];
-                                 } else if (cIdx === 7) {
+                                  } else if (cIdx === 7) {
                                     opts = ['RAB 195F'];
-                                 } else if (cIdx === 26) {
+                                  } else if (cIdx === 26) {
                                     opts = ['Person (Umuntu)', 'Company (Isociete)'];
-                                 }
-                                 return opts.map(o => <option key={o} value={o}>{o}</option>);
-                              })()}
-                            </select>
+                                  }
+                                  return opts.map(o => <option key={o} value={o}>{o}</option>);
+                                })()}
+                              </select>
+                            ) : (
+                              <input
+                                ref={inputRef}
+                                className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white"
+                                value={val}
+                                onChange={(e) => {
+                                  let newVal = e.target.value;
+                                  if (cIdx === 1) newVal = newVal.replace(/\D/g, '').slice(0, 16);
+                                  if (cIdx === 2) newVal = newVal.replace(/\D/g, '').slice(0, 10);
+                                  updateGridCell(originalIndex, cIdx, newVal);
+                                }}
+                                onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
+                                onBlur={() => setIsEditing(false)}
+                              />
+                            )
                           ) : (
-                            <input
-                              ref={inputRef}
-                              className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white"
-                              value={val}
-                              onChange={(e) => {
-                                let newVal = e.target.value;
-                                if (cIdx === 1) newVal = newVal.replace(/\D/g, '').slice(0, 16);
-                                if (cIdx === 2) newVal = newVal.replace(/\D/g, '').slice(0, 10);
-                                updateGridCell(originalIndex, cIdx, newVal);
+                            <div
+                              className="w-full h-full px-1.5 flex items-center cursor-cell gap-1 overflow-visible"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
                               }}
-                              onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
-                              onBlur={() => setIsEditing(false)}
-                            />
-                          )
-                        ) : (
-                          <div
-                            className="w-full h-full px-1.5 flex items-center cursor-cell gap-1 overflow-visible"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
-                            }}
-                            onDoubleClick={() => {
-                              if (!isViewMode && ![5].includes(cIdx)) setIsEditing(true);
-                            }}
-                          >
-                            <span className="truncate">{val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}</span>
-                            {cIdx === 17 && val && (() => {
-                              const status = tagStatuses[val.trim()];
-                              if (!status || !status.found) return null;
-                              return (
-                                <span className="flex gap-0.5 shrink-0">
-                                  {status.vaccinated && (
-                                    <span title="Vaccinated" className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-300">✓ VAX</span>
-                                  )}
-                                  {status.antibioticActive && (
-                                    <span title={`Antibiotic: ${status.daysRemaining}d left`} className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-300">⚠ {status.daysRemaining}d</span>
-                                  )}
-                                </span>
-                              );
-                            })()}
-                          </div>
-                        )}
-                        {isSelected && (
-                          <div className="absolute bottom-[-3px] right-[-3px] w-1.5 h-1.5 bg-[#1A73E8] border border-white cursor-crosshair"></div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                              onDoubleClick={() => {
+                                if (!isViewMode && ![5].includes(cIdx)) setIsEditing(true);
+                              }}
+                            >
+                              <span className="truncate">{val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}</span>
+                              {cIdx === 17 && val && (() => {
+                                const status = tagStatuses[val.trim()];
+                                if (!status || !status.found) return null;
+                                return (
+                                  <span className="flex gap-0.5 shrink-0">
+                                    {status.vaccinated && (
+                                      <span title="Vaccinated" className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-300">✓ VAX</span>
+                                    )}
+                                    {status.antibioticActive && (
+                                      <span title={`Antibiotic: ${status.daysRemaining}d left`} className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-300">⚠ {status.daysRemaining}d</span>
+                                    )}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          )}
+                          {isSelected && (
+                            <div className="absolute bottom-[-3px] right-[-3px] w-1.5 h-1.5 bg-[#1A73E8] border border-white cursor-crosshair"></div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -1474,352 +1471,352 @@ const CreatePermit = () => {
       <div className="md:hidden min-h-screen bg-[#F0EBF8] text-[14px] text-black">
         <form onSubmit={isViewMode ? (e) => e.preventDefault() : handleSubmitForms} className="max-w-3xl mx-auto p-4 space-y-4">
           <fieldset disabled={isViewMode} style={{ all: 'unset', display: 'contents' }}>
-          
-          {/* Form Header Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="h-2.5 w-full bg-[#673AB7]"></div>
-            <div className="p-6">
-              <h1 className="text-3xl font-normal text-gray-900 mb-2 flex items-center gap-3">
-                {isViewMode ? 'Reba Uruhushya' : editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
-                {isViewMode && (
-                  <span className="text-xs text-gray-500 font-normal flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" /> (Read-only)
-                  </span>
-                )}
-              </h1>
-              <p className="text-gray-600 mb-4 text-sm">
-                {isViewMode ? 'Viewing permit details. No changes can be made.' : editId ? 'Update an existing livestock movement permit.' : 'Form for requesting new livestock movement permits.'}
-              </p>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2">
-                <span className="font-medium text-gray-700">{user?.email || 'user@example.com'}</span>
-                <span className="text-[#673AB7] font-medium cursor-pointer">Switch account</span>
+
+            {/* Form Header Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="h-2.5 w-full bg-[#673AB7]"></div>
+              <div className="p-6">
+                <h1 className="text-3xl font-normal text-gray-900 mb-2 flex items-center gap-3">
+                  {isViewMode ? 'Reba Uruhushya' : editId ? 'Vugurura Uruhushya' : 'Saba Uruhushya Gashya'}
+                  {isViewMode && (
+                    <span className="text-xs text-gray-500 font-normal flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" /> (Read-only)
+                    </span>
+                  )}
+                </h1>
+                <p className="text-gray-600 mb-4 text-sm">
+                  {isViewMode ? 'Viewing permit details. No changes can be made.' : editId ? 'Update an existing livestock movement permit.' : 'Form for requesting new livestock movement permits.'}
+                </p>
+
+                <div className="flex items-center gap-2 text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2">
+                  <span className="font-medium text-gray-700">{user?.email || 'user@example.com'}</span>
+                  <span className="text-[#673AB7] font-medium cursor-pointer">Switch account</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">* Indicates required question</p>
               </div>
-              <p className="text-xs text-gray-500 mt-2">* Indicates required question</p>
             </div>
-          </div>
 
-          {/* Helper function to render a Form Card */}
-          {(() => {
-            const FormCard = ({ title, required, children }) => (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
-                <div className="text-base text-gray-800">
-                  {title} {required && <span className="text-red-500">*</span>}
-                </div>
-                {children}
-              </div>
-            );
-
-            return (
-              <>
-                {/* Transporter Mode Card */}
-                <FormCard title="Uburyo bw'Utwara Amatungo (Transporter Mode)" required>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mobile_transporter_mode"
-                        value="DRIVER_VEHICLE"
-                        checked={headerForm.transporter_mode === 'DRIVER_VEHICLE'}
-                        onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
-                        className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
-                      />
-                      <span className="text-sm font-medium text-gray-800">Imodoka n'Umushoferi (Vehicle & Driver)</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mobile_transporter_mode"
-                        value="PERSON_ON_FOOT"
-                        checked={headerForm.transporter_mode === 'PERSON_ON_FOOT'}
-                        onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
-                        className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
-                      />
-                      <span className="text-sm font-medium text-gray-800">Umunyamaguru / Omushumba (Person on Foot)</span>
-                    </label>
+            {/* Helper function to render a Form Card */}
+            {(() => {
+              const FormCard = ({ title, required, children }) => (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
+                  <div className="text-base text-gray-800">
+                    {title} {required && <span className="text-red-500">*</span>}
                   </div>
-                </FormCard>
+                  {children}
+                </div>
+              );
 
-                {/* Transporter Details & Vehicle Info */}
-                {headerForm.transporter_mode === 'DRIVER_VEHICLE' ? (
-                  <>
-                    <FormCard title="Amazina y'Umushoferi" required>
-                      <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umushoferi" />
-                    </FormCard>
-                    <FormCard title="Telephoni y'Umushoferi" required>
-                      <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
-                    </FormCard>
-                    <FormCard title="Indangamuntu y'Umushoferi" required>
-                      <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
-                    </FormCard>
-                    <FormCard title="Pulaki y'Imodoka (Plate Number)" required>
-                      <input type="text" name="plate_number" required value={mobileForm.plate_number || headerForm.plate_number} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, plate_number: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="RAB 195F" />
-                    </FormCard>
-                  </>
-                ) : (
-                  <>
-                    <FormCard title="Amazina y'Umunyamaguru" required>
-                      <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umunyamaguru" />
-                    </FormCard>
-                    <FormCard title="Telephoni y'Umunyamaguru" required>
-                      <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
-                    </FormCard>
-                    <FormCard title="Indangamuntu y'Umunyamaguru" required>
-                      <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
-                    </FormCard>
-                    <FormCard title="Uburyo bwo Kwimura">
-                      <input type="text" readOnly value="Umunyamaguru / Person" className="w-full border-b border-gray-300 py-1 bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
-                    </FormCard>
-                  </>
-                )}
+              return (
+                <>
+                  {/* Transporter Mode Card */}
+                  <FormCard title="Uburyo bw'Utwara Amatungo (Transporter Mode)" required>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="mobile_transporter_mode"
+                          value="DRIVER_VEHICLE"
+                          checked={headerForm.transporter_mode === 'DRIVER_VEHICLE'}
+                          onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'DRIVER_VEHICLE' }))}
+                          className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
+                        />
+                        <span className="text-sm font-medium text-gray-800">Imodoka n'Umushoferi (Vehicle & Driver)</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="mobile_transporter_mode"
+                          value="PERSON_ON_FOOT"
+                          checked={headerForm.transporter_mode === 'PERSON_ON_FOOT'}
+                          onChange={() => setHeaderForm(prev => ({ ...prev, transporter_mode: 'PERSON_ON_FOOT' }))}
+                          className="w-4 h-4 text-[#673AB7] focus:ring-[#673AB7]"
+                        />
+                        <span className="text-sm font-medium text-gray-800">Umunyamaguru / Omushumba (Person on Foot)</span>
+                      </label>
+                    </div>
+                  </FormCard>
 
-                {/* Cargo Photo Upload Card */}
-                <FormCard title="Ifoto y'amatungo yapakijwe / arimo kwimuka (Cargo Photo)" required>
-                  <div className="space-y-3">
-                    <p className="text-xs text-gray-500">
-                      Ohoza ifoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
-                    </p>
-                    {headerForm.cargo_photo ? (
-                      <div className="relative inline-block border border-gray-300 rounded overflow-hidden">
-                        <img src={headerForm.cargo_photo} alt="Cargo Preview" className="w-36 h-28 object-cover" />
-                        {!isViewMode && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setHeaderForm(prev => ({ ...prev, cargo_photo: '' }));
-                              setMobileForm(prev => ({ ...prev, cargo_photo: '' }));
-                            }}
-                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 shadow"
-                          >
-                            ✕
-                          </button>
+                  {/* Transporter Details & Vehicle Info */}
+                  {headerForm.transporter_mode === 'DRIVER_VEHICLE' ? (
+                    <>
+                      <FormCard title="Amazina y'Umushoferi" required>
+                        <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umushoferi" />
+                      </FormCard>
+                      <FormCard title="Telephoni y'Umushoferi" required>
+                        <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
+                      </FormCard>
+                      <FormCard title="Indangamuntu y'Umushoferi" required>
+                        <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                      </FormCard>
+                      <FormCard title="Pulaki y'Imodoka (Plate Number)" required>
+                        <input type="text" name="plate_number" required value={mobileForm.plate_number || headerForm.plate_number} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, plate_number: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="RAB 195F" />
+                      </FormCard>
+                    </>
+                  ) : (
+                    <>
+                      <FormCard title="Amazina y'Umunyamaguru" required>
+                        <input type="text" name="driver_name" required value={mobileForm.driver_name || headerForm.driver_name} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_name: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umunyamaguru" />
+                      </FormCard>
+                      <FormCard title="Telephoni y'Umunyamaguru" required>
+                        <input type="text" name="driver_phone" required value={mobileForm.driver_phone || headerForm.driver_phone} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10 (e.g. 0788000000)" />
+                      </FormCard>
+                      <FormCard title="Indangamuntu y'Umunyamaguru" required>
+                        <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                      </FormCard>
+                      <FormCard title="Uburyo bwo Kwimura">
+                        <input type="text" readOnly value="Umunyamaguru / Person" className="w-full border-b border-gray-300 py-1 bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+                      </FormCard>
+                    </>
+                  )}
+
+                  {/* Cargo Photo Upload Card */}
+                  <FormCard title="Ifoto y'amatungo yapakijwe / arimo kwimuka (Cargo Photo)" required>
+                    <div className="space-y-3">
+                      <p className="text-xs text-gray-500">
+                        Ohoza ifoto 1 y'imodoka yapakijwe cyangwa amatungo arimo kwimuka muri uru ruhushya.
+                      </p>
+                      {headerForm.cargo_photo ? (
+                        <div className="relative inline-block border border-gray-300 rounded overflow-hidden">
+                          <img src={headerForm.cargo_photo} alt="Cargo Preview" className="w-36 h-28 object-cover" />
+                          {!isViewMode && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setHeaderForm(prev => ({ ...prev, cargo_photo: '' }));
+                                setMobileForm(prev => ({ ...prev, cargo_photo: '' }));
+                              }}
+                              className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 shadow"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        !isViewMode && (
+                          <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#673AB7] text-white rounded text-sm font-medium cursor-pointer hover:bg-[#5E35B1] transition shadow-sm">
+                            <UploadCloud className="w-4 h-4" />
+                            <span>Upload Photo</span>
+                            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                          </label>
+                        )
+                      )}
+                    </div>
+                  </FormCard>
+
+                  <FormCard title="Amazina ya Nyir'amatungo" required>
+                    <input type="text" name="owner_name" required value={mobileForm.owner_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                  </FormCard>
+
+                  <FormCard title="Indangamuntu" required>
+                    <input type="text" name="owner_id_number" value={mobileForm.owner_id_number} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                  </FormCard>
+
+                  <FormCard title="Nimero ya telephoni" required>
+                    <input type="text" name="owner_phone" value={mobileForm.owner_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                  </FormCard>
+
+                  <FormCard title="Impamvu y'iyimuka" required>
+                    <input type="text" name="reason" required value={mobileForm.reason} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
+                  </FormCard>
+
+                  <FormCard title="Priority" required>
+                    <CustomSelect value={mobileForm.priority} onChange={(v) => handleMobileSelect('priority', v)} options={[{ value: 'Minor', label: 'Minor' }, { value: 'Urgency', label: 'Urgency' }]} />
+                  </FormCard>
+
+                  <FormCard title="Ubwoko bw'Umuguzi (Buyer Type)" required>
+                    <CustomSelect
+                      value={mobileForm.buyer_type || 'Person (Umuntu)'}
+                      onChange={(v) => handleMobileSelect('buyer_type', v)}
+                      options={[{ value: 'Person (Umuntu)', label: 'Person (Umuntu)' }, { value: 'Company (Isociete)', label: 'Company (Isociete)' }]}
+                    />
+                  </FormCard>
+
+                  {mobileForm.buyer_type === 'Company (Isociete)' ? (
+                    <>
+                      <FormCard title="Izina ry'Isociete y'Umuguzi" required>
+                        <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Izina ry'Isociete" />
+                      </FormCard>
+                      <FormCard title="Nimero ya Telephoni y'Isociete" required>
+                        <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                      </FormCard>
+                      <FormCard title="TIN Number y'Isociete" required>
+                        <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="TIN Number" />
+                      </FormCard>
+                    </>
+                  ) : (
+                    <>
+                      <FormCard title="Amazina y'Umuguzi" required>
+                        <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umuguzi" />
+                      </FormCard>
+                      <FormCard title="Telephoni y'Umuguzi" required>
+                        <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
+                      </FormCard>
+                      <FormCard title="Indangamuntu y'Umuguzi" required>
+                        <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
+                      </FormCard>
+                    </>
+                  )}
+
+                  <FormCard title="Ifite agaciro kugeza" required>
+                    <input type="date" name="valid_until" readOnly value={mobileForm.valid_until} className="w-full border-b border-gray-300 py-1 outline-none bg-gray-50 text-gray-500 cursor-not-allowed" />
+                  </FormCard>
+
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+                    <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Ahantu Biva n'Aho Bijya</h2>
+
+                    <div className="space-y-4">
+                      <p className="font-medium text-gray-700">Origin (Aho Biva)</p>
+                      <div className="space-y-4">
+                        {user?.role !== 'SARO' && (
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">District *</label>
+                            <CustomSelect value={mobileForm.origin_district} onChange={(v) => handleMobileSelect('origin_district', v)} options={districtOptions} />
+                          </div>
                         )}
-                      </div>
-                    ) : (
-                      !isViewMode && (
-                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#673AB7] text-white rounded text-sm font-medium cursor-pointer hover:bg-[#5E35B1] transition shadow-sm">
-                          <UploadCloud className="w-4 h-4" />
-                          <span>Upload Photo</span>
-                          <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                        </label>
-                      )
-                    )}
-                  </div>
-                </FormCard>
-
-                <FormCard title="Amazina ya Nyir'amatungo" required>
-                  <input type="text" name="owner_name" required value={mobileForm.owner_name} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
-                </FormCard>
-
-                <FormCard title="Indangamuntu" required>
-                  <input type="text" name="owner_id_number" value={mobileForm.owner_id_number} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
-                </FormCard>
-
-                <FormCard title="Nimero ya telephoni" required>
-                  <input type="text" name="owner_phone" value={mobileForm.owner_phone} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
-                </FormCard>
-
-                <FormCard title="Impamvu y'iyimuka" required>
-                  <input type="text" name="reason" required value={mobileForm.reason} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" />
-                </FormCard>
-
-                <FormCard title="Priority" required>
-                  <CustomSelect value={mobileForm.priority} onChange={(v) => handleMobileSelect('priority', v)} options={[{value: 'Minor', label: 'Minor'}, {value: 'Urgency', label: 'Urgency'}]} />
-                </FormCard>
-
-                <FormCard title="Ubwoko bw'Umuguzi (Buyer Type)" required>
-                  <CustomSelect
-                    value={mobileForm.buyer_type || 'Person (Umuntu)'}
-                    onChange={(v) => handleMobileSelect('buyer_type', v)}
-                    options={[{value: 'Person (Umuntu)', label: 'Person (Umuntu)'}, {value: 'Company (Isociete)', label: 'Company (Isociete)'}]}
-                  />
-                </FormCard>
-
-                {mobileForm.buyer_type === 'Company (Isociete)' ? (
-                  <>
-                    <FormCard title="Izina ry'Isociete y'Umuguzi" required>
-                      <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Izina ry'Isociete" />
-                    </FormCard>
-                    <FormCard title="Nimero ya Telephoni y'Isociete" required>
-                      <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
-                    </FormCard>
-                    <FormCard title="TIN Number y'Isociete" required>
-                      <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="TIN Number" />
-                    </FormCard>
-                  </>
-                ) : (
-                  <>
-                    <FormCard title="Amazina y'Umuguzi" required>
-                      <input type="text" name="buyer_name" required value={mobileForm.buyer_name || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Amazina y'Umuguzi" />
-                    </FormCard>
-                    <FormCard title="Telephoni y'Umuguzi" required>
-                      <input type="text" name="buyer_phone" required value={mobileForm.buyer_phone || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 10" />
-                    </FormCard>
-                    <FormCard title="Indangamuntu y'Umuguzi" required>
-                      <input type="text" name="buyer_id_tin" required value={mobileForm.buyer_id_tin || ''} onChange={handleMobileChange} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
-                    </FormCard>
-                  </>
-                )}
-
-                <FormCard title="Ifite agaciro kugeza" required>
-                  <input type="date" name="valid_until" readOnly value={mobileForm.valid_until} className="w-full border-b border-gray-300 py-1 outline-none bg-gray-50 text-gray-500 cursor-not-allowed" />
-                </FormCard>
-
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
-                   <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Ahantu Biva n'Aho Bijya</h2>
-                   
-                   <div className="space-y-4">
-                     <p className="font-medium text-gray-700">Origin (Aho Biva)</p>
-                     <div className="space-y-4">
-                       {user?.role !== 'SARO' && (
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">District *</label>
-                         <CustomSelect value={mobileForm.origin_district} onChange={(v) => handleMobileSelect('origin_district', v)} options={districtOptions} />
-                       </div>
-                       )}
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Sector *</label>
-                         <CustomSelect value={mobileForm.origin_sector} onChange={(v) => handleMobileSelect('origin_sector', v)} options={originSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.origin_district} />
-                       </div>
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Cell *</label>
-                         <CustomSelect value={mobileForm.origin_cell} onChange={(v) => handleMobileSelect('origin_cell', v)} options={originCellOptions} disabled={!mobileForm.origin_sector} />
-                       </div>
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Village *</label>
-                         <CustomSelect value={mobileForm.origin_village} onChange={(v) => handleMobileSelect('origin_village', v)} options={originVillageOptions} disabled={!mobileForm.origin_cell} />
-                       </div>
-                     </div>
-                   </div>
-
-                   <div className="space-y-4 pt-4 border-t border-gray-100">
-                     <p className="font-medium text-gray-700">Destination (Aho Bijya)</p>
-                     <div className="space-y-4">
-                       {user?.role !== 'SARO' && (
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">District *</label>
-                         <CustomSelect value={mobileForm.dest_district} onChange={(v) => handleMobileSelect('dest_district', v)} options={destDistrictOptions} />
-                       </div>
-                       )}
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Sector *</label>
-                         <CustomSelect value={mobileForm.dest_sector} onChange={(v) => handleMobileSelect('dest_sector', v)} options={destSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.dest_district} />
-                       </div>
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Cell *</label>
-                         <CustomSelect value={mobileForm.dest_cell} onChange={(v) => handleMobileSelect('dest_cell', v)} options={destCellOptions} disabled={!mobileForm.dest_sector} />
-                       </div>
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Village *</label>
-                         <CustomSelect value={mobileForm.dest_village} onChange={(v) => handleMobileSelect('dest_village', v)} options={destVillageOptions} disabled={!mobileForm.dest_cell} />
-                       </div>
-                     </div>
-                   </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
-                   <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Amatungo (Animals & Medical)</h2>
-                   {mobileAnimals.map((animal, idx) => (
-                     <div key={animal.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 relative space-y-4">
-                       <h3 className="font-medium text-gray-700">Animal #{idx + 1}</h3>
-                       {mobileAnimals.length > 1 && (
-                         <button type="button" onClick={() => removeMobileAnimal(animal.id)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500">
-                           <Trash2 className="w-4 h-4"/>
-                         </button>
-                       )}
-                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm text-gray-600 mb-1">Animal Type *</label>
-                          <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(animal.id, 'animal_type', v)} options={[{value: 'Inka (Cow)', label: 'Inka (Cow)'}, {value: 'Ihene (Goat)', label: 'Ihene (Goat)'}, {value: 'Intama (Sheep)', label: 'Intama (Sheep)'}]} />
+                          <label className="block text-sm text-gray-600 mb-1">Sector *</label>
+                          <CustomSelect value={mobileForm.origin_sector} onChange={(v) => handleMobileSelect('origin_sector', v)} options={originSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.origin_district} />
                         </div>
                         <div>
-                           <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
-                           <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Tag number" />
-                           {/* Vet status badges */}
-                           {animal.tag_number && (() => {
-                             const status = tagStatuses[animal.tag_number.trim()];
-                             if (!status || !status.found) return null;
-                             return (
-                               <div className="mt-2 flex flex-wrap gap-2">
-                                 {status.vaccinated && (
-                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
-                                     ✓ Vaccinated
-                                   </span>
-                                 )}
-                                 {status.antibioticActive && (
-                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
-                                     ⚠ Antibiotic active — {status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''} remaining
-                                   </span>
-                                 )}
-                               </div>
-                             );
-                           })()}
-                         </div>
-                       </div>
-                       <div>
-                         <label className="block text-sm text-gray-600 mb-1">Sex</label>
-                         <select value={animal.sex} onChange={(e) => handleMobileAnimalChange(animal.id, 'sex', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent">
-                           <option value="F">F</option><option value="M">M</option>
-                         </select>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                         <div>
-                           <label className="block text-sm text-gray-600 mb-1">Breed</label>
-                           <input type="text" value={animal.breed} onChange={(e) => handleMobileAnimalChange(animal.id, 'breed', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ubwoko" />
-                         </div>
-                         <div>
-                           <label className="block text-sm text-gray-600 mb-1">Color</label>
-                           <input type="text" value={animal.color} onChange={(e) => handleMobileAnimalChange(animal.id, 'color', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ibara" />
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4 pt-2">
-                         <div>
-                           <label className="block text-sm text-gray-600 mb-1">Inkingo (Vaccines)</label>
-                           <input type="text" value={animal.vaccines || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'vaccines', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. FMD" />
-                         </div>
-                         <div>
-                           <label className="block text-sm text-gray-600 mb-1">Imiti (Medication)</label>
-                           <input type="text" value={animal.medication || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'medication', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. Oxytetracycline" />
-                         </div>
-                       </div>
-                     </div>
-                   ))}
+                          <label className="block text-sm text-gray-600 mb-1">Cell *</label>
+                          <CustomSelect value={mobileForm.origin_cell} onChange={(v) => handleMobileSelect('origin_cell', v)} options={originCellOptions} disabled={!mobileForm.origin_sector} />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Village *</label>
+                          <CustomSelect value={mobileForm.origin_village} onChange={(v) => handleMobileSelect('origin_village', v)} options={originVillageOptions} disabled={!mobileForm.origin_cell} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                      <p className="font-medium text-gray-700">Destination (Aho Bijya)</p>
+                      <div className="space-y-4">
+                        {user?.role !== 'SARO' && (
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">District *</label>
+                            <CustomSelect value={mobileForm.dest_district} onChange={(v) => handleMobileSelect('dest_district', v)} options={destDistrictOptions} />
+                          </div>
+                        )}
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Sector *</label>
+                          <CustomSelect value={mobileForm.dest_sector} onChange={(v) => handleMobileSelect('dest_sector', v)} options={destSectorOptions} disabled={user?.role !== 'SARO' && !mobileForm.dest_district} />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Cell *</label>
+                          <CustomSelect value={mobileForm.dest_cell} onChange={(v) => handleMobileSelect('dest_cell', v)} options={destCellOptions} disabled={!mobileForm.dest_sector} />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Village *</label>
+                          <CustomSelect value={mobileForm.dest_village} onChange={(v) => handleMobileSelect('dest_village', v)} options={destVillageOptions} disabled={!mobileForm.dest_cell} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+                    <h2 className="text-xl font-normal text-gray-900 border-b border-gray-100 pb-2">Amatungo (Animals & Medical)</h2>
+                    {mobileAnimals.map((animal, idx) => (
+                      <div key={animal.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 relative space-y-4">
+                        <h3 className="font-medium text-gray-700">Animal #{idx + 1}</h3>
+                        {mobileAnimals.length > 1 && (
+                          <button type="button" onClick={() => removeMobileAnimal(animal.id)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Animal Type *</label>
+                            <CustomSelect value={animal.animal_type} onChange={(v) => handleMobileAnimalChange(animal.id, 'animal_type', v)} options={[{ value: 'Inka (Cow)', label: 'Inka (Cow)' }, { value: 'Ihene (Goat)', label: 'Ihene (Goat)' }, { value: 'Intama (Sheep)', label: 'Intama (Sheep)' }]} />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Tag Number *</label>
+                            <input type="text" required value={animal.tag_number} onChange={(e) => handleMobileAnimalChange(animal.id, 'tag_number', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Tag number" />
+                            {/* Vet status badges */}
+                            {animal.tag_number && (() => {
+                              const status = tagStatuses[animal.tag_number.trim()];
+                              if (!status || !status.found) return null;
+                              return (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {status.vaccinated && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+                                      ✓ Vaccinated
+                                    </span>
+                                  )}
+                                  {status.antibioticActive && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
+                                      ⚠ Antibiotic active — {status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''} remaining
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Sex</label>
+                          <select value={animal.sex} onChange={(e) => handleMobileAnimalChange(animal.id, 'sex', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent">
+                            <option value="F">F</option><option value="M">M</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Breed</label>
+                            <input type="text" value={animal.breed} onChange={(e) => handleMobileAnimalChange(animal.id, 'breed', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ubwoko" />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Color</label>
+                            <input type="text" value={animal.color} onChange={(e) => handleMobileAnimalChange(animal.id, 'color', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="Ibara" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Inkingo (Vaccines)</label>
+                            <input type="text" value={animal.vaccines || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'vaccines', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. FMD" />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Imiti (Medication)</label>
+                            <input type="text" value={animal.medication || ''} onChange={(e) => handleMobileAnimalChange(animal.id, 'medication', e.target.value)} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent" placeholder="e.g. Oxytetracycline" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                     {!isViewMode && (
                       <button type="button" onClick={addMobileAnimal} className="text-[#673AB7] text-sm font-medium hover:bg-purple-50 px-3 py-1.5 rounded transition">
                         + Add another animal
                       </button>
                     )}
-                </div>
+                  </div>
 
-              </>
-            );
-          })()}
+                </>
+              );
+            })()}
 
-          {/* Submit Actions */}
-          <div className="flex items-center justify-between pt-4 pb-12">
-            {isViewMode ? (
-              <button 
-                type="button"
-                onClick={() => navigate('/dashboard/movements')}
-                className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors"
-              >
-                Back to Movements
-              </button>
-            ) : (
-              <>
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
+            {/* Submit Actions */}
+            <div className="flex items-center justify-between pt-4 pb-12">
+              {isViewMode ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard/movements')}
+                  className="bg-[#C2E7FF] text-[#001D35] hover:bg-[#A8D4FF] px-6 py-2 rounded-full font-medium transition-colors"
                 >
-                  {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
+                  Back to Movements
                 </button>
-                <div className="flex items-center gap-4">
-                  <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
-                </div>
-              </>
-            )}
-          </div>
+              ) : (
+                <>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
+                  >
+                    {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
+                  </div>
+                </>
+              )}
+            </div>
           </fieldset>
         </form>
       </div>

@@ -171,26 +171,26 @@ const PoliceCases = () => {
     // Text Search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(m => 
-         m.title.toLowerCase().includes(query) || 
-         m.id.toLowerCase().includes(query) || 
-         m.reporter.name.toLowerCase().includes(query) || 
-         m.assignee.name.toLowerCase().includes(query) ||
-         m.vehiclePlate.toLowerCase().includes(query)
+      result = result.filter(m =>
+        m.title.toLowerCase().includes(query) ||
+        m.id.toLowerCase().includes(query) ||
+        m.reporter.name.toLowerCase().includes(query) ||
+        m.assignee.name.toLowerCase().includes(query) ||
+        m.vehiclePlate.toLowerCase().includes(query)
       );
     }
 
     // Checkbox Filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
-       result = result.filter(m => {
-          if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.location.includes(d))) return false;
-          if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.location.includes(s))) return false;
-          if (selectedFilters['Vehicle Plate']?.length > 0 && !selectedFilters['Vehicle Plate'].includes(m.vehiclePlate.toUpperCase())) return false;
-          if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
-          if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.filterStatus)) return false;
-          return true;
-       });
+      result = result.filter(m => {
+        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.location.includes(d))) return false;
+        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.location.includes(s))) return false;
+        if (selectedFilters['Vehicle Plate']?.length > 0 && !selectedFilters['Vehicle Plate'].includes(m.vehiclePlate.toUpperCase())) return false;
+        if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.filterType)) return false;
+        if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.filterStatus)) return false;
+        return true;
+      });
     }
 
     return result;
@@ -239,7 +239,7 @@ const PoliceCases = () => {
     const link = document.createElement('a');
     link.href = url;
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ActiveCases' : scopeParam === 'HISTORY' ? 'SolvedHistory' : 'AllCases';
-    link.setAttribute('download', `Police_Cases_${scopeLabel}_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `Police_Cases_${scopeLabel}_Report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -290,12 +290,12 @@ const PoliceCases = () => {
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     displayedCases.forEach(m => {
-       if (m.reporter.name !== 'System' && !userMap.has(m.reporter.name)) {
-          userMap.set(m.reporter.name, m.reporter);
-       }
-       if (m.assignee.name !== 'Unassigned' && !userMap.has(m.assignee.name)) {
-          userMap.set(m.assignee.name, m.assignee);
-       }
+      if (m.reporter.name !== 'System' && !userMap.has(m.reporter.name)) {
+        userMap.set(m.reporter.name, m.reporter);
+      }
+      if (m.assignee.name !== 'Unassigned' && !userMap.has(m.assignee.name)) {
+        userMap.set(m.assignee.name, m.assignee);
+      }
     });
     return Array.from(userMap.values());
   }, [displayedCases]);
@@ -314,7 +314,7 @@ const PoliceCases = () => {
             <Link to="/dashboard/overview" className="hover:underline text-blue-600">Overview</Link> / <span>Livestock Tracking app</span>
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            Police Cases 
+            Police Cases
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {displayedCases.length}
             </span>
@@ -325,14 +325,13 @@ const PoliceCases = () => {
       {/* Tabs / Toolbar (Matches Movements tab design) */}
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
         {tabs.map(tab => (
-          <button 
+          <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${
-              activeTab === tab 
-                ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]' 
+            className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
                 : 'hover:text-gray-900'
-            }`}
+              }`}
           >
             {tab}
           </button>
@@ -341,55 +340,55 @@ const PoliceCases = () => {
 
       {/* Filters Toolbar */}
       <div className="px-6 py-3 flex items-center gap-3 border-b border-gray-100">
-         <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search cases..." 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-blue-600"
-            />
-         </div>
-         
-         <div className="flex -space-x-2 ml-4">
-            {displayUsers.map((user, idx) => (
-              <div 
-                key={idx} 
-                title={user.name}
-                className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
-              >
-                {user.initials}
-              </div>
-            ))}
-            {extraUsersCount > 0 && (
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
-                +{extraUsersCount}
-              </div>
-            )}
-         </div>
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search cases..."
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-blue-600"
+          />
+        </div>
 
-         <div className="ml-4 relative z-50">
-           <FilterDropdown 
-             selectedFilters={selectedFilters} 
-             onFilterChange={handleFilterChange}
-             categories={policeCategories}
-             optionsMap={policeOptionsMap}
-           />
-         </div>
+        <div className="flex -space-x-2 ml-4">
+          {displayUsers.map((user, idx) => (
+            <div
+              key={idx}
+              title={user.name}
+              className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
+            >
+              {user.initials}
+            </div>
+          ))}
+          {extraUsersCount > 0 && (
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
+              +{extraUsersCount}
+            </div>
+          )}
+        </div>
 
-         <div className="relative z-50">
-           <ReportDropdown 
-             onExportCSV={exportToCSV}
-             onPrintPDF={printPDFReport}
-             timeRange={timeRange}
-             setTimeRange={setTimeRange}
-             recordScope={recordScope}
-             setRecordScope={setRecordScope}
-           />
-         </div>
+        <div className="ml-4 relative z-50">
+          <FilterDropdown
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            categories={policeCategories}
+            optionsMap={policeOptionsMap}
+          />
+        </div>
 
-         <div className="flex-1"></div>
+        <div className="relative z-50">
+          <ReportDropdown
+            onExportCSV={exportToCSV}
+            onPrintPDF={printPDFReport}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+            recordScope={recordScope}
+            setRecordScope={setRecordScope}
+          />
+        </div>
+
+        <div className="flex-1"></div>
       </div>
 
       {/* Main Content Area */}

@@ -83,20 +83,20 @@ const VetRecords = () => {
       group.forEach(req => {
         const type = req.animal_type || 'Unknown';
         const tag = req.animal_tag;
-        
+
         if (tag) {
-           const typeTag = `${type}-${tag}`;
-           if (!uniqueAnimals.has(typeTag)) {
-             uniqueAnimals.add(typeTag);
-             animalCounts[type] = (animalCounts[type] || 0) + 1;
-           }
+          const typeTag = `${type}-${tag}`;
+          if (!uniqueAnimals.has(typeTag)) {
+            uniqueAnimals.add(typeTag);
+            animalCounts[type] = (animalCounts[type] || 0) + 1;
+          }
         } else {
-           // fallback for older records: assume 1 animal per type to prevent 4x overcounting
-           const fallbackTag = `${type}-legacy`;
-           if (!uniqueAnimals.has(fallbackTag)) {
-             uniqueAnimals.add(fallbackTag);
-             animalCounts[type] = (animalCounts[type] || 0) + 1;
-           }
+          // fallback for older records: assume 1 animal per type to prevent 4x overcounting
+          const fallbackTag = `${type}-legacy`;
+          if (!uniqueAnimals.has(fallbackTag)) {
+            uniqueAnimals.add(fallbackTag);
+            animalCounts[type] = (animalCounts[type] || 0) + 1;
+          }
         }
 
         if (req.vaccines) vaccinesUsed.add(req.vaccines);
@@ -105,7 +105,7 @@ const VetRecords = () => {
 
       const animalTypeStr = Object.entries(animalCounts).map(([type, count]) => `${count} ${type}`).join(', ');
       const vaccinesStr = Array.from(vaccinesUsed).join(', ');
-      
+
       const typeStr = firstReq.type || 'VACCINATION';
 
       return {
@@ -190,7 +190,7 @@ const VetRecords = () => {
           {user?.role === 'SARO' && (
             <Link
               to={`/dashboard/vet-records/create?type=${activeTab?.toLowerCase()}`}
-              className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
+              className="bg-[#0052cc] hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm inline-flex items-center gap-2"
             >
               <span className="text-lg leading-none">+</span> Add {activeTab}
             </Link>
@@ -205,7 +205,7 @@ const VetRecords = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
-              ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]'
+              ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
               : 'hover:text-gray-900'
               }`}
           >
@@ -223,7 +223,7 @@ const VetRecords = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search records"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#2187e0]"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
           />
         </div>
 

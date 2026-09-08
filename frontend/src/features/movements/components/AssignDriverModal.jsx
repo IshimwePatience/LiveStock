@@ -38,74 +38,74 @@ const AssignDriverModal = ({ isOpen, onClose, requestId, onApproveSuccess }) => 
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6">
           <p className="text-sm text-gray-600 mb-5">
             Assign a driver for this trip. The driver will receive a magic link via SMS to share their GPS location.
           </p>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Driver Name</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={formData.name}
-                onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2187e0] focus:border-green-500 sm:text-sm"
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="e.g. John Doe"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input 
-                type="tel" 
+              <input
+                type="tel"
                 required
                 value={formData.phone}
-                onChange={e => setFormData({...formData, phone: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2187e0] focus:border-green-500 sm:text-sm"
+                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="e.g. +250780000000"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={formData.national_id}
-                onChange={e => setFormData({...formData, national_id: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2187e0] focus:border-green-500 sm:text-sm"
+                onChange={e => setFormData({ ...formData, national_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm"
                 placeholder="16 digits"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Plate Number</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={formData.plate_number}
-                onChange={e => setFormData({...formData, plate_number: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2187e0] focus:border-green-500 sm:text-sm uppercase"
+                onChange={e => setFormData({ ...formData, plate_number: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#0052cc] focus:border-green-500 sm:text-sm uppercase"
                 placeholder="e.g. RAB 123 A"
               />
             </div>
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2187e0]"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc]"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#2187e0] border border-transparent rounded-md hover:bg-[#1b72be] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2187e0] disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0052cc] border border-transparent rounded-md hover:bg-[#0047b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052cc] disabled:opacity-50"
             >
               {submitting ? 'Approving...' : 'Approve Request'}
             </button>

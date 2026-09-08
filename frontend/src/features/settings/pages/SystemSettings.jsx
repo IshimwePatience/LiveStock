@@ -71,7 +71,7 @@ const SystemSettings = () => {
       await api.put(`/auth/users/${selectedUserId}`, {
         permissions: updatedPermissions
       });
-      
+
       setSaveState('saved');
       setUsers(prev => prev.map(u => u.id === selectedUserId ? { ...u, permissions: updatedPermissions } : u));
 
@@ -134,7 +134,7 @@ const SystemSettings = () => {
         <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">
           Control which features and navigation modules RAB users can see in the app.
           You can change these settings at any time.
-          <a href="#info" className="text-[#2187e0] hover:underline ml-1">More about managing permissions</a>
+          <a href="#info" className="text-[#0052cc] hover:underline ml-1">More about managing permissions</a>
         </p>
       </div>
 
@@ -147,7 +147,7 @@ const SystemSettings = () => {
           value={selectedUserId}
           onChange={handleUserChange}
           disabled={loadingUsers}
-          className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] shadow-sm"
+          className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] shadow-sm"
         >
           {users.map(u => (
             <option key={u.id} value={u.id}>
@@ -206,7 +206,7 @@ const SystemSettings = () => {
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => togglePermission(mod.id)}
-                          className="w-4 h-4 text-[#2187e0] border-gray-300 rounded focus:ring-[#2187e0] cursor-pointer"
+                          className="w-4 h-4 text-[#0052cc] border-gray-300 rounded focus:ring-[#0052cc] cursor-pointer"
                         />
                       </div>
                       <div>
@@ -227,7 +227,7 @@ const SystemSettings = () => {
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-[#2187e0] hover:underline"
+                  className="text-[#0052cc] hover:underline"
                 >
                   Select all
                 </button>
@@ -235,7 +235,7 @@ const SystemSettings = () => {
                 <button
                   type="button"
                   onClick={handleDeselectAll}
-                  className="text-[#2187e0] hover:underline"
+                  className="text-[#0052cc] hover:underline"
                 >
                   Deselect all
                 </button>
@@ -243,7 +243,7 @@ const SystemSettings = () => {
                 <button
                   type="button"
                   onClick={handleResetDefaults}
-                  className="text-[#2187e0] hover:underline flex items-center gap-1"
+                  className="text-[#0052cc] hover:underline flex items-center gap-1"
                 >
                   Reset to role defaults
                 </button>

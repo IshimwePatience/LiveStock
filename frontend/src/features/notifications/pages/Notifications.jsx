@@ -24,7 +24,7 @@ const Notifications = () => {
   const markAsRead = async (id) => {
     try {
       await api.put(`/notifications/${id}/read`);
-      setNotifications(prev => prev.map(n => 
+      setNotifications(prev => prev.map(n =>
         (id === 'all' || n.id === id) ? { ...n, read: true } : n
       ));
     } catch (err) {
@@ -33,7 +33,7 @@ const Notifications = () => {
   };
 
   const getIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case 'APPROVAL': return <Check className="w-5 h-5 text-green-500" />;
       case 'ARRIVAL': return <Hexagon className="w-5 h-5 text-blue-500 fill-blue-100" />;
       case 'ALERT': return <AlertTriangle className="w-5 h-5 text-amber-500" />;
@@ -58,13 +58,13 @@ const Notifications = () => {
 
   const filteredNotifications = notifications.filter(n => {
     if (showOnlyUnread && n.read) return false;
-    
+
     const notifDate = new Date(n.createdAt);
     const today = new Date();
-    const isToday = notifDate.getDate() === today.getDate() && 
-                    notifDate.getMonth() === today.getMonth() && 
-                    notifDate.getFullYear() === today.getFullYear();
-    
+    const isToday = notifDate.getDate() === today.getDate() &&
+      notifDate.getMonth() === today.getMonth() &&
+      notifDate.getFullYear() === today.getFullYear();
+
     if (activeTab === 'Direct' && !isToday) return false;
     if (activeTab === 'Recents' && isToday) return false;
 
@@ -76,17 +76,17 @@ const Notifications = () => {
       {/* Left Sidebar */}
       <div className="w-64 border-r border-gray-200 bg-white flex flex-col py-6 shrink-0">
         <h2 className="px-6 text-xl font-bold text-gray-900 mb-6">Notifications</h2>
-        
+
         <div className="flex flex-col gap-1 mb-8">
-          <button 
+          <button
             onClick={() => setActiveTab('Direct')}
-            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Direct' ? 'bg-[#e9f2ff] text-[#2187e0] border-l-2 border-[#2187e0] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Direct' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Direct
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('Recents')}
-            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Recents' ? 'bg-[#e9f2ff] text-[#2187e0] border-l-2 border-[#2187e0] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Recents' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Recents
           </button>
@@ -101,7 +101,7 @@ const Notifications = () => {
             <h3 className="text-[15px] font-semibold text-gray-900">{activeTab === 'Direct' ? 'Today' : 'Older'}</h3>
             <div className="flex items-center gap-2">
               <span className="text-[13px] text-gray-600 font-medium">Only show unread</span>
-              <button 
+              <button
                 onClick={() => setShowOnlyUnread(!showOnlyUnread)}
                 className={`w-9 h-5 rounded-full flex items-center transition-colors ${showOnlyUnread ? 'bg-blue-600' : 'bg-gray-300'}`}
               >
@@ -123,8 +123,8 @@ const Notifications = () => {
             ) : (
               <div className="space-y-4">
                 {filteredNotifications.map((notif) => (
-                  <div 
-                    key={notif.id} 
+                  <div
+                    key={notif.id}
                     onClick={() => !notif.read && markAsRead(notif.id)}
                     className={`p-5 rounded-xl border transition flex items-start gap-4 cursor-pointer ${!notif.read ? 'bg-[#ebf2ff] border-transparent shadow-sm' : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm'}`}
                   >

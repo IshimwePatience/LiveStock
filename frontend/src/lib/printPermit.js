@@ -56,13 +56,13 @@ export const printOfficialPermit = async (permit) => {
     const animals = permit.Animals && permit.Animals.length > 0
       ? permit.Animals
       : [{
-          tag_number: permit.tag_number || '1079000',
-          sex: permit.sex || 'F',
-          breed: permit.breed || 'Cross',
-          color: permit.color || 'Ikibamba',
-          quantity: 1,
-          vaccines: permit.vaccines || '-'
-        }];
+        tag_number: permit.tag_number || '1079000',
+        sex: permit.sex || 'F',
+        breed: permit.breed || 'Cross',
+        color: permit.color || 'Ikibamba',
+        quantity: 1,
+        vaccines: permit.vaccines || '-'
+      }];
 
     const rawQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(permitCode)}`;
     const coatOfArmsRaw = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png";
@@ -229,7 +229,7 @@ export const printOfficialPermit = async (permit) => {
                     <tr>
                       <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Rutanzwe ku wa:</span><span style="font-weight: bold; font-size: 13px;">${issueDate}</span></td>
                       <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Inyandiko ifite agaciro kugeza:</span><span style="font-weight: bold; font-size: 13px;">${validUntilDate}</span></td>
-                      <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #2187e0;">${permitCode}</span></td>
+                      <td style="width: 33.3%; border: none; vertical-align: top;"><span style="color: #6b7280; display: block;">Nomero y'icyemezo:</span><span style="font-weight: bold; font-size: 13px; color: #0052cc;">${permitCode}</span></td>
                     </tr>
                   </table>
                 </div>
@@ -270,7 +270,7 @@ export const printOfficialPermit = async (permit) => {
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 12px;">
                   <tr>
                     <td style="border: none; padding: 4px 0;"><span style="color: #6b7280;">Ubwoko bw'Amatungo:</span> <span style="font-weight: bold; font-size: 12px; margin-left: 4px;">${permit.animal_type || 'Inka'}</span></td>
-                    <td style="text-align: right; border: none; padding: 4px 0;"><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 12px; color: #2187e0; margin-left: 4px;">${permitCode}</span></td>
+                    <td style="text-align: right; border: none; padding: 4px 0;"><span style="color: #6b7280;">Nomero y'icyemezo:</span> <span style="font-weight: bold; font-size: 12px; color: #0052cc; margin-left: 4px;">${permitCode}</span></td>
                   </tr>
                 </table>
 
@@ -290,7 +290,7 @@ export const printOfficialPermit = async (permit) => {
                     ${animals.map((anim, idx) => `
                       <tr>
                         <td style="text-align: center; font-weight: 500; color: #6b7280;">${idx + 1}</td>
-                        <td style="font-weight: bold; color: #000;">${anim.tag_number || `TAG-${idx+1}`}</td>
+                        <td style="font-weight: bold; color: #000;">${anim.tag_number || `TAG-${idx + 1}`}</td>
                         <td style="text-align: center; text-transform: uppercase; font-weight: 600;">${anim.sex || 'F'}</td>
                         <td style="text-align: center;">1</td>
                         <td style="text-transform: capitalize;">${anim.breed || 'Cross'}</td>
@@ -314,11 +314,11 @@ export const printOfficialPermit = async (permit) => {
     const html2pdf = await ensureHtml2Pdf();
     if (html2pdf) {
       const opt = {
-        margin:       [8, 8, 8, 14],
-        filename:     `Permit_${permitCode}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: [8, 8, 8, 14],
+        filename: `Permit_${permitCode}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       await html2pdf().set(opt).from(doc.body).save();
       document.body.removeChild(iframe);

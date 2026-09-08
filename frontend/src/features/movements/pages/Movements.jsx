@@ -45,11 +45,11 @@ const Movements = () => {
     const typeParam = searchParams.get('type');
     const animalParam = searchParams.get('animal');
     const searchParam = searchParams.get('search');
-    
+
     if (searchParam) {
       setSearchQuery(searchParam);
     }
-    
+
     const newFilters = {};
     if (statusParam) {
       if (statusParam === 'APPROVED') {
@@ -60,7 +60,7 @@ const Movements = () => {
     }
     if (typeParam) newFilters['Type'] = [typeParam];
     if (animalParam) newFilters['Animal'] = [animalParam];
-    
+
     if (Object.keys(newFilters).length > 0) {
       setSelectedFilters(prev => ({ ...prev, ...newFilters }));
     }
@@ -98,7 +98,7 @@ const Movements = () => {
   const movements = useMemo(() => {
     if (!rawMovements) return [];
     return rawMovements.map(req => {
-      
+
       // Determine Type (SECTOR_TO_SECTOR = bug, DISTRICT_TO_DISTRICT = enhancement)
       let type = 'task';
       if (req.type === 'SECTOR_TO_SECTOR') type = 'bug';
@@ -107,7 +107,7 @@ const Movements = () => {
       // Assignee (Approver) & Reporter (Initiator)
       let assigneeName = req.Approver ? req.Approver.name : null;
       if (!assigneeName) {
-         assigneeName = req.type === 'DISTRICT_TO_DISTRICT' ? 'National RAB' : 'District (DARO)';
+        assigneeName = req.type === 'DISTRICT_TO_DISTRICT' ? 'National RAB' : 'District (DARO)';
       }
       const assigneeInitials = getInitials(assigneeName);
       const assigneeColor = getColorForInitials(assigneeInitials);
@@ -128,8 +128,8 @@ const Movements = () => {
       if (req.Animals && req.Animals.length > 0) {
         const counts = {};
         req.Animals.forEach(a => {
-           const type = a.animal_type || 'Unknown';
-           counts[type] = (counts[type] || 0) + (a.quantity || 1);
+          const type = a.animal_type || 'Unknown';
+          counts[type] = (counts[type] || 0) + (a.quantity || 1);
         });
         const typesStr = Object.entries(counts).map(([type, c]) => `${c} ${type}`).join(', ');
         detailsString = `Move ${typesStr}: ${req.reason || 'No reason provided'}`;
@@ -145,7 +145,7 @@ const Movements = () => {
       // Origin and Dest
       let origin = 'Unknown';
       let destination = 'Unknown';
-      
+
       if (req.type === 'SECTOR_TO_SECTOR') {
         origin = req.origin_sector || req.origin_id || 'Unknown';
         destination = req.dest_sector || req.destination_id || 'Unknown';
@@ -266,7 +266,7 @@ const Movements = () => {
     // Text Search Filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(m => 
+      result = result.filter(m =>
         m.requestByTitle.toLowerCase().includes(q) ||
         m.title.toLowerCase().includes(q) ||
         m.farmerName.toLowerCase().includes(q) ||
@@ -370,7 +370,7 @@ const Movements = () => {
     const link = document.createElement('a');
     link.href = url;
     const scopeLabel = scopeParam === 'REQUESTS' ? 'Requests' : scopeParam === 'HISTORY' ? 'History' : 'AllRecords';
-    link.setAttribute('download', `RAB_Livestock_Movements_${scopeLabel}_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `RAB_Livestock_Movements_${scopeLabel}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -384,7 +384,7 @@ const Movements = () => {
       return;
     }
     const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY (REQUESTS & HISTORY)';
-    
+
     const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)',
       titleSub: '',
@@ -463,12 +463,12 @@ const Movements = () => {
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     filteredMovements.forEach(m => {
-       if (m.reporter.name !== 'System' && !userMap.has(m.reporter.name)) {
-          userMap.set(m.reporter.name, m.reporter);
-       }
-       if (m.assignee.name !== 'Unassigned' && !userMap.has(m.assignee.name)) {
-          userMap.set(m.assignee.name, m.assignee);
-       }
+      if (m.reporter.name !== 'System' && !userMap.has(m.reporter.name)) {
+        userMap.set(m.reporter.name, m.reporter);
+      }
+      if (m.assignee.name !== 'Unassigned' && !userMap.has(m.assignee.name)) {
+        userMap.set(m.assignee.name, m.assignee);
+      }
     });
     return Array.from(userMap.values());
   }, [filteredMovements]);
@@ -492,18 +492,18 @@ const Movements = () => {
             Overview / Livestock Tracking app
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            Movement Requests 
+            Movement Requests
             <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
               {filteredMovements.length}
             </span>
           </h1>
         </div>
         {canCreateRequest && (
-          <button 
+          <button
             onClick={() => navigate('/dashboard/movements/new')}
-            className="flex items-center gap-2 bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
-             New permission
+            New permission
           </button>
         )}
       </div>
@@ -511,14 +511,13 @@ const Movements = () => {
       {/* Tabs / Toolbar */}
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
         {tabs.map(tab => (
-          <button 
+          <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${
-              activeTab === tab 
-                ? 'text-[#2187e0] font-semibold border-b-2 border-[#2187e0]' 
+            className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
+                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
                 : 'hover:text-gray-900'
-            }`}
+              }`}
           >
             {tab}
           </button>
@@ -527,71 +526,71 @@ const Movements = () => {
 
       {/* Filters Toolbar */}
       <div className="px-6 py-3 flex items-center gap-3">
-         <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search requests" 
-              className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#2187e0]"
-            />
-         </div>
-         
-         <div className="flex -space-x-2 ml-4">
-            {displayUsers.map((user, idx) => (
-              <div 
-                key={idx} 
-                title={user.name}
-                className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
-              >
-                {user.initials}
-              </div>
-            ))}
-            {extraUsersCount > 0 && (
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
-                +{extraUsersCount}
-              </div>
-            )}
-            {uniqueUsers.length === 0 && (
-              <div className="text-xs text-gray-400 pl-4 font-medium italic">No active users in current filter</div>
-            )}
-         </div>
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search requests"
+            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
+          />
+        </div>
 
-         <div className="ml-4 relative z-50">
-           <FilterDropdown 
-             selectedFilters={selectedFilters} 
-             onFilterChange={handleFilterChange}
-             categories={movementCategories}
-             optionsMap={movementOptionsMap}
-           />
-         </div>
+        <div className="flex -space-x-2 ml-4">
+          {displayUsers.map((user, idx) => (
+            <div
+              key={idx}
+              title={user.name}
+              className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
+            >
+              {user.initials}
+            </div>
+          ))}
+          {extraUsersCount > 0 && (
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
+              +{extraUsersCount}
+            </div>
+          )}
+          {uniqueUsers.length === 0 && (
+            <div className="text-xs text-gray-400 pl-4 font-medium italic">No active users in current filter</div>
+          )}
+        </div>
 
-         <div className="relative z-50">
-           <ReportDropdown 
-             onExportCSV={exportToCSV}
-             onPrintPDF={printPDFReport}
-             timeRange={timeRange}
-             setTimeRange={setTimeRange}
-             recordScope={recordScope}
-             setRecordScope={setRecordScope}
-           />
-         </div>
-         
-         <div className="flex-1"></div>
+        <div className="ml-4 relative z-50">
+          <FilterDropdown
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            categories={movementCategories}
+            optionsMap={movementOptionsMap}
+          />
+        </div>
+
+        <div className="relative z-50">
+          <ReportDropdown
+            onExportCSV={exportToCSV}
+            onPrintPDF={printPDFReport}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+            recordScope={recordScope}
+            setRecordScope={setRecordScope}
+          />
+        </div>
+
+        <div className="flex-1"></div>
       </div>
 
       {/* Dynamic Content Area based on Active Tab */}
       <div className="flex-1 overflow-auto bg-white flex flex-col">
-         {activeTab === 'Requests' && (
-            <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING')} isLoading={isLoading} isError={isError} />
-         )}
-         {activeTab === 'Incoming (Destination)' && (
-            <MovementsList movements={filteredMovements.filter(m => isIncoming(m))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
-         )}
-         {activeTab === 'History' && (
-            <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
-         )}
+        {activeTab === 'Requests' && (
+          <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING')} isLoading={isLoading} isError={isError} />
+        )}
+        {activeTab === 'Incoming (Destination)' && (
+          <MovementsList movements={filteredMovements.filter(m => isIncoming(m))} isLoading={isLoading} isError={isError} isIncomingTab={true} />
+        )}
+        {activeTab === 'History' && (
+          <MovementsList movements={filteredMovements.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus))} isLoading={isLoading} isError={isError} />
+        )}
       </div>
 
     </div>
