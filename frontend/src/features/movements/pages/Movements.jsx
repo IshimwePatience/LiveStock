@@ -51,7 +51,13 @@ const Movements = () => {
     }
     
     const newFilters = {};
-    if (statusParam) newFilters['Status'] = [statusParam];
+    if (statusParam) {
+      if (statusParam === 'APPROVED') {
+        newFilters['Status'] = ['APPROVED', 'ACTIVE'];
+      } else {
+        newFilters['Status'] = [statusParam];
+      }
+    }
     if (typeParam) newFilters['Type'] = [typeParam];
     if (animalParam) newFilters['Animal'] = [animalParam];
     

@@ -264,7 +264,7 @@ const Overview = () => {
 
         {/* Card: Trips Starting Soon */}
         <div 
-          onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}
+          onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
         >
            <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
@@ -290,11 +290,11 @@ const Overview = () => {
              <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Permits: ${statsData?.statusOverview?.total || 0}`} onClick={() => navigate('/dashboard/movements')}>
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                  {/* Approved - Light Blue */}
-                 <circle title={`Approved Permits: ${statsData?.statusOverview?.approved || 0} - Authorized & Issued`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
+                 <circle title={`Approved Permits: ${statsData?.statusOverview?.approved || 0} - Authorized & Issued`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=History&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
                  {/* Pending - Orange */}
                  <circle title={`Pending Approval: ${statsData?.statusOverview?.pending || 0} - Awaiting Review`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=PENDING'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
                  {/* Active - Green */}
-                 <circle title={`Active Trips: ${statsData?.statusOverview?.active || 0} - Currently En Route`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
+                 <circle title={`Active Trips: ${statsData?.statusOverview?.active || 0} - Currently En Route`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=History&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                  <span className="text-3xl font-black text-gray-900">{statsData?.statusOverview?.total || 0}</span>
@@ -308,11 +308,11 @@ const Overview = () => {
                   <div className="w-3 h-3 bg-[#f97316] mt-0.5"></div>
                   <div>Pending Approval: {statsData?.statusOverview?.pending || 0}</div>
                 </div>
-                <div title={`Approved: ${statsData?.statusOverview?.approved || 0} Permits approved & issued`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
+                <div title={`Approved: ${statsData?.statusOverview?.approved || 0} Permits approved & issued`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#26b3d4] mt-0.5"></div>
                   <div>Approved: {statsData?.statusOverview?.approved || 0}</div>
                 </div>
-                <div title={`Active Trips: ${statsData?.statusOverview?.active || 0} Livestock vehicles currently in transit`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=APPROVED')}>
+                <div title={`Active Trips: ${statsData?.statusOverview?.active || 0} Livestock vehicles currently in transit`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
                   <div className="w-3 h-3 bg-[#22c55e] mt-0.5"></div>
                   <div>Active Trips: {statsData?.statusOverview?.active || 0}</div>
                 </div>
