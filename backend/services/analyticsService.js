@@ -54,10 +54,17 @@ class AnalyticsService {
       where: buildWhere({ status: 'COMPLETED', updatedAt: { [Op.gte]: sevenDaysAgo } })
     });
 
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     const dueSoon = await MovementRequest.count({
       where: buildWhere({
         status: { [Op.in]: ['APPROVED', 'ACTIVE'] },
-        valid_until: { [Op.between]: [new Date(), sevenDaysFromNow] }
+        [Op.or]: [
+          { valid_until: { [Op.gte]: startOfToday } },
+          { valid_until: null },
+          { updatedAt: { [Op.gte]: sevenDaysAgo } }
+        ]
       })
     });
 

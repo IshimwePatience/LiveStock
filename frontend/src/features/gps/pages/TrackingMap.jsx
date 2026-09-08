@@ -1137,9 +1137,11 @@ const TrackingMap = () => {
 
                 {/* Line */}
                 <div className="h-1 bg-blue-500 flex-grow relative mx-2">
-                  <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-medium text-blue-600 shadow-sm flex items-center gap-1">
-                    <Navigation className="w-3 h-3" />
-                    In Transit
+                  <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-semibold text-blue-700 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                    <Navigation className="w-3 h-3 text-blue-600 animate-pulse" />
+                    {selectedDevice?.speed > 0 
+                      ? `En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
+                      : (selectedDevice?.route?.status === 'ARRIVED' ? 'Arrived at Destination' : 'At Origin / Loading')}
                   </div>
                 </div>
 
@@ -1331,7 +1333,15 @@ const TrackingMap = () => {
                     </div>
                   </div>
                   <div className="border-l-2 border-dashed border-blue-400 ml-1 pl-3 my-0.5 flex items-center justify-between">
-                    <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">In Transit</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
+                      selectedDevice?.speed > 0
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : (selectedDevice?.route?.status === 'ARRIVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200')
+                    }`}>
+                      {selectedDevice?.speed > 0 
+                        ? `🚚 En Route (${(selectedDevice.speed * 1.852).toFixed(0)} km/h)`
+                        : (selectedDevice?.route?.status === 'ARRIVED' ? '🏁 Arrived at Destination' : '🅿️ At Origin / Loading')}
+                    </span>
                     {selectedDevice.route.permitNumber && (
                       <span className="text-[10px] text-gray-500 font-mono">Permit #{selectedDevice.route.permitNumber}</span>
                     )}

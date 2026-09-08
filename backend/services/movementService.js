@@ -198,6 +198,15 @@ class MovementService {
 
     request.status = 'APPROVED';
     request.approver_id = user.id;
+
+    // Ensure valid_until is set to 7 days in the future if missing or in the past
+    const now = new Date();
+    if (!request.valid_until || new Date(request.valid_until) < now) {
+      const future = new Date();
+      future.setDate(future.getDate() + 7);
+      request.valid_until = future;
+    }
+
     await request.save();
 
     const crypto = require('crypto');
