@@ -76,6 +76,39 @@ const Overview = () => {
     refetchOnMount: true,
   });
 
+  const statusOverview = useMemo(() => {
+    const raw = statsData?.statusOverview || {};
+    const pending = raw.pending || 0;
+    const approved = raw.approved || 0;
+    const active = raw.active || 0;
+    const completed = raw.completed || 0;
+    const rejected = raw.rejected || 0;
+    const total = pending + approved + active + completed + rejected;
+    return { pending, approved, active, completed, rejected, total: total || raw.total || 0 };
+  }, [statsData]);
+
+  const donutSlices = useMemo(() => {
+    const { pending, approved, active, completed, rejected, total } = statusOverview;
+    if (!total || total === 0) return [];
+
+    const items = [
+      { key: 'approved', val: approved, color: '#26b3d4', label: 'Approved', link: '/dashboard/movements?tab=History&status=APPROVED' },
+      { key: 'pending', val: pending, color: '#f97316', label: 'Pending Approval', link: '/dashboard/movements?tab=Requests&status=PENDING' },
+      { key: 'active', val: active, color: '#22c55e', label: 'Active Trips', link: '/dashboard/movements?tab=History&status=APPROVED' },
+      { key: 'completed', val: completed, color: '#10b981', label: 'Completed', link: '/dashboard/movements?tab=History&status=COMPLETED' },
+      { key: 'rejected', val: rejected, color: '#ef4444', label: 'Rejected', link: '/dashboard/movements?tab=History&status=REJECTED' }
+    ].filter(i => i.val > 0);
+
+    let currentOffset = 0;
+    return items.map(item => {
+      const pct = item.val / total;
+      const strokeDasharray = `${pct * 251.327} ${251.327}`;
+      const strokeDashoffset = `-${currentOffset * 251.327}`;
+      currentOffset += pct;
+      return { ...item, strokeDasharray, strokeDashoffset };
+    });
+  }, [statusOverview]);
+
   const uniqueUsers = useMemo(() => {
     if (!systemUsers) return [];
     let filtered = [];
@@ -197,8 +230,7 @@ const Overview = () => {
       )}
 
       {/* Top Cards */}
-      {/* Top Cards */}
-      <div className={`grid grid-cols-2 ${(user?.role === 'RAB' || user?.role === 'admin' || user?.role === 'SuperAdmin') ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6`}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Completed Permits */}
         <div 
           onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}
@@ -213,56 +245,41 @@ const Overview = () => {
            </div>
         </div>
 
-        {/* RAB / National Level: Separate District Permits and Sector Permits */}
-        {(user?.role === 'RAB' || user?.role === 'admin' || user?.role === 'SuperAdmin') ? (
-          <>
-            <div 
-              onClick={() => navigate('/dashboard/movements?tab=Requests&type=DISTRICT_TO_DISTRICT')}
-              className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-            >
-               <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                 <Edit2 className="w-5 h-5 text-gray-600" />
-               </div>
-               <div>
-                 <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.districtToDistrict || 0}</span> District Permits</div>
-                 <div className="text-xs text-gray-500">requested in the last 7 days</div>
-               </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/dashboard/movements?tab=Requests&type=SECTOR_TO_SECTOR')}
-              className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-            >
-               <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                 <CheckSquare className="w-5 h-5 text-gray-600" />
-               </div>
-               <div>
-                 <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.sectorToSector || 0}</span> Sector Permits</div>
-                 <div className="text-xs text-gray-500">requested in the last 7 days</div>
-               </div>
-            </div>
-          </>
-        ) : (
-          /* DARO & SARO Local Level: Out Permits */
-          <div 
-            onClick={() => navigate('/dashboard/movements?tab=Requests')}
-            className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-          >
-             <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-               <Edit2 className="w-5 h-5 text-gray-600" />
+        {/* Card 2: Incoming Permits (Destination) - Clickable for SARO, DARO & RAB */}
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=Incoming%20(Destination)')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
+           <div className="w-10 h-10 rounded bg-blue-50 border border-blue-100 flex items-center justify-center">
+             <ArrowDown className="w-5 h-5 text-[#0052cc]" />
+           </div>
+           <div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1">
+               <span className="text-lg">{statsData?.incoming || 0}</span> Incoming Permits
              </div>
-             <div>
-               <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                 <span className="text-lg">
-                   {user?.role === 'DARO' ? (statsData?.districtToDistrict || 0) : (statsData?.sectorToSector || 0)}
-                 </span> Out Permits
-               </div>
-               <div className="text-xs text-gray-500">requested in the last 7 days</div>
-             </div>
-          </div>
-        )}
+             <div className="text-xs text-gray-500">heading to jurisdiction</div>
+           </div>
+        </div>
 
-        {/* Card: Trips Starting Soon */}
+        {/* Card 3: Out Permits */}
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=Requests')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
+           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+             <Edit2 className="w-5 h-5 text-gray-600" />
+           </div>
+           <div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1">
+               <span className="text-lg">
+                 {user?.role === 'RAB' ? ((statsData?.districtToDistrict || 0) + (statsData?.sectorToSector || 0)) : (user?.role === 'DARO' ? (statsData?.districtToDistrict || 0) : (statsData?.sectorToSector || 0))}
+               </span> Out Permits
+             </div>
+             <div className="text-xs text-gray-500">requested in the last 7 days</div>
+           </div>
+        </div>
+
+        {/* Card 4: Trips Starting Soon */}
         <div 
           onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
@@ -287,35 +304,59 @@ const Overview = () => {
           
           <div className="flex-1 flex items-center">
              {/* Donut Chart */}
-             <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Permits: ${statsData?.statusOverview?.total || 0}`} onClick={() => navigate('/dashboard/movements')}>
+             <div className="relative w-48 h-48 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Permits: ${statusOverview.total}`} onClick={() => navigate('/dashboard/movements')}>
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                 {/* Approved - Light Blue */}
-                 <circle title={`Approved Permits: ${statsData?.statusOverview?.approved || 0} - Authorized & Issued`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=History&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 251} 251`} />
-                 {/* Pending - Orange */}
-                 <circle title={`Pending Approval: ${statsData?.statusOverview?.pending || 0} - Awaiting Review`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=Requests&status=PENDING'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.pending / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? (statsData.statusOverview.approved / statsData.statusOverview.total) * 251 : 0}`} />
-                 {/* Active - Green */}
-                 <circle title={`Active Trips: ${statsData?.statusOverview?.active || 0} - Currently En Route`} onClick={(e) => { e.stopPropagation(); navigate('/dashboard/movements?tab=History&status=APPROVED'); }} className="hover:opacity-80 transition-opacity" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${statsData?.statusOverview?.total ? (statsData.statusOverview.active / statsData.statusOverview.total) * 251 : 0} 251`} strokeDashoffset={`-${statsData?.statusOverview?.total ? ((statsData.statusOverview.approved + statsData.statusOverview.pending) / statsData.statusOverview.total) * 251 : 0}`} />
+                 {statusOverview.total === 0 ? (
+                   <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="16" />
+                 ) : (
+                   donutSlices.map(slice => (
+                     <circle
+                       key={slice.key}
+                       title={`${slice.label}: ${slice.val} Permits`}
+                       onClick={(e) => { e.stopPropagation(); navigate(slice.link); }}
+                       className="hover:opacity-80 transition-opacity"
+                       cx="50"
+                       cy="50"
+                       r="40"
+                       fill="transparent"
+                       stroke={slice.color}
+                       strokeWidth="16"
+                       strokeDasharray={slice.strokeDasharray}
+                       strokeDashoffset={slice.strokeDashoffset}
+                     />
+                   ))
+                 )}
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                 <span className="text-3xl font-black text-gray-900">{statsData?.statusOverview?.total || 0}</span>
+                 <span className="text-3xl font-black text-gray-900">{statusOverview.total}</span>
                  <span className="text-xs text-gray-500">Total Permits</span>
                </div>
              </div>
 
              {/* Legend */}
-             <div className="ml-8 flex-1 overflow-y-auto max-h-[200px] text-xs text-gray-600 space-y-3 pr-2">
-                <div title={`Pending Approval: ${statsData?.statusOverview?.pending || 0} Permits awaiting officer review`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=PENDING')}>
-                  <div className="w-3 h-3 bg-[#f97316] mt-0.5"></div>
-                  <div>Pending Approval: {statsData?.statusOverview?.pending || 0}</div>
+             <div className="ml-8 flex-1 overflow-y-auto max-h-[200px] text-xs text-gray-600 space-y-2.5 pr-2">
+                <div title={`Pending Approval: ${statusOverview.pending}`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=Requests&status=PENDING')}>
+                  <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0 rounded-sm"></div>
+                  <div>Pending Approval: {statusOverview.pending}</div>
                 </div>
-                <div title={`Approved: ${statsData?.statusOverview?.approved || 0} Permits approved & issued`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
-                  <div className="w-3 h-3 bg-[#26b3d4] mt-0.5"></div>
-                  <div>Approved: {statsData?.statusOverview?.approved || 0}</div>
+                <div title={`Approved: ${statusOverview.approved}`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
+                  <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0 rounded-sm"></div>
+                  <div>Approved: {statusOverview.approved}</div>
                 </div>
-                <div title={`Active Trips: ${statsData?.statusOverview?.active || 0} Livestock vehicles currently in transit`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
-                  <div className="w-3 h-3 bg-[#22c55e] mt-0.5"></div>
-                  <div>Active Trips: {statsData?.statusOverview?.active || 0}</div>
+                <div title={`Active Trips: ${statusOverview.active}`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}>
+                  <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0 rounded-sm"></div>
+                  <div>Active Trips: {statusOverview.active}</div>
                 </div>
+                <div title={`Completed: ${statusOverview.completed}`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}>
+                  <div className="w-3 h-3 bg-[#10b981] mt-0.5 shrink-0 rounded-sm"></div>
+                  <div>Completed: {statusOverview.completed}</div>
+                </div>
+                {statusOverview.rejected > 0 && (
+                  <div title={`Rejected: ${statusOverview.rejected}`} className="flex items-start gap-2 cursor-pointer hover:underline" onClick={() => navigate('/dashboard/movements?tab=History&status=REJECTED')}>
+                    <div className="w-3 h-3 bg-[#ef4444] mt-0.5 shrink-0 rounded-sm"></div>
+                    <div>Rejected: {statusOverview.rejected}</div>
+                  </div>
+                )}
              </div>
           </div>
         </div>

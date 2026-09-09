@@ -69,17 +69,28 @@ class AnalyticsService {
     });
 
     // Status Overview Breakdown — all-time counts (full picture for the donut chart)
-    const pendingCount  = await MovementRequest.count({ where: buildWhere({ status: 'PENDING' }) });
-    const approvedCount = await MovementRequest.count({ where: buildWhere({ status: 'APPROVED' }) });
-    const activeCount   = await MovementRequest.count({ where: buildWhere({ status: 'ACTIVE' }) });
-    const completedAll  = await MovementRequest.count({ where: buildWhere({ status: 'COMPLETED' }) });
-    const totalStatusCount = await MovementRequest.count({ where: scopeFilter || {} });
+    const pendingCount   = await MovementRequest.count({ where: buildWhere({ status: 'PENDING' }) });
+    const approvedCount  = await MovementRequest.count({ where: buildWhere({ status: 'APPROVED' }) });
+    const activeCount    = await MovementRequest.count({ where: buildWhere({ status: 'ACTIVE' }) });
+    const completedAll   = await MovementRequest.count({ where: buildWhere({ status: 'COMPLETED' }) });
+    const rejectedCount  = await MovementRequest.count({ where: buildWhere({ status: 'REJECTED' }) });
+
+    let incomingFilter = null;
+    if (user.role === 'SARO' && user.sector_id) {
+      incomingFilter = { type: 'SECTOR_TO_SECTOR', dest_sector: user.sector_id };
+    } else if (user.role === 'DARO' && user.district_id) {
+      incomingFilter = { type: 'DISTRICT_TO_DISTRICT', dest_district: user.district_id };
+    }
+    const incomingPermits = incomingFilter ? await MovementRequest.count({ where: incomingFilter }) : await MovementRequest.count();
+
+    const totalStatusCount = pendingCount + approvedCount + activeCount + completedAll + rejectedCount;
 
     const statusOverview = {
       pending: pendingCount,
       approved: approvedCount,
       active: activeCount,
       completed: completedAll,
+      rejected: rejectedCount,
       total: totalStatusCount
     };
 
@@ -156,7 +167,7 @@ class AnalyticsService {
     }));
 
     return { 
-      districtToDistrict, sectorToSector, completed, dueSoon, 
+      districtToDistrict, sectorToSector, completed, dueSoon, incoming: incomingPermits,
       statusOverview, recentActivity, animalDistribution, transportDistribution,
       districtVaccination, vaccineUsage
     };
