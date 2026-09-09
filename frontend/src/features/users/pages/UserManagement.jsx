@@ -338,6 +338,24 @@ const UserManagement = () => {
     return getSectors(prov, targetDistrict).sort();
   }, [isRAB, selectedDistrict, userDistrict]);
 
+  const districtSelectOptions = useMemo(() => {
+    return [
+      { value: '', label: `All Districts (${allDistricts.length})` },
+      ...allDistricts.map(dist => ({ value: dist, label: `${dist} District` }))
+    ];
+  }, [allDistricts]);
+
+  const sectorSelectOptions = useMemo(() => {
+    const defaultLabel = !isRAB 
+      ? `All Sectors in ${userDistrict || 'District'}` 
+      : (selectedDistrict ? `All Sectors in ${selectedDistrict}` : 'Select District first');
+
+    return [
+      { value: '', label: defaultLabel },
+      ...availableSectors.map(sec => ({ value: sec, label: `${sec} Sector` }))
+    ];
+  }, [isRAB, userDistrict, selectedDistrict, availableSectors]);
+
   const filteredUsers = useMemo(() => {
     let result = users;
 
@@ -393,13 +411,10 @@ const UserManagement = () => {
       });
     }
 
-    // Additional multi-category filters
+    // Additional multi-category filters (Status)
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
       result = result.filter(u => {
-        if (selectedFilters['Role']?.length > 0 && !selectedFilters['Role'].includes(u.role)) return false;
-        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => (u.district_id || '').toLowerCase().includes(d.toLowerCase()))) return false;
-        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => (u.sector_id || '').toLowerCase().includes(s.toLowerCase()))) return false;
         if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(u.status)) return false;
         return true;
       });
@@ -581,43 +596,43 @@ const UserManagement = () => {
 
         {/* District Filter for RAB */}
         {isRAB && (activeTab === 'SARO' || activeTab === 'DARO' || activeTab === 'ALL') && (
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedDistrict}
-              onChange={(e) => {
-                setSelectedDistrict(e.target.value);
-                setSelectedSector('');
-              }}
-              className="border border-gray-200 bg-white rounded-md px-3 py-1.5 text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0052cc] shadow-sm"
-            >
-              <option value="">All Districts ({allDistricts.length})</option>
-              {allDistricts.map(dist => (
-                <option key={dist} value={dist}>{dist} District</option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={selectedDistrict}
+            onChange={(val) => {
+              setSelectedDistrict(val);
+              setSelectedSector('');
+            }}
+            options={districtSelectOptions}
+            placeholder="All Districts"
+            minWidth="min-w-[180px]"
+          />
         )}
 
         {/* Sector Filter for DARO (Directly enabled) or RAB */}
         {(!isRAB || activeTab === 'SARO' || (activeTab === 'ALL' && selectedDistrict)) && (
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
-              disabled={isRAB && !selectedDistrict}
-              className="border border-gray-200 bg-white rounded-md px-3 py-1.5 text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0052cc] shadow-sm disabled:opacity-50 disabled:bg-gray-100"
-            >
-              <option value="">
-                {!isRAB 
-                  ? `All Sectors in ${userDistrict || 'District'}` 
-                  : (selectedDistrict ? `All Sectors in ${selectedDistrict}` : 'Select District first')}
-              </option>
-              {availableSectors.map(sec => (
-                <option key={sec} value={sec}>{sec} Sector</option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={selectedSector}
+            onChange={(val) => setSelectedSector(val)}
+            options={sectorSelectOptions}
+            placeholder="All Sectors"
+            minWidth="min-w-[200px]"
+          />
         )}
+
+        {/* Filter Dropdown (Active / Inactive Status) */}
+        <div className="relative z-50 ml-auto flex items-center gap-2">
+          <FilterDropdown
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            categories={['Status']}
+            optionsMap={{
+              'Status': [
+                { id: 'Active', title: 'Active', subtitle: 'Enabled user account' },
+                { id: 'Inactive', title: 'Inactive', subtitle: 'Disabled user account' }
+              ]
+            }}
+          />
+        </div>
       </div>
 
       {/* Table Area */}
