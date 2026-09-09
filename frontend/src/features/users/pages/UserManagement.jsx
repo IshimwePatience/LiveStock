@@ -509,72 +509,72 @@ const UserManagement = () => {
         )}
       </div>
 
-      {/* Tabs Row */}
-      <div className="flex items-center border-b border-gray-200 px-6 bg-white gap-2 pt-2">
+      {/* Tabs Row (Styled identically to Movement Requests tabs) */}
+      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto bg-white">
         {isRAB ? (
           <>
             <button
               onClick={() => { setActiveTab('RAB'); setSelectedDistrict(''); setSelectedSector(''); }}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'RAB'
-                  ? 'border-[#0052cc] text-[#0052cc]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
             >
               RAB Accounts
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'RAB' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'RAB' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
                 {users.filter(u => u.role === 'RAB').length}
               </span>
             </button>
 
             <button
               onClick={() => { setActiveTab('SARO'); setSelectedDistrict(''); setSelectedSector(''); }}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'SARO'
-                  ? 'border-[#0052cc] text-[#0052cc]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
             >
               SARO Users
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
                 {users.filter(u => u.role === 'SARO').length}
               </span>
             </button>
 
             <button
               onClick={() => { setActiveTab('DARO'); setSelectedDistrict(''); setSelectedSector(''); }}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'DARO'
-                  ? 'border-[#0052cc] text-[#0052cc]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
             >
               DARO Users
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'DARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'DARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
                 {users.filter(u => u.role === 'DARO').length}
               </span>
             </button>
 
             <button
               onClick={() => { setActiveTab('ALL'); setSelectedDistrict(''); setSelectedSector(''); }}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'ALL'
-                  ? 'border-[#0052cc] text-[#0052cc]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
             >
               All Accounts
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
                 {users.length}
               </span>
             </button>
           </>
         ) : (
           <button
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-[#0052cc] text-[#0052cc] flex items-center gap-2"
+            className="whitespace-nowrap pb-2 -mb-2 text-sm text-[#0052cc] font-semibold border-b-2 border-[#0052cc] flex items-center gap-2 cursor-pointer"
           >
             SARO Users
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#0052cc]">
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-[#0052cc]">
               {filteredUsers.length}
             </span>
           </button>
@@ -620,7 +620,7 @@ const UserManagement = () => {
         )}
 
         {/* Filter Dropdown (Active / Inactive Status) */}
-        <div className="relative z-50 ml-auto flex items-center gap-2">
+        <div className="relative z-50 flex items-center gap-2">
           <FilterDropdown
             selectedFilters={selectedFilters}
             onFilterChange={handleFilterChange}
