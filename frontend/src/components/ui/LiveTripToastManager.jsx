@@ -62,13 +62,15 @@ const showRightSlideToast = (id, messageText, duration = 6000) => {
 };
 
 const LiveTripToastManager = () => {
-  // Poll live GPS positions & trip statuses every 10 seconds
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  // Poll live GPS positions & trip statuses every 10 seconds (only when logged in)
   const { data: locations } = useQuery({
     queryKey: ['live-trip-reminders'],
     queryFn: async () => {
       const res = await getTraccarLocations();
       return res.data;
     },
+    enabled: !!token,
     refetchInterval: 10000, // 10 seconds polling interval
   });
 

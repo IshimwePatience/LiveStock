@@ -50,6 +50,10 @@ const UserManagement = () => {
     );
   };
 
+  const [activeTab, setActiveTab] = useState('SARO'); // 'RAB', 'SARO', 'DARO', 'ALL'
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedSector, setSelectedSector] = useState('');
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,7 +153,6 @@ const UserManagement = () => {
         payload.district_id = null;
         payload.sector_id = null;
       } else if (payload.role === 'POLICE') {
-        // National Level police have no district; district-level police keep their district
         if (payload.district_id === 'NATIONAL' || !payload.district_id) {
           payload.district_id = null;
         }
@@ -163,7 +166,6 @@ const UserManagement = () => {
         toast.success('User updated successfully!');
         setUsers(users.map(u => u.id === editUserId ? { ...res.data, status: res.data.status || u.status, permissions: modalPermissions } : u));
 
-        // Sync localStorage if editing currently logged-in user
         const userStr = localStorage.getItem('user');
         if (userStr) {
           const currentUser = JSON.parse(userStr);
@@ -238,17 +240,26 @@ const UserManagement = () => {
     }
   };
 
+  // Format display contact: Phone number for SARO/DARO or email for RAB
+  const getContactDisplay = (u) => {
+    if (u.phone) return u.phone;
+    if (u.email && u.email.endsWith('@saro.gov.rw')) {
+      return u.email.split('@')[0];
+    }
+    return u.email;
+  };
+
   // CSV Export Handler
   const exportToCSV = () => {
     if (!filteredUsers || filteredUsers.length === 0) {
       toast.error('No users available to export');
       return;
     }
-    const headers = ['User ID', 'Full Name', 'Email', 'Role', 'District', 'Sector', 'Status'];
+    const headers = ['User ID', 'Full Name', 'Contact / Phone', 'Role', 'District', 'Sector', 'Status'];
     const rows = filteredUsers.map(u => [
       u.id,
       `"${(u.name || '').replace(/"/g, '""')}"`,
-      `"${(u.email || '').replace(/"/g, '""')}"`,
+      `"${getContactDisplay(u).replace(/"/g, '""')}"`,
       u.role,
       `"${(u.district_id || 'National').replace(/"/g, '""')}"`,
       `"${(u.sector_id || '-').replace(/"/g, '""')}"`,
@@ -259,7 +270,7 @@ const UserManagement = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `System_Users_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `${activeTab}_Users_Report_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -273,7 +284,7 @@ const UserManagement = () => {
     }
     const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA LIVESTOCK SYSTEM',
-      titleSub: '— USER ACCOUNTS REGISTRY',
+      titleSub: `— ${activeTab} USER ACCOUNTS REGISTRY`,
       subtitle: 'Official User & Role Audit Report',
       meta: [
         { label: 'Generated On', value: new Date().toLocaleString() },
@@ -281,7 +292,7 @@ const UserManagement = () => {
       ],
       columns: [
         { header: 'Name', align: 'left' },
-        { header: 'Email', align: 'left' },
+        { header: 'Phone / Contact', align: 'left' },
         { header: 'Role', align: 'left' },
         { header: 'Jurisdiction', align: 'left' },
         { header: 'Status', align: 'left' }
@@ -289,44 +300,86 @@ const UserManagement = () => {
       rowsHtml: filteredUsers.map(u => `
         <tr>
           <td class="col-bold">${u.name}</td>
-          <td>${u.email}</td>
+          <td>${getContactDisplay(u)}</td>
           <td><span class="role-pill">${u.role}</span></td>
           <td>${u.sector_id ? `${u.district_id} / ${u.sector_id}` : (u.district_id || 'National (All)')}</td>
           <td><span class="badge ${u.status === 'Inactive' ? 'badge-inactive' : 'badge-active'}">${u.status || 'Active'}</span></td>
         </tr>
       `).join('')
     });
-    downloadPdfReport(htmlContent, 'User_Accounts_Registry.pdf');
+    downloadPdfReport(htmlContent, `${activeTab}_User_Accounts_Registry.pdf`);
   };
+
+  // Districts list for filter dropdown
+  const allDistricts = useMemo(() => {
+    const provs = getProvinces();
+    const dists = provs.flatMap(p => getDistricts(p));
+    return dists.sort();
+  }, []);
+
+  // Sectors list for selected district filter
+  const availableSectors = useMemo(() => {
+    if (!selectedDistrict) return [];
+    const provs = getProvinces();
+    let prov = null;
+    for (const p of provs) {
+      if (getDistricts(p).includes(selectedDistrict)) {
+        prov = p;
+        break;
+      }
+    }
+    if (!prov) return [];
+    return getSectors(prov, selectedDistrict).sort();
+  }, [selectedDistrict]);
 
   const filteredUsers = useMemo(() => {
     let result = users;
 
+    // 1. Tab Filter
+    if (activeTab === 'RAB') {
+      result = result.filter(u => u.role === 'RAB');
+    } else if (activeTab === 'SARO') {
+      result = result.filter(u => u.role === 'SARO');
+    } else if (activeTab === 'DARO') {
+      result = result.filter(u => u.role === 'DARO');
+    }
+
+    // 2. Direct District & Sector Dropdown Filters
+    if (selectedDistrict) {
+      result = result.filter(u => (u.district_id || '').toLowerCase() === selectedDistrict.toLowerCase());
+    }
+    if (selectedSector) {
+      result = result.filter(u => (u.sector_id || '').toLowerCase() === selectedSector.toLowerCase());
+    }
+
+    // 3. Time Range Filter
     if (timeRange !== 'ALL') {
       const now = new Date();
       result = result.filter(u => {
         const date = new Date(u.createdAt || Date.now());
-        if (timeRange === 'TODAY') {
-          return date.toDateString() === now.toDateString();
-        } else if (timeRange === 'WEEK') {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return date >= weekAgo;
-        } else if (timeRange === 'MONTH') {
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          return date >= monthAgo;
-        }
+        if (timeRange === 'TODAY') return date.toDateString() === now.toDateString();
+        if (timeRange === 'WEEK') return date >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (timeRange === 'MONTH') return date >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         return true;
       });
     }
 
+    // 4. Search Query (name, contact/phone, email, jurisdiction)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(u =>
-        u.name.toLowerCase().includes(query) ||
-        u.email.toLowerCase().includes(query)
-      );
+      result = result.filter(u => {
+        const contact = getContactDisplay(u).toLowerCase();
+        return (
+          u.name.toLowerCase().includes(query) ||
+          u.email.toLowerCase().includes(query) ||
+          contact.includes(query) ||
+          (u.district_id || '').toLowerCase().includes(query) ||
+          (u.sector_id || '').toLowerCase().includes(query)
+        );
+      });
     }
 
+    // 5. Additional multi-category filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
       result = result.filter(u => {
@@ -340,7 +393,7 @@ const UserManagement = () => {
 
     setCurrentPage(1);
     return result;
-  }, [users, searchQuery, selectedFilters, timeRange]);
+  }, [users, activeTab, selectedDistrict, selectedSector, searchQuery, selectedFilters, timeRange]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -368,7 +421,6 @@ const UserManagement = () => {
     const provs = getProvinces();
     const dists = provs.flatMap(p => getDistricts(p));
     const distList = dists.sort().map(d => ({ value: d, label: d }));
-    // For Police, add National Level as first option
     if (formData.role === 'POLICE') {
       return [{ value: 'NATIONAL', label: '🌍 National Level' }, ...distList];
     }
@@ -378,7 +430,6 @@ const UserManagement = () => {
   const sectorOptions = useMemo(() => {
     if (!formData.district_id) return [];
     const provs = getProvinces();
-    // Find province for the selected district
     let province = null;
     for (const p of provs) {
       if (getDistricts(p).includes(formData.district_id)) {
@@ -395,6 +446,13 @@ const UserManagement = () => {
   const currentUser = userStr ? JSON.parse(userStr) : null;
   const isRAB = currentUser?.role === 'RAB';
 
+  const searchPlaceholder = useMemo(() => {
+    if (activeTab === 'RAB') return 'Search RAB users...';
+    if (activeTab === 'SARO') return 'Search SARO users...';
+    if (activeTab === 'DARO') return 'Search DARO users...';
+    return 'Search all users...';
+  }, [activeTab]);
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Top Breadcrumb/Title Area */}
@@ -404,9 +462,9 @@ const UserManagement = () => {
             {isRAB ? 'Overview / User Management' : 'Overview / Sector Vet Officers'}
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            {isRAB ? 'User Management' : 'SARO Accounts'}
-            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
-              {filteredUsers.length}
+            User Management
+            <span className="bg-blue-50 text-[#0052cc] px-2 py-0.5 rounded text-xs font-semibold border border-blue-100">
+              {filteredUsers.length} Users
             </span>
           </h1>
         </div>
@@ -418,27 +476,125 @@ const UserManagement = () => {
               setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition shadow-sm"
           >
+            <UserPlus className="w-4 h-4" />
             Create User
           </button>
         )}
       </div>
 
-      {/* Filters Toolbar */}
-      <div className="px-6 py-3 flex items-center gap-3 border-b border-gray-100">
+      {/* Tabs Row: RAB Accounts | SARO Users | DARO Users | All Accounts */}
+      <div className="flex items-center border-b border-gray-200 px-6 bg-white gap-2 pt-2">
+        <button
+          onClick={() => { setActiveTab('RAB'); setSelectedDistrict(''); setSelectedSector(''); }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'RAB'
+              ? 'border-[#0052cc] text-[#0052cc]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          RAB Accounts
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'RAB' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+            {users.filter(u => u.role === 'RAB').length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('SARO'); setSelectedDistrict(''); setSelectedSector(''); }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'SARO'
+              ? 'border-[#0052cc] text-[#0052cc]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          SARO Users
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+            {users.filter(u => u.role === 'SARO').length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('DARO'); setSelectedDistrict(''); setSelectedSector(''); }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'DARO'
+              ? 'border-[#0052cc] text-[#0052cc]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          DARO Users
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'DARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+            {users.filter(u => u.role === 'DARO').length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('ALL'); setSelectedDistrict(''); setSelectedSector(''); }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'ALL'
+              ? 'border-[#0052cc] text-[#0052cc]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          All Accounts
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+            {users.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Filters & Search Toolbar */}
+      <div className="px-6 py-3 flex flex-wrap items-center gap-3 border-b border-gray-100 bg-gray-50/50">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search users"
-            className="border border-gray-200 rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc]"
+            placeholder={searchPlaceholder}
+            className="border border-gray-200 bg-white rounded-md pl-9 pr-3 py-1.5 text-sm w-64 focus:outline-none focus:border-[#0052cc] shadow-sm"
           />
         </div>
 
-        <div className="flex -space-x-2 ml-4">
+        {/* Dedicated District Filter for SARO / DARO */}
+        {(activeTab === 'SARO' || activeTab === 'DARO' || activeTab === 'ALL') && (
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedDistrict}
+              onChange={(e) => {
+                setSelectedDistrict(e.target.value);
+                setSelectedSector('');
+              }}
+              className="border border-gray-200 bg-white rounded-md px-3 py-1.5 text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0052cc] shadow-sm"
+            >
+              <option value="">All Districts ({allDistricts.length})</option>
+              {allDistricts.map(dist => (
+                <option key={dist} value={dist}>{dist} District</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Dedicated Sector Filter for SARO */}
+        {(activeTab === 'SARO' || (activeTab === 'ALL' && selectedDistrict)) && (
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              disabled={!selectedDistrict}
+              className="border border-gray-200 bg-white rounded-md px-3 py-1.5 text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0052cc] shadow-sm disabled:opacity-50 disabled:bg-gray-100"
+            >
+              <option value="">
+                {selectedDistrict ? `All Sectors in ${selectedDistrict}` : 'Select District first to filter Sector'}
+              </option>
+              {availableSectors.map(sec => (
+                <option key={sec} value={sec}>{sec} Sector</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="flex -space-x-2 ml-auto">
           {displayUsers.map((user, idx) => (
             <div
               key={idx}
@@ -453,40 +609,19 @@ const UserManagement = () => {
               +{extraUsersCount}
             </div>
           )}
-          {uniqueUsers.length === 0 && (
-            <div className="text-xs text-gray-400 pl-4 font-medium italic">No active users in current filter</div>
-          )}
         </div>
 
-        <div className="ml-4 relative z-50">
+        <div className="relative z-50">
           <FilterDropdown
             selectedFilters={selectedFilters}
             onFilterChange={handleFilterChange}
-            categories={['Role', 'District', 'Sector', 'Status']}
+            categories={['Role', 'Status']}
             optionsMap={{
               'Role': [
                 { id: 'RAB', title: 'RAB', subtitle: 'National Admin' },
                 { id: 'DARO', title: 'DARO', subtitle: 'District Vet' },
                 { id: 'SARO', title: 'SARO', subtitle: 'Sector Vet' },
                 { id: 'POLICE', title: 'Police', subtitle: 'Law Enforcement' }
-              ],
-              'District': [
-                { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
-                { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
-                { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
-                { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
-                { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
-                { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
-                { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
-                { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
-              ],
-              'Sector': [
-                { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
-                { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
-                { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
-                { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
-                { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
-                { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
               ],
               'Status': [
                 { id: 'Active', title: 'Active', subtitle: 'Enabled account' },
@@ -514,7 +649,7 @@ const UserManagement = () => {
           <div className="py-16 flex-1 flex flex-col items-center justify-center">
             <EmptyState
               illustration="drive"
-              title="No users matching filter"
+              title={`No ${activeTab === 'ALL' ? 'users' : activeTab + ' users'} matching filter`}
               description="User accounts and permissions registered in your system scope will show up here."
             />
           </div>
@@ -531,7 +666,9 @@ const UserManagement = () => {
                   />
                 </th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">Name</th>
-                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Email</th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">
+                  {activeTab === 'SARO' || activeTab === 'DARO' ? 'Phone Number' : 'Phone / Email'}
+                </th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">Role</th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">Jurisdiction</th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">Status</th>
@@ -539,71 +676,83 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map((user, idx) => (
-                <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
-                  <td className="py-2 px-4">
-                    <input
-                      type="checkbox"
-                      className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => toggleSelect(user.id)}
-                    />
-                  </td>
-                  <td className="py-2 px-4">
-                    <p className="text-[13px] font-medium text-black">{user.name}</p>
-                  </td>
-                  <td className="py-2 px-4">
-                    <p className="text-[13px] font-medium text-black">{user.email}</p>
-                  </td>
-                  <td className="py-2 px-4">
-                    <span className="text-[13px] font-medium text-black">{user.role}</span>
-                  </td>
-                  <td className="py-2 px-4">
-                    <span className="text-[13px] font-medium text-black">
-                      {user.sector_id
-                        ? `${user.district_id} / ${user.sector_id}`
-                        : (user.district_id || 'National (All)')}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4">
-                    <span className={`font-medium px-2 py-0.5 rounded text-xs ${user.status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                      {user.status || 'Active'}
-                    </span>
-                  </td>
-                  {isRAB && (
-                    <td className="py-2 px-4 text-right relative">
-                      <button
-                        onClick={() => setOpenActionDropdown(openActionDropdown === user.id ? null : user.id)}
-                        className="p-1 text-gray-500 hover:bg-gray-100 rounded"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                      {openActionDropdown === user.id && (
-                        <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
-                          <button
-                            onClick={() => { handleEdit(user); setOpenActionDropdown(null); }}
-                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => { handleToggleStatus(user.id); setOpenActionDropdown(null); }}
-                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                          >
-                            {user.status === 'Inactive' ? 'Activate' : 'Deactivate'}
-                          </button>
-                          <button
-                            onClick={() => { handleDelete(user.id); setOpenActionDropdown(null); }}
-                            className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+              {paginatedUsers.map((user) => {
+                const contactDisplay = getContactDisplay(user);
+                return (
+                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors group">
+                    <td className="py-2 px-4">
+                      <input
+                        type="checkbox"
+                        className="rounded-sm border-gray-300 w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        checked={selectedUsers.includes(user.id)}
+                        onChange={() => toggleSelect(user.id)}
+                      />
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td className="py-2 px-4">
+                      <p className="text-[13px] font-medium text-black">{user.name}</p>
+                    </td>
+                    <td className="py-2 px-4">
+                      <p className="text-[13px] font-semibold text-[#172b4d] tracking-wide">
+                        {contactDisplay}
+                      </p>
+                    </td>
+                    <td className="py-2 px-4">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                        user.role === 'SARO' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        user.role === 'DARO' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                        user.role === 'RAB' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4">
+                      <span className="text-[13px] font-medium text-black">
+                        {user.sector_id
+                          ? `${user.district_id} / ${user.sector_id}`
+                          : (user.district_id || 'National (All)')}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4">
+                      <span className={`font-medium px-2 py-0.5 rounded text-xs ${user.status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {user.status || 'Active'}
+                      </span>
+                    </td>
+                    {isRAB && (
+                      <td className="py-2 px-4 text-right relative">
+                        <button
+                          onClick={() => setOpenActionDropdown(openActionDropdown === user.id ? null : user.id)}
+                          className="p-1 text-gray-500 hover:bg-gray-100 rounded"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openActionDropdown === user.id && (
+                          <div className="absolute right-10 top-6 w-32 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-gray-200 py-1 z-50 text-left">
+                            <button
+                              onClick={() => { handleEdit(user); setOpenActionDropdown(null); }}
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => { handleToggleStatus(user.id); setOpenActionDropdown(null); }}
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                            >
+                              {user.status === 'Inactive' ? 'Activate' : 'Deactivate'}
+                            </button>
+                            <button
+                              onClick={() => { handleDelete(user.id); setOpenActionDropdown(null); }}
+                              className="w-full text-left px-4 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100/70 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

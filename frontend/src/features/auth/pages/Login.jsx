@@ -102,17 +102,9 @@ const Login = () => {
 
           {/* Title */}
           <div className="text-center mb-6">
-            {isDaroSaroLogin && (
-              <span className="bg-blue-50 text-[#0052cc] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-200 inline-block mb-2">
-                DARO &amp; SARO Portal
-              </span>
-            )}
             <h1 className="text-[20px] font-bold text-[#172b4d] leading-tight">
-              {isDaroSaroLogin ? 'Officer Sign In' : 'Sign in with Livestock\nTracking App'}
+              Sign in with Livestock<br />Tracking App
             </h1>
-            {isDaroSaroLogin && (
-              <p className="text-xs text-gray-500 mt-1">Enter your 10-digit phone number &amp; password</p>
-            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
