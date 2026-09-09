@@ -317,42 +317,56 @@ const UserManagement = () => {
     return dists.sort();
   }, []);
 
-  // Sectors list for selected district filter
+  const userStr = localStorage.getItem('user');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isRAB = currentUser?.role === 'RAB';
+  const userDistrict = currentUser?.district_id || '';
+
+  // Sectors list for selected district filter (or DARO's own district)
   const availableSectors = useMemo(() => {
-    if (!selectedDistrict) return [];
+    const targetDistrict = isRAB ? selectedDistrict : userDistrict;
+    if (!targetDistrict) return [];
     const provs = getProvinces();
     let prov = null;
     for (const p of provs) {
-      if (getDistricts(p).includes(selectedDistrict)) {
+      if (getDistricts(p).includes(targetDistrict)) {
         prov = p;
         break;
       }
     }
     if (!prov) return [];
-    return getSectors(prov, selectedDistrict).sort();
-  }, [selectedDistrict]);
+    return getSectors(prov, targetDistrict).sort();
+  }, [isRAB, selectedDistrict, userDistrict]);
 
   const filteredUsers = useMemo(() => {
     let result = users;
 
-    // 1. Tab Filter
-    if (activeTab === 'RAB') {
-      result = result.filter(u => u.role === 'RAB');
-    } else if (activeTab === 'SARO') {
-      result = result.filter(u => u.role === 'SARO');
-    } else if (activeTab === 'DARO') {
-      result = result.filter(u => u.role === 'DARO');
+    if (!isRAB) {
+      // Non-RAB users (DARO) are strictly scoped to SARO officers in their own district
+      result = result.filter(u =>
+        u.role === 'SARO' &&
+        (!userDistrict || (u.district_id || '').toLowerCase() === userDistrict.toLowerCase())
+      );
+    } else {
+      // RAB Admin can filter by activeTab & selectedDistrict
+      if (activeTab === 'RAB') {
+        result = result.filter(u => u.role === 'RAB');
+      } else if (activeTab === 'SARO') {
+        result = result.filter(u => u.role === 'SARO');
+      } else if (activeTab === 'DARO') {
+        result = result.filter(u => u.role === 'DARO');
+      }
+
+      if (selectedDistrict) {
+        result = result.filter(u => (u.district_id || '').toLowerCase() === selectedDistrict.toLowerCase());
+      }
     }
 
-    // 2. Direct District & Sector Dropdown Filters
-    if (selectedDistrict) {
-      result = result.filter(u => (u.district_id || '').toLowerCase() === selectedDistrict.toLowerCase());
-    }
     if (selectedSector) {
       result = result.filter(u => (u.sector_id || '').toLowerCase() === selectedSector.toLowerCase());
     }
 
-    // 3. Time Range Filter
+    // Time Range Filter
     if (timeRange !== 'ALL') {
       const now = new Date();
       result = result.filter(u => {
@@ -364,7 +378,7 @@ const UserManagement = () => {
       });
     }
 
-    // 4. Search Query (name, contact/phone, email, jurisdiction)
+    // Search Query (name, contact/phone, email, jurisdiction)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(u => {
@@ -379,7 +393,7 @@ const UserManagement = () => {
       });
     }
 
-    // 5. Additional multi-category filters
+    // Additional multi-category filters
     const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
     if (hasFilters) {
       result = result.filter(u => {
@@ -393,7 +407,7 @@ const UserManagement = () => {
 
     setCurrentPage(1);
     return result;
-  }, [users, activeTab, selectedDistrict, selectedSector, searchQuery, selectedFilters, timeRange]);
+  }, [users, isRAB, userDistrict, activeTab, selectedDistrict, selectedSector, searchQuery, selectedFilters, timeRange]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -442,16 +456,13 @@ const UserManagement = () => {
     return getSectors(province, formData.district_id).sort().map(s => ({ value: s, label: s }));
   }, [formData.district_id]);
 
-  const userStr = localStorage.getItem('user');
-  const currentUser = userStr ? JSON.parse(userStr) : null;
-  const isRAB = currentUser?.role === 'RAB';
-
   const searchPlaceholder = useMemo(() => {
+    if (!isRAB) return 'Search SARO users...';
     if (activeTab === 'RAB') return 'Search RAB users...';
     if (activeTab === 'SARO') return 'Search SARO users...';
     if (activeTab === 'DARO') return 'Search DARO users...';
     return 'Search all users...';
-  }, [activeTab]);
+  }, [isRAB, activeTab]);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -459,10 +470,10 @@ const UserManagement = () => {
       <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-end">
         <div>
           <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-            {isRAB ? 'Overview / User Management' : 'Overview / Sector Vet Officers'}
+            {isRAB ? 'Overview / User Management' : `Overview / ${userDistrict ? userDistrict + ' District' : ''} Sector Officers`}
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            User Management
+            {isRAB ? 'User Management' : 'Sector Animal Resources Officers (SARO)'}
             <span className="bg-blue-50 text-[#0052cc] px-2 py-0.5 rounded text-xs font-semibold border border-blue-100">
               {filteredUsers.length} Users
             </span>
@@ -476,75 +487,87 @@ const UserManagement = () => {
               setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition shadow-sm"
+            className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
           >
-            <UserPlus className="w-4 h-4" />
             Create User
           </button>
         )}
       </div>
 
-      {/* Tabs Row: RAB Accounts | SARO Users | DARO Users | All Accounts */}
+      {/* Tabs Row */}
       <div className="flex items-center border-b border-gray-200 px-6 bg-white gap-2 pt-2">
-        <button
-          onClick={() => { setActiveTab('RAB'); setSelectedDistrict(''); setSelectedSector(''); }}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'RAB'
-              ? 'border-[#0052cc] text-[#0052cc]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          RAB Accounts
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'RAB' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-            {users.filter(u => u.role === 'RAB').length}
-          </span>
-        </button>
+        {isRAB ? (
+          <>
+            <button
+              onClick={() => { setActiveTab('RAB'); setSelectedDistrict(''); setSelectedSector(''); }}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'RAB'
+                  ? 'border-[#0052cc] text-[#0052cc]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              RAB Accounts
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'RAB' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.filter(u => u.role === 'RAB').length}
+              </span>
+            </button>
 
-        <button
-          onClick={() => { setActiveTab('SARO'); setSelectedDistrict(''); setSelectedSector(''); }}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'SARO'
-              ? 'border-[#0052cc] text-[#0052cc]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          SARO Users
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-            {users.filter(u => u.role === 'SARO').length}
-          </span>
-        </button>
+            <button
+              onClick={() => { setActiveTab('SARO'); setSelectedDistrict(''); setSelectedSector(''); }}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'SARO'
+                  ? 'border-[#0052cc] text-[#0052cc]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              SARO Users
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.filter(u => u.role === 'SARO').length}
+              </span>
+            </button>
 
-        <button
-          onClick={() => { setActiveTab('DARO'); setSelectedDistrict(''); setSelectedSector(''); }}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'DARO'
-              ? 'border-[#0052cc] text-[#0052cc]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          DARO Users
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'DARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-            {users.filter(u => u.role === 'DARO').length}
-          </span>
-        </button>
+            <button
+              onClick={() => { setActiveTab('DARO'); setSelectedDistrict(''); setSelectedSector(''); }}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'DARO'
+                  ? 'border-[#0052cc] text-[#0052cc]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              DARO Users
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'DARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.filter(u => u.role === 'DARO').length}
+              </span>
+            </button>
 
-        <button
-          onClick={() => { setActiveTab('ALL'); setSelectedDistrict(''); setSelectedSector(''); }}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'ALL'
-              ? 'border-[#0052cc] text-[#0052cc]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          All Accounts
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-            {users.length}
-          </span>
-        </button>
+            <button
+              onClick={() => { setActiveTab('ALL'); setSelectedDistrict(''); setSelectedSector(''); }}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'ALL'
+                  ? 'border-[#0052cc] text-[#0052cc]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              All Accounts
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.length}
+              </span>
+            </button>
+          </>
+        ) : (
+          <button
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-[#0052cc] text-[#0052cc] flex items-center gap-2"
+          >
+            SARO Users
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#0052cc]">
+              {filteredUsers.length}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Filters & Search Toolbar */}
-      <div className="px-6 py-3 flex flex-wrap items-center gap-3 border-b border-gray-100 bg-gray-50/50">
+      <div className="px-6 py-3 flex flex-wrap items-center gap-3 border-b border-gray-100 bg-white">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -556,8 +579,8 @@ const UserManagement = () => {
           />
         </div>
 
-        {/* Dedicated District Filter for SARO / DARO */}
-        {(activeTab === 'SARO' || activeTab === 'DARO' || activeTab === 'ALL') && (
+        {/* District Filter for RAB */}
+        {isRAB && (activeTab === 'SARO' || activeTab === 'DARO' || activeTab === 'ALL') && (
           <div className="flex items-center gap-2">
             <select
               value={selectedDistrict}
@@ -575,17 +598,19 @@ const UserManagement = () => {
           </div>
         )}
 
-        {/* Dedicated Sector Filter for SARO */}
-        {(activeTab === 'SARO' || (activeTab === 'ALL' && selectedDistrict)) && (
+        {/* Sector Filter for DARO (Directly enabled) or RAB */}
+        {(!isRAB || activeTab === 'SARO' || (activeTab === 'ALL' && selectedDistrict)) && (
           <div className="flex items-center gap-2">
             <select
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
-              disabled={!selectedDistrict}
+              disabled={isRAB && !selectedDistrict}
               className="border border-gray-200 bg-white rounded-md px-3 py-1.5 text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0052cc] shadow-sm disabled:opacity-50 disabled:bg-gray-100"
             >
               <option value="">
-                {selectedDistrict ? `All Sectors in ${selectedDistrict}` : 'Select District first to filter Sector'}
+                {!isRAB 
+                  ? `All Sectors in ${userDistrict || 'District'}` 
+                  : (selectedDistrict ? `All Sectors in ${selectedDistrict}` : 'Select District first')}
               </option>
               {availableSectors.map(sec => (
                 <option key={sec} value={sec}>{sec} Sector</option>
@@ -593,54 +618,6 @@ const UserManagement = () => {
             </select>
           </div>
         )}
-
-        <div className="flex -space-x-2 ml-auto">
-          {displayUsers.map((user, idx) => (
-            <div
-              key={idx}
-              title={user.name}
-              className={`w-6 h-6 rounded-full ${user.color} flex items-center justify-center text-white text-[10px] font-bold border border-white relative z-${30 - idx * 10}`}
-            >
-              {user.initials}
-            </div>
-          ))}
-          {extraUsersCount > 0 && (
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-[10px] font-bold border border-white relative z-0">
-              +{extraUsersCount}
-            </div>
-          )}
-        </div>
-
-        <div className="relative z-50">
-          <FilterDropdown
-            selectedFilters={selectedFilters}
-            onFilterChange={handleFilterChange}
-            categories={['Role', 'Status']}
-            optionsMap={{
-              'Role': [
-                { id: 'RAB', title: 'RAB', subtitle: 'National Admin' },
-                { id: 'DARO', title: 'DARO', subtitle: 'District Vet' },
-                { id: 'SARO', title: 'SARO', subtitle: 'Sector Vet' },
-                { id: 'POLICE', title: 'Police', subtitle: 'Law Enforcement' }
-              ],
-              'Status': [
-                { id: 'Active', title: 'Active', subtitle: 'Enabled account' },
-                { id: 'Inactive', title: 'Inactive', subtitle: 'Disabled account' }
-              ]
-            }}
-          />
-        </div>
-
-        <div className="relative z-50">
-          <ReportDropdown
-            onExportCSV={exportToCSV}
-            onPrintPDF={printPDFReport}
-            timeRange={timeRange}
-            setTimeRange={setTimeRange}
-            recordScope={recordScope}
-            setRecordScope={setRecordScope}
-          />
-        </div>
       </div>
 
       {/* Table Area */}
