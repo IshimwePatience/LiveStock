@@ -245,21 +245,23 @@ const Overview = () => {
            </div>
         </div>
 
-        {/* Card 2: Incoming Permits (Destination) - Clickable for SARO, DARO & RAB */}
-        <div 
-          onClick={() => navigate('/dashboard/movements?tab=Incoming%20(Destination)')}
-          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-        >
-           <div className="w-10 h-10 rounded bg-blue-50 border border-blue-100 flex items-center justify-center">
-             <ArrowDown className="w-5 h-5 text-[#0052cc]" />
-           </div>
-           <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1">
-               <span className="text-lg">{statsData?.incoming || 0}</span> Incoming Permits
+        {/* Card 2: Incoming Permits (Destination) - Only for SARO and DARO */}
+        {(user?.role === 'SARO' || user?.role === 'DARO') && (
+          <div 
+            onClick={() => navigate('/dashboard/movements?tab=Incoming%20(Destination)')}
+            className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+          >
+             <div className="w-10 h-10 rounded bg-blue-50 border border-blue-100 flex items-center justify-center">
+               <ArrowDown className="w-5 h-5 text-[#0052cc]" />
              </div>
-             <div className="text-xs text-gray-500">heading to jurisdiction</div>
-           </div>
-        </div>
+             <div>
+               <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                 <span className="text-lg">{statsData?.incoming || 0}</span> Incoming Permits
+               </div>
+               <div className="text-xs text-gray-500">heading to jurisdiction</div>
+             </div>
+          </div>
+        )}
 
         {/* Card 3: Out Permits */}
         <div 
