@@ -66,6 +66,19 @@ const ConfirmArrivalModal = ({ isOpen, onClose, request, onConfirmSuccess }) => 
                   <span className="text-gray-500">Route</span>
                   <span className="font-medium text-gray-900">{request.route}</span>
                 </div>
+                <div className="flex justify-between items-center pt-2.5 border-t border-gray-200/70 mt-1.5">
+                  <span className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 uppercase tracking-wide">
+                    <Key className="w-3.5 h-3.5 text-[#0052cc]" />
+                    Dedicated OTP Code
+                  </span>
+                  <span 
+                    onClick={() => request.otp && setOtpInput(request.otp)}
+                    title={request.otp ? "Click to auto-fill OTP code" : "OTP Code"}
+                    className="font-mono font-bold text-sm text-[#0052cc] bg-blue-50 hover:bg-blue-100 cursor-pointer border border-blue-200 px-2.5 py-0.5 rounded tracking-widest select-all transition-colors"
+                  >
+                    {request.otp || 'N/A'}
+                  </span>
+                </div>
               </div>
 
               <div className="mb-6">

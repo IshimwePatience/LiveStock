@@ -197,6 +197,7 @@ const Movements = () => {
         driverName: req.driver_name || req.Trip?.driver_name || 'N/A',
         driverPhone: req.driver_phone || req.Trip?.driver_phone || 'N/A',
         plateNumber: req.plate_number || req.Trip?.plate_number || 'N/A',
+        otp: req.Trip?.otp || req.otp || null,
       };
     });
   }, [rawMovements]);
