@@ -32,14 +32,33 @@ class AuthService {
     return jwt.sign({ id }, secret, { expiresIn: '30d' });
   }
 
-  async login(email, password) {
-    const user = await User.findOne({ where: { email } });
+  async login(identifier, password) {
+    if (!identifier || !password) throw new Error('Phone number / Email and password are required');
+
+    const cleanIdentifier = identifier.toString().trim();
+    let sanitizedPhone = cleanIdentifier.replace(/[^0-9]/g, '');
+    if (sanitizedPhone.startsWith('250') && sanitizedPhone.length === 12) {
+      sanitizedPhone = '0' + sanitizedPhone.slice(3);
+    }
+
+    const { Op } = require('sequelize');
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: cleanIdentifier },
+          { phone: cleanIdentifier },
+          { phone: sanitizedPhone }
+        ]
+      }
+    });
+
     if (user && (await bcrypt.compare(password, user.password_hash))) {
       const permissions = resolveUserPermissions(user);
       return {
         id: user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         district_id: user.district_id,
         sector_id: user.sector_id,
@@ -47,7 +66,7 @@ class AuthService {
         token: this.generateToken(user.id),
       };
     }
-    throw new Error('Invalid email or password');
+    throw new Error('Invalid phone number/email or password');
   }
 
   async register(data) {

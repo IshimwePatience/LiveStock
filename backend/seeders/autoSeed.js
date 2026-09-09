@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const { User } = require('../models');
+const seedSAROs = require('./seedSAROs');
 
 const autoSeed = async () => {
   try {
@@ -18,8 +19,11 @@ const autoSeed = async () => {
       });
       console.log('⚡ RAB Super Admin seeded automatically: admin@rab.gov.rw / RabAdmin123!');
     }
+
+    // Auto-seed SARO & DARO accounts
+    await seedSAROs();
   } catch (error) {
-    console.error('Error auto-seeding admin:', error.message);
+    console.error('Error auto-seeding admin & SAROs:', error.message);
   }
 };
 

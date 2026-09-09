@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Globe, User, Key, EyeOff } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
 import loginImage from '../../../assets/images/login_illustration.jpg';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+  const isDaroSaroLogin = location.pathname.includes('/daro/saro-login') || location.pathname.includes('saro-login');
+
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [cookiesAccepted, setCookiesAccepted] = useState(true);
   const navigate = useNavigate();
@@ -20,12 +23,6 @@ const Login = () => {
     }
   }, []);
 
-  const handleAcceptCookies = (e) => {
-    e.preventDefault();
-    localStorage.setItem('cookiesAccepted', 'true');
-    setCookiesAccepted(true);
-  };
-
   const loginMutation = useMutation({
     mutationFn: async (credentials) => {
       const response = await api.post('/auth/login', credentials);
@@ -34,20 +31,50 @@ const Login = () => {
     onSuccess: (data) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
+      toast.success(`Welcome back, ${data.name}!`);
       navigate('/dashboard');
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Login failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   });
 
+  const handleIdentifierChange = (e) => {
+    const val = e.target.value;
+    if (isDaroSaroLogin) {
+      // Enforce 10 numeric digits only for phone login
+      const cleanDigits = val.replace(/[^0-9]/g, '').slice(0, 10);
+      setIdentifier(cleanDigits);
+    } else {
+      setIdentifier(val);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email || !password) {
+
+    if (!identifier || !password) {
       toast.error('Please fill in all fields');
       return;
     }
-    loginMutation.mutate({ email, password });
+
+    if (isDaroSaroLogin) {
+      if (identifier.length !== 10) {
+        toast.error('Phone number must be exactly 10 digits (e.g. 0788749889)');
+        return;
+      }
+      if (!identifier.startsWith('07')) {
+        toast.error('Rwanda phone number must start with 07 (e.g. 0788749889)');
+        return;
+      }
+    }
+
+    loginMutation.mutate({
+      identifier,
+      email: identifier,
+      phone: identifier,
+      password
+    });
   };
 
   return (
@@ -57,6 +84,7 @@ const Login = () => {
         className="absolute inset-0 z-0 pointer-events-none"
         style={{ backgroundImage: `url(${loginImage})`, backgroundPosition: 'center bottom', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}
       ></div>
+
       {/* Top Thin Navbar */}
       <div className="w-full bg-white py-3 px-8 flex justify-between items-center text-sm text-gray-700 relative z-10">
         <div className="flex items-center gap-3">
@@ -70,31 +98,51 @@ const Login = () => {
       </div>
 
       <div className="flex-1 flex flex-col justify-center items-center p-4 relative z-10 mt-[-5vh]">
-        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
+        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 font-sans">
 
           {/* Title */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
+            {isDaroSaroLogin && (
+              <span className="bg-blue-50 text-[#0052cc] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-200 inline-block mb-2">
+                DARO &amp; SARO Portal
+              </span>
+            )}
             <h1 className="text-[20px] font-bold text-[#172b4d] leading-tight">
-              Sign in with Livestock<br />Tracking App
+              {isDaroSaroLogin ? 'Officer Sign In' : 'Sign in with Livestock\nTracking App'}
             </h1>
+            {isDaroSaroLogin && (
+              <p className="text-xs text-gray-500 mt-1">Enter your 10-digit phone number &amp; password</p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* Email Field */}
+            {/* Email or 10-Digit Phone Field */}
             <div className="space-y-1">
-              <input
-                type="email"
-                value={email}
-                placeholder="Enter email"
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-medium placeholder-gray-500 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
-                required
-              />
+              <label className="block text-xs font-semibold text-gray-700">
+                {isDaroSaroLogin ? 'Phone Number (10 Digits)' : 'Email Address'}
+              </label>
+              <div className="relative">
+                <input
+                  type={isDaroSaroLogin ? 'tel' : 'email'}
+                  value={identifier}
+                  placeholder={isDaroSaroLogin ? 'e.g. 0788749889' : 'Enter email'}
+                  onChange={handleIdentifierChange}
+                  maxLength={isDaroSaroLogin ? 10 : undefined}
+                  className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-semibold placeholder-gray-400 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
+                  required
+                />
+                {isDaroSaroLogin && (
+                  <span className="absolute right-3 top-2.5 text-[11px] font-bold text-gray-400">
+                    {identifier.length}/10
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Password Field */}
             <div className="space-y-1">
+              <label className="block text-xs font-semibold text-gray-700">Password</label>
               <input
                 type="password"
                 value={password}
@@ -110,16 +158,29 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px]"
+                className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px] cursor-pointer"
               >
-                {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+                {loginMutation.isPending ? 'Signing in...' : (isDaroSaroLogin ? 'Sign in as Officer' : 'Sign in')}
               </button>
             </div>
 
-            <div className="text-center mt-6">
-              <a href="#" className="text-[#0052cc] hover:underline text-[14px] font-medium">Can't log in?</a>
-              <span className="mx-2 text-gray-300">•</span>
-              <Link to="/forgot-password" className="text-[#0052cc] hover:underline text-[14px] font-medium">Forgot password?</Link>
+            <div className="text-center mt-5 space-y-2">
+              <div>
+                {isDaroSaroLogin ? (
+                  <Link to="/login" className="text-[#0052cc] hover:underline text-[13px] font-semibold">
+                    ← Standard Email Login
+                  </Link>
+                ) : (
+                  <Link to="/daro/saro-login" className="text-[#0052cc] hover:underline text-[13px] font-semibold">
+                    DARO / SARO Officer Login (Phone) →
+                  </Link>
+                )}
+              </div>
+              <div>
+                <a href="#" className="text-[#0052cc] hover:underline text-[13px] font-medium">Can't log in?</a>
+                <span className="mx-2 text-gray-300">•</span>
+                <Link to="/forgot-password" className="text-[#0052cc] hover:underline text-[13px] font-medium">Forgot password?</Link>
+              </div>
             </div>
 
             <div className="border-t border-gray-200 mt-6 pt-6 text-center">

@@ -1,0 +1,3330 @@
+[
+  {
+    "sn": 1,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Mukingo",
+    "name": "NGABO Felix",
+    "phone": "0788749889"
+  },
+  {
+    "sn": 2,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Kigoma",
+    "name": "NIYONZIMA Fulgence",
+    "phone": "0788698811"
+  },
+  {
+    "sn": 3,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Busoro",
+    "name": "DUSENGE Jean Claude",
+    "phone": "0788408998"
+  },
+  {
+    "sn": 4,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Muyira",
+    "name": "Uwereyimfura Jean Paul Bonheur",
+    "phone": "0785324937"
+  },
+  {
+    "sn": 5,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Kibirizi",
+    "name": "HASINGIZWEYEZU Jean d' Amour",
+    "phone": "0782715130"
+  },
+  {
+    "sn": 6,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Ntyazo",
+    "name": "NDAGIJIMANA Elie",
+    "phone": "0788445592"
+  },
+  {
+    "sn": 7,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Busasamana",
+    "name": "MUKAMUGENZI Marie Solange",
+    "phone": "0791634613"
+  },
+  {
+    "sn": 8,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Rwabicuma",
+    "name": "MUNYENTWARI Jean Damascene",
+    "phone": "0788486094"
+  },
+  {
+    "sn": 9,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Cyabakamyi",
+    "name": "HITIYISE Francois",
+    "phone": "0783399220"
+  },
+  {
+    "sn": 10,
+    "province": "South",
+    "district": "Nyanza",
+    "sector": "Nyagisozi",
+    "name": "ABIMANA Sixbert",
+    "phone": "0783128271"
+  },
+  {
+    "sn": 11,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Rugalika",
+    "name": "ISHOBORABYOSE Enock",
+    "phone": "0788278014"
+  },
+  {
+    "sn": 12,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Runda",
+    "name": "NZAYISENGA Roland",
+    "phone": "0788735876"
+  },
+  {
+    "sn": 13,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Rukoma",
+    "name": "S:KANTENGWA Colette",
+    "phone": "0783151310"
+  },
+  {
+    "sn": 14,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Gacurabwenge",
+    "name": "MUKESHIMANA Emmanuel",
+    "phone": "0788856112"
+  },
+  {
+    "sn": 15,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Nyamiyaga",
+    "name": "BEMERIKI Jean Pierre",
+    "phone": "0787921568"
+  },
+  {
+    "sn": 16,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Mugina",
+    "name": "PHILBERT NSENGIYUMVA Philbert",
+    "phone": "0783026310"
+  },
+  {
+    "sn": 17,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Nyarubaka",
+    "name": "MURAMIRA Vedaste",
+    "phone": "0781045520"
+  },
+  {
+    "sn": 18,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Musangira",
+    "name": "NSENGIYUMVA Celestin",
+    "phone": "0788720979"
+  },
+  {
+    "sn": 19,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Kayumbu",
+    "name": "NZAHABWANAYO Viateur",
+    "phone": "0783278837"
+  },
+  {
+    "sn": 20,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Karama",
+    "name": "NZARAMBA Jean de Dieu",
+    "phone": "0788856111"
+  },
+  {
+    "sn": 21,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Kayenzi",
+    "name": "MUSHIMIYIMANA Triphonie",
+    "phone": "0783459931"
+  },
+  {
+    "sn": 22,
+    "province": "South",
+    "district": "Kamonyi",
+    "sector": "Ngamba",
+    "name": "IRINDABAYO Jean Constantin",
+    "phone": "0789445672"
+  },
+  {
+    "sn": 23,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Kiyumba",
+    "name": "NSHIMYUMUKIZA Etienne",
+    "phone": "0782376707"
+  },
+  {
+    "sn": 24,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Cyeza",
+    "name": "RUGWIRO Gilbert",
+    "phone": "0785534869"
+  },
+  {
+    "sn": 25,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Kabacuzi",
+    "name": "NSENGIYUMVA David",
+    "phone": "0784826086"
+  },
+  {
+    "sn": 26,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Kibangu",
+    "name": "NSHYIMIYIMANA Vedaste",
+    "phone": "0790837570"
+  },
+  {
+    "sn": 27,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Muhanga",
+    "name": "HABIMANA Ezechiel",
+    "phone": "0784298004"
+  },
+  {
+    "sn": 28,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Mushishiro",
+    "name": "HABINEZA Jean Pierre",
+    "phone": "0789418217"
+  },
+  {
+    "sn": 29,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Nyabinoni",
+    "name": "IYAKAREMYE Theoneste",
+    "phone": "0788930447"
+  },
+  {
+    "sn": 30,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Nyamabuye",
+    "name": "MUKAYIRANGA Yvonne",
+    "phone": "0788563783"
+  },
+  {
+    "sn": 31,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Nyarusange",
+    "name": "TWAHIRWA Evase",
+    "phone": "0788584275"
+  },
+  {
+    "sn": 32,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Rugendabari",
+    "name": "HABIMANA Emmanuel",
+    "phone": "0786971420"
+  },
+  {
+    "sn": 33,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Shyongwe",
+    "name": "KUBWIMANA Patricie",
+    "phone": "0788863364"
+  },
+  {
+    "sn": 34,
+    "province": "South",
+    "district": "Muhanga",
+    "sector": "Rongi",
+    "name": "Ntawuhari",
+    "phone": "0788761624"
+  },
+  {
+    "sn": 35,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Ntongwe",
+    "name": "NDAGIJIMANA Martin",
+    "phone": "0788761624"
+  },
+  {
+    "sn": 36,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Kinihira",
+    "name": "IYARWEGO Fidele",
+    "phone": "0788944370"
+  },
+  {
+    "sn": 37,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Mbuye",
+    "name": "YUMVUHOZE Andre",
+    "phone": "0783179720"
+  },
+  {
+    "sn": 38,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Ruhango",
+    "name": "UMUHOZA Elyse",
+    "phone": "0788829080"
+  },
+  {
+    "sn": 39,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Kabagali",
+    "name": "MANIRAHABA Evariste",
+    "phone": "0788784935"
+  },
+  {
+    "sn": 40,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Mwendo",
+    "name": "MBERABAGABO Etienne",
+    "phone": "0788704477"
+  },
+  {
+    "sn": 41,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Bweramana",
+    "name": "MUKESHUBUTATU Joachim",
+    "phone": "0788622078"
+  },
+  {
+    "sn": 42,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Kinazi",
+    "name": "IRADUKUNDA Patrick",
+    "phone": "0789588344"
+  },
+  {
+    "sn": 43,
+    "province": "South",
+    "district": "Ruhango",
+    "sector": "Byimana",
+    "name": "INGABIRE Marie Noella (Agro acting)",
+    "phone": "0788610139"
+  },
+  {
+    "sn": 44,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Save",
+    "name": "YANKURIJE Francoise",
+    "phone": "0783397681"
+  },
+  {
+    "sn": 45,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Gikonko",
+    "name": "NIYIBIZI Jean de Dieu",
+    "phone": "0783597413"
+  },
+  {
+    "sn": 46,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Gishubi",
+    "name": "NTAGANDA Antoine",
+    "phone": "0781260515"
+  },
+  {
+    "sn": 47,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Mamba",
+    "name": "HARINDINTWARI Tharcisse",
+    "phone": "0788864721"
+  },
+  {
+    "sn": 48,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Muganza",
+    "name": "MANIRAREBA Jean Pierre",
+    "phone": "0788838294"
+  },
+  {
+    "sn": 49,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Musha",
+    "name": "KAYIGAMBA Janvier",
+    "phone": "0788660324"
+  },
+  {
+    "sn": 50,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Mugombwa",
+    "name": "UWIMANA Marie Louise",
+    "phone": "0783215457"
+  },
+  {
+    "sn": 51,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Mukindo",
+    "name": "AHISHAKIYE Theophile",
+    "phone": "0783723458"
+  },
+  {
+    "sn": 52,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Kansi",
+    "name": "NSABIMANA Celestin",
+    "phone": "0788465214"
+  },
+  {
+    "sn": 53,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Kibilizi",
+    "name": "UWITIJE Consilie",
+    "phone": "0788801340"
+  },
+  {
+    "sn": 54,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Kigembe",
+    "name": "MUHIMUNDU Gaudance",
+    "phone": "0783650392"
+  },
+  {
+    "sn": 55,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Ndora",
+    "name": "TWAGIRAYEZU Gaspard",
+    "phone": "0784018929"
+  },
+  {
+    "sn": 56,
+    "province": "South",
+    "district": "Gisagara",
+    "sector": "Nyanza",
+    "name": "BIGIRIMANA Evariste",
+    "phone": "0783345425"
+  },
+  {
+    "sn": 57,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Mukura",
+    "name": "SINGIRANKABO Jean Pierre",
+    "phone": "0783347812"
+  },
+  {
+    "sn": 58,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Gishamvu",
+    "name": "NGENDABANGA Innocent",
+    "phone": "0786828530"
+  },
+  {
+    "sn": 59,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Huye",
+    "name": "NTWARI Faustin",
+    "phone": "0786829413"
+  },
+  {
+    "sn": 60,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Karama",
+    "name": "NYABYENDA Jean Claude",
+    "phone": "0786828670"
+  },
+  {
+    "sn": 61,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Kigoma",
+    "name": "BIZIMANA Joseph",
+    "phone": "0786828348"
+  },
+  {
+    "sn": 62,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Kinazi",
+    "name": "BYIRINGIRO Hope",
+    "phone": "0786828543"
+  },
+  {
+    "sn": 63,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Maraba",
+    "name": "KABATESI Marie Claudine",
+    "phone": "0786829390"
+  },
+  {
+    "sn": 64,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Mbazi",
+    "name": "KABERA Philippe",
+    "phone": "0786828952"
+  },
+  {
+    "sn": 65,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Ngoma",
+    "name": "NYIRABAHIRE Vestine",
+    "phone": "0786828629"
+  },
+  {
+    "sn": 66,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Ruhashya",
+    "name": "MAINSHIMWE Jean Bosco",
+    "phone": "0786828592"
+  },
+  {
+    "sn": 67,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Rusatira",
+    "name": "KAYIRANGA Antoine",
+    "phone": "0786828346"
+  },
+  {
+    "sn": 68,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Rwaniro",
+    "name": "UWIZEYIMANA Jean Claude",
+    "phone": "0786828618"
+  },
+  {
+    "sn": 69,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Simbi",
+    "name": "SINDIKUBWABO Clement",
+    "phone": "0786828738"
+  },
+  {
+    "sn": 70,
+    "province": "South",
+    "district": "Huye",
+    "sector": "Tumba",
+    "name": "GATETE Ildephonse",
+    "phone": "0786829261"
+  },
+  {
+    "sn": 71,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Cyanika",
+    "name": "NSABIYAREMYE Cyprien",
+    "phone": "0783184863"
+  },
+  {
+    "sn": 72,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Buruhukiro",
+    "name": "SUGIRA Fraterne",
+    "phone": "0788705817"
+  },
+  {
+    "sn": 73,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Gasaka",
+    "name": "KANGWIJE Anastasie",
+    "phone": "0788755702"
+  },
+  {
+    "sn": 74,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Gatare",
+    "name": "ISINGIZWE Serene",
+    "phone": "0780697064"
+  },
+  {
+    "sn": 75,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Kaduha",
+    "name": "NDAGIJIMANA Theogene",
+    "phone": "0782527964"
+  },
+  {
+    "sn": 76,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Kamegeri",
+    "name": "NKUNDINGABO Alexandre",
+    "phone": "0784136459"
+  },
+  {
+    "sn": 77,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Kibirizi",
+    "name": "NSENGIYUMVA Donath",
+    "phone": "0783339878"
+  },
+  {
+    "sn": 78,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Kibumbwe",
+    "name": "MBONABUCYA Emmanuel",
+    "phone": "0780523226"
+  },
+  {
+    "sn": 79,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Kitabi",
+    "name": "MUSAFIRI Josue",
+    "phone": "0782517007"
+  },
+  {
+    "sn": 80,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Mbazi",
+    "name": "SINDIKUBWABO Eugene",
+    "phone": "0783471441"
+  },
+  {
+    "sn": 81,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Musange",
+    "name": "GASANA Epian",
+    "phone": "0785692405"
+  },
+  {
+    "sn": 82,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Mushubi",
+    "name": "DUSHIMIMANA Jean Damascene",
+    "phone": "0788879401"
+  },
+  {
+    "sn": 83,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Nkomane",
+    "name": "KAYUMBA Gustave",
+    "phone": "0787547577"
+  },
+  {
+    "sn": 84,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Tare",
+    "name": "NSHIMIYIMANA Theogene",
+    "phone": "0785152434"
+  },
+  {
+    "sn": 85,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Uwinkingi",
+    "name": "KAMANA Protogene",
+    "phone": "0783609606"
+  },
+  {
+    "sn": 86,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Mugano",
+    "name": "Ntawuhari",
+    "phone": "0788604333"
+  },
+  {
+    "sn": 87,
+    "province": "South",
+    "district": "Nyamagabe",
+    "sector": "Musebeya",
+    "name": "Ntawuhari",
+    "phone": "0786194324"
+  },
+  {
+    "sn": 88,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Busanze",
+    "name": "NYIRIBAMBE Felicien",
+    "phone": "0788695278"
+  },
+  {
+    "sn": 89,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Cyahinda",
+    "name": "UWIZEYIMANA Innocent",
+    "phone": "0783297880"
+  },
+  {
+    "sn": 90,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Kibeho",
+    "name": "NIYITEGEKA Pacifique",
+    "phone": "0788886992"
+  },
+  {
+    "sn": 91,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Kivu",
+    "name": "MURWANASHYAKA Emmanuel",
+    "phone": "0788617606"
+  },
+  {
+    "sn": 92,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Mata",
+    "name": "NKESHIMANA Theogene",
+    "phone": "0786694260"
+  },
+  {
+    "sn": 93,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Muganza",
+    "name": "VITA Ignace",
+    "phone": "0788838883"
+  },
+  {
+    "sn": 94,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Munini",
+    "name": "DUSABIMANA Dieudonne",
+    "phone": "0788298636"
+  },
+  {
+    "sn": 95,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Ngera",
+    "name": "CYUBAHIRO Emmanuel",
+    "phone": "0788568899"
+  },
+  {
+    "sn": 96,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Ngoma",
+    "name": "ISHIMWE Pacifique",
+    "phone": "0788834556"
+  },
+  {
+    "sn": 97,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Ruheru",
+    "name": "HAGENIMANA Francois Regis",
+    "phone": "0786194324"
+  },
+  {
+    "sn": 98,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Nyabimana",
+    "name": "MUSANGAMFURA Medard",
+    "phone": "0788492612"
+  },
+  {
+    "sn": 99,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Cyahinda",
+    "name": "UWIZEYIMANA Innocent",
+    "phone": "0788649242"
+  },
+  {
+    "sn": 100,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Ruramba",
+    "name": "KALISA Emmanuel",
+    "phone": "0783018305"
+  },
+  {
+    "sn": 101,
+    "province": "South",
+    "district": "Nyaruguru",
+    "sector": "Rusenge",
+    "name": "DUSENGE Phocas",
+    "phone": "0788738269"
+  },
+  {
+    "sn": 102,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Shyorongi",
+    "name": "NIYOYITA Froduard",
+    "phone": "0783577677"
+  },
+  {
+    "sn": 103,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Burega",
+    "name": "NGENGWANUMUHOZA Hermenegilde",
+    "phone": "0788604573"
+  },
+  {
+    "sn": 104,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Base",
+    "name": "GASIGWA Claude",
+    "phone": "0788502692"
+  },
+  {
+    "sn": 105,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Rusiga",
+    "name": "NYIRIMBABAZI ALINE",
+    "phone": "0788719491"
+  },
+  {
+    "sn": 106,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Bushoki",
+    "name": "MUJAWAMARIYA Agnes",
+    "phone": "0783209558"
+  },
+  {
+    "sn": 107,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Murambi",
+    "name": "UWAMARIYA NDUWIMANA Leontine",
+    "phone": "0785138302"
+  },
+  {
+    "sn": 108,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Ntarabana",
+    "name": "NDEKEZI Jean Marie Vianney",
+    "phone": "0788751926"
+  },
+  {
+    "sn": 109,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Cyungo",
+    "name": "HAGUMINEZA Jean Baptiste",
+    "phone": "0787764737"
+  },
+  {
+    "sn": 110,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Tumba",
+    "name": "UWINEZA Marie Claire",
+    "phone": "0788404170"
+  },
+  {
+    "sn": 111,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Kinihira",
+    "name": "NSHIMYIRYAYO Wellars",
+    "phone": "0785246632"
+  },
+  {
+    "sn": 112,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Mbogo",
+    "name": "MUTABAZI Albert",
+    "phone": "0788510993"
+  },
+  {
+    "sn": 113,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Rukozo",
+    "name": "NIYIGENA Gilbert",
+    "phone": "0788527946"
+  },
+  {
+    "sn": 114,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Ngoma",
+    "name": "BOSENIBO Valens",
+    "phone": "0788649416"
+  },
+  {
+    "sn": 115,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Masoro",
+    "name": "DUSENGIMANA Jean Damascene",
+    "phone": "0785345813"
+  },
+  {
+    "sn": 116,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Kisaro",
+    "name": "BIZAVUGARUREMA Joseph",
+    "phone": "0785229640"
+  },
+  {
+    "sn": 117,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Buyoga",
+    "name": "UWAYEZU Pontien",
+    "phone": "0788213985"
+  },
+  {
+    "sn": 118,
+    "province": "North",
+    "district": "Rulindo",
+    "sector": "Cyinzuzi",
+    "name": "BIGIRIMFURA Jean Baptiste",
+    "phone": "0785197448"
+  },
+  {
+    "sn": 119,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Ruli",
+    "name": "KANYARWANDA Jean Baptiste",
+    "phone": "0785712883"
+  },
+  {
+    "sn": 120,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Rushashi",
+    "name": "KWITONDA Bertin",
+    "phone": "0788481935"
+  },
+  {
+    "sn": 121,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Coko",
+    "name": "MUSINGA Florien",
+    "phone": "0780392992"
+  },
+  {
+    "sn": 122,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Muyongwe",
+    "name": "RENZAHO Philbert",
+    "phone": "0786515825"
+  },
+  {
+    "sn": 123,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Muhondo",
+    "name": "TERIMBERE Slyvain",
+    "phone": "0789979571"
+  },
+  {
+    "sn": 124,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Minazi",
+    "name": "HABINEZA Hodal",
+    "phone": "0785691935"
+  },
+  {
+    "sn": 125,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Janja",
+    "name": "NIYONZIMA Ephron",
+    "phone": "0788466867"
+  },
+  {
+    "sn": 126,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Rusasa",
+    "name": "MUNEZERO Dieudonn\u00e9",
+    "phone": "0788290857"
+  },
+  {
+    "sn": 127,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Muzo",
+    "name": "NDABERETSE Ildephonse",
+    "phone": "0785232155"
+  },
+  {
+    "sn": 128,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Cyabingo",
+    "name": "TUYAMBAZE Emmanuel",
+    "phone": "0787665390"
+  },
+  {
+    "sn": 129,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Busengo",
+    "name": "MUTUYIMANA Martine",
+    "phone": "0788669624"
+  },
+  {
+    "sn": 130,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Karambo",
+    "name": "TUYAMBAZE Jean Bosco",
+    "phone": "0788754868"
+  },
+  {
+    "sn": 131,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Kamubuga",
+    "name": "Karemera Alexis",
+    "phone": "0788609099"
+  },
+  {
+    "sn": 132,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Gashenyi",
+    "name": "UJENEZA Epimaque",
+    "phone": "0781712646"
+  },
+  {
+    "sn": 133,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Gakenke",
+    "name": "AMAHIRWE THEOGENE",
+    "phone": "0789657741"
+  },
+  {
+    "sn": 134,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Mataba",
+    "name": "USENGIMANA Kalisa",
+    "phone": "0788814387"
+  },
+  {
+    "sn": 135,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Kivuruga",
+    "name": "MUVANDIMWE Jean Claude",
+    "phone": "0782742468"
+  },
+  {
+    "sn": 136,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Nemba",
+    "name": "MUKAMUNANA Solange",
+    "phone": "0788469811"
+  },
+  {
+    "sn": 137,
+    "province": "North",
+    "district": "Gakenke",
+    "sector": "Mugunga",
+    "name": "Ntawuhari",
+    "phone": "0788551280"
+  },
+  {
+    "sn": 138,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Kinigi",
+    "name": "BARIGORA Jean Marie Vianney",
+    "phone": "0783332359"
+  },
+  {
+    "sn": 139,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Busogo",
+    "name": "NZABANITA Appolinaire",
+    "phone": "0780364307"
+  },
+  {
+    "sn": 140,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Cyuve",
+    "name": "YABARAGIYE Bernard",
+    "phone": "0783559375"
+  },
+  {
+    "sn": 141,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Gacaca",
+    "name": "UWIMBABAZI Clarisse",
+    "phone": "0784484831"
+  },
+  {
+    "sn": 142,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Gashaki",
+    "name": "SIBOMANA Jean Damascene",
+    "phone": "0788812170"
+  },
+  {
+    "sn": 143,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Gataraga",
+    "name": "IMANIRAKIZA Josue",
+    "phone": "0785800602"
+  },
+  {
+    "sn": 144,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Kimonyi",
+    "name": "UWINEZA Genevieve",
+    "phone": "0788989046"
+  },
+  {
+    "sn": 145,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Muhoza",
+    "name": "MUNYAMARIZA Henry",
+    "phone": "0783584056"
+  },
+  {
+    "sn": 146,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Muko",
+    "name": "URUJENI Rebecca",
+    "phone": "0785734021"
+  },
+  {
+    "sn": 147,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Musanze",
+    "name": "NSHIMIYIMANA Jean Pierre",
+    "phone": "0783963757"
+  },
+  {
+    "sn": 148,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Nkotsi",
+    "name": "SHUMBUSHO Schadrack",
+    "phone": "0788214860"
+  },
+  {
+    "sn": 149,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Nyange",
+    "name": "NTIRENGANYA Martin",
+    "phone": "0785457392"
+  },
+  {
+    "sn": 150,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Remera",
+    "name": "NDAGIJIMANA Celestin",
+    "phone": "0788572785"
+  },
+  {
+    "sn": 151,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Rwaza",
+    "name": "NIYITEGEKA Hyacinthe",
+    "phone": "0788997944"
+  },
+  {
+    "sn": 152,
+    "province": "North",
+    "district": "Musanze",
+    "sector": "Shingiro",
+    "name": "NTAGANDA Jean de Dieu",
+    "phone": "0785241022"
+  },
+  {
+    "sn": 153,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Butaro",
+    "name": "NTANYUNGURA Jean de Dieu",
+    "phone": "0783245942"
+  },
+  {
+    "sn": 154,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Bungwe",
+    "name": "NIRAGIRE Noel",
+    "phone": "0785110071"
+  },
+  {
+    "sn": 155,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Cyanika",
+    "name": "NSANZIMANA Sylvestere",
+    "phone": "0788566121"
+  },
+  {
+    "sn": 156,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Cyeru",
+    "name": "RUTIKANGA Christian",
+    "phone": "0788400231"
+  },
+  {
+    "sn": 157,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Gahunga",
+    "name": "NIYONSENGA Noel",
+    "phone": "0785811187"
+  },
+  {
+    "sn": 158,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Gatebe",
+    "name": "NDAYISENGA Yves",
+    "phone": "0788579098"
+  },
+  {
+    "sn": 159,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Gitovu",
+    "name": "NIRINGIYIMANA Emmanuel",
+    "phone": "0782002027"
+  },
+  {
+    "sn": 160,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Kagogo",
+    "name": "UMURERWA Irene",
+    "phone": "0785511591"
+  },
+  {
+    "sn": 161,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Kinoni",
+    "name": "TWIBANIRE Girbert",
+    "phone": "0789435017"
+  },
+  {
+    "sn": 162,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Kinyababa",
+    "name": "NIYIKORA Jean Marie Vianney",
+    "phone": "0788822797"
+  },
+  {
+    "sn": 163,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Kivuye",
+    "name": "TURINAMAHIRWE Aimable",
+    "phone": "0788933257"
+  },
+  {
+    "sn": 164,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Rugarama",
+    "name": "UWABABYEYI Eugenie",
+    "phone": "0787594374"
+  },
+  {
+    "sn": 165,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Rugengabali",
+    "name": "NTAKIRUTIMANA Elisaphan",
+    "phone": "0736355996"
+  },
+  {
+    "sn": 166,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Ruhunde",
+    "name": "IYAMUREMYE Cleophas",
+    "phone": "0782070058"
+  },
+  {
+    "sn": 167,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Nemba",
+    "name": "BANKUNDIYE Esther",
+    "phone": "0788688200"
+  },
+  {
+    "sn": 168,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Rusarabuye",
+    "name": "NZIRORERA Joseph",
+    "phone": "0789588680"
+  },
+  {
+    "sn": 169,
+    "province": "North",
+    "district": "Burera",
+    "sector": "Rwerere",
+    "name": "NIYIGENA Vincent",
+    "phone": "0788571867"
+  },
+  {
+    "sn": 170,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Rukomo",
+    "name": "NSENGIMANA J.M.Vianney",
+    "phone": "0783254977"
+  },
+  {
+    "sn": 171,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Bwisige",
+    "name": "BWIRUKA Innocent",
+    "phone": "0788861509"
+  },
+  {
+    "sn": 172,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Miyove",
+    "name": "MUKASHYAKA Clementine",
+    "phone": "0788599033"
+  },
+  {
+    "sn": 173,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Mutete",
+    "name": "HATEGEKIMANA Samuel",
+    "phone": "0788773205"
+  },
+  {
+    "sn": 174,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Giti",
+    "name": "MUKEZANGANGO Jean de Dieu",
+    "phone": "0783563098"
+  },
+  {
+    "sn": 175,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Kageyo",
+    "name": "TUYIZERE Evariste",
+    "phone": "0782972712"
+  },
+  {
+    "sn": 176,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Cyumba",
+    "name": "DUKUNDANE Clement",
+    "phone": "0783805992"
+  },
+  {
+    "sn": 177,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Byumba",
+    "name": "IYAKAREMYE Leonidas",
+    "phone": "0788438339"
+  },
+  {
+    "sn": 178,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Mukarange",
+    "name": "Dufitumukiza amos",
+    "phone": "0783062737"
+  },
+  {
+    "sn": 179,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Muko",
+    "name": "RUHASHYA Tite",
+    "phone": "0784522964"
+  },
+  {
+    "sn": 180,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Nyamiyaga",
+    "name": "SIBORUREMA P.Celestin",
+    "phone": "0783565561"
+  },
+  {
+    "sn": 181,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Rubaya",
+    "name": "MUSHINZIMANA John",
+    "phone": "0788224219"
+  },
+  {
+    "sn": 182,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Nyankenke",
+    "name": "MUTUYIMANA Valentine",
+    "phone": "0788275377"
+  },
+  {
+    "sn": 183,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Rushaki",
+    "name": "NSHIMYUMUREMYI Alexis",
+    "phone": "0787270044"
+  },
+  {
+    "sn": 184,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Kaniga",
+    "name": "BAREBERAHO Deogratias",
+    "phone": "0783798143"
+  },
+  {
+    "sn": 185,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Manyagiro",
+    "name": "NSENGIMANA Regis",
+    "phone": "0785324259"
+  },
+  {
+    "sn": 186,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Rutare",
+    "name": "UMUHOZA Felix",
+    "phone": "0789363462"
+  },
+  {
+    "sn": 187,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Ruvune",
+    "name": "MBONYAMASHYAKA Ferdinand",
+    "phone": "0782176958"
+  },
+  {
+    "sn": 188,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Rwamiko",
+    "name": "Ruberangeyo valentin",
+    "phone": "0782825070"
+  },
+  {
+    "sn": 189,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Bukure",
+    "name": "IMANIZABAYO Emmanuel",
+    "phone": "0788431206"
+  },
+  {
+    "sn": 190,
+    "province": "North",
+    "district": "Gicumbi",
+    "sector": "Shangasha",
+    "name": "MASENGESHO Felicien",
+    "phone": "0788698148"
+  },
+  {
+    "sn": 191,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Ruhuha",
+    "name": "NSHIMYIMFURA Silas",
+    "phone": "0786287856"
+  },
+  {
+    "sn": 192,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Nyarugenge",
+    "name": "NYIRANTWALI Fortune",
+    "phone": "0785284759"
+  },
+  {
+    "sn": 193,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Shyara",
+    "name": "SEYOBOKA JMV",
+    "phone": "0788656113"
+  },
+  {
+    "sn": 194,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Mareba",
+    "name": "UBAYAGIHAGAZE Jean Bosco",
+    "phone": "0785343435"
+  },
+  {
+    "sn": 195,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Ngeruka",
+    "name": "MIZERO Oscar",
+    "phone": "0788469741"
+  },
+  {
+    "sn": 196,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Kamababuye",
+    "name": "NZABIRINDA Damien (agro. Acting)",
+    "phone": "0783143243"
+  },
+  {
+    "sn": 197,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Rweru",
+    "name": "NSENGIMANA Eric",
+    "phone": "0788854495"
+  },
+  {
+    "sn": 198,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Gashora",
+    "name": "MUJEJIMANA Prudence",
+    "phone": "0788805625"
+  },
+  {
+    "sn": 199,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Rilima",
+    "name": "IMANANIMWE Jean de Dieu",
+    "phone": "0788218555"
+  },
+  {
+    "sn": 200,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Mayange",
+    "name": "HAKIZIMANA Martin",
+    "phone": "0788565723"
+  },
+  {
+    "sn": 201,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Mwogo",
+    "name": "NSANZIMFURA Leandre",
+    "phone": "0783402085"
+  },
+  {
+    "sn": 202,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Juru",
+    "name": "NSANZUMUHIRE Aphrodis",
+    "phone": "0788560199"
+  },
+  {
+    "sn": 203,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Nyamata",
+    "name": "NIYONZIMA Fidele",
+    "phone": "0783110865"
+  },
+  {
+    "sn": 204,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Ntarama",
+    "name": "NSHIMYUMUREMYI Anaclet",
+    "phone": "0788255894"
+  },
+  {
+    "sn": 205,
+    "province": "East",
+    "district": "Bugesera",
+    "sector": "Musenyi",
+    "name": "HAGANIRIMFURA Jean Pierre",
+    "phone": "0788753956"
+  },
+  {
+    "sn": 206,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Munyaga",
+    "name": "UFITESE Novance",
+    "phone": "0783075509"
+  },
+  {
+    "sn": 207,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Munyiginya",
+    "name": "KANYARUTOKI Aime Cyprien",
+    "phone": "0783339244"
+  },
+  {
+    "sn": 208,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Gahengeri",
+    "name": "Rutazana Lambert",
+    "phone": "0788779769"
+  },
+  {
+    "sn": 209,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Kigabiro",
+    "name": "MBONEZA Luc",
+    "phone": "0788619393"
+  },
+  {
+    "sn": 210,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Nzige",
+    "name": "Musabyimana Clement",
+    "phone": "0789402628"
+  },
+  {
+    "sn": 211,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Fumbwe",
+    "name": "Muhoza Dieudonn\u00e9",
+    "phone": "0788651378"
+  },
+  {
+    "sn": 212,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Muyumbu",
+    "name": "NGABONZIZA Sylvestre",
+    "phone": "0788836071"
+  },
+  {
+    "sn": 213,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Musha",
+    "name": "UWINGENEYE Louise",
+    "phone": "0788475509"
+  },
+  {
+    "sn": 214,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Nyakaliro",
+    "name": "NTAWUBAHUNGA Innocent",
+    "phone": "0788488659"
+  },
+  {
+    "sn": 215,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Gishali",
+    "name": "Nizeyimana Theogene",
+    "phone": "0788502092"
+  },
+  {
+    "sn": 216,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Mwulire",
+    "name": "NIYONIRINGIYE Venuste",
+    "phone": "0788651378"
+  },
+  {
+    "sn": 217,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Muhazi",
+    "name": "HABIMANA Philbert",
+    "phone": "0782008231"
+  },
+  {
+    "sn": 218,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Rubona",
+    "name": "Assinapol Rwigara",
+    "phone": "0787794500"
+  },
+  {
+    "sn": 219,
+    "province": "East",
+    "district": "Rwamagana",
+    "sector": "Karenge",
+    "name": "NTAWUBAHUNGA Innocent",
+    "phone": "0788468850"
+  },
+  {
+    "sn": 220,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Gahini",
+    "name": "MUGABONAKE Aristide",
+    "phone": "0782740600"
+  },
+  {
+    "sn": 221,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Ndego",
+    "name": "TUYISENGE Eugene",
+    "phone": "0788479870"
+  },
+  {
+    "sn": 222,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Kabare",
+    "name": "MUNYANDATWA Jean Pierre",
+    "phone": "0788316760"
+  },
+  {
+    "sn": 223,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Murama",
+    "name": "UWIHIRWE Delphine",
+    "phone": "0782113200"
+  },
+  {
+    "sn": 224,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Rwinkwavu",
+    "name": "NSHIMIYIMANA Leonard",
+    "phone": "0786397041"
+  },
+  {
+    "sn": 225,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Kabarondo",
+    "name": "GASHAYIJA Benon",
+    "phone": "0788213780"
+  },
+  {
+    "sn": 226,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Ruramira",
+    "name": "SIBOMANA Jean Claude",
+    "phone": "0785332258"
+  },
+  {
+    "sn": 227,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Nyamirama",
+    "name": "DUSABIMANA Clementine",
+    "phone": "0783095421"
+  },
+  {
+    "sn": 228,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Mukarange",
+    "name": "KWIZERA Danny",
+    "phone": "0792583454"
+  },
+  {
+    "sn": 229,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Mwiri",
+    "name": "GAKURU Cosma",
+    "phone": "0783348419"
+  },
+  {
+    "sn": 230,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Rukara",
+    "name": "NSABIYERA Jean Pierre",
+    "phone": "0788844315"
+  },
+  {
+    "sn": 231,
+    "province": "East",
+    "district": "Kayonza",
+    "sector": "Murundi",
+    "name": "Ntawuhari",
+    "phone": "0783438684"
+  },
+  {
+    "sn": 232,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Rurenge",
+    "name": "BAMPORIKI Diogene",
+    "phone": "0788488366"
+  },
+  {
+    "sn": 233,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Remera",
+    "name": "TWAGIRIMANA Francois",
+    "phone": "0788671695"
+  },
+  {
+    "sn": 234,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Kibungo",
+    "name": "MUDENGE AGABA Yussufu",
+    "phone": "0785350722"
+  },
+  {
+    "sn": 235,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Jarama",
+    "name": "MINANI Felecien",
+    "phone": "0782652627"
+  },
+  {
+    "sn": 236,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Mutenderi",
+    "name": "CISHAHAYO Guido Olivier",
+    "phone": "0788595251"
+  },
+  {
+    "sn": 237,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Murama",
+    "name": "MUNDERE Richard",
+    "phone": "0783035135"
+  },
+  {
+    "sn": 238,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Rukira",
+    "name": "NSANZAMAHORO Fidel",
+    "phone": "0788623379"
+  },
+  {
+    "sn": 239,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Gashanda",
+    "name": "MUSHIMIYIMANA Marie helene",
+    "phone": "0733885296"
+  },
+  {
+    "sn": 240,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Karembo",
+    "name": "ZIGAMA Dominique",
+    "phone": "0781857140"
+  },
+  {
+    "sn": 241,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Zaza",
+    "name": "NIYOYITA Desire",
+    "phone": "0788296233"
+  },
+  {
+    "sn": 242,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Sake",
+    "name": "GASHIRABAKE Eduard",
+    "phone": "0782288876"
+  },
+  {
+    "sn": 243,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Rukumberi",
+    "name": "MUDAHERANWA Emmanuel",
+    "phone": "0783870638"
+  },
+  {
+    "sn": 244,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Mugesera",
+    "name": "TUYITURIKI TISA Jean claude",
+    "phone": "0781405822"
+  },
+  {
+    "sn": 245,
+    "province": "East",
+    "district": "Ngoma",
+    "sector": "Kazo",
+    "name": "Ntawuhari",
+    "phone": "0782886380"
+  },
+  {
+    "sn": 246,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Nasho",
+    "name": "MUKESHIMANA Joel",
+    "phone": "0785190219"
+  },
+  {
+    "sn": 247,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Mpanga",
+    "name": "NIYITANGA Emmanuel",
+    "phone": "0781927052"
+  },
+  {
+    "sn": 248,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Nyarubuye",
+    "name": "TUYISENGE Jean Pierre",
+    "phone": "0783423538"
+  },
+  {
+    "sn": 249,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Nyamugari",
+    "name": "NSABIMANA Hodari",
+    "phone": "0782655310"
+  },
+  {
+    "sn": 250,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Gatore",
+    "name": "HABIMANA Sylivestre",
+    "phone": "0788870479"
+  },
+  {
+    "sn": 251,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Gahara",
+    "name": "TWIZERIMANA Eugene",
+    "phone": "0783339744"
+  },
+  {
+    "sn": 252,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Mahama",
+    "name": "BIZIMANA Eliezer",
+    "phone": "0722657978"
+  },
+  {
+    "sn": 253,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Kigarama",
+    "name": "KUBWIMANA Desire",
+    "phone": "0725427538"
+  },
+  {
+    "sn": 254,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Musaza",
+    "name": "DUSINGIZIMANA Felicien",
+    "phone": "0788832537"
+  },
+  {
+    "sn": 255,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Kigina",
+    "name": "UMURERWA Immaculee",
+    "phone": "0735298580"
+  },
+  {
+    "sn": 256,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Kirehe",
+    "name": "KAMUGISHA Jean Baptiste",
+    "phone": "0788457305"
+  },
+  {
+    "sn": 257,
+    "province": "East",
+    "district": "Kirehe",
+    "sector": "Mushikiri",
+    "name": "MANIRAGUHA Viateur",
+    "phone": "0788752450"
+  },
+  {
+    "sn": 258,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Nyagatare",
+    "name": "MUNYANEZA Ildephonse",
+    "phone": "0788733135"
+  },
+  {
+    "sn": 259,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Katabagemu",
+    "name": "GATERA David",
+    "phone": "0783626132"
+  },
+  {
+    "sn": 260,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Tabagwe",
+    "name": "MANIRAGABA Jean Bosco",
+    "phone": "0788266429"
+  },
+  {
+    "sn": 261,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Rwimiyaga",
+    "name": "BURAKARI Felix",
+    "phone": "0788856946"
+  },
+  {
+    "sn": 262,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Karangazi",
+    "name": "SABITI Tom",
+    "phone": "0788995483"
+  },
+  {
+    "sn": 263,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Rwempasha",
+    "name": "NSENGIYUMVA Fred",
+    "phone": "0784919398"
+  },
+  {
+    "sn": 264,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Mukama",
+    "name": "SEMU Pasifique",
+    "phone": "0782468002"
+  },
+  {
+    "sn": 265,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Matimba",
+    "name": "NSANZAMAHORO Vedaste",
+    "phone": "0786034997"
+  },
+  {
+    "sn": 266,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Musheri",
+    "name": "KADIDA Boneur",
+    "phone": "0784346448"
+  },
+  {
+    "sn": 267,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Rukomo",
+    "name": "IYAMUREMYE Daniel",
+    "phone": "0788367364"
+  },
+  {
+    "sn": 268,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Mimuri",
+    "name": "NDIKUMANA Sylvere",
+    "phone": "0788948438"
+  },
+  {
+    "sn": 269,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Gatunda",
+    "name": "NKUNDIMANA Samuel",
+    "phone": "0788252739"
+  },
+  {
+    "sn": 270,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Kiyombe",
+    "name": "MUGARUKA Eric",
+    "phone": "0782740547"
+  },
+  {
+    "sn": 271,
+    "province": "East",
+    "district": "Nyagatare",
+    "sector": "Karama",
+    "name": "MUHIRE Jean Bosco",
+    "phone": "0783343764"
+  },
+  {
+    "sn": 272,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Nyagihanga",
+    "name": "KABERA Moses",
+    "phone": "0783251394"
+  },
+  {
+    "sn": 273,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Kabarore",
+    "name": "NSHIMIYIMANA Jean Nepomuscene",
+    "phone": "0788630576"
+  },
+  {
+    "sn": 274,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Kiziguro",
+    "name": "KARANGWA Appolinere",
+    "phone": "0789319259"
+  },
+  {
+    "sn": 275,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Gitoki",
+    "name": "NGIRINSHUTI Augustin",
+    "phone": "0783463217"
+  },
+  {
+    "sn": 276,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Gatsibo",
+    "name": "TWIZEYE MANZI Jean Bernard",
+    "phone": "0788433125"
+  },
+  {
+    "sn": 277,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Ngarama",
+    "name": "NAVUGANYENIMANA Placide",
+    "phone": "0783641465"
+  },
+  {
+    "sn": 278,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Kageyo",
+    "name": "TUYISENGE Aron",
+    "phone": "0788803447"
+  },
+  {
+    "sn": 279,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Muhura",
+    "name": "HAKORIMANA Aaron Fidele",
+    "phone": "0781645077"
+  },
+  {
+    "sn": 280,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Murambi",
+    "name": "ISABANE Herbert",
+    "phone": "0787260612"
+  },
+  {
+    "sn": 281,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Rugarama",
+    "name": "SANDE Moses",
+    "phone": "0788472248"
+  },
+  {
+    "sn": 282,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Rwimbogo",
+    "name": "HABIYAREMYE Laurent",
+    "phone": "0795032817"
+  },
+  {
+    "sn": 283,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Gasange",
+    "name": "NIYODUSENGA Jean Bosco",
+    "phone": "0783878056"
+  },
+  {
+    "sn": 284,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Kiramuruzi",
+    "name": "NIRAGIRE Jean Bosco",
+    "phone": "0783558282"
+  },
+  {
+    "sn": 285,
+    "province": "East",
+    "district": "Gatsibo",
+    "sector": "Remera",
+    "name": "TWAGIRUMUKIZA Lazaro",
+    "phone": "0788793016"
+  },
+  {
+    "sn": 286,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Giheke",
+    "name": "NTIGURIRWA Joseph",
+    "phone": "0783403015"
+  },
+  {
+    "sn": 287,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Bugarama",
+    "name": "KARENZI JMV",
+    "phone": "0785812536"
+  },
+  {
+    "sn": 288,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Butare",
+    "name": "MANISHIMWE Emmanuel",
+    "phone": "0788999706"
+  },
+  {
+    "sn": 289,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Bweyeye",
+    "name": "MANIRAFASHA Phenias",
+    "phone": "0783756563"
+  },
+  {
+    "sn": 290,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Gitambi",
+    "name": "IMANIRABARUTA Damascene",
+    "phone": "0788610457"
+  },
+  {
+    "sn": 291,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Kamembe",
+    "name": "MUKESHIMANA Immaculee",
+    "phone": "0789635350"
+  },
+  {
+    "sn": 292,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Muganza",
+    "name": "BIMENYIMANA Felicule",
+    "phone": "0788727089"
+  },
+  {
+    "sn": 293,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Mururu",
+    "name": "UWAMAHORO Theophile",
+    "phone": "0722255662"
+  },
+  {
+    "sn": 294,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nkana",
+    "name": "NYIRANEZA Francine",
+    "phone": "0788614004"
+  },
+  {
+    "sn": 295,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nkombo",
+    "name": "NIYITEGEKA Charles",
+    "phone": "0783011089"
+  },
+  {
+    "sn": 296,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nkungu",
+    "name": "MASUDI Jacques",
+    "phone": "0781931200"
+  },
+  {
+    "sn": 297,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nyakabuye",
+    "name": "MURINDWA Jary Jonas",
+    "phone": "0788756252"
+  },
+  {
+    "sn": 298,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nyakarenzo",
+    "name": "NIYITEGEKA Jean Nepomuscene",
+    "phone": "0788737881"
+  },
+  {
+    "sn": 299,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Nzahaha",
+    "name": "NSHIMYUMUREMYI Jean de Dieu",
+    "phone": "0788478250"
+  },
+  {
+    "sn": 300,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Rwimbogo",
+    "name": "BIZIMANA Dieudonne",
+    "phone": "0788822011"
+  },
+  {
+    "sn": 301,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Gashonga",
+    "name": "Ntawuhari",
+    "phone": "0782464210"
+  },
+  {
+    "sn": 302,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Gihundwe",
+    "name": "Ntawuhari",
+    "phone": "0783941278"
+  },
+  {
+    "sn": 303,
+    "province": "West",
+    "district": "Rusizi",
+    "sector": "Gikundamvura",
+    "name": "Ntawuhari",
+    "phone": "0788558847"
+  },
+  {
+    "sn": 304,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Kagano",
+    "name": "NKILIYE UWABERA Virginie",
+    "phone": "0784517167"
+  },
+  {
+    "sn": 305,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Bushekeri",
+    "name": "MUKANDAMAGE Drocelle",
+    "phone": "0788488379"
+  },
+  {
+    "sn": 306,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Bushenge",
+    "name": "HARERIMANA Samuel",
+    "phone": "0785632555"
+  },
+  {
+    "sn": 307,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Cyato",
+    "name": "ZIRAGWIRA Jean Claude",
+    "phone": "0788320783"
+  },
+  {
+    "sn": 308,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Gihombo",
+    "name": "MANIRAFASHA Gerard",
+    "phone": "0785605570"
+  },
+  {
+    "sn": 309,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Kanjongo",
+    "name": "NIZEYIMANA Theogene",
+    "phone": "0781785677"
+  },
+  {
+    "sn": 310,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Karambi",
+    "name": "TWUMVIRIMANA Anastase",
+    "phone": "0788471459"
+  },
+  {
+    "sn": 311,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Karengera",
+    "name": "SEBAHAYA Felix",
+    "phone": "0788856968"
+  },
+  {
+    "sn": 312,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Kirimbi",
+    "name": "HABINEZA Odette",
+    "phone": "0788688647"
+  },
+  {
+    "sn": 313,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Macuba",
+    "name": "KAYITERA Arthemon",
+    "phone": "0788803160"
+  },
+  {
+    "sn": 314,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Mahembe",
+    "name": "BAYISENGE Epiphanie",
+    "phone": "0783142969"
+  },
+  {
+    "sn": 315,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Nyabitekeri",
+    "name": "Ntawuhari",
+    "phone": "0785794339"
+  },
+  {
+    "sn": 316,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Rangiro",
+    "name": "DUSENGIMANA Protais",
+    "phone": "0784957977"
+  },
+  {
+    "sn": 317,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Ruharambuga",
+    "name": "TWIZEYIMANA Jean Claude",
+    "phone": "0785539758"
+  },
+  {
+    "sn": 318,
+    "province": "West",
+    "district": "Nyamasheke",
+    "sector": "Shangi",
+    "name": "UBARIJORO Erneste",
+    "phone": "0788471538"
+  },
+  {
+    "sn": 319,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Gishyita",
+    "name": "MUSHIMIYIMANA Jean Fran\u00e7ois",
+    "phone": "0785821288"
+  },
+  {
+    "sn": 320,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Gitesi",
+    "name": "AHIGEREJE Telesphore",
+    "phone": "0788650266"
+  },
+  {
+    "sn": 321,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Rwankuba",
+    "name": "AKIMANA Jean d'Amour",
+    "phone": "0788364335"
+  },
+  {
+    "sn": 322,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Rugabano",
+    "name": "BIZIMANA Emmanuel",
+    "phone": "0788474791"
+  },
+  {
+    "sn": 323,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Mutuntu",
+    "name": "HABIMANA Valens",
+    "phone": "0788769631"
+  },
+  {
+    "sn": 324,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Ruganda",
+    "name": "HAGENIMANA Thomas",
+    "phone": "0788762678"
+  },
+  {
+    "sn": 325,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Twumba",
+    "name": "MUGABO Materne",
+    "phone": "0788665652"
+  },
+  {
+    "sn": 326,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Murundi",
+    "name": "NDAYISHIMIYE Elisee",
+    "phone": "0788513172"
+  },
+  {
+    "sn": 327,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Bwishyura",
+    "name": "NDINDA Pascal",
+    "phone": "0788476067"
+  },
+  {
+    "sn": 328,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Gishari",
+    "name": "NGIRICYIZERE Christian",
+    "phone": "0788820423"
+  },
+  {
+    "sn": 329,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Mubuga",
+    "name": "NIYONIZEYE Marie Therese",
+    "phone": "0788253467"
+  },
+  {
+    "sn": 330,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Rubengera",
+    "name": "NIYONSABA Emmanuel",
+    "phone": "0724497512"
+  },
+  {
+    "sn": 331,
+    "province": "West",
+    "district": "Karongi",
+    "sector": "Murambi",
+    "name": "RUGWIRO Etienne",
+    "phone": "0784972831"
+  },
+  {
+    "sn": 332,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Kivumu",
+    "name": "UFITINGABIRE VAINQUEUR Maurice`",
+    "phone": "0788835495"
+  },
+  {
+    "sn": 333,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Nyabirasi",
+    "name": "NDAYAMBAJE Peter",
+    "phone": "0788488248"
+  },
+  {
+    "sn": 334,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Kigeyo",
+    "name": "NIKUZE Aimee",
+    "phone": "0788528861"
+  },
+  {
+    "sn": 335,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Ruhango",
+    "name": "UMUTONI Olive",
+    "phone": "0783610149"
+  },
+  {
+    "sn": 336,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Musasa",
+    "name": "NGEZAHAYO Innocent",
+    "phone": "0788873207"
+  },
+  {
+    "sn": 337,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Gihango",
+    "name": "MUKAMUSANA Constance",
+    "phone": "0782598884"
+  },
+  {
+    "sn": 338,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Mushubati",
+    "name": "HITIMANA Jean Pierre",
+    "phone": "0786710384"
+  },
+  {
+    "sn": 339,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Mukura",
+    "name": "CYUSA NYITURIKI Thacienne",
+    "phone": "0788631537"
+  },
+  {
+    "sn": 340,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Rusebeya",
+    "name": "BYIRINGIRO Aimable",
+    "phone": "0783776787"
+  },
+  {
+    "sn": 341,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Manihira",
+    "name": "HAVUGINEZA Fabien",
+    "phone": "0783309440"
+  },
+  {
+    "sn": 342,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Boneza",
+    "name": "Ntawuhari",
+    "phone": "0788870462"
+  },
+  {
+    "sn": 343,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Murunda",
+    "name": "Ntawuhari",
+    "phone": "0722738154"
+  },
+  {
+    "sn": 344,
+    "province": "West",
+    "district": "Rutsiro",
+    "sector": "Mushonyi",
+    "name": "Ntawuhari",
+    "phone": "0788761247"
+  },
+  {
+    "sn": 345,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Kanama",
+    "name": "HABIYAMBERE Elie",
+    "phone": "0783664459"
+  },
+  {
+    "sn": 346,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Mudende",
+    "name": "SEPTIPLE Jeanne d'Arc",
+    "phone": "0788814803"
+  },
+  {
+    "sn": 347,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Rubavu",
+    "name": "NSHIMIYIMANA Alexis",
+    "phone": "0782579097"
+  },
+  {
+    "sn": 348,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Gisenyi",
+    "name": "ZANINKA Acinatha",
+    "phone": "0783309518"
+  },
+  {
+    "sn": 349,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Nyamyumba",
+    "name": "HABIMANA Javan Hussein",
+    "phone": "0783306053"
+  },
+  {
+    "sn": 350,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Rugerero",
+    "name": "NKURAYIJA Justin",
+    "phone": "0783261794"
+  },
+  {
+    "sn": 351,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Nyakiriba",
+    "name": "SINABAKEKA Jean de Dieu",
+    "phone": "0788833363"
+  },
+  {
+    "sn": 352,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Kanzenze",
+    "name": "BIZIMANA Innocent",
+    "phone": "0783505041"
+  },
+  {
+    "sn": 353,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Cyanzarwe",
+    "name": "RUDASINGWA Adolphe",
+    "phone": "0784486160"
+  },
+  {
+    "sn": 354,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Bugeshi",
+    "name": "IBYIMANA Oligene",
+    "phone": "0788402389"
+  },
+  {
+    "sn": 355,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Busasamana",
+    "name": "SIBOMANA Pascal",
+    "phone": "0788805491"
+  },
+  {
+    "sn": 356,
+    "province": "West",
+    "district": "Rubavu",
+    "sector": "Nyundo",
+    "name": "MUSABIREMA Joseph",
+    "phone": "0788822464"
+  },
+  {
+    "sn": 357,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Bigogwe",
+    "name": "ABURUKUNDO Fulgence",
+    "phone": "0786352222"
+  },
+  {
+    "sn": 358,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Rugera",
+    "name": "MUKESHIMANA Alexis",
+    "phone": "0788580400"
+  },
+  {
+    "sn": 359,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Mukamira",
+    "name": "HAKIZIMANA J.MV",
+    "phone": "0788751727"
+  },
+  {
+    "sn": 360,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Rambura",
+    "name": "MUNGARURIRE Hakim Gilbert",
+    "phone": "0783358001"
+  },
+  {
+    "sn": 361,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Jomba",
+    "name": "UWITONZE Louise",
+    "phone": "0788671306"
+  },
+  {
+    "sn": 362,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Jenda",
+    "name": "BAYAVUGE Joel",
+    "phone": "0783498093"
+  },
+  {
+    "sn": 363,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Shyira",
+    "name": "BIZIYAREMYE Jean Paul",
+    "phone": "0788357592"
+  },
+  {
+    "sn": 364,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Kintobo",
+    "name": "UKWISHATSE Ildephonse",
+    "phone": "0783687704"
+  },
+  {
+    "sn": 365,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Karago",
+    "name": "MPAZAYABO Jean Baptiste",
+    "phone": "0788513767"
+  },
+  {
+    "sn": 366,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Kabatwa",
+    "name": "MANIRAKIZA Thaddee",
+    "phone": "0783442462"
+  },
+  {
+    "sn": 367,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Mulinga",
+    "name": "HABIMANA Innocent",
+    "phone": "0787938111"
+  },
+  {
+    "sn": 368,
+    "province": "West",
+    "district": "Nyabihu",
+    "sector": "Rulembo",
+    "name": "NIYIBIZI Jean Baptiste",
+    "phone": "0784111084"
+  },
+  {
+    "sn": 369,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Muhororo",
+    "name": "NYIRANKUNZIMANA Leoncie",
+    "phone": "0788801668"
+  },
+  {
+    "sn": 370,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Gatumba",
+    "name": "NDAGIJIMANA Emmanuel",
+    "phone": "0789195589"
+  },
+  {
+    "sn": 371,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Ndaro",
+    "name": "MURWANASHYAKA JMV",
+    "phone": "0788420792"
+  },
+  {
+    "sn": 372,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Nyange",
+    "name": "UMUHIRE Fulgence",
+    "phone": "0788632760"
+  },
+  {
+    "sn": 373,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Ngororero",
+    "name": "GASANA Evaliste",
+    "phone": "0788464031"
+  },
+  {
+    "sn": 374,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Hindiro",
+    "name": "MUHINEZA Emile",
+    "phone": "0787211524"
+  },
+  {
+    "sn": 375,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Matyazo",
+    "name": "TWAGIRAYEZU Paulin",
+    "phone": "0788534562"
+  },
+  {
+    "sn": 376,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Kabaya",
+    "name": "MUSABYIMANA Erneste",
+    "phone": "0788879978"
+  },
+  {
+    "sn": 377,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Muhanda",
+    "name": "MUHAYIMANA Job",
+    "phone": "0788758916"
+  },
+  {
+    "sn": 378,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Kageyo",
+    "name": "ABISHUKA J.Damascene",
+    "phone": "0782532143"
+  },
+  {
+    "sn": 379,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Bwira",
+    "name": "AYIRWANDA Theogene",
+    "phone": "0788318125"
+  },
+  {
+    "sn": 380,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Kavumu",
+    "name": "KWIZERIYERA Elie",
+    "phone": "0788230046"
+  },
+  {
+    "sn": 381,
+    "province": "West",
+    "district": "Ngororero",
+    "sector": "Sovu",
+    "name": "MBITUYIMANA Richard",
+    "phone": "0788847377"
+  },
+  {
+    "sn": 382,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Kigali",
+    "name": "TUYISENGE Pierre",
+    "phone": "0788516411"
+  },
+  {
+    "sn": 383,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Kanyinya",
+    "name": "NZAYISENGA Camille",
+    "phone": "0788403697"
+  },
+  {
+    "sn": 384,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Kimisagara",
+    "name": "DUSHYIKUMUGABO Venuste",
+    "phone": "0733974159"
+  },
+  {
+    "sn": 385,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Nyakabanda",
+    "name": "NDEKEZI Jean de Dieu",
+    "phone": "0788674549"
+  },
+  {
+    "sn": 386,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Muhima",
+    "name": "NTEZIRYIMANA Abdon",
+    "phone": "0788844578"
+  },
+  {
+    "sn": 387,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Gitega",
+    "name": "DUSHIMIYIMANA Silas",
+    "phone": "0788833437"
+  },
+  {
+    "sn": 388,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Nyarugenge",
+    "name": "No SARO appointed",
+    "phone": "0788632199"
+  },
+  {
+    "sn": 389,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Rwezamenyo",
+    "name": "No SARO appointed",
+    "phone": "0788550360"
+  },
+  {
+    "sn": 390,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Mageragere",
+    "name": "DUSHIMIYIMANA Silas",
+    "phone": "0788988660"
+  },
+  {
+    "sn": 391,
+    "province": "Kgl City",
+    "district": "Nyarugenge",
+    "sector": "Nyamirambo",
+    "name": "No SARO appointed",
+    "phone": "0781215428"
+  },
+  {
+    "sn": 392,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Kanombe",
+    "name": "DUSENGIMANA Felicien",
+    "phone": "0785995286"
+  },
+  {
+    "sn": 393,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Kagarama",
+    "name": "GASENGAYIRE Francine",
+    "phone": "0788836889"
+  },
+  {
+    "sn": 394,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Nyarugunga",
+    "name": "KAMUGUNDU Samuel",
+    "phone": "0732842632"
+  },
+  {
+    "sn": 395,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Gatenga",
+    "name": "SEBUSHISHI Philbert",
+    "phone": "0788473911"
+  },
+  {
+    "sn": 396,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Kicukiro",
+    "name": "MISAGARO BUHIRE Martin",
+    "phone": "0788000396"
+  },
+  {
+    "sn": 397,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Kigarama",
+    "name": "MISAGARO BUHIRE Martin",
+    "phone": "0788000397"
+  },
+  {
+    "sn": 398,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Masaka",
+    "name": "MISAGO Gracien",
+    "phone": "0788000398"
+  },
+  {
+    "sn": 399,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Gahanga",
+    "name": "MUSHIMIYIMANA Jean Bienvenu",
+    "phone": "0788000399"
+  },
+  {
+    "sn": 400,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Niboye",
+    "name": "UWIRINGIYIMANA Odette",
+    "phone": "0788000400"
+  },
+  {
+    "sn": 401,
+    "province": "Kgl City",
+    "district": "Kicukiro",
+    "sector": "Gikondo",
+    "name": "No SARO appointed",
+    "phone": "0788000401"
+  },
+  {
+    "sn": 402,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Remera",
+    "name": "TWIZEYIMANA Sylvine",
+    "phone": "0788000402"
+  },
+  {
+    "sn": 403,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Jali",
+    "name": "BIKORIMANA Adeodatus",
+    "phone": "0788000403"
+  },
+  {
+    "sn": 404,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Jabana",
+    "name": "NIYOMUGABO Gregoire",
+    "phone": "0788000404"
+  },
+  {
+    "sn": 405,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Gatsata",
+    "name": "MURENZI J.Chrysostome",
+    "phone": "0788000405"
+  },
+  {
+    "sn": 406,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Bumbogo",
+    "name": "NDIZIHIWE Emmanuel",
+    "phone": "0788000406"
+  },
+  {
+    "sn": 407,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Nduba",
+    "name": "MUGANINEZA Jimmy Frank",
+    "phone": "0788000407"
+  },
+  {
+    "sn": 408,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Kinyinya",
+    "name": "MUKAMURENZI Clotilde",
+    "phone": "0788000408"
+  },
+  {
+    "sn": 409,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Ndera",
+    "name": "KAREGEYA Moses",
+    "phone": "0788000409"
+  },
+  {
+    "sn": 410,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Gikomero",
+    "name": "TURANEZEREWE Usia",
+    "phone": "0788000410"
+  },
+  {
+    "sn": 411,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Rusororo",
+    "name": "Byukusenge Claudine",
+    "phone": "0788000411"
+  },
+  {
+    "sn": 412,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Gisozi",
+    "name": "UWINGELI Valens",
+    "phone": "0788000412"
+  },
+  {
+    "sn": 413,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Rutunga",
+    "name": "UWIHOREYE JMV",
+    "phone": "0788000413"
+  },
+  {
+    "sn": 414,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Kimironko",
+    "name": "UWABAGESERA Marie Therese",
+    "phone": "0788000414"
+  },
+  {
+    "sn": 415,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Kacyiru",
+    "name": "No SARO appointed",
+    "phone": "0788000415"
+  },
+  {
+    "sn": 416,
+    "province": "Kgl City",
+    "district": "Gasabo",
+    "sector": "Kimihurura",
+    "name": "No SARO appointed",
+    "phone": "0788000416"
+  }
+]
