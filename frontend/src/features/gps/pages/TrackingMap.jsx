@@ -1580,7 +1580,7 @@ const TrackingMap = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingClaim}
-                  className="bg-[#0052cc] hover:bg-[#0040a8] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
+                  className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-md transition disabled:opacity-50"
                 >
                   {isSubmittingClaim ? 'Submitting Claim...' : 'Claim Vehicle'}
                 </button>

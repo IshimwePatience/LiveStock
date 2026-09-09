@@ -502,7 +502,7 @@ const UserManagement = () => {
               setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
               setIsModalOpen(true);
             }}
-            className="bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded-md font-medium text-sm transition shadow-sm"
           >
             Create User
           </button>
@@ -928,7 +928,7 @@ const UserManagement = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full transition disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#2187e0] hover:bg-[#1b72be] rounded-full transition disabled:opacity-50 shadow-sm"
                 >
                   {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Create')}
                 </button>

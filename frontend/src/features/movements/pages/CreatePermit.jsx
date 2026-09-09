@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from 'rwanda-locations';
 import { useNavigate, Link, useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye, UploadCloud, CheckCircle2, Check } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Menu, Share, UserCircle, MoreVertical, FileText, Download, Printer, Search, Eye, UploadCloud, CheckCircle2, Check, Maximize2, X } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -56,6 +56,7 @@ const CreatePermit = () => {
 
   const [loading, setLoading] = useState(false);
   const [officialPermitModal, setOfficialPermitModal] = useState({ isOpen: false, permit: null });
+  const [isPhotoLightboxOpen, setIsPhotoLightboxOpen] = useState(false);
   // tag -> { vaccinated, antibioticActive, daysRemaining, antibiotic, withdrawalEnd }
   const [tagStatuses, setTagStatuses] = useState({});
 
@@ -1087,22 +1088,42 @@ const CreatePermit = () => {
 
             <div className="flex items-center gap-3">
               {headerForm.cargo_photo && (
-                <div className="relative group">
-                  <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover border border-gray-300" />
-                  {!isViewMode && (
-                    <button
-                      type="button"
-                      onClick={() => setHeaderForm(prev => ({ ...prev, cargo_photo: '' }))}
-                      className="absolute -top-1.5 -right-1.5 bg-red-600 text-white p-0.5 text-[10px] hover:bg-red-700"
-                    >
-                      ✕
-                    </button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={() => setIsPhotoLightboxOpen(true)}
+                    title="Click to view full screen"
+                  >
+                    <img src={headerForm.cargo_photo} alt="Preview" className="w-16 h-12 object-cover border border-gray-300 rounded shadow-sm hover:opacity-90 transition" />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded">
+                      <Maximize2 className="w-4 h-4" />
+                    </div>
+                    {!isViewMode && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHeaderForm(prev => ({ ...prev, cargo_photo: '' }));
+                        }}
+                        className="absolute -top-1.5 -right-1.5 bg-red-600 text-white p-0.5 text-[10px] hover:bg-red-700 rounded-full"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPhotoLightboxOpen(true)}
+                    className="flex items-center gap-1.5 text-xs text-[#0052cc] hover:text-[#003b99] font-medium hover:underline bg-blue-50 px-2.5 py-1.5 rounded border border-blue-200 transition"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>See full screen</span>
+                  </button>
                 </div>
               )}
 
               {!isViewMode && (
-                <label className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 transition">
+                <label className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 transition rounded">
                   <UploadCloud className="w-4 h-4 text-gray-600" />
                   <span>Upload Photo</span>
                   <input
@@ -1807,12 +1828,12 @@ const CreatePermit = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
+                    className="bg-[#2187e0] hover:bg-[#1b72be] text-white px-6 py-2 rounded font-medium shadow-sm transition disabled:opacity-70"
                   >
                     {loading ? 'Submitting...' : (editId ? 'Update' : 'Submit')}
                   </button>
                   <div className="flex items-center gap-4">
-                    <span onClick={handleClearForm} className="text-sm text-[#673AB7] font-medium cursor-pointer">Clear form</span>
+                    <span onClick={handleClearForm} className="text-sm text-[#2187e0] font-medium cursor-pointer hover:underline">Clear form</span>
                   </div>
                 </>
               )}
@@ -1820,6 +1841,47 @@ const CreatePermit = () => {
           </fieldset>
         </form>
       </div>
+
+      {/* Full Screen Lightbox Modal */}
+      {isPhotoLightboxOpen && headerForm.cargo_photo && (
+        <div
+          className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 select-none animate-fadeIn"
+          onClick={() => setIsPhotoLightboxOpen(false)}
+        >
+          <div className="absolute top-4 right-4 flex items-center gap-3 z-10" onClick={e => e.stopPropagation()}>
+            <a
+              href={headerForm.cargo_photo}
+              download="cargo_photo.jpg"
+              className="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full transition-colors flex items-center justify-center backdrop-blur-md"
+              title="Download Photo"
+            >
+              <Download className="w-5 h-5 text-white" />
+            </a>
+            <button
+              onClick={() => setIsPhotoLightboxOpen(false)}
+              className="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full transition-colors flex items-center justify-center backdrop-blur-md"
+              title="Close Preview"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          <div
+            className="relative max-w-5xl max-h-[88vh] flex items-center justify-center overflow-hidden rounded-lg shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={headerForm.cargo_photo}
+              alt="Loaded Cargo Full Preview"
+              className="max-w-full max-h-[85vh] object-contain rounded"
+            />
+          </div>
+
+          <p className="text-white/80 text-xs mt-3 font-medium bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+            Ifoto y'amatungo yapakijwe / arimo kwimuka (Loaded Cargo Batch Photo) — Click anywhere outside or ✕ to close
+          </p>
+        </div>
+      )}
     </>
   );
 };

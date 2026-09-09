@@ -501,7 +501,7 @@ const Movements = () => {
         {canCreateRequest && (
           <button
             onClick={() => navigate('/dashboard/movements/new')}
-            className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            className="flex items-center gap-2 bg-[#2187e0] hover:bg-[#1b72be] text-white px-4 py-2 rounded-md font-medium text-sm transition shadow-sm"
           >
             New permission
           </button>

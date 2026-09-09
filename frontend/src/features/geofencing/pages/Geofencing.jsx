@@ -308,7 +308,7 @@ const Geofencing = () => {
           {isRABUser && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0052cc] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-white hover:bg-[#0047b3] whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2187e0] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] text-[13px] font-medium text-white hover:bg-[#1b72be] whitespace-nowrap transition-colors"
             >
               <Plus className="w-4 h-4" /> Add Zone
             </button>
@@ -607,7 +607,7 @@ const Geofencing = () => {
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-[#0052cc] hover:bg-[#0047b3] rounded-full transition disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#2187e0] hover:bg-[#1b72be] rounded-full transition disabled:opacity-50 shadow-sm"
                 >
                   {createMutation.isPending ? 'Activating...' : 'Activate Geofence'}
                 </button>
