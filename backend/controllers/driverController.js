@@ -4,6 +4,7 @@ const getTripByToken = async (req, res) => {
   try {
     const trip = await Trip.findOne({ 
       where: { driver_token: req.params.token },
+      include: [{ model: MovementRequest }]
     });
     
     if (!trip) {

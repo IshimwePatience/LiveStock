@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { MapPin, Navigation, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -84,6 +84,16 @@ const DriverTripPage = () => {
             <div className="flex justify-between items-center pb-3 border-b border-gray-50">
               <span className="text-sm font-medium text-gray-500">Plate Number</span>
               <span className="text-[15px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">{trip.plate_number || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+              <span className="text-sm font-medium text-gray-500">Route (Origin → Destination)</span>
+              <span className="text-[14px] font-semibold text-[#0052cc]">
+                {trip.MovementRequest
+                  ? (trip.MovementRequest.type === 'SECTOR_TO_SECTOR'
+                      ? `${trip.MovementRequest.origin_sector || trip.MovementRequest.origin_district || 'Origin'} → ${trip.MovementRequest.dest_sector || trip.MovementRequest.dest_district || 'Destination'}`
+                      : `${trip.MovementRequest.origin_district || trip.MovementRequest.origin_sector || 'Origin'} → ${trip.MovementRequest.dest_district || trip.MovementRequest.dest_sector || 'Destination'}`)
+                  : (trip.route || 'N/A')}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">Status</span>
