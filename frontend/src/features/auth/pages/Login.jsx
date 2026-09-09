@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import { Globe } from 'lucide-react';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
-import loginImage from '../../../assets/images/login_illustration.jpg';
 
 const Login = () => {
   const location = useLocation();
@@ -78,12 +77,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen font-sans flex flex-col relative overflow-hidden bg-white">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{ backgroundImage: `url(${loginImage})`, backgroundPosition: 'center bottom', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}
-      ></div>
+    <div className="min-h-screen font-sans flex flex-col relative overflow-hidden bg-gray-50/50">
 
       {/* Top Thin Navbar */}
       <div className="w-full bg-white py-3 px-8 flex justify-between items-center text-sm text-gray-700 relative z-10">
