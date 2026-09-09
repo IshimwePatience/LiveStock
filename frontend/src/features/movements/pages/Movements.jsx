@@ -484,6 +484,18 @@ const Movements = () => {
     return ['Requests', 'Incoming (Destination)', 'History'];
   }, [user?.role]);
 
+  const requestsCount = useMemo(() => {
+    return filteredMovements.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING').length;
+  }, [filteredMovements]);
+
+  const incomingCount = useMemo(() => {
+    return filteredMovements.filter(m => isIncoming(m)).length;
+  }, [filteredMovements]);
+
+  const historyCount = useMemo(() => {
+    return filteredMovements.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus)).length;
+  }, [filteredMovements]);
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Top Breadcrumb/Title Area */}
@@ -494,8 +506,8 @@ const Movements = () => {
           </div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             Movement Requests
-            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-normal border border-gray-200">
-              {filteredMovements.length}
+            <span className="bg-blue-50 text-[#0052cc] px-2 py-0.5 rounded text-xs font-semibold border border-blue-100">
+              {filteredMovements.length} Movements
             </span>
           </h1>
         </div>
@@ -510,19 +522,32 @@ const Movements = () => {
       </div>
 
       {/* Tabs / Toolbar */}
-      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap pb-2 -mb-2 ${activeTab === tab
-                ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
-                : 'hover:text-gray-900'
+      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto bg-white">
+        {tabs.map(tab => {
+          let count = 0;
+          if (tab === 'Requests') count = requestsCount;
+          else if (tab === 'Incoming (Destination)') count = incomingCount;
+          else if (tab === 'History') count = historyCount;
+
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+                activeTab === tab
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
-          >
-            {tab}
-          </button>
-        ))}
+            >
+              {tab}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                activeTab === tab ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters Toolbar */}
