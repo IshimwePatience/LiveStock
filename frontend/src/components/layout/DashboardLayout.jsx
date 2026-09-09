@@ -292,10 +292,10 @@ const DashboardLayout = () => {
 
         {/* Sidebar (Responsive Desktop & Mobile Drawer) */}
         <aside className={`
-          fixed md:static top-16 bottom-0 left-0 z-40 bg-white flex flex-col overflow-y-auto py-4 transition-all duration-300 shrink-0 border-r border-gray-200/80 shadow-xl md:shadow-none
+          fixed md:static top-16 bottom-0 left-0 z-40 bg-white flex flex-col overflow-y-auto py-4 transition-all duration-300 shrink-0 shadow-xl md:shadow-none
           ${isSidebarOpen 
             ? 'w-64 translate-x-0' 
-            : '-translate-x-full md:translate-x-0 md:w-0 md:border-none'
+            : '-translate-x-full md:translate-x-0 md:w-0'
           }
         `}>
 
