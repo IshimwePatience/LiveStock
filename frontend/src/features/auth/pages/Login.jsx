@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Globe, Lock, Phone, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
 import DashboardSkeletonBackground from '../../../components/layout/DashboardSkeletonBackground';
@@ -70,41 +70,51 @@ const Login = () => {
 
   return (
     <DashboardSkeletonBackground>
-      {/* Centered Overlay Modal (Matching Coursera-style Modal Dialog in Image 2) */}
-      <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 p-8 font-sans transition-all animate-in fade-in zoom-in-95 duration-200">
+      {/* Exact Coursera Cloned Modal Card (Image 1) */}
+      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-gray-200 shadow-[0_16px_32px_rgba(0,0,0,0.12)] p-8 font-sans relative">
         
-        {/* Header Logo & Title */}
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <img src={logo} alt="RAB Logo" className="h-12 object-contain" />
+        {/* Top Close (X) Icon */}
+        <button
+          onClick={() => navigate('/')}
+          className="absolute right-6 top-6 text-gray-700 hover:bg-gray-100 p-1.5 rounded-full transition-colors cursor-pointer"
+          title="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Logo & Heading */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
+            <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">RAB System</span>
           </div>
-          <h1 className="text-[20px] font-bold text-[#172b4d] leading-snug">
+          <h1 className="text-[24px] font-bold text-[#1f1f1f] leading-tight mb-1 font-sans">
             {isDaroSaroLogin ? 'DARO / SARO Officer Login' : 'Sign in to Livestock App'}
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            {isDaroSaroLogin ? 'Enter your 10-digit phone number and password' : 'Enter your email address and password to continue'}
+          <p className="text-[14px] text-[#5c6170]">
+            {isDaroSaroLogin ? 'Enter your 10-digit phone number and password' : 'Enter your email address and password to continue.'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Identifier Input (Email or 10-Digit Phone) */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-700">
-              {isDaroSaroLogin ? 'Phone Number (10 Digits)' : 'Email Address'}
+          <div>
+            <label className="block text-[14px] font-bold text-[#1f1f1f] mb-1.5">
+              {isDaroSaroLogin ? 'Phone Number *' : 'Email *'}
             </label>
             <div className="relative">
               <input
                 type={isDaroSaroLogin ? 'tel' : 'email'}
                 value={identifier}
-                placeholder={isDaroSaroLogin ? '0788749889' : 'Enter email address'}
+                placeholder={isDaroSaroLogin ? '0788749889' : 'name@email.com'}
                 onChange={handleIdentifierChange}
                 maxLength={isDaroSaroLogin ? 10 : undefined}
-                className="w-full bg-white border border-[#dfe1e6] rounded-lg px-3.5 py-2.5 text-sm text-[#172b4d] font-semibold placeholder-gray-400 focus:outline-none focus:border-[#0052cc] focus:ring-2 focus:ring-[#0052cc]/20 transition-all"
+                className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
                 required
               />
               {isDaroSaroLogin && (
-                <span className="absolute right-3 top-3 text-[11px] font-mono font-bold text-gray-400">
+                <span className="absolute right-3 top-3.5 text-[12px] font-mono font-bold text-gray-400">
                   {identifier.length}/10
                 </span>
               )}
@@ -112,10 +122,10 @@ const Login = () => {
           </div>
 
           {/* Password Input */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label className="block text-xs font-semibold text-gray-700">Password</label>
-              <Link to="/forgot-password" className="text-[12px] font-medium text-[#0052cc] hover:underline">
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-[14px] font-bold text-[#1f1f1f]">Password *</label>
+              <Link to="/forgot-password" className="text-[13px] font-medium text-[#0056d2] hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -124,47 +134,38 @@ const Login = () => {
               value={password}
               placeholder="Enter password"
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border border-[#dfe1e6] rounded-lg px-3.5 py-2.5 text-sm text-[#172b4d] font-medium placeholder-gray-400 focus:outline-none focus:border-[#0052cc] focus:ring-2 focus:ring-[#0052cc]/20 transition-all"
+              className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
               required
             />
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-2">
+          {/* Primary Submit Button (Exact Coursera Solid Blue #0056d2) */}
+          <div className="pt-1">
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-3 rounded-lg transition-all shadow-md shadow-blue-500/20 disabled:opacity-70 text-[14px] cursor-pointer flex items-center justify-center gap-2"
+              className="w-full bg-[#0056d2] hover:bg-[#00419e] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
             >
-              {loginMutation.isPending ? 'Signing in...' : (isDaroSaroLogin ? 'Sign in as Officer' : 'Sign in')}
-              <ArrowRight className="w-4 h-4" />
+              {loginMutation.isPending ? 'Signing in...' : 'Continue'}
             </button>
           </div>
 
-          {/* Mode Switch Link */}
-          <div className="text-center mt-5 pt-3 border-t border-gray-100">
+          {/* Mode Switch Link (Coursera Style Blue Underline) */}
+          <div className="pt-2">
             {isDaroSaroLogin ? (
-              <Link to="/login" className="text-[#0052cc] hover:underline text-[13px] font-semibold inline-flex items-center gap-1">
+              <Link to="/login" className="text-[#0056d2] hover:text-[#00419e] hover:underline text-[14px] font-semibold">
                 ← Standard Email Login
               </Link>
             ) : (
-              <Link to="/daro/saro-login" className="text-[#0052cc] hover:underline text-[13px] font-semibold inline-flex items-center gap-1">
+              <Link to="/daro/saro-login" className="text-[#0056d2] hover:text-[#00419e] hover:underline text-[14px] font-semibold">
                 DARO / SARO Officer Login (Phone) →
               </Link>
             )}
           </div>
 
-          {/* RAB Footer Branding */}
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-            <div className="flex items-center justify-center gap-1.5 opacity-60">
-              <ShieldCheck className="w-4 h-4 text-gray-500" />
-              <span className="text-[11px] font-bold text-gray-600 tracking-wider uppercase">RAB System Protected</span>
-            </div>
-            <div className="text-[11px] text-gray-400 mt-1">
-              <a href="#" className="hover:underline">Privacy Policy</a>
-              <span className="mx-1.5">•</span>
-              <a href="#" className="hover:underline">User Notice</a>
-            </div>
+          {/* Coursera Style Footer Links & Terms */}
+          <div className="text-[12px] text-[#5c6170] leading-relaxed pt-4 border-t border-gray-100">
+            I accept RAB System's <a href="#" className="text-[#0056d2] hover:underline font-medium">Terms of Use</a> and <a href="#" className="text-[#0056d2] hover:underline font-medium">Privacy Notice</a>.
           </div>
 
         </form>
@@ -174,5 +175,6 @@ const Login = () => {
 };
 
 export default Login;
+
 
 
