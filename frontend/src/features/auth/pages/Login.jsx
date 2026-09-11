@@ -73,22 +73,13 @@ const Login = () => {
       {/* Exact Coursera Cloned Modal Card (Image 1) */}
       <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-gray-200 shadow-[0_16px_32px_rgba(0,0,0,0.12)] p-8 font-sans relative">
         
-        {/* Top Close (X) Icon */}
-        <button
-          onClick={() => navigate('/')}
-          className="absolute right-6 top-6 text-gray-700 hover:bg-gray-100 p-1.5 rounded-full transition-colors cursor-pointer"
-          title="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
         {/* Logo & Heading */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
             <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">RAB System</span>
           </div>
-          <h1 className="text-[24px] font-bold text-[#1f1f1f] leading-tight mb-1 font-sans">
+          <h1 className="text-[22px] font-bold text-[#1f1f1f] leading-tight mb-1 tracking-tight">
             {isDaroSaroLogin ? 'DARO / SARO Officer Login' : 'Sign in to Livestock App'}
           </h1>
           <p className="text-[14px] text-[#5c6170]">
