@@ -63,14 +63,17 @@ const showRightSlideToast = (id, messageText, duration = 6000) => {
 
 const LiveTripToastManager = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  // Poll live GPS positions & trip statuses every 10 seconds (only when logged in)
+  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  const user = userStr ? JSON.parse(userStr) : null;
+
+  // Poll live GPS positions & trip statuses every 10 seconds (only when logged in and inside dashboard)
   const { data: locations } = useQuery({
     queryKey: ['live-trip-reminders'],
     queryFn: async () => {
       const res = await getTraccarLocations();
       return res.data;
     },
-    enabled: !!token,
+    enabled: !!token && !!user,
     refetchInterval: 10000, // 10 seconds polling interval
   });
 
@@ -78,11 +81,35 @@ const LiveTripToastManager = () => {
   const vehicleStateRef = useRef(new Map());
 
   useEffect(() => {
-    if (!locations || !Array.isArray(locations)) return;
+    if (!locations || !Array.isArray(locations) || !user) return;
+
+    const isNationalPolice = user.role === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
+    const isNationalUser = user.role === 'RAB' || user.role === 'ADMIN' || isNationalPolice;
+
+    const scopedLocations = locations.filter(loc => {
+      if (isNationalUser) return true;
+      if (!loc.route) return false;
+
+      const { originDistrict, originSector, destDistrict, destSector } = loc.route;
+
+      if (user.role === 'DARO') {
+        return user.district_id && (originDistrict === user.district_id || destDistrict === user.district_id);
+      }
+      if (user.role === 'SARO') {
+        return user.sector_id && (originSector === user.sector_id || destSector === user.sector_id);
+      }
+      if (user.role === 'POLICE' && user.district_id) {
+        return originDistrict === user.district_id || destDistrict === user.district_id;
+      }
+      if (user.role === 'DRIVER') {
+        return (user.phone && loc.driverPhone === user.phone) || (user.name && loc.driverName?.toLowerCase() === user.name?.toLowerCase());
+      }
+      return true;
+    });
 
     const now = Date.now();
 
-    locations.forEach(async (loc) => {
+    scopedLocations.forEach(async (loc) => {
       if (!loc.route) return;
 
       const deviceId = loc.deviceId || loc.deviceName;
@@ -188,7 +215,7 @@ const LiveTripToastManager = () => {
       prevState.wasMoving = isMoving;
       vehicleStateRef.current.set(deviceId, prevState);
     });
-  }, [locations]);
+  }, [locations, user]);
 
   return null;
 };

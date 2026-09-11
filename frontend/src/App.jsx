@@ -139,7 +139,6 @@ function App() {
 
   return (
     <>
-      <LiveTripToastManager />
       <Toaster
         position="top-right"
         toastOptions={{

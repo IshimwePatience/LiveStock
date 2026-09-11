@@ -156,6 +156,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-800">
+      <LiveTripToastManager />
 
       {/* Top Header — Google Drive style */}
       <header className="h-16 bg-[#2187e0] border-b border-[#1b72be] flex items-center justify-between px-4 sticky top-0 z-50 text-white shadow-sm">

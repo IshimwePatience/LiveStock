@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Globe } from 'lucide-react';
+import { Globe, Lock, Phone, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
+import DashboardSkeletonBackground from '../../../components/layout/DashboardSkeletonBackground';
 
 const Login = () => {
   const location = useLocation();
@@ -12,15 +13,7 @@ const Login = () => {
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [cookiesAccepted, setCookiesAccepted] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const isAccepted = localStorage.getItem('cookiesAccepted');
-    if (!isAccepted) {
-      setCookiesAccepted(false);
-    }
-  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials) => {
@@ -41,7 +34,6 @@ const Login = () => {
   const handleIdentifierChange = (e) => {
     const val = e.target.value;
     if (isDaroSaroLogin) {
-      // Enforce 10 numeric digits only for phone login
       const cleanDigits = val.replace(/[^0-9]/g, '').slice(0, 10);
       setIdentifier(cleanDigits);
     } else {
@@ -77,116 +69,110 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen font-sans flex flex-col relative overflow-hidden bg-gray-50/50">
-
-      {/* Top Thin Navbar */}
-      <div className="w-full bg-white py-3 px-8 flex justify-between items-center text-sm text-gray-700 relative z-10">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="RAB Logo" className="h-10 object-contain" />
-          <span className="text-[17px] font-semibold text-gray-800 tracking-wide">Livestock app</span>
-        </div>
-        <div className="flex items-center gap-1 cursor-pointer hover:text-green-700 text-green-700">
-          <Globe className="w-4 h-4" />
-          <span className="font-medium text-xs">EN ▾</span>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col justify-center items-center p-4 relative z-10 mt-[-5vh]">
-        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 font-sans">
-
-          {/* Title */}
-          <div className="text-center mb-6">
-            <h1 className="text-[20px] font-bold text-[#172b4d] leading-tight">
-              Sign in with Livestock<br />Tracking App
-            </h1>
+    <DashboardSkeletonBackground>
+      {/* Centered Overlay Modal (Matching Coursera-style Modal Dialog in Image 2) */}
+      <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 p-8 font-sans transition-all animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Header Logo & Title */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-3">
+            <img src={logo} alt="RAB Logo" className="h-12 object-contain" />
           </div>
+          <h1 className="text-[20px] font-bold text-[#172b4d] leading-snug">
+            {isDaroSaroLogin ? 'DARO / SARO Officer Login' : 'Sign in to Livestock App'}
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            {isDaroSaroLogin ? 'Enter your 10-digit phone number and password' : 'Enter your email address and password to continue'}
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* Email or 10-Digit Phone Field */}
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-gray-700">
-                {isDaroSaroLogin ? 'Phone Number (10 Digits)' : 'Email Address'}
-              </label>
-              <div className="relative">
-                <input
-                  type={isDaroSaroLogin ? 'tel' : 'email'}
-                  value={identifier}
-                  placeholder={isDaroSaroLogin ? 'e.g. 0788749889' : 'Enter email'}
-                  onChange={handleIdentifierChange}
-                  maxLength={isDaroSaroLogin ? 10 : undefined}
-                  className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-semibold placeholder-gray-400 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
-                  required
-                />
-                {isDaroSaroLogin && (
-                  <span className="absolute right-3 top-2.5 text-[11px] font-bold text-gray-400">
-                    {identifier.length}/10
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-gray-700">Password</label>
+          {/* Identifier Input (Email or 10-Digit Phone) */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-gray-700">
+              {isDaroSaroLogin ? 'Phone Number (10 Digits)' : 'Email Address'}
+            </label>
+            <div className="relative">
               <input
-                type="password"
-                value={password}
-                placeholder="Enter password"
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border border-[#dfe1e6] rounded-sm px-3 py-2 text-sm text-[#172b4d] font-medium placeholder-gray-500 focus:outline-none focus:border-[#4c9aff] focus:ring-1 focus:ring-[#4c9aff] transition-colors"
+                type={isDaroSaroLogin ? 'tel' : 'email'}
+                value={identifier}
+                placeholder={isDaroSaroLogin ? '0788749889' : 'Enter email address'}
+                onChange={handleIdentifierChange}
+                maxLength={isDaroSaroLogin ? 10 : undefined}
+                className="w-full bg-white border border-[#dfe1e6] rounded-lg px-3.5 py-2.5 text-sm text-[#172b4d] font-semibold placeholder-gray-400 focus:outline-none focus:border-[#0052cc] focus:ring-2 focus:ring-[#0052cc]/20 transition-all"
                 required
               />
+              {isDaroSaroLogin && (
+                <span className="absolute right-3 top-3 text-[11px] font-mono font-bold text-gray-400">
+                  {identifier.length}/10
+                </span>
+              )}
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={loginMutation.isPending}
-                className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-2 rounded-sm transition-colors disabled:opacity-70 text-[14px] cursor-pointer"
-              >
-                {loginMutation.isPending ? 'Signing in...' : (isDaroSaroLogin ? 'Sign in as Officer' : 'Sign in')}
-              </button>
+          {/* Password Input */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-semibold text-gray-700">Password</label>
+              <Link to="/forgot-password" className="text-[12px] font-medium text-[#0052cc] hover:underline">
+                Forgot password?
+              </Link>
             </div>
+            <input
+              type="password"
+              value={password}
+              placeholder="Enter password"
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-white border border-[#dfe1e6] rounded-lg px-3.5 py-2.5 text-sm text-[#172b4d] font-medium placeholder-gray-400 focus:outline-none focus:border-[#0052cc] focus:ring-2 focus:ring-[#0052cc]/20 transition-all"
+              required
+            />
+          </div>
 
-            <div className="text-center mt-5 space-y-2">
-              <div>
-                {isDaroSaroLogin ? (
-                  <Link to="/login" className="text-[#0052cc] hover:underline text-[13px] font-semibold">
-                    ← Standard Email Login
-                  </Link>
-                ) : (
-                  <Link to="/daro/saro-login" className="text-[#0052cc] hover:underline text-[13px] font-semibold">
-                    DARO / SARO Officer Login (Phone) →
-                  </Link>
-                )}
-              </div>
-              <div>
-                <a href="#" className="text-[#0052cc] hover:underline text-[13px] font-medium">Can't log in?</a>
-                <span className="mx-2 text-gray-300">•</span>
-                <Link to="/forgot-password" className="text-[#0052cc] hover:underline text-[13px] font-medium">Forgot password?</Link>
-              </div>
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loginMutation.isPending}
+              className="w-full bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold py-3 rounded-lg transition-all shadow-md shadow-blue-500/20 disabled:opacity-70 text-[14px] cursor-pointer flex items-center justify-center gap-2"
+            >
+              {loginMutation.isPending ? 'Signing in...' : (isDaroSaroLogin ? 'Sign in as Officer' : 'Sign in')}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Mode Switch Link */}
+          <div className="text-center mt-5 pt-3 border-t border-gray-100">
+            {isDaroSaroLogin ? (
+              <Link to="/login" className="text-[#0052cc] hover:underline text-[13px] font-semibold inline-flex items-center gap-1">
+                ← Standard Email Login
+              </Link>
+            ) : (
+              <Link to="/daro/saro-login" className="text-[#0052cc] hover:underline text-[13px] font-semibold inline-flex items-center gap-1">
+                DARO / SARO Officer Login (Phone) →
+              </Link>
+            )}
+          </div>
+
+          {/* RAB Footer Branding */}
+          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+            <div className="flex items-center justify-center gap-1.5 opacity-60">
+              <ShieldCheck className="w-4 h-4 text-gray-500" />
+              <span className="text-[11px] font-bold text-gray-600 tracking-wider uppercase">RAB System Protected</span>
             </div>
-
-            <div className="border-t border-gray-200 mt-6 pt-6 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2 opacity-50 grayscale">
-                <img src={logo} alt="RAB Logo" className="h-5 object-contain" />
-                <span className="text-[12px] font-bold text-[#172b4d] tracking-widest uppercase">RAB System</span>
-              </div>
-              <div className="text-[11px] text-[#5e6c84]">
-                <a href="#" className="hover:underline">Privacy Policy</a>
-                <span className="mx-1">•</span>
-                <a href="#" className="hover:underline">User Notice</a>
-              </div>
+            <div className="text-[11px] text-gray-400 mt-1">
+              <a href="#" className="hover:underline">Privacy Policy</a>
+              <span className="mx-1.5">•</span>
+              <a href="#" className="hover:underline">User Notice</a>
             </div>
+          </div>
 
-          </form>
-        </div>
+        </form>
       </div>
-    </div>
+    </DashboardSkeletonBackground>
   );
 };
 
 export default Login;
+
 

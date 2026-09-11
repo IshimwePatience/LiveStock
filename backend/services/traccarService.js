@@ -19,12 +19,12 @@ class TraccarService {
   async getLocations(user) {
     try {
       const isNationalPolice = user.role === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
-      const isNationalUser = user.role === 'RAB' || isNationalPolice;
+      const isNationalUser = user.role === 'RAB' || user.role === 'ADMIN' || isNationalPolice;
 
       // 1. Get all active trips & movement requests
       const [activeTrips, activeRequests] = await Promise.all([
         Trip.findAll({
-          where: { status: 'ACTIVE' },
+          where: { status: ['ACTIVE', 'SCHEDULED', 'ARRIVED'] },
           include: [{
             model: MovementRequest,
             include: [{ model: User, as: 'Initiator' }]
@@ -36,30 +36,48 @@ class TraccarService {
         })
       ]);
 
-      // 2. Filter trips based on RBAC (RAB & National Police sees all, DARO/SARO sees origin/dest, District Police sees district)
+      // 2. Filter trips based on RBAC (RAB, Admin & National Police see all; DARO/SARO see origin/dest; Drivers see assigned car)
       const allowedPlateNumbers = new Set();
-      activeTrips.forEach(trip => {
-        const req = trip.MovementRequest;
-        if (!req) return;
 
-        const isInitiator = req.initiator_id === user.id;
-        const isApprover = req.approver_id === user.id;
+      const addPlateIfAllowed = (plate, req, trip = null) => {
+        if (!plate) return;
+
+        const isInitiator = req && req.initiator_id === user.id;
+        const isApprover = req && req.approver_id === user.id;
+
+        const isDriver = (req?.driver_phone && user.phone && req.driver_phone === user.phone) ||
+          (trip?.driver_phone && user.phone && trip.driver_phone === user.phone) ||
+          (req?.driver_name && user.name && req.driver_name.toLowerCase().trim() === user.name.toLowerCase().trim()) ||
+          (trip?.driver_name && user.name && trip.driver_name.toLowerCase().trim() === user.name.toLowerCase().trim()) ||
+          (user.role === 'DRIVER');
+
+        const isOriginOfficer = (user.role === 'DARO' && user.district_id && req?.origin_district === user.district_id) ||
+          (user.role === 'SARO' && user.sector_id && req?.origin_sector === user.sector_id);
 
         let isReceiver = false;
-        if (req.type === 'DISTRICT_TO_DISTRICT') {
-          isReceiver = user.role === 'DARO' && user.district_id && req.dest_district === user.district_id;
-        } else if (req.type === 'SECTOR_TO_SECTOR') {
-          isReceiver = user.role === 'SARO' && user.sector_id && req.dest_sector === user.sector_id;
+        if (req) {
+          if (req.type === 'DISTRICT_TO_DISTRICT') {
+            isReceiver = user.role === 'DARO' && user.district_id && req.dest_district === user.district_id;
+          } else if (req.type === 'SECTOR_TO_SECTOR') {
+            isReceiver = user.role === 'SARO' && user.sector_id && req.dest_sector === user.sector_id;
+          }
         }
 
         const isDistrictPolice = user.role === 'POLICE' && user.district_id && user.district_id !== 'NATIONAL' &&
-          (req.origin_district === user.district_id || req.dest_district === user.district_id);
+          req && (req.origin_district === user.district_id || req.dest_district === user.district_id);
 
-        if (isNationalUser || isInitiator || isApprover || isReceiver || isDistrictPolice) {
-          if (trip.plate_number) {
-            allowedPlateNumbers.add(trip.plate_number.toUpperCase());
-          }
+        if (isNationalUser || isInitiator || isApprover || isReceiver || isOriginOfficer || isDriver || isDistrictPolice) {
+          allowedPlateNumbers.add(plate.toUpperCase().trim());
         }
+      };
+
+      activeTrips.forEach(trip => {
+        const req = trip.MovementRequest;
+        addPlateIfAllowed(trip.plate_number || req?.plate_number, req, trip);
+      });
+
+      activeRequests.forEach(req => {
+        addPlateIfAllowed(req.plate_number, req, null);
       });
 
       const [devicesRes, positionsRes] = await Promise.all([
