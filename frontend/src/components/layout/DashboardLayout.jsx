@@ -159,7 +159,7 @@ const DashboardLayout = () => {
       <LiveTripToastManager />
 
       {/* Top Header — Google Drive style */}
-      <header className="h-16 bg-[#2187e0] border-b border-[#1b72be] flex items-center justify-between px-4 sticky top-0 z-50 text-white shadow-sm">
+      <header className="h-16 bg-[#0056d2] border-b border-[#00419e] flex items-center justify-between px-4 sticky top-0 z-50 text-white shadow-sm">
 
         {/* Left: Menu & Logo */}
         <div className="flex items-center gap-2 min-w-[220px]">
