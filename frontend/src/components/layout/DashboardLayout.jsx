@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power } from 'lucide-react';
+import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, Hexagon, Power } from 'lucide-react';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import LiveTripToastManager from '../ui/LiveTripToastManager';
@@ -239,10 +239,6 @@ const DashboardLayout = () => {
               </div>
             )}
           </div>
-
-          <button className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white">
-            <MoreVertical className="w-5 h-5" />
-          </button>
 
           {/* Profile Dropdown */}
           <div className="relative">
