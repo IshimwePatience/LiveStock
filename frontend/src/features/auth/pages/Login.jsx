@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { X, ArrowRight } from 'lucide-react';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
-import DashboardSkeletonBackground from '../../../components/layout/DashboardSkeletonBackground';
 
 const Login = () => {
   const location = useLocation();
@@ -69,9 +67,10 @@ const Login = () => {
   };
 
   return (
-    <DashboardSkeletonBackground>
-      {/* Exact Coursera Cloned Modal Card (Image 1) */}
-      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-gray-200 shadow-[0_16px_32px_rgba(0,0,0,0.12)] p-8 font-sans relative">
+    <div className="min-h-screen w-full bg-[#2187e0] font-sans flex flex-col justify-center items-center p-4 relative overflow-hidden">
+      
+      {/* Centered White Modal Card */}
+      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-blue-100 shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-8 font-sans relative z-10 my-auto">
         
         {/* Logo & Heading */}
         <div className="mb-6">
@@ -101,7 +100,7 @@ const Login = () => {
                 placeholder={isDaroSaroLogin ? '0788749889' : 'name@email.com'}
                 onChange={handleIdentifierChange}
                 maxLength={isDaroSaroLogin ? 10 : undefined}
-                className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
+                className="w-full bg-white border border-[#7b8191] focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
                 required
               />
               {isDaroSaroLogin && (
@@ -116,7 +115,7 @@ const Login = () => {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="block text-[14px] font-bold text-[#1f1f1f]">Password *</label>
-              <Link to="/forgot-password" className="text-[13px] font-medium text-[#0056d2] hover:underline">
+              <Link to="/forgot-password" className="text-[13px] font-medium text-[#2187e0] hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -125,43 +124,43 @@ const Login = () => {
               value={password}
               placeholder="Enter password"
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
+              className="w-full bg-white border border-[#7b8191] focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
               required
             />
           </div>
 
-          {/* Primary Submit Button (Exact Coursera Solid Blue #0056d2) */}
+          {/* Primary Submit Button (Exact Navbar Blue #2187e0) */}
           <div className="pt-1">
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full bg-[#0056d2] hover:bg-[#00419e] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
+              className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
             >
               {loginMutation.isPending ? 'Signing in...' : 'Continue'}
             </button>
           </div>
 
-          {/* Mode Switch Link (Coursera Style Blue Underline) */}
+          {/* Mode Switch Link */}
           <div className="pt-2">
             {isDaroSaroLogin ? (
-              <Link to="/login" className="text-[#0056d2] hover:text-[#00419e] hover:underline text-[14px] font-semibold">
+              <Link to="/login" className="text-[#2187e0] hover:text-[#1b72be] hover:underline text-[14px] font-semibold">
                 ← Standard Email Login
               </Link>
             ) : (
-              <Link to="/daro/saro-login" className="text-[#0056d2] hover:text-[#00419e] hover:underline text-[14px] font-semibold">
+              <Link to="/daro/saro-login" className="text-[#2187e0] hover:text-[#1b72be] hover:underline text-[14px] font-semibold">
                 DARO / SARO Officer Login (Phone) →
               </Link>
             )}
           </div>
 
-          {/* Coursera Style Footer Links & Terms */}
+          {/* Footer Links & Terms */}
           <div className="text-[12px] text-[#5c6170] leading-relaxed pt-4 border-t border-gray-100">
-            I accept RAB System's <a href="#" className="text-[#0056d2] hover:underline font-medium">Terms of Use</a> and <a href="#" className="text-[#0056d2] hover:underline font-medium">Privacy Notice</a>.
+            I accept RAB System's <a href="#" className="text-[#2187e0] hover:underline font-medium">Terms of Use</a> and <a href="#" className="text-[#2187e0] hover:underline font-medium">Privacy Notice</a>.
           </div>
 
         </form>
       </div>
-    </DashboardSkeletonBackground>
+    </div>
   );
 };
 

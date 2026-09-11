@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, Hexagon, Power } from 'lucide-react';
+import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power } from 'lucide-react';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import LiveTripToastManager from '../ui/LiveTripToastManager';
@@ -240,6 +240,10 @@ const DashboardLayout = () => {
             )}
           </div>
 
+          <button className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+
           {/* Profile Dropdown */}
           <div className="relative">
             <button
@@ -281,7 +285,7 @@ const DashboardLayout = () => {
 
         {/* Mobile Backdrop Overlay */}
         {isSidebarOpen && (
-          <div 
+          <div
             className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
             onClick={() => setIsSidebarOpen(false)}
           />
@@ -290,8 +294,8 @@ const DashboardLayout = () => {
         {/* Sidebar (Responsive Desktop & Mobile Drawer) */}
         <aside className={`
           fixed md:static top-16 bottom-0 left-0 z-40 bg-white flex flex-col overflow-y-auto py-4 transition-all duration-300 shrink-0 shadow-xl md:shadow-none
-          ${isSidebarOpen 
-            ? 'w-64 translate-x-0' 
+          ${isSidebarOpen
+            ? 'w-64 translate-x-0'
             : '-translate-x-full md:translate-x-0 md:w-0'
           }
         `}>
@@ -300,14 +304,13 @@ const DashboardLayout = () => {
 
             {/* Overview */}
             {hasPerm('overview') && (
-              <Link 
-                to="/dashboard/overview" 
+              <Link
+                to="/dashboard/overview"
                 onClick={handleNavClick}
-                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
-                  isActive('/dashboard/overview') 
-                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/overview')
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                     : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                }`}
+                  }`}
               >
                 <svg className={`w-5 h-5 ${isActive('/dashboard/overview') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 Overview
@@ -316,14 +319,13 @@ const DashboardLayout = () => {
 
             {/* Police Cases */}
             {hasPerm('cases') && (
-              <Link 
-                to="/dashboard/cases" 
+              <Link
+                to="/dashboard/cases"
                 onClick={handleNavClick}
-                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
-                  isActive('/dashboard/cases') 
-                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${isActive('/dashboard/cases')
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                     : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                }`}
+                  }`}
               >
                 <svg className={`w-5 h-5 ${isActive('/dashboard/cases') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 Police Cases
@@ -351,27 +353,25 @@ const DashboardLayout = () => {
                 {editorsChoiceOpen && (
                   <div className="pl-6 pr-3 space-y-1 mt-1">
                     {hasPerm('gps') && (
-                      <Link 
-                        to="/dashboard/gps" 
+                      <Link
+                        to="/dashboard/gps"
                         onClick={handleNavClick}
-                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${
-                          isActive('/dashboard/gps') 
-                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/gps')
+                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                             : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                        }`}
+                          }`}
                       >
                         GPS Tracking
                       </Link>
                     )}
                     {hasPerm('movements') && (
-                      <Link 
-                        to="/dashboard/movements" 
+                      <Link
+                        to="/dashboard/movements"
                         onClick={handleNavClick}
-                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${
-                          isActive('/dashboard/movements') 
-                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                        className={`block px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/movements')
+                            ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                             : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                        }`}
+                          }`}
                       >
                         Movements
                       </Link>
@@ -383,14 +383,13 @@ const DashboardLayout = () => {
 
             {/* Geo-Fencing */}
             {hasPerm('geofencing') && (
-              <Link 
-                to="/dashboard/geofencing" 
+              <Link
+                to="/dashboard/geofencing"
                 onClick={handleNavClick}
-                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${
-                  isActive('/dashboard/geofencing') 
-                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors mt-1 ${isActive('/dashboard/geofencing')
+                    ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                     : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                }`}
+                  }`}
               >
                 <span className={`font-bold text-lg ml-0.5 ${isActive('/dashboard/geofencing') ? 'text-[#001d35]' : 'text-[#444746]'}`}>G</span> Geo-Fencing
               </Link>
@@ -402,11 +401,10 @@ const DashboardLayout = () => {
                 <Link
                   to="/dashboard/national-reports"
                   onClick={handleNavClick}
-                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
-                    isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
+                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit')
                       ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                       : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                  }`}
+                    }`}
                 >
                   <svg className={`w-5 h-5 ${isActive('/dashboard/national-reports') || isActive('/dashboard/performance-audit') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                   Analytics & Reports
@@ -417,14 +415,13 @@ const DashboardLayout = () => {
             {/* Notifications */}
             {hasPerm('notifications') && (
               <div className="mt-1 space-y-1">
-                <Link 
-                  to="/dashboard/notifications" 
+                <Link
+                  to="/dashboard/notifications"
                   onClick={handleNavClick}
-                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
-                    isActive('/dashboard/notifications') 
-                      ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                  className={`flex items-center gap-4 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/notifications')
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                       : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                  }`}
+                    }`}
                 >
                   <svg className={`w-5 h-5 ${isActive('/dashboard/notifications') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                   Notifications
@@ -436,28 +433,26 @@ const DashboardLayout = () => {
             {(hasPerm('system_settings') || hasPerm('user_management')) && (
               <div className="mt-1 space-y-1">
                 {hasPerm('system_settings') && (
-                  <Link 
-                    to="/dashboard/system-settings" 
+                  <Link
+                    to="/dashboard/system-settings"
                     onClick={handleNavClick}
-                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
-                      isActive('/dashboard/system-settings') 
-                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/system-settings')
+                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                         : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                    }`}
+                      }`}
                   >
                     <svg className={`w-4 h-4 ${isActive('/dashboard/system-settings') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h2a2 2 0 011 1v2m-6 0h6"></path></svg>
                     System Settings
                   </Link>
                 )}
                 {hasPerm('user_management') && (
-                  <Link 
-                    to="/dashboard/users" 
+                  <Link
+                    to="/dashboard/users"
                     onClick={handleNavClick}
-                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${
-                      isActive('/dashboard/users') 
-                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold' 
+                    className={`flex items-center gap-3 mx-3 px-4 py-2 text-sm rounded-full transition-colors ${isActive('/dashboard/users')
+                        ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
                         : 'text-[#444746] font-medium hover:bg-[#f0f4f9]'
-                    }`}
+                      }`}
                   >
                     <svg className={`w-4 h-4 ${isActive('/dashboard/users') ? 'text-[#001d35]' : 'text-[#444746]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     User Management
