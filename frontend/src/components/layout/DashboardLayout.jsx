@@ -240,10 +240,6 @@ const DashboardLayout = () => {
             )}
           </div>
 
-          <button className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white">
-            <MoreVertical className="w-5 h-5" />
-          </button>
-
           {/* Profile Dropdown */}
           <div className="relative">
             <button

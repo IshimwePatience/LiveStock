@@ -96,8 +96,8 @@ const DashboardSkeletonBackground = ({ children }) => {
         </main>
       </div>
 
-      {/* 3. Soft Backdrop Overlay & Centered Modal Container */}
-      <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[1px] z-30 flex items-center justify-center p-4 overflow-y-auto">
+      {/* 3. Soft Neutral Overlay & Centered Modal Container */}
+      <div className="absolute inset-0 bg-black/5 backdrop-blur-[1px] z-30 flex items-center justify-center p-4 overflow-y-auto">
         {children}
       </div>
     </div>

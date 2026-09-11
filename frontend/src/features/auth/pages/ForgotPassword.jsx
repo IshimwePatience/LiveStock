@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import logo from '../../../assets/images/RAB_Logo2.png';
+import DashboardSkeletonBackground from '../../../components/layout/DashboardSkeletonBackground';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -63,10 +64,9 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#2187e0] font-sans flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      
-      {/* Centered White Modal Card */}
-      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-blue-100 shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-8 font-sans relative z-10 my-auto">
+    <DashboardSkeletonBackground>
+      {/* Exact Coursera Cloned Modal Card (Image 1) */}
+      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-gray-200 shadow-[0_16px_32px_rgba(0,0,0,0.12)] p-8 font-sans relative">
         
         {/* Logo & Heading */}
         <div className="mb-6">
@@ -94,7 +94,7 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@email.com"
-                className="w-full bg-white border border-[#7b8191] focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
+                className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
                 required
               />
             </div>
@@ -103,14 +103,14 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={forgotMutation.isPending}
-                className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
+                className="w-full bg-[#0056d2] hover:bg-[#00419e] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
               >
                 {forgotMutation.isPending ? 'Sending OTP...' : 'Send Reset Link'}
               </button>
             </div>
 
             <div className="pt-2">
-              <Link to="/login" className="text-[#2187e0] hover:text-[#1b72be] hover:underline text-[14px] font-semibold inline-flex items-center gap-1">
+              <Link to="/login" className="text-[#0056d2] hover:text-[#00419e] hover:underline text-[14px] font-semibold inline-flex items-center gap-1">
                 ← Return to Login
               </Link>
             </div>
@@ -127,7 +127,7 @@ const ForgotPassword = () => {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="123456"
-                className="w-full bg-white border border-[#7b8191] focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] rounded-[8px] px-3.5 py-3 text-[16px] text-[#1f1f1f] font-mono tracking-widest text-center font-bold placeholder-[#7b8191] outline-none transition-all"
+                className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[16px] text-[#1f1f1f] font-mono tracking-widest text-center font-bold placeholder-[#7b8191] outline-none transition-all"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ const ForgotPassword = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full bg-white border border-[#7b8191] focus:border-[#2187e0] focus:ring-1 focus:ring-[#2187e0] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
+                className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[15px] text-[#1f1f1f] font-normal placeholder-[#7b8191] outline-none transition-all"
                 required
               />
             </div>
@@ -148,7 +148,7 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={resetMutation.isPending}
-                className="w-full bg-[#2187e0] hover:bg-[#1b72be] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
+                className="w-full bg-[#0056d2] hover:bg-[#00419e] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[16px] cursor-pointer shadow-none flex items-center justify-center gap-2"
               >
                 {resetMutation.isPending ? 'Resetting...' : 'Reset Password'}
               </button>
@@ -166,15 +166,12 @@ const ForgotPassword = () => {
 
         {/* Footer Links & Terms */}
         <div className="text-[12px] text-[#5c6170] leading-relaxed pt-4 border-t border-gray-100 mt-6">
-          I accept RAB System's <a href="#" className="text-[#2187e0] hover:underline font-medium">Terms of Use</a> and <a href="#" className="text-[#2187e0] hover:underline font-medium">Privacy Notice</a>.
+          I accept RAB System's <a href="#" className="text-[#0056d2] hover:underline font-medium">Terms of Use</a> and <a href="#" className="text-[#0056d2] hover:underline font-medium">Privacy Notice</a>.
         </div>
 
       </div>
-    </div>
+    </DashboardSkeletonBackground>
   );
 };
 
 export default ForgotPassword;
-
-
-
