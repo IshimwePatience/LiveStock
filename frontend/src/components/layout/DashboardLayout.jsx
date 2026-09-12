@@ -5,7 +5,7 @@ import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import LiveTripToastManager from '../ui/LiveTripToastManager';
 import { useQuery } from '@tanstack/react-query';
-import { getTraccarLocations } from '../../lib/api';
+import api, { getTraccarLocations } from '../../lib/api';
 import toast from 'react-hot-toast';
 
 const DashboardLayout = () => {

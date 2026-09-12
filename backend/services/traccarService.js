@@ -166,8 +166,8 @@ class TraccarService {
 
       return locations;
     } catch (error) {
-      console.error('Error fetching GPS data:', error.message);
-      throw new Error('Failed to fetch GPS tracking data');
+      console.warn('GPS Traccar server connection offline/unreachable:', error.message);
+      return [];
     }
   }
 

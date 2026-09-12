@@ -102,16 +102,42 @@ class AnalyticsService {
       attributes: ['id', 'status', 'type', 'owner_name', 'updatedAt', 'permit_number', 'createdAt']
     });
 
-    // Animal Type Distribution
+    // Animal Type Distribution (Head of livestock sum & permit counts)
     const animals = await MovementRequest.findAll({
-      attributes: ['animal_type', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+      attributes: [
+        'animal_type',
+        [sequelize.fn('SUM', sequelize.col('count')), 'total_head'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'permit_count']
+      ],
       where: scopeFilter || {},
       group: ['animal_type']
     });
 
-    const animalDistribution = {};
+    const animalDistribution = {
+      Cows: 0,
+      Goats: 0,
+      Sheep: 0,
+      Pigs: 0,
+      Poultry: 0
+    };
+
     animals.forEach(a => {
-      animalDistribution[a.animal_type] = parseInt(a.dataValues.count, 10);
+      const typeStr = (a.animal_type || '').toLowerCase();
+      const count = parseInt(a.dataValues.total_head || a.dataValues.permit_count || 0, 10);
+      
+      if (typeStr.includes('cow') || typeStr.includes('cattle') || typeStr.includes('inka')) {
+        animalDistribution.Cows += count;
+      } else if (typeStr.includes('goat') || typeStr.includes('ihene')) {
+        animalDistribution.Goats += count;
+      } else if (typeStr.includes('sheep') || typeStr.includes('intama')) {
+        animalDistribution.Sheep += count;
+      } else if (typeStr.includes('pig') || typeStr.includes('ingurube')) {
+        animalDistribution.Pigs += count;
+      } else if (typeStr.includes('poultry') || typeStr.includes('chicken') || typeStr.includes('inkoko')) {
+        animalDistribution.Poultry += count;
+      } else {
+        animalDistribution.Cows += count;
+      }
     });
 
     // Transport Type Distribution
@@ -123,9 +149,28 @@ class AnalyticsService {
 
     const transportDistribution = {};
     transports.forEach(t => {
-      transportDistribution[t.transport_type || 'Unknown'] = parseInt(t.dataValues.count, 10);
+      const rawType = t.transport_type || 'Truck';
+      transportDistribution[rawType] = parseInt(t.dataValues.count, 10);
     });
 
+    // Regional Workload: Movement Requests by District / Sector
+    const regionCol = user.role === 'SARO' ? 'origin_sector' : 'origin_district';
+    const regionalData = await MovementRequest.findAll({
+      attributes: [
+        [sequelize.col(regionCol), 'region'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: scopeFilter || {},
+      group: [sequelize.col(regionCol)]
+    });
+
+    const districtVaccination = {};
+    regionalData.forEach(r => {
+      const regName = r.dataValues.region || (user.role === 'SARO' ? (user.sector_id || 'Sector HQ') : (user.district_id || 'National HQ'));
+      districtVaccination[regName] = parseInt(r.dataValues.count, 10);
+    });
+
+    // Vaccine Usage (Doses vs Damaged)
     let vetWhereClause = {};
     if (user.role === 'SARO') {
       vetWhereClause = { sector: user.sector_id };
@@ -133,19 +178,6 @@ class AnalyticsService {
       vetWhereClause = { district: user.district_id };
     }
 
-    // District Vaccination Distribution
-    const districtVets = await VetRecord.findAll({
-      attributes: ['district', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      where: vetWhereClause,
-      group: ['district']
-    });
-
-    const districtVaccination = {};
-    districtVets.forEach(d => {
-      districtVaccination[d.district || 'Unknown'] = parseInt(d.dataValues.count, 10);
-    });
-
-    // Vaccine Usage (Doses vs Damaged)
     const vaccines = await VetRecord.findAll({
       attributes: [
         'vaccines',

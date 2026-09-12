@@ -830,15 +830,7 @@ const TrackingMap = () => {
     }
   };
 
-  if (isError) {
-    return (
-      <div className="flex h-full items-center justify-center bg-gray-50 p-6">
-        <div className="text-red-500 bg-red-50 border border-red-200 p-4 rounded-md">
-          Error loading GPS data: {error.message}
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="fixed inset-0 z-[400] w-screen h-screen bg-gray-100 overflow-hidden font-sans">
