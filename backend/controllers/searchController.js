@@ -1,10 +1,10 @@
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const { MovementRequest, Case, VetRecord, NotificationLog, User } = require('../models');
 
 const globalSearch = async (req, res) => {
   try {
-    const query = (req.query.q || '').trim();
-    if (!query || query.length < 2) {
+    const rawQuery = (req.query.q || '').trim();
+    if (!rawQuery || rawQuery.length < 2) {
       return res.json({
         permits: [],
         cases: [],
@@ -15,19 +15,26 @@ const globalSearch = async (req, res) => {
     }
 
     const user = req.user;
-    const searchPattern = `%${query}%`;
+    const qLower = rawQuery.toLowerCase();
+    const searchPattern = `%${qLower}%`;
+
+    // Helper for case-insensitive column match
+    const lowerMatch = (colName) => Sequelize.where(
+      Sequelize.fn('LOWER', Sequelize.col(colName)),
+      { [Op.like]: searchPattern }
+    );
 
     // 1. Session-based Permits search
     let permitWhere = {
       [Op.or]: [
-        { permit_number: { [Op.like]: searchPattern } },
-        { trader_name: { [Op.like]: searchPattern } },
-        { origin_district: { [Op.like]: searchPattern } },
-        { destination_district: { [Op.like]: searchPattern } },
-        { status: { [Op.like]: searchPattern } }
+        lowerMatch('permit_number'),
+        lowerMatch('trader_name'),
+        lowerMatch('origin_district'),
+        lowerMatch('destination_district'),
+        lowerMatch('status')
       ]
     };
-    if (user.role === 'DARO') {
+    if (user.role === 'DARO' && user.district_id) {
       permitWhere[Op.and] = [
         {
           [Op.or]: [
@@ -36,7 +43,7 @@ const globalSearch = async (req, res) => {
           ]
         }
       ];
-    } else if (user.role === 'SARO') {
+    } else if (user.role === 'SARO' && user.sector_id) {
       permitWhere[Op.and] = [
         {
           [Op.or]: [
@@ -49,17 +56,17 @@ const globalSearch = async (req, res) => {
 
     const permits = await MovementRequest.findAll({
       where: permitWhere,
-      limit: 5,
+      limit: 10,
       order: [['createdAt', 'DESC']]
     });
 
     // 2. Session-based Police Cases search
     let caseWhere = {
       [Op.or]: [
-        { case_number: { [Op.like]: searchPattern } },
-        { location: { [Op.like]: searchPattern } },
-        { reason: { [Op.like]: searchPattern } },
-        { status: { [Op.like]: searchPattern } }
+        lowerMatch('case_number'),
+        lowerMatch('location'),
+        lowerMatch('reason'),
+        lowerMatch('status')
       ]
     };
     if (user.role === 'DARO' && user.district_id) {
@@ -70,22 +77,22 @@ const globalSearch = async (req, res) => {
 
     const cases = await Case.findAll({
       where: caseWhere,
-      limit: 5,
+      limit: 10,
       order: [['createdAt', 'DESC']]
     });
 
     // 3. Session-based Vet Records search
     let vetWhere = {
       [Op.or]: [
-        { tag_number: { [Op.like]: searchPattern } },
-        { animal_type: { [Op.like]: searchPattern } },
-        { diagnosis: { [Op.like]: searchPattern } },
-        { vet_name: { [Op.like]: searchPattern } }
+        lowerMatch('tag_number'),
+        lowerMatch('animal_type'),
+        lowerMatch('diagnosis'),
+        lowerMatch('vet_name')
       ]
     };
     const vetRecords = await VetRecord.findAll({
       where: vetWhere,
-      limit: 5,
+      limit: 10,
       order: [['createdAt', 'DESC']]
     });
 
@@ -93,33 +100,39 @@ const globalSearch = async (req, res) => {
     const notifications = await NotificationLog.findAll({
       where: {
         user_id: user.id,
-        message: { [Op.like]: searchPattern }
+        [Op.or]: [
+          lowerMatch('message'),
+          lowerMatch('type')
+        ]
       },
-      limit: 5,
+      limit: 10,
       order: [['createdAt', 'DESC']]
     });
 
-    // 5. Users search (only for RAB or DARO)
-    let users = [];
-    if (user.role === 'RAB' || user.role === 'DARO') {
-      let userWhere = {
-        [Op.or]: [
-          { name: { [Op.like]: searchPattern } },
-          { email: { [Op.like]: searchPattern } },
-          { phone: { [Op.like]: searchPattern } },
-          { role: { [Op.like]: searchPattern } },
-          { district_id: { [Op.like]: searchPattern } }
-        ]
-      };
-      if (user.role === 'DARO') {
-        userWhere.district_id = user.district_id;
-      }
-      users = await User.findAll({
-        where: userWhere,
-        attributes: ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id', 'status'],
-        limit: 5
-      });
+    // 5. Session-based Registered Users search (RAB, DARO, SARO, POLICE)
+    let userWhere = {
+      [Op.or]: [
+        lowerMatch('name'),
+        lowerMatch('email'),
+        lowerMatch('phone'),
+        lowerMatch('role'),
+        lowerMatch('district_id'),
+        lowerMatch('sector_id')
+      ]
+    };
+
+    if (user.role === 'DARO' && user.district_id) {
+      userWhere.district_id = user.district_id;
+    } else if (user.role === 'SARO' && user.sector_id) {
+      userWhere.sector_id = user.sector_id;
     }
+
+    const users = await User.findAll({
+      where: userWhere,
+      attributes: ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id', 'status'],
+      limit: 10,
+      order: [['name', 'ASC']]
+    });
 
     res.json({
       permits,

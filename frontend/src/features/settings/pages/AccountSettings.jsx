@@ -129,72 +129,68 @@ const AccountSettings = () => {
   };
 
   return (
-    <div className="min-h-full bg-white flex font-sans text-gray-800">
-      
-      {/* Left Sidebar Navigation — Atlassian Jira Style */}
-      <aside className="w-64 border-r border-gray-200 p-6 flex flex-col gap-1 shrink-0 bg-white min-h-[calc(100vh-4rem)]">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
-          Personal Settings
-        </p>
+    <div className="flex h-[calc(100vh-48px)] bg-white font-sans">
+      {/* Left Sidebar — Cloned 1:1 from Notifications page layout */}
+      <div className="w-64 border-r border-gray-200 bg-white flex flex-col py-6 shrink-0">
+        <h2 className="px-6 text-xl font-bold text-gray-900 mb-6">Personal Settings</h2>
 
-        <button
-          onClick={() => setActiveTab('general')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2.5 ${
-            activeTab === 'general'
-              ? 'bg-[#e9f2ff] text-[#0052cc] font-semibold'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Globe className="w-4 h-4" />
-          General
-        </button>
+        <div className="flex flex-col gap-1 mb-8">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${
+              activeTab === 'general'
+                ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
+                : 'hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            General
+          </button>
 
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2.5 ${
-            activeTab === 'security'
-              ? 'bg-[#e9f2ff] text-[#0052cc] font-semibold'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Shield className="w-4 h-4" />
-          Security &amp; MFA
-        </button>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${
+              activeTab === 'security'
+                ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
+                : 'hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            Security &amp; MFA
+          </button>
 
-        <button
-          onClick={() => setActiveTab('location')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2.5 ${
-            activeTab === 'location'
-              ? 'bg-[#e9f2ff] text-[#0052cc] font-semibold'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <MapPin className="w-4 h-4" />
-          Location Tracking
-        </button>
+          <button
+            onClick={() => setActiveTab('location')}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${
+              activeTab === 'location'
+                ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
+                : 'hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            Location Tracking
+          </button>
 
-        <button
-          onClick={() => setActiveTab('notifications')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2.5 ${
-            activeTab === 'notifications'
-              ? 'bg-[#e9f2ff] text-[#0052cc] font-semibold'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Bell className="w-4 h-4" />
-          Emails and notifications
-        </button>
-      </aside>
-
-      {/* Main Settings Content Area */}
-      <main className="flex-1 p-8 max-w-4xl bg-white">
-        
-        {/* Breadcrumb */}
-        <div className="text-xs text-gray-500 mb-1 font-normal flex items-center gap-1.5">
-          <span>Personal settings</span>
-          <span>/</span>
-          <span className="capitalize">{activeTab === 'security' ? 'Security & MFA' : activeTab}</span>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`px-6 py-2 text-left text-[14px] transition-colors ${
+              activeTab === 'notifications'
+                ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
+                : 'hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            Emails and notifications
+          </button>
         </div>
+      </div>
+
+      {/* Main Settings Content Area — Cloned 1:1 from Notifications page main area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white overflow-y-auto">
+        <div className="px-10 py-8 max-w-4xl w-full flex-1 flex flex-col">
+          
+          {/* Breadcrumb */}
+          <div className="text-xs text-gray-500 mb-2 font-normal flex items-center gap-1.5">
+            <span>Personal settings</span>
+            <span>/</span>
+            <span className="capitalize">{activeTab === 'security' ? 'Security & MFA' : activeTab === 'location' ? 'Location Tracking' : activeTab === 'notifications' ? 'Emails and notifications' : 'General'}</span>
+          </div>
 
         {/* Tab 1: General */}
         {activeTab === 'general' && (
@@ -549,8 +545,8 @@ const AccountSettings = () => {
             </div>
           </div>
         )}
-
-      </main>
+        </div>
+      </div>
     </div>
   );
 };

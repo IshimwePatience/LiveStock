@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   loginUser, registerUser, forgotPassword, resetPassword, getAllUsers, updateUser, deleteUser, toggleUserStatus,
-  changePassword, toggleMfa, toggleLocationTracking, getUserLocationStatuses
+  changePassword, toggleMfa, toggleLocationTracking, getUserLocationStatuses, updateRolePermissions
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -12,6 +12,7 @@ router.post('/forgotpassword', forgotPassword);
 router.post('/resetpassword', resetPassword);
 router.get('/users', protect, authorize('RAB', 'DARO'), getAllUsers);
 router.put('/users/:id', protect, authorize('RAB'), updateUser);
+router.put('/roles/:role/permissions', protect, authorize('RAB'), updateRolePermissions);
 router.delete('/users/:id', protect, authorize('RAB'), deleteUser);
 router.patch('/users/:id/status', protect, authorize('RAB'), toggleUserStatus);
 

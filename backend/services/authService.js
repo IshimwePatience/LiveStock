@@ -149,6 +149,23 @@ class AuthService {
     };
   }
 
+  async updateRolePermissions(role, permissions) {
+    if (!['RAB', 'DARO', 'SARO', 'POLICE'].includes(role)) {
+      throw new Error('Invalid role specified');
+    }
+
+    await User.update(
+      { permissions },
+      { where: { role } }
+    );
+
+    return {
+      role,
+      permissions,
+      message: `Permissions updated successfully for all ${role} users`
+    };
+  }
+
   async deleteUser(id, currentUserId) {
     if (id === currentUserId) throw new Error('You cannot delete your own account');
     const user = await User.findByPk(id);

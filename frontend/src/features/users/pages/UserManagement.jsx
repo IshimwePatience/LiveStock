@@ -50,7 +50,15 @@ const UserManagement = () => {
     );
   };
 
-  const [activeTab, setActiveTab] = useState('SARO'); // 'RAB', 'SARO', 'DARO', 'ALL'
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('user_mgmt_tab') || 'ALL');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('user_mgmt_tab', tab);
+    setSelectedDistrict('');
+    setSelectedSector('');
+  };
+
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedSector, setSelectedSector] = useState('');
 
@@ -513,8 +521,24 @@ const UserManagement = () => {
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-6 text-sm text-gray-600 overflow-x-auto bg-white">
         {isRAB ? (
           <>
+            {/* All Accounts — FIRST */}
             <button
-              onClick={() => { setActiveTab('RAB'); setSelectedDistrict(''); setSelectedSector(''); }}
+              onClick={() => handleTabChange('ALL')}
+              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+                activeTab === 'ALL'
+                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
+                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
+              }`}
+            >
+              All Accounts
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.length}
+              </span>
+            </button>
+
+            {/* RAB Accounts */}
+            <button
+              onClick={() => handleTabChange('RAB')}
               className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'RAB'
                   ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
@@ -527,22 +551,9 @@ const UserManagement = () => {
               </span>
             </button>
 
+            {/* DARO Users */}
             <button
-              onClick={() => { setActiveTab('SARO'); setSelectedDistrict(''); setSelectedSector(''); }}
-              className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
-                activeTab === 'SARO'
-                  ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
-                  : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
-              }`}
-            >
-              SARO Users
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-                {users.filter(u => u.role === 'SARO').length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => { setActiveTab('DARO'); setSelectedDistrict(''); setSelectedSector(''); }}
+              onClick={() => handleTabChange('DARO')}
               className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
                 activeTab === 'DARO'
                   ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
@@ -555,17 +566,18 @@ const UserManagement = () => {
               </span>
             </button>
 
+            {/* SARO Users */}
             <button
-              onClick={() => { setActiveTab('ALL'); setSelectedDistrict(''); setSelectedSector(''); }}
+              onClick={() => handleTabChange('SARO')}
               className={`whitespace-nowrap pb-2 -mb-2 text-sm transition-colors flex items-center gap-2 cursor-pointer ${
-                activeTab === 'ALL'
+                activeTab === 'SARO'
                   ? 'text-[#0052cc] font-semibold border-b-2 border-[#0052cc]'
                   : 'text-gray-600 hover:text-gray-900 border-b-2 border-transparent'
               }`}
             >
-              All Accounts
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'ALL' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
-                {users.length}
+              SARO Users
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'SARO' ? 'bg-blue-100 text-[#0052cc]' : 'bg-gray-100 text-gray-600'}`}>
+                {users.filter(u => u.role === 'SARO').length}
               </span>
             </button>
           </>
