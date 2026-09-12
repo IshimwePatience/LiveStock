@@ -107,6 +107,8 @@ const getUserLocationStatuses = async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
+};
+
 const updateRolePermissions = async (req, res) => {
   try {
     const result = await authService.updateRolePermissions(req.params.role, req.body.permissions);

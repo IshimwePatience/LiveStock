@@ -9,7 +9,12 @@ const AccountSettings = () => {
     return uStr ? JSON.parse(uStr) : null;
   });
 
-  const [activeTab, setActiveTab] = useState('general'); // 'general' | 'security' | 'location' | 'notifications'
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('account_settings_tab') || 'general');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('account_settings_tab', tab);
+  };
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -136,7 +141,7 @@ const AccountSettings = () => {
 
         <div className="flex flex-col gap-1 mb-8">
           <button
-            onClick={() => setActiveTab('general')}
+            onClick={() => handleTabChange('general')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${
               activeTab === 'general'
                 ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
@@ -147,7 +152,7 @@ const AccountSettings = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('security')}
+            onClick={() => handleTabChange('security')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${
               activeTab === 'security'
                 ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
@@ -158,7 +163,7 @@ const AccountSettings = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('location')}
+            onClick={() => handleTabChange('location')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${
               activeTab === 'location'
                 ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
@@ -169,7 +174,7 @@ const AccountSettings = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('notifications')}
+            onClick={() => handleTabChange('notifications')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${
               activeTab === 'notifications'
                 ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium'
@@ -250,10 +255,7 @@ const AccountSettings = () => {
               {/* MFA Card */}
               <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
                 <div className="bg-[#f4f5f7] px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-[#0052cc]" />
-                    <span className="text-sm font-semibold text-gray-800">Two-Step Verification (MFA)</span>
-                  </div>
+                  <span className="text-sm font-semibold text-gray-800">Two-Step Verification (MFA)</span>
 
                   {user?.role === 'RAB' ? (
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -297,8 +299,7 @@ const AccountSettings = () => {
 
               {/* Password Change Form */}
               <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm space-y-5">
-                <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                  <Key className="w-4 h-4 text-[#0052cc]" />
+                <div className="pb-3 border-b border-gray-100">
                   <h3 className="text-base font-semibold text-gray-900">Change Password</h3>
                 </div>
 
@@ -384,10 +385,7 @@ const AccountSettings = () => {
               {/* User Location Toggle Card */}
               <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
                 <div className="bg-[#f4f5f7] px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-[#0052cc]" />
-                    <span className="text-sm font-semibold text-gray-800">My Location Tracking Status</span>
-                  </div>
+                  <span className="text-sm font-semibold text-gray-800">My Location Tracking Status</span>
 
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -489,59 +487,73 @@ const AccountSettings = () => {
             <p className="text-sm text-gray-500 mb-6">Control when you receive email or in-app notifications from Livestock App.</p>
 
             <div className="space-y-6 max-w-2xl">
-              
-              {/* Notification Preference Card 1 */}
-              <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <span className="text-sm font-semibold text-gray-900">Send me emails for work item activity</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={emailWorkItems}
-                      onChange={(e) => setEmailWorkItems(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#36b37e]"></div>
-                  </label>
+              {user?.role === 'RAB' ? (
+                <>
+                  {/* Notification Preference Card 1 */}
+                  <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <span className="text-sm font-semibold text-gray-900">Send me emails for work item activity</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={emailWorkItems}
+                          onChange={(e) => setEmailWorkItems(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#36b37e]"></div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs font-medium text-gray-700 pl-1">
+                      <p className="text-gray-500 font-semibold mb-2">Receive emails when:</p>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-[#0052cc] rounded" />
+                        You are the assigned inspector or officer
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-[#0052cc] rounded" />
+                        A geofence security violation occurs in your district
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 text-[#0052cc] rounded" />
+                        You make changes to movement permits
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Notification Preference Card 2 */}
+                  <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <span className="text-sm font-semibold text-gray-900">Group notification emails together</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={groupNotifications}
+                          onChange={(e) => setGroupNotifications(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#36b37e]"></div>
+                      </label>
+                    </div>
+
+                    <p className="text-xs text-gray-500">
+                      We'll group together notifications for the same work items into one digest email.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Email Notifications Unavailable</h3>
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                        Email notifications are only available for <strong>RAB</strong> administrator accounts configured with registered email addresses. As a <strong>{user?.role || 'Phone'}</strong> user, your notifications are delivered directly in-app and via phone alerts.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="space-y-2.5 text-xs font-medium text-gray-700 pl-1">
-                  <p className="text-gray-500 font-semibold mb-2">Receive emails when:</p>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="w-4 h-4 text-[#0052cc] rounded" />
-                    You are the assigned inspector or officer
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="w-4 h-4 text-[#0052cc] rounded" />
-                    A geofence security violation occurs in your district
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4 text-[#0052cc] rounded" />
-                    You make changes to movement permits
-                  </label>
-                </div>
-              </div>
-
-              {/* Notification Preference Card 2 */}
-              <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <span className="text-sm font-semibold text-gray-900">Group notification emails together</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={groupNotifications}
-                      onChange={(e) => setGroupNotifications(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#36b37e]"></div>
-                  </label>
-                </div>
-
-                <p className="text-xs text-gray-500">
-                  We'll group together notifications for the same work items into one digest email.
-                </p>
-              </div>
-
+              )}
             </div>
           </div>
         )}

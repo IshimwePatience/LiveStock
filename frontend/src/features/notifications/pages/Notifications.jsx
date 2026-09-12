@@ -6,7 +6,12 @@ import EmptyState from '../../../components/ui/EmptyState';
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [showOnlyUnread, setShowOnlyUnread] = useState(false);
-  const [activeTab, setActiveTab] = useState('Direct');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('notifications_tab') || 'Direct');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('notifications_tab', tab);
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -79,13 +84,13 @@ const Notifications = () => {
 
         <div className="flex flex-col gap-1 mb-8">
           <button
-            onClick={() => setActiveTab('Direct')}
+            onClick={() => handleTabChange('Direct')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Direct' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Direct
           </button>
           <button
-            onClick={() => setActiveTab('Recents')}
+            onClick={() => handleTabChange('Recents')}
             className={`px-6 py-2 text-left text-[14px] transition-colors ${activeTab === 'Recents' ? 'bg-[#e9f2ff] text-[#0052cc] border-l-2 border-[#0052cc] font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
           >
             Recents
