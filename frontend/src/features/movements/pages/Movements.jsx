@@ -138,7 +138,19 @@ const Movements = () => {
       }
 
       // Map backend values to our filter structure
-      const filterAnimal = req.animal_type?.toLowerCase() || 'unknown';
+      let filterAnimal = (req.animal_type || '').toLowerCase();
+      if (filterAnimal.includes('cow') || filterAnimal.includes('cattle') || filterAnimal.includes('inka')) {
+        filterAnimal = 'cattle';
+      } else if (filterAnimal.includes('goat') || filterAnimal.includes('ihene')) {
+        filterAnimal = 'goat';
+      } else if (filterAnimal.includes('sheep') || filterAnimal.includes('intama')) {
+        filterAnimal = 'sheep';
+      } else if (filterAnimal.includes('pig') || filterAnimal.includes('ingurube')) {
+        filterAnimal = 'pig';
+      } else if (filterAnimal.includes('poultry') || filterAnimal.includes('chicken') || filterAnimal.includes('inkoko')) {
+        filterAnimal = 'poultry';
+      }
+
       const filterStatus = (req.status === 'APPROVED' || req.status === 'COMPLETED') ? 'Closed' : 'Open';
       const filterType = req.type;
 
@@ -273,16 +285,22 @@ const Movements = () => {
         m.farmerName.toLowerCase().includes(q) ||
         m.driverName.toLowerCase().includes(q) ||
         m.plateNumber.toLowerCase().includes(q) ||
-        m.route.toLowerCase().includes(q)
+        m.route.toLowerCase().includes(q) ||
+        (m.originDistrict && m.originDistrict.toLowerCase().includes(q)) ||
+        (m.originSector && m.originSector.toLowerCase().includes(q)) ||
+        (m.destDistrict && m.destDistrict.toLowerCase().includes(q)) ||
+        (m.destSector && m.destSector.toLowerCase().includes(q)) ||
+        (m.transporterMode && m.transporterMode.toLowerCase().includes(q)) ||
+        (m.permitNumber && m.permitNumber.toLowerCase().includes(q))
       );
     }
 
     // Checkbox Category Filters
-    const hasFilters = Object.values(selectedFilters).some(arr => arr.length > 0);
+    const hasFilters = Object.values(selectedFilters).some(arr => arr && arr.length > 0);
     if (hasFilters) {
       result = result.filter(m => {
-        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.route.includes(d))) return false;
-        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.route.includes(s))) return false;
+        if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.route.toLowerCase().includes(d.toLowerCase()))) return false;
+        if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.route.toLowerCase().includes(s.toLowerCase()))) return false;
         if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.rawType)) return false;
         if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.rawStatus)) return false;
         if (selectedFilters['Animal']?.length > 0 && !selectedFilters['Animal'].includes(m.filterAnimal)) return false;

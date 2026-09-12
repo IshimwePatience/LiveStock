@@ -404,7 +404,7 @@ const Overview = () => {
         {/* Widget 3: Animal Type Breakdown */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Animal Breakdown</h3>
-          <p className="text-sm text-gray-500 mb-6">Total head of livestock being transported across permits. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>View movement permits</span></p>
+          <p className="text-sm text-gray-500 mb-6">Total head of livestock being transported across permits. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements?tab=History')}>View movement permits</span></p>
           
           <div className="flex-1 flex flex-col justify-end relative mt-4">
              {/* Y-axis lines & labels */}
@@ -428,30 +428,30 @@ const Overview = () => {
                    
                    {/* Bars (Dynamic height + Numeric Badges) */}
                    <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
-                     <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows: ${cowCount} Animals`} className="w-12 bg-[#0052cc] hover:bg-blue-700 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (cowCount / maxVal) * 100)}%` }}>
+                     <div onClick={() => navigate('/dashboard/movements?tab=History&animal=cattle')} title={`Cows: ${cowCount} Animals`} className="w-12 bg-[#0052cc] hover:bg-blue-700 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (cowCount / maxVal) * 100)}%` }}>
                        {cowCount > 0 ? cowCount : ''}
                      </div>
-                     <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats: ${goatCount} Animals`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (goatCount / maxVal) * 100)}%` }}>
+                     <div onClick={() => navigate('/dashboard/movements?tab=History&animal=goat')} title={`Goats: ${goatCount} Animals`} className="w-12 bg-gray-400 hover:bg-blue-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (goatCount / maxVal) * 100)}%` }}>
                        {goatCount > 0 ? goatCount : ''}
                      </div>
-                     <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep: ${sheepCount} Animals`} className="w-12 bg-amber-500 hover:bg-amber-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (sheepCount / maxVal) * 100)}%` }}>
+                     <div onClick={() => navigate('/dashboard/movements?tab=History&animal=sheep')} title={`Sheep: ${sheepCount} Animals`} className="w-12 bg-amber-500 hover:bg-amber-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (sheepCount / maxVal) * 100)}%` }}>
                        {sheepCount > 0 ? sheepCount : ''}
                      </div>
-                     <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs: ${pigCount} Animals`} className="w-12 bg-[#8c929d] hover:bg-gray-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (pigCount / maxVal) * 100)}%` }}>
+                     <div onClick={() => navigate('/dashboard/movements?tab=History&animal=pig')} title={`Pigs: ${pigCount} Animals`} className="w-12 bg-[#8c929d] hover:bg-gray-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (pigCount / maxVal) * 100)}%` }}>
                        {pigCount > 0 ? pigCount : ''}
                      </div>
-                     <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry: ${poultryCount} Animals`} className="w-12 bg-teal-500 hover:bg-teal-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (poultryCount / maxVal) * 100)}%` }}>
+                     <div onClick={() => navigate('/dashboard/movements?tab=History&animal=poultry')} title={`Poultry: ${poultryCount} Animals`} className="w-12 bg-teal-500 hover:bg-teal-600 transition-colors cursor-pointer rounded-t relative flex items-center justify-center text-white text-[10px] font-bold" style={{ height: `${Math.max(8, (poultryCount / maxVal) * 100)}%` }}>
                        {poultryCount > 0 ? poultryCount : ''}
                      </div>
                    </div>
 
                    {/* X-axis legends */}
                    <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                      <div onClick={() => navigate('/dashboard/movements?animal=cattle')} title={`Cows: ${cowCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-[#0052cc] rounded"></span> Cows ({cowCount})</div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=goat')} title={`Goats: ${goatCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-gray-500" /> Goats ({goatCount})</div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=sheep')} title={`Sheep: ${sheepCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-amber-500" /> Sheep ({sheepCount})</div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=pig')} title={`Pigs: ${pigCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-gray-600" /> Pigs ({pigCount})</div>
-                      <div onClick={() => navigate('/dashboard/movements?animal=poultry')} title={`Poultry: ${poultryCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-teal-500"></span> Poultry ({poultryCount})</div>
+                      <div onClick={() => navigate('/dashboard/movements?tab=History&animal=cattle')} title={`Cows: ${cowCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-[#0052cc] rounded"></span> Cows ({cowCount})</div>
+                      <div onClick={() => navigate('/dashboard/movements?tab=History&animal=goat')} title={`Goats: ${goatCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-gray-500" /> Goats ({goatCount})</div>
+                      <div onClick={() => navigate('/dashboard/movements?tab=History&animal=sheep')} title={`Sheep: ${sheepCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowUp className="w-3 h-3 text-amber-500" /> Sheep ({sheepCount})</div>
+                      <div onClick={() => navigate('/dashboard/movements?tab=History&animal=pig')} title={`Pigs: ${pigCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-gray-600" /> Pigs ({pigCount})</div>
+                      <div onClick={() => navigate('/dashboard/movements?tab=History&animal=poultry')} title={`Poultry: ${poultryCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-teal-500"></span> Poultry ({poultryCount})</div>
                    </div>
                  </>
                );
@@ -462,7 +462,7 @@ const Overview = () => {
         {/* Widget 4: Transport Types */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Transport Methods</h3>
-          <p className="text-sm text-gray-500 mb-6">Breakdown of permit requests by transport vehicle type. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>View logistics</span></p>
+          <p className="text-sm text-gray-500 mb-6">Breakdown of permit requests by transport vehicle type. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements?tab=History')}>View logistics</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
             <div className="w-32">Type</div>
@@ -482,7 +482,7 @@ const Overview = () => {
                 return transportsSorted.map(([type, count], index) => {
                   const pct = Math.round((count / totalTransport) * 100);
                   return (
-                    <div key={type} onClick={() => navigate(`/dashboard/movements?search=${type}`)} title={`Transport Method: ${type} — ${count} Permits (${pct}%)`} className="flex items-center cursor-pointer group">
+                    <div key={type} onClick={() => navigate(`/dashboard/movements?tab=History&search=${encodeURIComponent(type)}`)} title={`Transport Method: ${type} — ${count} Permits (${pct}%)`} className="flex items-center cursor-pointer group">
                        <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600" title={type}>
                          <CheckSquare className="w-4 h-4 text-blue-500 shrink-0" /> {type}
                        </div>
@@ -501,7 +501,7 @@ const Overview = () => {
         {/* Widget 5: Regional Movement Workload */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Regional Workload</h3>
-          <p className="text-sm text-gray-500 mb-6">Distribution of movement permit activity by region. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>View regional permits</span></p>
+          <p className="text-sm text-gray-500 mb-6">Distribution of movement permit activity by region. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements?tab=History')}>View regional permits</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
             <div className="w-40">Region</div>
@@ -522,7 +522,7 @@ const Overview = () => {
                   const pct = Math.round((count / totalVets) * 100);
                   const colors = ['bg-blue-600', 'bg-orange-500', 'bg-teal-500', 'bg-purple-500', 'bg-pink-500'];
                   return (
-                    <div key={region} onClick={() => navigate(`/dashboard/movements?search=${region}`)} title={`Region: ${region} — ${count} Movement Permits (${pct}%)`} className="flex items-center cursor-pointer group">
+                    <div key={region} onClick={() => navigate(`/dashboard/movements?tab=History&search=${encodeURIComponent(region)}`)} title={`Region: ${region} — ${count} Movement Permits (${pct}%)`} className="flex items-center cursor-pointer group">
                        <div className="w-40 flex items-center gap-2 text-sm text-gray-800 font-medium group-hover:text-[#0052cc] cursor-pointer">
                           <div className={`w-6 h-6 rounded-full ${colors[index % colors.length]} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>
                             {region.substring(0, 2).toUpperCase()}
