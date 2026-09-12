@@ -17,6 +17,10 @@ const User = sequelize.define('User', {
   reset_token_expires: { type: DataTypes.DATE, allowNull: true },
   status: { type: DataTypes.STRING, defaultValue: 'Active' },
   permissions: { type: DataTypes.JSON, allowNull: true, defaultValue: null },
+  mfa_enabled: { type: DataTypes.BOOLEAN, defaultValue: false },
+  mfa_secret: { type: DataTypes.STRING, allowNull: true },
+  location_tracking_enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
+  last_location_updated: { type: DataTypes.DATE, allowNull: true },
 });
 
 module.exports = User;

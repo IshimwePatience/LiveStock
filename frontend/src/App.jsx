@@ -19,6 +19,7 @@ import Geofencing from './features/geofencing/pages/Geofencing';
 
 import Notifications from './features/notifications/pages/Notifications';
 import SystemSettings from './features/settings/pages/SystemSettings';
+import AccountSettings from './features/settings/pages/AccountSettings';
 import DriverTripPage from './features/driver/DriverTripPage';
 import LiveTripToastManager from './components/ui/LiveTripToastManager';
 import api from './lib/api';
@@ -177,6 +178,7 @@ function App() {
           <Route path="movements/view/:id" element={<PermittedRoute permKey="movements"><CreatePermit key="view" /></PermittedRoute>} />
           <Route path="users" element={<PermittedRoute permKey="user_management"><UserManagement /></PermittedRoute>} />
           <Route path="system-settings" element={<PermittedRoute permKey="system_settings"><SystemSettings /></PermittedRoute>} />
+          <Route path="account-settings" element={<AccountSettings />} />
           <Route path="national-reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
           <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><NationalReports /></PermittedRoute>} />
           <Route path="cases" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />

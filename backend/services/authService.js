@@ -227,6 +227,66 @@ class AuthService {
 
     return { message: 'Password updated successfully' };
   }
+
+  async changePassword(userId, currentPassword, newPassword) {
+    if (!currentPassword || !newPassword) throw new Error('Current password and new password are required');
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) throw new Error('Incorrect current password');
+
+    const salt = await bcrypt.genSalt(10);
+    user.password_hash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async toggleMfa(userId, enabled) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    if (user.role !== 'RAB') {
+      throw new Error('MFA is only applicable for RAB accounts. DARO/SARO accounts log in via phone.');
+    }
+
+    user.mfa_enabled = !!enabled;
+    await user.save();
+
+    return {
+      message: user.mfa_enabled ? 'Two-Step Verification (MFA) enabled' : 'Two-Step Verification (MFA) disabled',
+      mfa_enabled: user.mfa_enabled
+    };
+  }
+
+  async toggleLocationTracking(userId, enabled) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    user.location_tracking_enabled = !!enabled;
+    user.last_location_updated = new Date();
+    await user.save();
+
+    return {
+      message: user.location_tracking_enabled ? 'Location tracking enabled' : 'Location tracking disabled',
+      location_tracking_enabled: user.location_tracking_enabled,
+      last_location_updated: user.last_location_updated
+    };
+  }
+
+  async getUserLocationStatuses(currentUser) {
+    if (!currentUser || currentUser.role !== 'RAB') {
+      throw new Error('Unauthorized. Only RAB administrators can view user location tracking statuses.');
+    }
+
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id', 'status', 'location_tracking_enabled', 'last_location_updated', 'updatedAt'],
+      order: [['name', 'ASC']]
+    });
+
+    return users;
+  }
 }
 
 module.exports = new AuthService();

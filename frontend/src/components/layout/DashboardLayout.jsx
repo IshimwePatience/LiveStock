@@ -62,6 +62,43 @@ const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
 
+  // Global Session Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchRef = React.useRef(null);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await api.get('/search', { params: { q: searchQuery } });
+          setSearchResults(res.data);
+        } catch (err) {
+          console.error('Search failed', err);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults(null);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -154,6 +191,31 @@ const DashboardLayout = () => {
     return perms.includes(permKey);
   };
 
+  const hasSearchResults = searchResults && (
+    (searchResults.permits?.length > 0) ||
+    (searchResults.cases?.length > 0) ||
+    (searchResults.vetRecords?.length > 0) ||
+    (searchResults.notifications?.length > 0) ||
+    (searchResults.users?.length > 0)
+  );
+
+  const getSearchPlaceholder = () => {
+    if (!user) return "Search (/) session data...";
+    const perms = getEffectivePermissions();
+    const targets = [];
+    if (perms.includes('movements')) targets.push('permits');
+    if (perms.includes('cases')) targets.push('cases');
+    if (perms.includes('user_management')) targets.push('users');
+    if (perms.includes('notifications')) targets.push('alerts');
+
+    if (user.role === 'RAB') return "Search (/) national permits, cases, vet records, users...";
+    if (user.role === 'DARO') return `Search (/) ${user.district_id ? `${user.district_id} district` : 'district'} permits, records, officers...`;
+    if (user.role === 'SARO') return `Search (/) ${user.sector_id ? `${user.sector_id} sector` : 'sector'} permits, local alerts...`;
+    if (user.role === 'POLICE') return "Search (/) police cases, impoundments...";
+
+    return `Search (/) ${targets.length > 0 ? targets.join(', ') : 'resources'}...`;
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-800">
       <LiveTripToastManager />
@@ -202,16 +264,114 @@ const DashboardLayout = () => {
           </div>
         </div>
 
-        {/* Center: Search Bar — Google Drive pill style */}
-        <div className="flex-1 max-w-2xl px-4 hidden md:block">
-          <div className="relative flex items-center bg-white/20 hover:bg-white/25 focus-within:bg-white focus-within:shadow-md rounded-full px-4 py-2.5 transition-all group">
-            <Search className="w-5 h-5 text-white group-focus-within:text-gray-500 mr-3 shrink-0 transition-colors" />
+        {/* Center: Session-Based Global Search Bar */}
+        <div className="flex-1 max-w-2xl px-4 hidden md:block relative" ref={searchRef}>
+          <div className={`relative flex items-center rounded-full px-4 py-2.5 transition-all group ${
+            isSearchFocused ? 'bg-white shadow-lg text-gray-900' : 'bg-white/20 hover:bg-white/25 text-white'
+          }`}>
+            <Search className={`w-5 h-5 mr-3 shrink-0 transition-colors ${isSearchFocused ? 'text-gray-500' : 'text-white'}`} />
             <input
               type="text"
-              placeholder="Search (/) for resources, districts, reports, and more"
-              className="bg-transparent border-none outline-none w-full text-sm text-white placeholder-white/80 group-focus-within:text-gray-900 group-focus-within:placeholder-gray-400"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              placeholder={getSearchPlaceholder()}
+              className={`bg-transparent border-none outline-none w-full text-sm placeholder-white/80 ${
+                isSearchFocused ? 'text-gray-900 placeholder-gray-400' : 'text-white placeholder-white/80'
+              }`}
             />
           </div>
+
+          {/* Session Search Results Overlay Dropdown */}
+          {isSearchFocused && searchQuery.trim().length >= 2 && (
+            <div className="absolute left-4 right-4 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-50 text-gray-800 max-h-[420px] overflow-y-auto divide-y divide-gray-100">
+              {isSearching ? (
+                <div className="p-4 text-center text-xs text-gray-500 font-medium">Searching session records...</div>
+              ) : !hasSearchResults ? (
+                <div className="p-4 text-center text-xs text-gray-500 italic">No matching results found in your account data.</div>
+              ) : (
+                <>
+                  {/* Permits */}
+                  {searchResults.permits?.length > 0 && (
+                    <div className="py-2 px-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Movement Permits</p>
+                      {searchResults.permits.map(p => (
+                        <div
+                          key={p.id}
+                          onClick={() => { setIsSearchFocused(false); navigate('/dashboard/movements'); }}
+                          className="px-3 py-2 hover:bg-blue-50 rounded-lg cursor-pointer transition flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{p.permit_number || 'Permit'}</p>
+                            <p className="text-xs text-gray-500">{p.trader_name} • {p.origin_district} → {p.destination_district}</p>
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">{p.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Police Cases */}
+                  {searchResults.cases?.length > 0 && (
+                    <div className="py-2 px-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Police Security Cases</p>
+                      {searchResults.cases.map(c => (
+                        <div
+                          key={c.id}
+                          onClick={() => { setIsSearchFocused(false); navigate('/dashboard/cases'); }}
+                          className="px-3 py-2 hover:bg-amber-50 rounded-lg cursor-pointer transition flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{c.case_number}</p>
+                            <p className="text-xs text-gray-500">{c.reason} • {c.location}</p>
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">{c.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Vet Records */}
+                  {searchResults.vetRecords?.length > 0 && (
+                    <div className="py-2 px-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Veterinary Records</p>
+                      {searchResults.vetRecords.map(v => (
+                        <div
+                          key={v.id}
+                          onClick={() => { setIsSearchFocused(false); navigate('/dashboard/vet-records'); }}
+                          className="px-3 py-2 hover:bg-green-50 rounded-lg cursor-pointer transition flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Tag #{v.tag_number} ({v.animal_type})</p>
+                            <p className="text-xs text-gray-500">{v.diagnosis} • Vet: {v.vet_name}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* System Users */}
+                  {searchResults.users?.length > 0 && (
+                    <div className="py-2 px-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Registered Users</p>
+                      {searchResults.users.map(u => (
+                        <div
+                          key={u.id}
+                          onClick={() => { setIsSearchFocused(false); navigate('/dashboard/users'); }}
+                          className="px-3 py-2 hover:bg-gray-100 rounded-lg cursor-pointer transition flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{u.name}</p>
+                            <p className="text-xs text-gray-500">{u.role} • {u.email || u.phone}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right: Icons & Avatar */}
@@ -240,24 +400,30 @@ const DashboardLayout = () => {
             )}
           </div>
 
-          {/* Profile Dropdown */}
+          {/* Profile Dropdown (Exact Jira Style - Image 2) */}
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="w-8 h-8 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[15px] font-normal hover:opacity-90 transition ml-1"
+              className="w-8 h-8 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[15px] font-bold uppercase hover:opacity-90 transition ml-1"
             >
               {getInitials(user?.name)}
             </button>
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 py-4 px-4 z-50 text-gray-800">
-                <div className="flex items-start gap-4 mb-3">
-                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-normal">
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 py-4 px-4 z-50 text-gray-800">
+                <div className="flex items-start gap-3.5 mb-3">
+                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-bold uppercase">
                     {getInitials(user?.name)}
                   </div>
                   <div className="flex flex-col pt-0.5 overflow-hidden">
                     <p className="text-[15px] font-semibold text-gray-900 truncate w-full">{getCleanName(user?.name)}</p>
-                    <p className="text-xs text-gray-500 truncate w-full mt-0.5">{user?.email || 'admin@rab.gov.rw'}</p>
-                    <button className="mt-3 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg py-1.5 px-4 w-fit transition-colors">
+                    <p className="text-xs text-gray-500 truncate w-full mt-0.5">{user?.email || user?.phone || 'admin@rab.gov.rw'}</p>
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate('/dashboard/account-settings');
+                      }}
+                      className="mt-3 text-sm font-medium text-[#0052cc] bg-[#ebf5ff] hover:bg-[#deebff] border border-[#b3d4ff] rounded-lg py-1.5 px-4 w-fit transition-colors cursor-pointer"
+                    >
                       Manage Account
                     </button>
                   </div>

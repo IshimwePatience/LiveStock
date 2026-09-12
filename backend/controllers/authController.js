@@ -73,4 +73,53 @@ const toggleUserStatus = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, registerUser, forgotPassword, resetPassword, getAllUsers, updateUser, deleteUser, toggleUserStatus };
+const changePassword = async (req, res) => {
+  try {
+    const result = await authService.changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const toggleMfa = async (req, res) => {
+  try {
+    const result = await authService.toggleMfa(req.user.id, req.body.enabled);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const toggleLocationTracking = async (req, res) => {
+  try {
+    const result = await authService.toggleLocationTracking(req.user.id, req.body.enabled);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const getUserLocationStatuses = async (req, res) => {
+  try {
+    const users = await authService.getUserLocationStatuses(req.user);
+    res.json(users);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  loginUser,
+  registerUser,
+  forgotPassword,
+  resetPassword,
+  getAllUsers,
+  updateUser,
+  deleteUser,
+  toggleUserStatus,
+  changePassword,
+  toggleMfa,
+  toggleLocationTracking,
+  getUserLocationStatuses
+};
