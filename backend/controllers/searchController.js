@@ -28,9 +28,14 @@ const globalSearch = async (req, res) => {
     let permitWhere = {
       [Op.or]: [
         lowerMatch('permit_number'),
-        lowerMatch('trader_name'),
+        lowerMatch('owner_name'),
+        lowerMatch('driver_name'),
+        lowerMatch('plate_number'),
         lowerMatch('origin_district'),
-        lowerMatch('destination_district'),
+        lowerMatch('origin_sector'),
+        lowerMatch('dest_district'),
+        lowerMatch('dest_sector'),
+        lowerMatch('animal_type'),
         lowerMatch('status')
       ]
     };
@@ -39,7 +44,7 @@ const globalSearch = async (req, res) => {
         {
           [Op.or]: [
             { origin_district: user.district_id },
-            { destination_district: user.district_id }
+            { dest_district: user.district_id }
           ]
         }
       ];
@@ -48,7 +53,7 @@ const globalSearch = async (req, res) => {
         {
           [Op.or]: [
             { origin_sector: user.sector_id },
-            { destination_sector: user.sector_id }
+            { dest_sector: user.sector_id }
           ]
         }
       ];
@@ -63,16 +68,17 @@ const globalSearch = async (req, res) => {
     // 2. Session-based Police Cases search
     let caseWhere = {
       [Op.or]: [
-        lowerMatch('case_number'),
+        lowerMatch('vehicle_plate'),
         lowerMatch('location'),
-        lowerMatch('reason'),
+        lowerMatch('details'),
+        lowerMatch('type'),
         lowerMatch('status')
       ]
     };
     if (user.role === 'DARO' && user.district_id) {
-      caseWhere.district_id = user.district_id;
+      caseWhere.location = { [Op.like]: `%${user.district_id}%` };
     } else if (user.role === 'SARO' && user.sector_id) {
-      caseWhere.sector_id = user.sector_id;
+      caseWhere.location = { [Op.like]: `%${user.sector_id}%` };
     }
 
     const cases = await Case.findAll({
@@ -84,12 +90,20 @@ const globalSearch = async (req, res) => {
     // 3. Session-based Vet Records search
     let vetWhere = {
       [Op.or]: [
-        lowerMatch('tag_number'),
+        lowerMatch('animal_tag'),
         lowerMatch('animal_type'),
-        lowerMatch('diagnosis'),
-        lowerMatch('vet_name')
+        lowerMatch('owner_name'),
+        lowerMatch('vaccines'),
+        lowerMatch('district'),
+        lowerMatch('sector')
       ]
     };
+    if (user.role === 'DARO' && user.district_id) {
+      vetWhere.district = user.district_id;
+    } else if (user.role === 'SARO' && user.sector_id) {
+      vetWhere.sector = user.sector_id;
+    }
+
     const vetRecords = await VetRecord.findAll({
       where: vetWhere,
       limit: 10,
