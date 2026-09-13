@@ -5,7 +5,7 @@ import api from '../../../lib/api';
 import { Search, Bell, Download, Printer, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FilterDropdown from '../../../components/ui/FilterDropdown';
-import ReportDropdown from '../../../components/ui/ReportDropdown';
+import PoliceReportDropdown from '../../../components/ui/PoliceReportDropdown';
 import PoliceCasesList from '../components/PoliceCasesList';
 import { generatePdfReportHTML, downloadPdfReport } from '../../../lib/pdfReportTheme';
 
@@ -34,7 +34,10 @@ const PoliceCases = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
-  const [recordScope, setRecordScope] = useState('BOTH');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [caseScope, setCaseScope] = useState('CURRENT_TAB');
+  const [caseTypeFilter, setCaseTypeFilter] = useState('ALL');
 
   const setActiveTab = (tab) => {
     setSearchParams({ tab });
@@ -163,6 +166,17 @@ const PoliceCases = () => {
         } else if (timeRange === 'MONTH') {
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           return date >= monthAgo;
+        } else if (timeRange === 'CUSTOM') {
+          if (customStartDate) {
+            const start = new Date(customStartDate);
+            if (date < start) return false;
+          }
+          if (customEndDate) {
+            const end = new Date(customEndDate);
+            end.setHours(23, 59, 59, 999);
+            if (date > end) return false;
+          }
+          return true;
         }
         return true;
       });
@@ -194,7 +208,7 @@ const PoliceCases = () => {
     }
 
     return result;
-  }, [cases, searchQuery, selectedFilters, timeRange]);
+  }, [cases, searchQuery, selectedFilters, timeRange, customStartDate, customEndDate]);
 
   // Filter cases based on active tab ('Cases' vs 'History')
   const displayedCases = useMemo(() => {
@@ -204,86 +218,131 @@ const PoliceCases = () => {
     return filteredCases.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
   }, [filteredCases, activeTab]);
 
-  // Helper to filter cases by scope (REQUESTS = Active Cases, HISTORY = Solved History, BOTH = All Cases)
-  const getExportDataset = (scopeParam = recordScope) => {
+  // Helper to filter cases by caseScope and caseTypeFilter
+  const getExportDataset = (scopeParam = caseScope, caseTypeParam = caseTypeFilter) => {
     let target = filteredCases;
-    if (scopeParam === 'REQUESTS') {
-      target = target.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
-    } else if (scopeParam === 'HISTORY') {
+
+    // Scope Filtering
+    if (scopeParam === 'CURRENT_TAB') {
+      if (activeTab === 'History') {
+        target = target.filter(c => c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED');
+      } else {
+        target = target.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
+      }
+    } else if (scopeParam === 'OPEN') {
+      target = target.filter(c => c.status === 'Open');
+    } else if (scopeParam === 'FOLLOWING_UP') {
+      target = target.filter(c => c.status === 'Following Up');
+    } else if (scopeParam === 'SOLVED') {
       target = target.filter(c => c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED');
+    } else if (scopeParam === 'ACTIVE') {
+      target = target.filter(c => c.status === 'Open' || c.status === 'Following Up');
+    } else if (scopeParam === 'ALL') {
+      // Full Registry (All Cases)
     }
+
+    // Type Filtering
+    if (caseTypeParam && caseTypeParam !== 'ALL') {
+      target = target.filter(c => c.type === caseTypeParam || c.filterType === caseTypeParam);
+    }
+
     return target;
   };
 
-  // CSV Export Handler
-  const exportToCSV = (scopeParam = recordScope) => {
-    const dataset = getExportDataset(scopeParam);
+  // CSV Export Handler - Independent Police Cases & Claims
+  const exportToCSV = (scopeParam = caseScope, caseTypeParam = caseTypeFilter) => {
+    const dataset = getExportDataset(scopeParam, caseTypeParam);
     if (!dataset || dataset.length === 0) {
-      toast.error('No cases available to export for selected scope');
+      toast.error('No police security cases available for selected scope & type filter');
       return;
     }
-    const headers = ['Case ID', 'Vehicle Plate', 'Title / Description', 'Type', 'Reporter', 'Status', 'Location', 'Date Reported'];
+    const headers = [
+      'Case ID',
+      'Vehicle Plate Number',
+      'Case Summary & Claim Details',
+      'Claim Type',
+      'Assigned Officer',
+      'Reporter / Initiator',
+      'Severity',
+      'Case Status (Open, Following Up, Case Solved)',
+      'Incident Location',
+      'Date Reported'
+    ];
     const rows = dataset.map(c => [
       c.id,
-      c.vehiclePlate || 'N/A',
+      `"${(c.vehiclePlate || 'N/A').replace(/"/g, '""')}"`,
       `"${(c.title || '').replace(/"/g, '""')}"`,
       c.type,
-      `"${c.reporter?.name || ''}"`,
+      `"${(c.assignee?.name || 'Police').replace(/"/g, '""')}"`,
+      `"${(c.reporter?.name || 'System').replace(/"/g, '""')}"`,
+      c.severity,
       c.status,
       `"${(c.location || '').replace(/"/g, '""')}"`,
       new Date(c.createdAt).toLocaleDateString()
     ]);
+
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const scopeLabel = scopeParam === 'REQUESTS' ? 'ActiveCases' : scopeParam === 'HISTORY' ? 'SolvedHistory' : 'AllCases';
-    link.setAttribute('download', `Police_Cases_${scopeLabel}_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    const scopeLabel = scopeParam === 'CURRENT_TAB' ? activeTab : scopeParam;
+    link.setAttribute('download', `RNP_Police_Claims_${scopeLabel}_${caseTypeParam}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // PDF Print Report Handler
-  const printPDFReport = (scopeParam = recordScope) => {
-    const dataset = getExportDataset(scopeParam);
+  // PDF Print Report Handler - Rwanda National Police
+  const printPDFReport = (scopeParam = caseScope, caseTypeParam = caseTypeFilter) => {
+    const dataset = getExportDataset(scopeParam, caseTypeParam);
     if (!dataset || dataset.length === 0) {
-      toast.error('No cases available to print report');
+      toast.error('No police security cases available to print report');
       return;
     }
-    const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE CASES' : scopeParam === 'HISTORY' ? 'SOLVED HISTORY' : 'FULL REGISTRY (ACTIVE & SOLVED)';
+    const scopeLabel = scopeParam === 'CURRENT_TAB' ? `CURRENT TAB: ${activeTab.toUpperCase()}` : scopeParam === 'OPEN' ? 'OPEN CASES' : scopeParam === 'FOLLOWING_UP' ? 'FOLLOWING UP CASES' : scopeParam === 'SOLVED' ? 'CASE SOLVED HISTORY' : scopeParam === 'ACTIVE' ? 'ACTIVE CASES (OPEN & FOLLOWING UP)' : 'FULL REGISTRY (ALL CASES)';
+    const typeLabel = caseTypeParam === 'ALL' ? 'ALL CLAIM TYPES' : caseTypeParam;
+
     const htmlContent = generatePdfReportHTML({
-      titleMain: 'RWANDA NATIONAL POLICE',
-      titleSub: '— OFFICIAL CASE REPORT',
-      subtitle: `Livestock & Transit Security Division • ${scopeLabel}`,
+      titleMain: 'RWANDA NATIONAL POLICE (RNP)',
+      titleSub: ' — LIVESTOCK & TRANSIT SECURITY DIVISION',
+      subtitle: `Official Police Security Claims & Case Registry • ${scopeLabel}`,
       meta: [
         { label: 'Generated On', value: new Date().toLocaleString() },
         { label: 'Export Scope', value: scopeLabel },
+        { label: 'Claim Type Filter', value: typeLabel },
         { label: 'Total Cases Included', value: dataset.length }
       ],
       columns: [
         { header: 'Case ID', align: 'left' },
         { header: 'Vehicle Plate', align: 'left' },
-        { header: 'Case Summary', align: 'left' },
-        { header: 'Type', align: 'left' },
+        { header: 'Case Details & Claims', align: 'left' },
+        { header: 'Claim Type', align: 'left' },
         { header: 'Reporter', align: 'left' },
         { header: 'Location', align: 'left' },
         { header: 'Status', align: 'left' }
       ],
-      rowsHtml: dataset.map(c => `
-        <tr>
-          <td class="col-bold">${c.id}</td>
-          <td>${c.vehiclePlate || 'N/A'}</td>
-          <td>${c.title}</td>
-          <td>${c.type}</td>
-          <td>${c.reporter?.name || 'System'}</td>
-          <td>${c.location}</td>
-          <td><span class="badge ${c.status === 'Case Solved' ? 'badge-solved' : c.status === 'Following Up' ? 'badge-following' : 'badge-open'}">${c.status}</span></td>
-        </tr>
-      `).join('')
+      rowsHtml: dataset.map(c => {
+        const statusBadgeClass = c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED'
+          ? 'badge-solved'
+          : c.status === 'Following Up'
+          ? 'badge-following'
+          : 'badge-open';
+
+        return `
+          <tr>
+            <td class="col-bold">${c.id}</td>
+            <td class="col-bold">${c.vehiclePlate || 'N/A'}</td>
+            <td><strong>${c.title}</strong></td>
+            <td>${c.type}</td>
+            <td>${c.reporter?.name || 'System'}</td>
+            <td>${c.location}</td>
+            <td><span class="badge ${statusBadgeClass}">${c.status}</span></td>
+          </tr>
+        `;
+      }).join('')
     });
-    downloadPdfReport(htmlContent, `Police_Cases_Report_${scopeParam}.pdf`);
+    downloadPdfReport(htmlContent, `RNP_Police_Cases_Report_${scopeParam}_${caseTypeParam}.pdf`);
   };
 
   // Extract unique users (Initiators & Approvers) from the filtered data for the avatars
@@ -378,13 +437,20 @@ const PoliceCases = () => {
         </div>
 
         <div className="relative z-50">
-          <ReportDropdown
+          <PoliceReportDropdown
             onExportCSV={exportToCSV}
             onPrintPDF={printPDFReport}
             timeRange={timeRange}
             setTimeRange={setTimeRange}
-            recordScope={recordScope}
-            setRecordScope={setRecordScope}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
+            caseScope={caseScope}
+            setCaseScope={setCaseScope}
+            caseTypeFilter={caseTypeFilter}
+            setCaseTypeFilter={setCaseTypeFilter}
+            activeTab={activeTab}
           />
         </div>
 
@@ -400,3 +466,4 @@ const PoliceCases = () => {
 };
 
 export default PoliceCases;
+
