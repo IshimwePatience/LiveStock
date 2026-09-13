@@ -231,22 +231,24 @@ const Overview = () => {
 
       {/* Top Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {/* Card 1: Completed Permits */}
+        {/* Card 1: Pending Requests (Awaiting approval) */}
         <div 
-          onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}
+          onClick={() => navigate('/dashboard/movements?tab=Requests')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
         >
-           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-             <CheckCircle2 className="w-5 h-5 text-gray-600" />
+           <div className="w-10 h-10 rounded bg-orange-50 border border-orange-100 flex items-center justify-center">
+             <Edit2 className="w-5 h-5 text-orange-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.completed || 0}</span> Permits Completed</div>
-             <div className="text-xs text-gray-500">Total completed movements</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1">
+               <span className="text-lg">{statsData?.pending || 0}</span> Pending Requests
+             </div>
+             <div className="text-xs text-gray-500">Awaiting approval</div>
            </div>
         </div>
 
         {/* Card 2: Incoming Permits (Destination) - Only for SARO and DARO */}
-        {(user?.role === 'SARO' || user?.role === 'DARO') && (
+        {(user?.role === 'SARO' || user?.role === 'DARO') ? (
           <div 
             onClick={() => navigate('/dashboard/movements?tab=Incoming%20(Destination)')}
             className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
@@ -261,37 +263,49 @@ const Overview = () => {
                <div className="text-xs text-gray-500">Heading to jurisdiction</div>
              </div>
           </div>
+        ) : (
+          /* Card 2 for RAB: Total Permits Issued */
+          <div 
+            onClick={() => navigate('/dashboard/movements?tab=History')}
+            className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+          >
+             <div className="w-10 h-10 rounded bg-blue-50 border border-blue-100 flex items-center justify-center">
+               <CheckSquare className="w-5 h-5 text-[#0052cc]" />
+             </div>
+             <div>
+               <div className="font-bold text-gray-900 flex items-baseline gap-1">
+                 <span className="text-lg">{statsData?.totalPermits || 0}</span> Total Permits
+               </div>
+               <div className="text-xs text-gray-500">All movement permits</div>
+             </div>
+          </div>
         )}
 
-        {/* Card 3: Out Permits */}
-        <div 
-          onClick={() => navigate('/dashboard/movements?tab=Requests')}
-          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
-        >
-           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-             <Edit2 className="w-5 h-5 text-gray-600" />
-           </div>
-           <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1">
-               <span className="text-lg">
-                 {user?.role === 'RAB' ? ((statsData?.districtToDistrict || 0) + (statsData?.sectorToSector || 0)) : (user?.role === 'DARO' ? (statsData?.districtToDistrict || 0) : (statsData?.sectorToSector || 0))}
-               </span> Out Permits
-             </div>
-             <div className="text-xs text-gray-500">Total permits issued</div>
-           </div>
-        </div>
-
-        {/* Card 4: Trips Starting Soon */}
+        {/* Card 3: Active Trips */}
         <div 
           onClick={() => navigate('/dashboard/movements?tab=History&status=APPROVED')}
           className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
         >
-           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-             <Calendar className="w-5 h-5 text-gray-600" />
+           <div className="w-10 h-10 rounded bg-green-50 border border-green-100 flex items-center justify-center">
+             <Calendar className="w-5 h-5 text-green-600" />
            </div>
            <div>
              <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.dueSoon || 0}</span> Active Trips</div>
              <div className="text-xs text-gray-500">Active &amp; scheduled trips</div>
+           </div>
+        </div>
+
+        {/* Card 4: Completed Permits */}
+        <div 
+          onClick={() => navigate('/dashboard/movements?tab=History&status=COMPLETED')}
+          className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all"
+        >
+           <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+             <CheckCircle2 className="w-5 h-5 text-gray-600" />
+           </div>
+           <div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.completed || 0}</span> Completed Permits</div>
+             <div className="text-xs text-gray-500">Total completed movements</div>
            </div>
         </div>
       </div>

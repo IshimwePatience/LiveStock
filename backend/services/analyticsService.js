@@ -191,7 +191,7 @@ class AnalyticsService {
     }));
 
     return { 
-      districtToDistrict, sectorToSector, completed, dueSoon, incoming: incomingPermits,
+      districtToDistrict, sectorToSector, completed: completedAll, pending: pendingCount, approved: approvedCount, active: activeCount, totalPermits: totalStatusCount, dueSoon, incoming: incomingPermits,
       statusOverview, recentActivity, animalDistribution, transportDistribution,
       districtVaccination, vaccineUsage
     };
