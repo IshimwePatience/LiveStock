@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Download, Printer, Check, Calendar, MapPin, Shield, Building } from 'lucide-react';
 import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
+import CustomSelect from './CustomSelect';
 
 const ReportDropdown = ({
   onExportCSV = () => { },
@@ -87,6 +88,13 @@ const ReportDropdown = ({
       return [{ id: 'ALL', title: 'All Locations (Entire Rwanda)', province: 'National Registry' }];
     }
   }, []);
+
+  const districtCustomOptions = useMemo(() => {
+    return allDistricts.map(d => ({
+      value: d.id,
+      label: d.id === 'ALL' ? d.title : `${d.title} (${d.province})`
+    }));
+  }, [allDistricts]);
 
   // Helper to fetch sectors dynamically for currently selected district
   const availableSectors = useMemo(() => {
@@ -380,26 +388,19 @@ const ReportDropdown = ({
                       /* RAB / Admin: Full Rwanda 30 District & Sector Picker */
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-[#0052cc]" />
+                          <label className="block text-[11px] font-bold text-gray-700 mb-1">
                             Select Rwanda District (Akarere):
                           </label>
-                          <select
+                          <CustomSelect
                             value={districtFilter}
-                            onChange={(e) => {
-                              const val = e.target.value;
+                            onChange={(val) => {
                               setDistrictFilter(val);
                               setSectorFilter('ALL');
                             }}
-                            className="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white font-medium focus:outline-none focus:border-[#0052cc] text-gray-800"
-                          >
-                            <option value="ALL">All Locations (Entire Rwanda)</option>
-                            {allDistricts.filter(d => d.id !== 'ALL').map(d => (
-                              <option key={d.id} value={d.id}>
-                                {d.title} ({d.province})
-                              </option>
-                            ))}
-                          </select>
+                            options={districtCustomOptions}
+                            placeholder="Select Rwanda District (Akarere)..."
+                            minWidth="w-full"
+                          />
                         </div>
 
                         {districtFilter !== 'ALL' && (
