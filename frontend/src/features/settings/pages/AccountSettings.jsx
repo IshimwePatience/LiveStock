@@ -48,8 +48,8 @@ const AccountSettings = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error('Image size must be less than 500MB');
       return;
     }
 
@@ -261,7 +261,7 @@ const AccountSettings = () => {
                         className="hidden"
                       />
                     </label>
-                    <p className="text-xs text-gray-500">Allowed formats: JPG, PNG, WEBP (Max size: 5MB)</p>
+                    <p className="text-xs text-gray-500">Allowed formats: JPG, PNG, WEBP (Max size: 500MB)</p>
                   </div>
                 </div>
               </div>
