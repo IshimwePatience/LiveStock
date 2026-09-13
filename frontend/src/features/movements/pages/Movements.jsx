@@ -42,6 +42,8 @@ const Movements = () => {
   const [recordScope, setRecordScope] = useState('CURRENT_TAB');
   const [animalFilter, setAnimalFilter] = useState('ALL');
   const [transportFilter, setTransportFilter] = useState('ALL');
+  const [districtFilter, setDistrictFilter] = useState('ALL');
+  const [sectorFilter, setSectorFilter] = useState('ALL');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -377,8 +379,14 @@ const Movements = () => {
     return s.includes(f);
   };
 
-  // Helper function to filter dataset by recordScope, animalFilter, and transportFilter
-  const getExportDataset = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
+  // Helper function to filter dataset by recordScope, animalFilter, transportFilter, districtFilter, and sectorFilter
+  const getExportDataset = (
+    scopeParam = recordScope,
+    animalFilterParam = animalFilter,
+    transportFilterParam = transportFilter,
+    districtFilterParam = districtFilter,
+    sectorFilterParam = sectorFilter
+  ) => {
     let target = filteredMovements;
     if (scopeParam === 'CURRENT_TAB') {
       if (activeTab === 'Requests') {
@@ -419,12 +427,36 @@ const Movements = () => {
       });
     }
 
+    if (districtFilterParam && districtFilterParam !== 'ALL') {
+      const d = districtFilterParam.toLowerCase();
+      target = target.filter(m =>
+        (m.originDistrict && m.originDistrict.toLowerCase().includes(d)) ||
+        (m.destDistrict && m.destDistrict.toLowerCase().includes(d)) ||
+        (m.route && m.route.toLowerCase().includes(d))
+      );
+    }
+
+    if (sectorFilterParam && sectorFilterParam !== 'ALL') {
+      const s = sectorFilterParam.toLowerCase();
+      target = target.filter(m =>
+        (m.originSector && m.originSector.toLowerCase().includes(s)) ||
+        (m.destSector && m.destSector.toLowerCase().includes(s)) ||
+        (m.route && m.route.toLowerCase().includes(s))
+      );
+    }
+
     return target;
   };
 
   // CSV Export Handler - Exports Animal by Animal
-  const exportToCSV = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
-    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam);
+  const exportToCSV = (
+    scopeParam = recordScope,
+    animalFilterParam = animalFilter,
+    transportFilterParam = transportFilter,
+    districtFilterParam = districtFilter,
+    sectorFilterParam = sectorFilter
+  ) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam, districtFilterParam, sectorFilterParam);
     if (!dataset || dataset.length === 0) {
       toast.error('No movement records available to export for selected scope & filters');
       return;
@@ -555,15 +587,21 @@ const Movements = () => {
     const link = document.createElement('a');
     link.href = url;
     const scopeLabel = scopeParam === 'CURRENT_TAB' ? activeTab.replace(/\s+/g, '') : scopeParam;
-    link.setAttribute('download', `RAB_Animal_Movements_${scopeLabel}_${animalFilterParam}_${transportFilterParam}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `RAB_Animal_Movements_${scopeLabel}_${animalFilterParam}_${transportFilterParam}_${districtFilterParam}_${sectorFilterParam}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // PDF Print Report Handler - Exports Animal by Animal
-  const printPDFReport = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
-    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam);
+  const printPDFReport = (
+    scopeParam = recordScope,
+    animalFilterParam = animalFilter,
+    transportFilterParam = transportFilter,
+    districtFilterParam = districtFilter,
+    sectorFilterParam = sectorFilter
+  ) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam, districtFilterParam, sectorFilterParam);
     if (!dataset || dataset.length === 0) {
       toast.error('No movement records available to print report');
       return;
@@ -622,6 +660,8 @@ const Movements = () => {
       meta: [
         { label: 'Generated On', value: new Date().toLocaleString() },
         { label: 'Export Scope', value: scopeLabel },
+        { label: 'District Filter', value: districtFilterParam.toUpperCase() },
+        { label: 'Sector Filter', value: sectorFilterParam.toUpperCase() },
         { label: 'Animal Filter', value: animalFilterParam.toUpperCase() },
         { label: 'Transport Mode', value: transportLabel },
         { label: 'Total Animal Rows', value: pdfRowsHtml.length }
@@ -638,7 +678,7 @@ const Movements = () => {
       ],
       rowsHtml: pdfRowsHtml.join('')
     });
-    downloadPdfReport(htmlContent, `RAB_Animal_Registry_${scopeParam}_${animalFilterParam}_${transportFilterParam}.pdf`);
+    downloadPdfReport(htmlContent, `RAB_Animal_Registry_${scopeParam}_${animalFilterParam}_${districtFilterParam}_${sectorFilterParam}.pdf`);
   };
 
   // Helper to check if movement is incoming to current user's jurisdiction
@@ -833,6 +873,10 @@ const Movements = () => {
             setAnimalFilter={setAnimalFilter}
             transportFilter={transportFilter}
             setTransportFilter={setTransportFilter}
+            districtFilter={districtFilter}
+            setDistrictFilter={setDistrictFilter}
+            sectorFilter={sectorFilter}
+            setSectorFilter={setSectorFilter}
             activeTab={activeTab}
           />
         </div>
