@@ -53,25 +53,57 @@ const AccountSettings = () => {
       return;
     }
 
+    setUploadingPic(true);
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Str = reader.result;
-      setUploadingPic(true);
-      try {
-        await api.put('/auth/profile-picture', { profile_picture: base64Str });
-        setProfilePic(base64Str);
-        toast.success('Profile picture updated successfully!');
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
 
-        const updatedUser = { ...user, profile_picture: base64Str };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        window.dispatchEvent(new Event('user_permissions_updated'));
-        window.dispatchEvent(new Event('storage'));
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Failed to upload profile picture');
-      } finally {
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+          await api.put('/auth/profile-picture', { profile_picture: compressedBase64 });
+          setProfilePic(compressedBase64);
+          toast.success('Profile picture updated successfully!');
+
+          const updatedUser = { ...user, profile_picture: compressedBase64 };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+          window.dispatchEvent(new Event('user_permissions_updated'));
+          window.dispatchEvent(new Event('storage'));
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Failed to upload profile picture');
+        } finally {
+          setUploadingPic(false);
+        }
+      };
+      img.onerror = () => {
+        toast.error('Invalid image file');
         setUploadingPic(false);
-      }
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
