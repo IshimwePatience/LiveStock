@@ -41,6 +41,40 @@ const AccountSettings = () => {
   // General settings
   const [timezone, setTimezone] = useState('Africa/Kigali');
   const [language, setLanguage] = useState('English (United States)');
+  const [profilePic, setProfilePic] = useState(user?.profile_picture || null);
+  const [uploadingPic, setUploadingPic] = useState(false);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Str = reader.result;
+      setUploadingPic(true);
+      try {
+        await api.put('/auth/profile-picture', { profile_picture: base64Str });
+        setProfilePic(base64Str);
+        toast.success('Profile picture updated successfully!');
+
+        const updatedUser = { ...user, profile_picture: base64Str };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        window.dispatchEvent(new Event('user_permissions_updated'));
+        window.dispatchEvent(new Event('storage'));
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to upload profile picture');
+      } finally {
+        setUploadingPic(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (activeTab === 'location' && user?.role === 'RAB') {
@@ -201,9 +235,37 @@ const AccountSettings = () => {
         {activeTab === 'general' && (
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">General</h1>
-            <p className="text-sm text-gray-500 mb-6">Manage your language, timezone, and personal account defaults.</p>
+            <p className="text-sm text-gray-500 mb-6">Manage your profile picture, timezone, and language preferences.</p>
 
             <div className="space-y-6 max-w-xl">
+              {/* Profile Picture Upload Card */}
+              <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Profile Picture</label>
+                <div className="flex items-center gap-5">
+                  <div className="w-20 h-20 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-bold uppercase overflow-hidden shrink-0 border-2 border-gray-200 shadow-sm">
+                    {profilePic ? (
+                      <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name ? user.name[0].toUpperCase() : 'U'
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="inline-flex items-center px-4 py-2 bg-[#0052cc] hover:bg-[#00419e] text-white text-xs font-semibold rounded-lg cursor-pointer transition shadow-sm">
+                      {uploadingPic ? 'Uploading...' : 'Upload Profile Picture'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingPic}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500">Allowed formats: JPG, PNG, WEBP (Max size: 5MB)</p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Your timezone</label>
                 <select
@@ -221,14 +283,13 @@ const AccountSettings = () => {
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Language</label>
                 <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full bg-[#f4f5f7] border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-800 focus:bg-white focus:border-[#0052cc] outline-none transition"
+                  value="English (United States)"
+                  disabled
+                  className="w-full bg-[#f4f5f7] border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-800 focus:bg-white focus:border-[#0052cc] outline-none transition cursor-not-allowed opacity-90"
                 >
                   <option value="English (United States)">English (United States)</option>
-                  <option value="Kinyarwanda">Kinyarwanda</option>
-                  <option value="French">Français</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">System interface is restricted to English (United States).</p>
               </div>
 
               <div className="pt-4 border-t border-gray-100">

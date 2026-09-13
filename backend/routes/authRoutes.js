@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   loginUser, registerUser, forgotPassword, resetPassword, getAllUsers, updateUser, deleteUser, toggleUserStatus,
-  changePassword, toggleMfa, toggleLocationTracking, getUserLocationStatuses, updateRolePermissions
+  changePassword, toggleMfa, toggleLocationTracking, getUserLocationStatuses, updateRolePermissions, updateProfilePicture
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -21,5 +21,6 @@ router.post('/change-password', protect, changePassword);
 router.post('/mfa/toggle', protect, authorize('RAB'), toggleMfa);
 router.put('/location-toggle', protect, toggleLocationTracking);
 router.get('/users/location-status', protect, authorize('RAB'), getUserLocationStatuses);
+router.put('/profile-picture', protect, updateProfilePicture);
 
 module.exports = router;

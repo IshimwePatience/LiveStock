@@ -298,11 +298,26 @@ class AuthService {
     }
 
     const users = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id', 'status', 'location_tracking_enabled', 'last_location_updated', 'updatedAt'],
+      attributes: ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id', 'status', 'location_tracking_enabled', 'last_location_updated', 'profile_picture', 'updatedAt'],
       order: [['name', 'ASC']]
     });
 
     return users;
+  }
+
+  async updateProfilePicture(userId, profilePicture) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    user.profile_picture = profilePicture;
+    await user.save();
+
+    const userObj = user.toJSON();
+    delete userObj.password_hash;
+    delete userObj.reset_token;
+    delete userObj.reset_token_expires;
+
+    return { message: 'Profile picture updated successfully', user: userObj };
   }
 }
 

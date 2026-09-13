@@ -118,6 +118,15 @@ const updateRolePermissions = async (req, res) => {
   }
 };
 
+const updateProfilePicture = async (req, res) => {
+  try {
+    const result = await authService.updateProfilePicture(req.user.id, req.body.profile_picture);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
@@ -131,5 +140,6 @@ module.exports = {
   toggleMfa,
   toggleLocationTracking,
   getUserLocationStatuses,
-  updateRolePermissions
+  updateRolePermissions,
+  updateProfilePicture
 };

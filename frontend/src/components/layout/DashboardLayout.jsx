@@ -404,15 +404,23 @@ const DashboardLayout = () => {
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="w-8 h-8 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[15px] font-bold uppercase hover:opacity-90 transition ml-1"
+              className="w-8 h-8 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-[15px] font-bold uppercase hover:opacity-90 transition ml-1 overflow-hidden border border-white/20"
             >
-              {getInitials(user?.name)}
+              {user?.profile_picture ? (
+                <img src={user.profile_picture} alt={user?.name || 'User'} className="w-full h-full object-cover" />
+              ) : (
+                getInitials(user?.name)
+              )}
             </button>
             {isProfileOpen && (
               <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 py-4 px-4 z-50 text-gray-800">
                 <div className="flex items-start gap-3.5 mb-3">
-                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-bold uppercase">
-                    {getInitials(user?.name)}
+                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#607d8b] flex items-center justify-center text-white text-2xl font-bold uppercase overflow-hidden border border-gray-200">
+                    {user?.profile_picture ? (
+                      <img src={user.profile_picture} alt={user?.name || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      getInitials(user?.name)
+                    )}
                   </div>
                   <div className="flex flex-col pt-0.5 overflow-hidden">
                     <p className="text-[15px] font-semibold text-gray-900 truncate w-full">{getCleanName(user?.name)}</p>

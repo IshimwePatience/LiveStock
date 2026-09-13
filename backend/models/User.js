@@ -21,6 +21,7 @@ const User = sequelize.define('User', {
   mfa_secret: { type: DataTypes.STRING, allowNull: true },
   location_tracking_enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_location_updated: { type: DataTypes.DATE, allowNull: true },
+  profile_picture: { type: DataTypes.TEXT, allowNull: true },
 });
 
 module.exports = User;

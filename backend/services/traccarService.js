@@ -22,18 +22,25 @@ class TraccarService {
       const isNationalPolice = roleUpper === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
       const isNationalUser = roleUpper.includes('RAB') || roleUpper.includes('ADMIN') || roleUpper.includes('SUPER') || isNationalPolice;
 
-      // 1. Get all active trips & movement requests from DB
+      // 1. Get all active trips & movement requests from DB safely
+      const userAttrs = ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id'];
+      
       const [activeTrips, activeRequests] = await Promise.all([
         Trip.findAll({
-          where: { status: ['ACTIVE', 'SCHEDULED', 'ARRIVED'] },
           include: [{
             model: MovementRequest,
-            include: [{ model: User, as: 'Initiator' }]
+            include: [{ model: User, as: 'Initiator', attributes: userAttrs }]
           }]
+        }).catch(err => {
+          console.warn('Trip query warning in TraccarService:', err.message);
+          return [];
         }),
         MovementRequest.findAll({
           where: { status: ['APPROVED', 'ACTIVE', 'COMPLETED', 'PENDING'] },
-          include: [{ model: User, as: 'Initiator' }]
+          include: [{ model: User, as: 'Initiator', attributes: userAttrs }]
+        }).catch(err => {
+          console.warn('MovementRequest query warning in TraccarService:', err.message);
+          return [];
         })
       ]);
 

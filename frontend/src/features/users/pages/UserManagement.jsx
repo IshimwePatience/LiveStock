@@ -669,6 +669,7 @@ const UserManagement = () => {
                     checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
                   />
                 </th>
+                <th className="py-2.5 px-4 font-medium text-[13px] text-black">Profile</th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">Name</th>
                 <th className="py-2.5 px-4 font-medium text-[13px] text-black">
                   {activeTab === 'SARO' || activeTab === 'DARO' ? 'Phone Number' : 'Phone / Email'}
@@ -691,6 +692,19 @@ const UserManagement = () => {
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => toggleSelect(user.id)}
                       />
+                    </td>
+                    <td className="py-2 px-4">
+                      {user.profile_picture ? (
+                        <img
+                          src={user.profile_picture}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm shrink-0"
+                        />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full ${getColorForInitials(getInitials(user.name))} flex items-center justify-center text-white text-[11px] font-bold uppercase shadow-sm shrink-0`}>
+                          {getInitials(user.name)}
+                        </div>
+                      )}
                     </td>
                     <td className="py-2 px-4">
                       <p className="text-[13px] font-medium text-black">{user.name}</p>
