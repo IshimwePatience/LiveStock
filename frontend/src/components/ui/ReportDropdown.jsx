@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, Download, Printer, Check, Calendar } from 'lucide-react';
+import { Search, ChevronDown, Download, Printer, Check, Calendar, MapPin, Shield, Building } from 'lucide-react';
+import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 
 const ReportDropdown = ({
   onExportCSV = () => { },
@@ -27,7 +28,23 @@ const ReportDropdown = ({
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
-  const categories = ['Record Scope', 'District Filter', 'Sector Filter', 'Transport Mode', 'Animal Filter', 'Date Range', 'Export Format'];
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isRabOrAdmin = user?.role === 'RAB' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isDaro = user?.role === 'DARO';
+  const isSaro = user?.role === 'SARO';
+
+  // Automatically enforce user jurisdiction defaults
+  useEffect(() => {
+    if (isDaro && user?.district_id) {
+      setDistrictFilter(user.district_id);
+    } else if (isSaro) {
+      if (user?.district_id) setDistrictFilter(user.district_id);
+      if (user?.sector_id) setSectorFilter(user.sector_id);
+    }
+  }, [isDaro, isSaro, user?.district_id, user?.sector_id]);
+
+  const categories = ['Record Scope', 'Location', 'Transport Mode', 'Animal Filter', 'Date Range', 'Export Format'];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,42 +56,54 @@ const ReportDropdown = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const scopeOptions = [
-    { id: 'CURRENT_TAB', title: `Current Tab (${activeTab})`, subtitle: `Export records matching current visible tab (${activeTab})` },
-    { id: 'BOTH', title: 'Both (Requests & History)', subtitle: 'Export active pending requests and completed history' },
-    { id: 'ALL', title: 'All Movements (Full Registry)', subtitle: 'Export all movements including outgoing and incoming' },
-    { id: 'REQUESTS', title: 'Active Requests Only', subtitle: 'Export pending movement requests awaiting approval' },
-    { id: 'HISTORY', title: 'Completed History Only', subtitle: 'Export approved, completed, or rejected permits' },
-    { id: 'INCOMING', title: 'Incoming Movements Only', subtitle: 'Export permits heading to destination' },
-  ];
+  // RAB / Admin must NOT see "Incoming Movements Only" in their report scopes
+  const scopeOptions = useMemo(() => {
+    const list = [
+      { id: 'CURRENT_TAB', title: `Current Tab (${activeTab})`, subtitle: `Export records matching current visible tab (${activeTab})` },
+      { id: 'BOTH', title: 'Both (Requests & History)', subtitle: 'Export active pending requests and completed history' },
+      { id: 'ALL', title: 'All Movements (Full Registry)', subtitle: 'Export all movements including outgoing and incoming' },
+      { id: 'REQUESTS', title: 'Active Requests Only', subtitle: 'Export pending movement requests awaiting approval' },
+      { id: 'HISTORY', title: 'Completed History Only', subtitle: 'Export approved, completed, or rejected permits' },
+    ];
+    if (!isRabOrAdmin) {
+      list.push({ id: 'INCOMING', title: 'Incoming Movements Only', subtitle: 'Export permits heading to destination' });
+    }
+    return list;
+  }, [activeTab, isRabOrAdmin]);
 
-  const districtOptions = [
-    { id: 'ALL', title: 'All Districts (General)', subtitle: 'Export permits from all origin/destination districts' },
-    { id: 'Gatsibo', title: 'Gatsibo District', subtitle: 'Eastern Province' },
-    { id: 'Nyagatare', title: 'Nyagatare District', subtitle: 'Eastern Province' },
-    { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
-    { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
-    { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
-    { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
-    { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
-    { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
-    { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
-    { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' },
-    { id: 'Gicumbi', title: 'Gicumbi District', subtitle: 'Northern Province' },
-    { id: 'Kayonza', title: 'Kayonza District', subtitle: 'Eastern Province' },
-  ];
+  // Helper to build list of all 30 Districts in Rwanda from rwanda-locations
+  const allDistricts = useMemo(() => {
+    try {
+      const provinces = getProvinces();
+      const list = [{ id: 'ALL', title: 'All Locations (Entire Rwanda)', province: 'National Registry' }];
+      provinces.forEach(prov => {
+        const dists = getDistricts(prov) || [];
+        dists.forEach(d => {
+          list.push({ id: d, title: `${d} District`, province: prov });
+        });
+      });
+      return list;
+    } catch (e) {
+      return [{ id: 'ALL', title: 'All Locations (Entire Rwanda)', province: 'National Registry' }];
+    }
+  }, []);
 
-  const sectorOptions = [
-    { id: 'ALL', title: 'All Sectors (General)', subtitle: 'Export permits from all origin/destination sectors' },
-    { id: 'Rwimbogo', title: 'Rwimbogo Sector', subtitle: 'Gatsibo District' },
-    { id: 'Tabagwe', title: 'Tabagwe Sector', subtitle: 'Nyagatare District' },
-    { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera District' },
-    { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera District' },
-    { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera District' },
-    { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo District' },
-    { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo District' },
-    { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo District' },
-  ];
+  // Helper to fetch sectors dynamically for currently selected district
+  const availableSectors = useMemo(() => {
+    const targetDistrict = isDaro || isSaro ? (user?.district_id || districtFilter) : districtFilter;
+    if (!targetDistrict || targetDistrict === 'ALL') return [];
+    try {
+      const provinces = getProvinces();
+      for (const prov of provinces) {
+        const dists = getDistricts(prov) || [];
+        if (dists.includes(targetDistrict)) {
+          const secs = getSectors(prov, targetDistrict) || [];
+          return [{ id: 'ALL', title: `All Sectors in ${targetDistrict} District` }, ...secs.map(s => ({ id: s, title: `${s} Sector` }))];
+        }
+      }
+    } catch (e) { }
+    return [];
+  }, [districtFilter, isDaro, isSaro, user?.district_id]);
 
   const transportOptions = [
     { id: 'ALL', title: 'All Transport Modes (Both)', subtitle: 'Export permits transported by vehicle or on foot' },
@@ -106,8 +135,7 @@ const ReportDropdown = ({
 
   const currentOptions = useMemo(() => {
     let opts = scopeOptions;
-    if (activeCategory === 'District Filter') opts = districtOptions;
-    if (activeCategory === 'Sector Filter') opts = sectorOptions;
+    if (activeCategory === 'Location') opts = allDistricts;
     if (activeCategory === 'Transport Mode') opts = transportOptions;
     if (activeCategory === 'Animal Filter') opts = animalOptions;
     if (activeCategory === 'Date Range') opts = dateOptions;
@@ -115,16 +143,17 @@ const ReportDropdown = ({
 
     if (!searchQuery) return opts;
     const q = searchQuery.toLowerCase();
-    return opts.filter(o => o.title.toLowerCase().includes(q) || (o.subtitle && o.subtitle.toLowerCase().includes(q)));
-  }, [activeCategory, searchQuery, activeTab]);
+    return opts.filter(o => o.title.toLowerCase().includes(q) || (o.province && o.province.toLowerCase().includes(q)) || (o.subtitle && o.subtitle.toLowerCase().includes(q)));
+  }, [activeCategory, searchQuery, activeTab, allDistricts, scopeOptions]);
 
   const handleSelectOption = (optId) => {
     if (activeCategory === 'Record Scope') {
       setRecordScope(optId);
-    } else if (activeCategory === 'District Filter') {
-      setDistrictFilter(optId);
-    } else if (activeCategory === 'Sector Filter') {
-      setSectorFilter(optId);
+    } else if (activeCategory === 'Location') {
+      if (!isDaro && !isSaro) {
+        setDistrictFilter(optId);
+        setSectorFilter('ALL');
+      }
     } else if (activeCategory === 'Transport Mode') {
       setTransportFilter(optId);
     } else if (activeCategory === 'Animal Filter') {
@@ -142,6 +171,12 @@ const ReportDropdown = ({
   };
 
   const isFiltered = timeRange !== 'ALL' || recordScope !== 'CURRENT_TAB' || animalFilter !== 'ALL' || transportFilter !== 'ALL' || districtFilter !== 'ALL' || sectorFilter !== 'ALL' || customStartDate !== '' || customEndDate !== '';
+
+  const getLocationBadgeText = () => {
+    if (districtFilter === 'ALL') return null;
+    if (sectorFilter === 'ALL') return districtFilter;
+    return `${districtFilter}/${sectorFilter}`;
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -178,8 +213,12 @@ const ReportDropdown = ({
                 setRecordScope('CURRENT_TAB');
                 setAnimalFilter('ALL');
                 setTransportFilter('ALL');
-                setDistrictFilter('ALL');
-                setSectorFilter('ALL');
+                if (!isDaro && !isSaro) {
+                  setDistrictFilter('ALL');
+                  setSectorFilter('ALL');
+                } else if (isDaro) {
+                  setSectorFilter('ALL');
+                }
                 setCustomStartDate('');
                 setCustomEndDate('');
               }}
@@ -193,7 +232,7 @@ const ReportDropdown = ({
           <div className="flex h-[360px]">
 
             {/* Left Column: Categories */}
-            <div className="w-[180px] border-r border-gray-200 flex flex-col py-2 bg-gray-50/30">
+            <div className="w-[180px] border-r border-gray-200 flex flex-col py-2 bg-gray-50/30 shrink-0">
               <div className="flex-1 overflow-y-auto space-y-0.5">
                 {categories.map((cat) => (
                   <button
@@ -202,7 +241,7 @@ const ReportDropdown = ({
                       setActiveCategory(cat);
                       setSearchQuery('');
                     }}
-                    className={`w-full text-left flex items-center justify-between px-3.5 py-2 text-xs ${activeCategory === cat
+                    className={`w-full text-left flex items-center justify-between px-3.5 py-2.5 text-xs ${activeCategory === cat
                         ? 'bg-blue-50 text-[#0052cc] font-semibold border-l-4 border-[#0052cc]'
                         : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                       }`}
@@ -211,11 +250,8 @@ const ReportDropdown = ({
                     {cat === 'Record Scope' && recordScope !== 'CURRENT_TAB' && (
                       <span className="bg-blue-100 text-[#0052cc] text-[9px] px-1.5 py-0.5 rounded-full font-bold">Scope</span>
                     )}
-                    {cat === 'District Filter' && districtFilter !== 'ALL' && (
-                      <span className="bg-blue-100 text-[#0052cc] text-[9px] px-1.5 py-0.5 rounded-full font-bold">{districtFilter}</span>
-                    )}
-                    {cat === 'Sector Filter' && sectorFilter !== 'ALL' && (
-                      <span className="bg-blue-100 text-[#0052cc] text-[9px] px-1.5 py-0.5 rounded-full font-bold">{sectorFilter}</span>
+                    {cat === 'Location' && getLocationBadgeText() && (
+                      <span className="bg-blue-100 text-[#0052cc] text-[9px] px-1.5 py-0.5 rounded-full font-bold truncate max-w-[65px]">{getLocationBadgeText()}</span>
                     )}
                     {cat === 'Transport Mode' && transportFilter !== 'ALL' && (
                       <span className="bg-blue-100 text-[#0052cc] text-[9px] px-1.5 py-0.5 rounded-full font-bold">{transportFilter === 'PERSON_ON_FOOT' ? 'Foot' : 'Vehicle'}</span>
@@ -232,7 +268,7 @@ const ReportDropdown = ({
             </div>
 
             {/* Right Column: Options */}
-            <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative">
+            <div className="flex-1 flex flex-col pt-3 pb-0 pl-4 pr-1 relative min-w-0">
               <div className="pr-3 pb-2">
                 <div className="relative flex items-center border border-gray-300 rounded focus-within:border-[#0052cc] focus-within:ring-1 focus-within:ring-[#0052cc] transition overflow-hidden">
                   <div className="pl-2.5 text-gray-500">
@@ -278,62 +314,130 @@ const ReportDropdown = ({
                   })
                 )}
 
-                {activeCategory === 'District Filter' && (
-                  currentOptions.map((opt) => {
-                    const isSelected = districtFilter === opt.id;
-                    return (
-                      <label
-                        key={opt.id}
-                        onClick={() => handleSelectOption(opt.id)}
-                        className={`flex items-start gap-2.5 p-2 rounded cursor-pointer group transition border ${isSelected ? 'bg-blue-50/70 border-blue-200' : 'hover:bg-gray-50 border-transparent'
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name="reportDistrictFilter"
-                          checked={isSelected}
-                          onChange={() => handleSelectOption(opt.id)}
-                          className="mt-0.5 border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-3.5 h-3.5 cursor-pointer"
-                        />
-                        <div className="flex flex-col flex-1">
-                          <span className={`text-xs leading-tight ${isSelected ? 'font-semibold text-[#0052cc]' : 'text-gray-700 group-hover:text-gray-900'}`}>
-                            {opt.title}
-                          </span>
-                          {opt.subtitle && <span className="text-[11px] text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
+                {/* Location Category (Role-adapted for RAB, DARO, and SARO) */}
+                {activeCategory === 'Location' && (
+                  <div className="space-y-3 pr-1">
+                    {/* SARO: Fixed Sector & District */}
+                    {isSaro ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-md space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#0052cc]">
+                          <Building className="w-4 h-4" />
+                          <span>Sector Jurisdiction (SARO)</span>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#0052cc]" />}
-                      </label>
-                    );
-                  })
-                )}
+                        <p className="text-xs font-semibold text-gray-800">
+                          {user?.sector_id || 'Rwimbogo'} Sector ({user?.district_id || 'Gatsibo'} District)
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          Your reports are automatically scoped exclusively to your assigned sector.
+                        </p>
+                      </div>
+                    ) : isDaro ? (
+                      /* DARO: Fixed District, Selectable Sectors */
+                      <div className="space-y-3">
+                        <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-md">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-0.5">
+                            <MapPin className="w-3.5 h-3.5 text-[#0052cc]" />
+                            <span>District Jurisdiction:</span>
+                          </div>
+                          <span className="text-xs font-semibold text-[#0052cc]">
+                            {user?.district_id || 'Gatsibo'} District (All Sectors)
+                          </span>
+                        </div>
 
-                {activeCategory === 'Sector Filter' && (
-                  currentOptions.map((opt) => {
-                    const isSelected = sectorFilter === opt.id;
-                    return (
-                      <label
-                        key={opt.id}
-                        onClick={() => handleSelectOption(opt.id)}
-                        className={`flex items-start gap-2.5 p-2 rounded cursor-pointer group transition border ${isSelected ? 'bg-blue-50/70 border-blue-200' : 'hover:bg-gray-50 border-transparent'
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name="reportSectorFilter"
-                          checked={isSelected}
-                          onChange={() => handleSelectOption(opt.id)}
-                          className="mt-0.5 border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-3.5 h-3.5 cursor-pointer"
-                        />
-                        <div className="flex flex-col flex-1">
-                          <span className={`text-xs leading-tight ${isSelected ? 'font-semibold text-[#0052cc]' : 'text-gray-700 group-hover:text-gray-900'}`}>
-                            {opt.title}
-                          </span>
-                          {opt.subtitle && <span className="text-[11px] text-gray-500 leading-tight mt-0.5">{opt.subtitle}</span>}
+                        <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-md">
+                          <label className="block text-[11px] font-bold text-[#0052cc] mb-1.5">
+                            Select Sector in {user?.district_id || 'Gatsibo'} District:
+                          </label>
+
+                          <div className="space-y-1 max-h-[180px] overflow-y-auto pr-1">
+                            {availableSectors.map((sec) => {
+                              const isSelected = sectorFilter === sec.id;
+                              return (
+                                <label
+                                  key={sec.id}
+                                  onClick={() => setSectorFilter(sec.id)}
+                                  className={`flex items-center justify-between p-1.5 rounded cursor-pointer transition border text-xs ${isSelected ? 'bg-white font-semibold text-[#0052cc] border-blue-300 shadow-sm' : 'hover:bg-white/60 border-transparent text-gray-700'
+                                    }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name="daroLocationSector"
+                                      checked={isSelected}
+                                      onChange={() => setSectorFilter(sec.id)}
+                                      className="border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{sec.title}</span>
+                                  </div>
+                                  {isSelected && <Check className="w-3.5 h-3.5 text-[#0052cc]" />}
+                                </label>
+                              );
+                            })}
+                          </div>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#0052cc]" />}
-                      </label>
-                    );
-                  })
+                      </div>
+                    ) : (
+                      /* RAB / Admin: Full Rwanda 30 District & Sector Picker */
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-[#0052cc]" />
+                            Select Rwanda District (Akarere):
+                          </label>
+                          <select
+                            value={districtFilter}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setDistrictFilter(val);
+                              setSectorFilter('ALL');
+                            }}
+                            className="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white font-medium focus:outline-none focus:border-[#0052cc] text-gray-800"
+                          >
+                            <option value="ALL">All Locations (Entire Rwanda)</option>
+                            {allDistricts.filter(d => d.id !== 'ALL').map(d => (
+                              <option key={d.id} value={d.id}>
+                                {d.title} ({d.province})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {districtFilter !== 'ALL' && (
+                          <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-md animate-in fade-in duration-150">
+                            <label className="block text-[11px] font-bold text-[#0052cc] mb-1.5">
+                              Sectors in {districtFilter} District (Umurenge):
+                            </label>
+
+                            <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1">
+                              {availableSectors.map((sec) => {
+                                const isSelected = sectorFilter === sec.id;
+                                return (
+                                  <label
+                                    key={sec.id}
+                                    onClick={() => setSectorFilter(sec.id)}
+                                    className={`flex items-center justify-between p-1.5 rounded cursor-pointer transition border text-xs ${isSelected ? 'bg-white font-semibold text-[#0052cc] border-blue-300 shadow-sm' : 'hover:bg-white/60 border-transparent text-gray-700'
+                                      }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="radio"
+                                        name="locationSector"
+                                        checked={isSelected}
+                                        onChange={() => setSectorFilter(sec.id)}
+                                        className="border-gray-300 text-[#0052cc] focus:ring-[#0052cc] w-3 h-3 cursor-pointer"
+                                      />
+                                      <span>{sec.title}</span>
+                                    </div>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-[#0052cc]" />}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {activeCategory === 'Transport Mode' && (
@@ -478,7 +582,7 @@ const ReportDropdown = ({
                   })
                 )}
 
-                {currentOptions.length === 0 && (
+                {currentOptions.length === 0 && activeCategory !== 'Location' && (
                   <div className="text-xs text-gray-500 p-2 text-center mt-4">No matching options</div>
                 )}
               </div>
@@ -486,21 +590,22 @@ const ReportDropdown = ({
 
           </div>
 
-          {/* Footer Row with Quick Actions */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-gray-50/70">
-            <span className="text-xs text-gray-500">
-              Active: <strong className="text-gray-800">{scopeOptions.find(s => s.id === recordScope)?.title.split('(')[0].trim() || recordScope}</strong> • <strong className="text-gray-800">{districtFilter === 'ALL' ? 'All Districts' : districtFilter}</strong> • <strong className="text-gray-800">{sectorFilter === 'ALL' ? 'All Sectors' : sectorFilter}</strong> • <strong className="text-gray-800">{transportFilter === 'ALL' ? 'All Transport' : transportFilter === 'PERSON_ON_FOOT' ? 'On Foot' : 'Vehicle'}</strong> • <strong className="text-gray-800">{animalOptions.find(a => a.id === animalFilter)?.title.split('(')[0].trim() || 'All Animals'}</strong>
-            </span>
+          {/* Footer Row with Non-Squeezed Quick Action Buttons */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-gray-50/70 gap-3">
+            <div className="text-xs text-gray-500 truncate flex-1 min-w-0">
+              Active: <strong className="text-gray-800">{scopeOptions.find(s => s.id === recordScope)?.title.split('(')[0].trim() || recordScope}</strong> • <strong className="text-gray-800">{districtFilter === 'ALL' ? 'All Locations' : sectorFilter === 'ALL' ? `${districtFilter} District` : `${districtFilter}/${sectorFilter}`}</strong> • <strong className="text-gray-800">{transportFilter === 'ALL' ? 'All Transport' : transportFilter === 'PERSON_ON_FOOT' ? 'On Foot' : 'Vehicle'}</strong> • <strong className="text-gray-800">{animalOptions.find(a => a.id === animalFilter)?.title.split('(')[0].trim() || 'All Animals'}</strong>
+            </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => {
                   onExportCSV(recordScope, animalFilter, transportFilter, districtFilter, sectorFilter);
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm"
+                className="flex items-center gap-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm shrink-0 whitespace-nowrap"
               >
-                <Download className="w-3.5 h-3.5" /> Export Excel CSV
+                <Download className="w-3.5 h-3.5 shrink-0" />
+                <span>Export Excel CSV</span>
               </button>
 
               <button
@@ -508,9 +613,10 @@ const ReportDropdown = ({
                   onPrintPDF(recordScope, animalFilter, transportFilter, districtFilter, sectorFilter);
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm"
+                className="flex items-center gap-1.5 bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm shrink-0 whitespace-nowrap"
               >
-                <Printer className="w-3.5 h-3.5" /> Print PDF
+                <Printer className="w-3.5 h-3.5 shrink-0" />
+                <span>Print PDF</span>
               </button>
             </div>
           </div>
