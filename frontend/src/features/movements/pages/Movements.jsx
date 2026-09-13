@@ -37,7 +37,8 @@ const Movements = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
-  const [recordScope, setRecordScope] = useState('BOTH');
+  const [recordScope, setRecordScope] = useState('CURRENT_TAB');
+  const [animalFilter, setAnimalFilter] = useState('ALL');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +46,7 @@ const Movements = () => {
     const typeParam = searchParams.get('type');
     const animalParam = searchParams.get('animal');
     const searchParam = searchParams.get('search');
+    const modeParam = searchParams.get('mode') || searchParams.get('transportMode');
 
     if (searchParam) {
       setSearchQuery(searchParam);
@@ -60,6 +62,7 @@ const Movements = () => {
     }
     if (typeParam) newFilters['Type'] = [typeParam];
     if (animalParam) newFilters['Animal'] = [animalParam];
+    if (modeParam) newFilters['Transport Mode'] = [modeParam];
 
     if (Object.keys(newFilters).length > 0) {
       setSelectedFilters(prev => ({ ...prev, ...newFilters }));
@@ -183,13 +186,24 @@ const Movements = () => {
         filterAnimal,
         farmerName: req.owner_name || 'Unknown Farmer',
         route: `${origin} → ${destination}`,
-        destDistrict: req.dest_district || req.destination_id,
-        destSector: req.dest_sector || req.destination_id,
+        destDistrict: req.dest_district || req.destination_id || 'N/A',
+        destSector: req.dest_sector || 'N/A',
+        destCell: req.dest_cell || 'N/A',
+        destVillage: req.dest_village || 'N/A',
         destinationId: req.destination_id,
-        originDistrict: req.origin_district || req.origin_id,
-        originSector: req.origin_sector || req.origin_id,
+        originDistrict: req.origin_district || req.origin_id || 'N/A',
+        originSector: req.origin_sector || 'N/A',
+        originCell: req.origin_cell || 'N/A',
+        originVillage: req.origin_village || 'N/A',
         initiatorId: req.initiator_id,
         title: detailsString,
+        rawAnimalType: req.animal_type || 'Unknown',
+        rawCount: req.count || 1,
+        rawAnimals: req.Animals || [],
+        buyerType: req.buyer_type || 'N/A',
+        buyerName: req.buyer_name || 'N/A',
+        buyerPhone: req.buyer_phone || 'N/A',
+        buyerIdTin: req.buyer_id_tin || 'N/A',
         assignee: { name: assigneeName, initials: assigneeInitials, color: assigneeColor },
         reporter: { name: reporterName, initials: reporterInitials, color: reporterColor },
         priority,
@@ -214,7 +228,7 @@ const Movements = () => {
     });
   }, [rawMovements]);
 
-  const movementCategories = ['District', 'Sector', 'Type', 'Status', 'Animal'];
+  const movementCategories = ['District', 'Sector', 'Type', 'Status', 'Animal', 'Transport Mode'];
   const movementOptionsMap = {
     'District': [
       { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
@@ -250,6 +264,10 @@ const Movements = () => {
       { id: 'sheep', title: 'Sheep', subtitle: '' },
       { id: 'pig', title: 'Pigs', subtitle: '' },
       { id: 'poultry', title: 'Poultry', subtitle: 'Chickens, ducks, turkeys' }
+    ],
+    'Transport Mode': [
+      { id: 'DRIVER_VEHICLE', title: 'Imodoka n\'Umushoferi (Vehicle & Driver)', subtitle: 'Transported by vehicle or truck' },
+      { id: 'PERSON_ON_FOOT', title: 'Umunyamaguru / Omushumba (Person on Foot)', subtitle: 'Herded or walked on foot' }
     ]
   };
 
@@ -304,31 +322,62 @@ const Movements = () => {
         if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.rawType)) return false;
         if (selectedFilters['Status']?.length > 0 && !selectedFilters['Status'].includes(m.rawStatus)) return false;
         if (selectedFilters['Animal']?.length > 0 && !selectedFilters['Animal'].includes(m.filterAnimal)) return false;
+        
+        if (selectedFilters['Transport Mode']?.length > 0) {
+          const modesSelected = selectedFilters['Transport Mode'];
+          const isFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+          const matchFoot = modesSelected.includes('PERSON_ON_FOOT') && isFoot;
+          const matchVehicle = modesSelected.includes('DRIVER_VEHICLE') && !isFoot;
+          if (!matchFoot && !matchVehicle) return false;
+        }
+
         return true;
       });
     }
 
     return result;
   }, [movements, searchQuery, selectedFilters, timeRange]);
-
-  // Helper function to filter dataset by recordScope (REQUESTS, HISTORY, BOTH)
-  const getExportDataset = (scopeParam = recordScope) => {
+  // Helper function to filter dataset by recordScope and animalFilter
+  const getExportDataset = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
     let target = filteredMovements;
-    if (scopeParam === 'REQUESTS') {
+    if (scopeParam === 'CURRENT_TAB') {
+      if (activeTab === 'Requests') {
+        target = target.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING');
+      } else if (activeTab === 'History') {
+        target = target.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus));
+      } else if (activeTab === 'Incoming (Destination)') {
+        target = target.filter(m => isIncoming(m));
+      }
+    } else if (scopeParam === 'REQUESTS') {
       target = target.filter(m => isOutgoing(m) && m.rawStatus === 'PENDING');
     } else if (scopeParam === 'HISTORY') {
       target = target.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus));
-    } else {
+    } else if (scopeParam === 'INCOMING') {
+      target = target.filter(m => isIncoming(m));
+    } else if (scopeParam === 'BOTH') {
       target = target.filter(m => isOutgoing(m));
+    } else if (scopeParam === 'ALL') {
+      // All movements (full registry)
     }
+
+    if (animalFilterParam && animalFilterParam !== 'ALL') {
+      const q = animalFilterParam.toLowerCase();
+      target = target.filter(m => {
+        if (m.filterAnimal === q) return true;
+        if (m.rawAnimalType && m.rawAnimalType.toLowerCase().includes(q)) return true;
+        if (m.rawAnimals && m.rawAnimals.some(a => (a.animal_type || '').toLowerCase().includes(q))) return true;
+        return false;
+      });
+    }
+
     return target;
   };
 
-  // CSV Export Handler
-  const exportToCSV = (scopeParam = recordScope) => {
-    const dataset = getExportDataset(scopeParam);
+  // CSV Export Handler - Exports Animal by Animal
+  const exportToCSV = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam);
     if (!dataset || dataset.length === 0) {
-      toast.error('No movement records available to export for selected scope');
+      toast.error('No movement records available to export for selected scope & animal filter');
       return;
     }
 
@@ -345,22 +394,38 @@ const Movements = () => {
       'Movement Reason',
       'Priority',
       'Valid Until',
-      'Origin District',
-      'Origin Sector',
-      'Destination District',
-      'Destination Sector',
-      'Animal Type & Details',
+      'Origin District (Biva)',
+      'Origin Sector (Biva)',
+      'Origin Cell (Biva)',
+      'Origin Village (Biva)',
+      'Destination District (Bijya)',
+      'Destination Sector (Bijya)',
+      'Destination Cell (Bijya)',
+      'Destination Village (Bijya)',
+      'Animal Type (Ubwoko)',
+      'Tag Number (Nomero y\'iherena)',
+      'Sex (Igitsina)',
+      'Quantity (Ingano)',
+      'Breed (Ubwoko)',
+      'Color (Ibara)',
+      'Vaccines / Health Details',
+      'Buyer Type (Ubwoko bw\'Umuguzi)',
+      'Buyer Name / Company',
+      'Buyer Phone',
+      'Buyer NID / TIN (Indangamuntu/TIN y\'Umuguzi)',
       'Permit Status',
       'Date Created'
     ];
 
-    const rows = dataset.map(m => {
+    const rows = [];
+
+    dataset.forEach(m => {
       const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
       const modeStr = isPersonOnFoot ? 'Umushumba (Person on Foot)' : 'Imodoka n\'Umushoferi (Vehicle & Driver)';
       const plateStr = isPersonOnFoot ? 'N/A (Person on Foot)' : m.plateNumber;
       const driverStr = m.driverName !== 'N/A' && m.driverName !== 'Unknown' ? m.driverName : (isPersonOnFoot ? 'Umushumba (Herder)' : 'Driver Unassigned');
 
-      return [
+      const baseInfo = [
         m.permitNumber,
         `"${modeStr}"`,
         `"${driverStr.replace(/"/g, '""')}"`,
@@ -375,12 +440,58 @@ const Movements = () => {
         m.validUntil || 'N/A',
         `"${(m.originDistrict || 'N/A').replace(/"/g, '""')}"`,
         `"${(m.originSector || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.originCell || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.originVillage || 'N/A').replace(/"/g, '""')}"`,
         `"${(m.destDistrict || 'N/A').replace(/"/g, '""')}"`,
         `"${(m.destSector || 'N/A').replace(/"/g, '""')}"`,
-        `"${(m.title || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.destCell || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.destVillage || 'N/A').replace(/"/g, '""')}"`,
+      ];
+
+      const endInfo = [
+        `"${(m.buyerType || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.buyerName || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.buyerPhone || 'N/A').replace(/"/g, '""')}"`,
+        `"${(m.buyerIdTin || 'N/A').replace(/"/g, '""')}"`,
         m.rawStatus,
         new Date(m.createdAt || m.updatedAt).toLocaleDateString()
       ];
+
+      if (m.rawAnimals && m.rawAnimals.length > 0) {
+        m.rawAnimals.forEach((anim, idx) => {
+          const animalTypeStr = anim.animal_type || m.rawAnimalType || 'Animal';
+          const tagStr = anim.tag_number || `TAG-${idx + 1}`;
+          const sexStr = anim.sex || 'F';
+          const qtyStr = anim.quantity || 1;
+          const breedStr = anim.breed || 'Cross';
+          const colorStr = anim.color || 'N/A';
+          const healthStr = anim.vaccines ? `Vaccines: ${anim.vaccines}` : (anim.description || 'N/A');
+
+          rows.push([
+            ...baseInfo,
+            `"${animalTypeStr.replace(/"/g, '""')}"`,
+            `"${tagStr.replace(/"/g, '""')}"`,
+            `"${sexStr.replace(/"/g, '""')}"`,
+            qtyStr,
+            `"${breedStr.replace(/"/g, '""')}"`,
+            `"${colorStr.replace(/"/g, '""')}"`,
+            `"${healthStr.replace(/"/g, '""')}"`,
+            ...endInfo
+          ]);
+        });
+      } else {
+        rows.push([
+          ...baseInfo,
+          `"${(m.rawAnimalType || 'Animal').replace(/"/g, '""')}"`,
+          `"TAG-SUMMARY"`,
+          `"F"`,
+          m.rawCount || 1,
+          `"Cross"`,
+          `"N/A"`,
+          `"N/A"`,
+          ...endInfo
+        ]);
+      }
     });
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -388,58 +499,83 @@ const Movements = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const scopeLabel = scopeParam === 'REQUESTS' ? 'Requests' : scopeParam === 'HISTORY' ? 'History' : 'AllRecords';
-    link.setAttribute('download', `RAB_Livestock_Movements_${scopeLabel}_${new Date().toISOString().slice(0, 10)}.csv`);
+    const scopeLabel = scopeParam === 'CURRENT_TAB' ? activeTab.replace(/\s+/g, '') : scopeParam;
+    link.setAttribute('download', `RAB_Animal_Movements_${scopeLabel}_${animalFilterParam}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // PDF Print Report Handler
-  const printPDFReport = (scopeParam = recordScope) => {
-    const dataset = getExportDataset(scopeParam);
+  // PDF Print Report Handler - Exports Animal by Animal
+  const printPDFReport = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam);
     if (!dataset || dataset.length === 0) {
       toast.error('No movement records available to print report');
       return;
     }
-    const scopeLabel = scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY (REQUESTS & HISTORY)';
+    const scopeLabel = scopeParam === 'CURRENT_TAB' ? `CURRENT TAB: ${activeTab.toUpperCase()}` : scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY';
+
+    const pdfRowsHtml = [];
+    dataset.forEach(m => {
+      const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+      const modeStr = isPersonOnFoot ? 'Umushumba' : 'Vehicle';
+      const plateStr = isPersonOnFoot ? 'N/A (Foot)' : m.plateNumber;
+      const driverStr = m.driverName !== 'N/A' && m.driverName !== 'Unknown' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned');
+
+      if (m.rawAnimals && m.rawAnimals.length > 0) {
+        m.rawAnimals.forEach((anim, idx) => {
+          pdfRowsHtml.push(`
+            <tr>
+              <td class="col-bold">${m.permitNumber}</td>
+              <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${modeStr} (${plateStr})</td>
+              <td><strong>${m.farmerName}</strong><span class="sub-text">NID: ${m.farmerNid}</span></td>
+              <td>${driverStr}<span class="sub-text">Tel: ${m.driverPhone}</span></td>
+              <td>${m.route}</td>
+              <td><strong>Tag: ${anim.tag_number || `TAG-${idx + 1}`}</strong><span class="sub-text">${anim.animal_type || m.rawAnimalType} (${anim.sex || 'F'}, ${anim.breed || 'Cross'})</span></td>
+              <td><strong>${m.buyerName}</strong><span class="sub-text">TIN/NID: ${m.buyerIdTin}</span></td>
+              <td><span class="badge ${m.rawStatus === 'APPROVED' || m.rawStatus === 'COMPLETED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
+            </tr>
+          `);
+        });
+      } else {
+        pdfRowsHtml.push(`
+          <tr>
+            <td class="col-bold">${m.permitNumber}</td>
+            <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${modeStr} (${plateStr})</td>
+            <td><strong>${m.farmerName}</strong><span class="sub-text">NID: ${m.farmerNid}</span></td>
+            <td>${driverStr}<span class="sub-text">Tel: ${m.driverPhone}</span></td>
+            <td>${m.route}</td>
+            <td><strong>${m.rawAnimalType} (x${m.rawCount})</strong></td>
+            <td><strong>${m.buyerName}</strong><span class="sub-text">TIN/NID: ${m.buyerIdTin}</span></td>
+            <td><span class="badge ${m.rawStatus === 'APPROVED' || m.rawStatus === 'COMPLETED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
+          </tr>
+        `);
+      }
+    });
 
     const htmlContent = generatePdfReportHTML({
       titleMain: 'RWANDA AGRICULTURE & ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)',
       titleSub: '',
-      subtitle: `Official Livestock Movement Permit Registry • ${scopeLabel}`,
+      subtitle: `Official Livestock Movement Permit & Animal Registry • ${scopeLabel}`,
       meta: [
         { label: 'Generated On', value: new Date().toLocaleString() },
         { label: 'Export Scope', value: scopeLabel },
-        { label: 'Total Records', value: dataset.length }
+        { label: 'Animal Filter', value: animalFilterParam.toUpperCase() },
+        { label: 'Total Animal Rows', value: pdfRowsHtml.length }
       ],
       columns: [
         { header: 'Permit No', align: 'left' },
-        { header: 'Transport Mode', align: 'left' },
+        { header: 'Transport & Plate', align: 'left' },
         { header: 'Farmer / Owner', align: 'left' },
         { header: 'Driver / Herder', align: 'left' },
-        { header: 'Vehicle / Plate', align: 'left' },
         { header: 'Route', align: 'left' },
-        { header: 'Details', align: 'left' },
+        { header: 'Animal & Tag Number', align: 'left' },
+        { header: 'Buyer / TIN', align: 'left' },
         { header: 'Status', align: 'left' }
       ],
-      rowsHtml: dataset.map(m => {
-        const isPersonOnFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
-        return `
-          <tr>
-            <td class="col-bold">${m.permitNumber}</td>
-            <td class="${isPersonOnFoot ? 'mode-foot' : 'mode-car'}">${isPersonOnFoot ? 'Umushumba' : 'Vehicle'}</td>
-            <td><strong>${m.farmerName}</strong><span class="sub-text">ID: ${m.farmerNid}</span></td>
-            <td>${m.driverName !== 'N/A' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned')}<span class="sub-text">Tel: ${m.driverPhone}</span></td>
-            <td>${isPersonOnFoot ? 'N/A' : m.plateNumber}</td>
-            <td>${m.route}</td>
-            <td>${m.title}</td>
-            <td><span class="badge ${m.rawStatus === 'APPROVED' || m.rawStatus === 'COMPLETED' ? 'badge-approved' : m.rawStatus === 'REJECTED' ? 'badge-rejected' : 'badge-pending'}">${m.rawStatus}</span></td>
-          </tr>
-        `;
-      }).join('')
+      rowsHtml: pdfRowsHtml.join('')
     });
-    downloadPdfReport(htmlContent, `RAB_Movement_Permits_${scopeParam}.pdf`);
+    downloadPdfReport(htmlContent, `RAB_Animal_Registry_${scopeParam}_${animalFilterParam}.pdf`);
   };
 
   // Helper to check if movement is incoming to current user's jurisdiction

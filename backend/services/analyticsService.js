@@ -132,17 +132,27 @@ class AnalyticsService {
       }
     });
 
-    // Transport Type Distribution
-    const transports = await MovementRequest.findAll({
-      attributes: ['transport_type', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      where: scopeFilter || {},
-      group: ['transport_type']
+    // Transport Mode Distribution: Imodoka n'Umushoferi vs Umunyamaguru / Omushumba
+    const requestsForTransport = await MovementRequest.findAll({
+      attributes: ['transporter_mode', 'transport_type', 'plate_number'],
+      where: scopeFilter || {}
     });
 
-    const transportDistribution = {};
-    transports.forEach(t => {
-      const rawType = t.transport_type || 'Truck';
-      transportDistribution[rawType] = parseInt(t.dataValues.count, 10);
+    const transportDistribution = {
+      "Imodoka n'Umushoferi": 0,
+      "Umunyamaguru / Omushumba": 0
+    };
+
+    requestsForTransport.forEach(req => {
+      const mode = req.transporter_mode;
+      const plate = req.plate_number;
+      const isFoot = mode === 'PERSON_ON_FOOT' || plate === 'ON_FOOT' || (!plate || plate === 'N/A' || plate === 'Unknown') && mode !== 'DRIVER_VEHICLE';
+
+      if (isFoot) {
+        transportDistribution["Umunyamaguru / Omushumba"]++;
+      } else {
+        transportDistribution["Imodoka n'Umushoferi"]++;
+      }
     });
 
     // Regional Workload: Movement Requests by District / Sector

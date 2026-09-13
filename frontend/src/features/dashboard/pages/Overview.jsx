@@ -476,10 +476,10 @@ const Overview = () => {
         {/* Widget 4: Transport Types */}
         <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
           <h3 className="font-bold text-gray-900">Transport Methods</h3>
-          <p className="text-sm text-gray-500 mb-6">Breakdown of permit requests by transport vehicle type. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements?tab=History')}>View logistics</span></p>
+          <p className="text-sm text-gray-500 mb-6">Breakdown of permit requests by transport vehicle type. <span className="text-[#0052cc] hover:underline cursor-pointer font-medium" onClick={() => navigate('/dashboard/movements')}>View logistics</span></p>
           
           <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-            <div className="w-32">Type</div>
+            <div className="w-48">Type</div>
             <div>Distribution</div>
           </div>
           
@@ -487,7 +487,7 @@ const Overview = () => {
              {(() => {
                 const transportDist = statsData?.transportDistribution || {};
                 const totalTransport = Object.values(transportDist).reduce((a, b) => a + b, 0) || 1;
-                const transportsSorted = Object.entries(transportDist).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                const transportsSorted = Object.entries(transportDist);
 
                 if (transportsSorted.length === 0) {
                   return <p className="text-xs text-gray-400">No transport data available.</p>;
@@ -495,13 +495,16 @@ const Overview = () => {
 
                 return transportsSorted.map(([type, count], index) => {
                   const pct = Math.round((count / totalTransport) * 100);
+                  const isFoot = type.includes('Umunyamaguru');
+                  const modeParam = isFoot ? 'PERSON_ON_FOOT' : 'DRIVER_VEHICLE';
+
                   return (
-                    <div key={type} onClick={() => navigate(`/dashboard/movements?tab=History&search=${encodeURIComponent(type)}`)} title={`Transport Method: ${type} — ${count} Permits (${pct}%)`} className="flex items-center cursor-pointer group">
-                       <div className="w-32 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600" title={type}>
+                    <div key={type} onClick={() => navigate(`/dashboard/movements?mode=${modeParam}`)} title={`Transport Method: ${type} — ${count} Permits (${pct}%)`} className="flex items-center cursor-pointer group">
+                       <div className="w-48 flex items-center gap-2 text-xs font-semibold text-gray-700 truncate group-hover:text-blue-600" title={type}>
                          <CheckSquare className="w-4 h-4 text-blue-500 shrink-0" /> {type}
                        </div>
                        <div className="flex-1 h-5 bg-gray-200 flex rounded overflow-hidden">
-                          <div className={`h-full ${index % 2 === 0 ? 'bg-[#0052cc]' : 'bg-teal-600'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden`} style={{ width: `${Math.max(12, pct)}%` }}>
+                          <div className={`h-full ${index % 2 === 0 ? 'bg-[#0052cc]' : 'bg-teal-600'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden`} style={{ width: `${Math.max(14, pct)}%` }}>
                             {count} ({pct}%)
                           </div>
                        </div>
