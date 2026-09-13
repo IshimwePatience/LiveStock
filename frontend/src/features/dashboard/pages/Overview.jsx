@@ -241,7 +241,7 @@ const Overview = () => {
            </div>
            <div>
              <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.completed || 0}</span> Permits Completed</div>
-             <div className="text-xs text-gray-500">in the last 7 days</div>
+             <div className="text-xs text-gray-500">Total completed movements</div>
            </div>
         </div>
 
@@ -258,7 +258,7 @@ const Overview = () => {
                <div className="font-bold text-gray-900 flex items-baseline gap-1">
                  <span className="text-lg">{statsData?.incoming || 0}</span> Incoming Permits
                </div>
-               <div className="text-xs text-gray-500">heading to jurisdiction</div>
+               <div className="text-xs text-gray-500">Heading to jurisdiction</div>
              </div>
           </div>
         )}
@@ -277,7 +277,7 @@ const Overview = () => {
                  {user?.role === 'RAB' ? ((statsData?.districtToDistrict || 0) + (statsData?.sectorToSector || 0)) : (user?.role === 'DARO' ? (statsData?.districtToDistrict || 0) : (statsData?.sectorToSector || 0))}
                </span> Out Permits
              </div>
-             <div className="text-xs text-gray-500">requested in the last 7 days</div>
+             <div className="text-xs text-gray-500">Total permits issued</div>
            </div>
         </div>
 
@@ -290,8 +290,8 @@ const Overview = () => {
              <Calendar className="w-5 h-5 text-gray-600" />
            </div>
            <div>
-             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.dueSoon || 0}</span> Trips Starting Soon</div>
-             <div className="text-xs text-gray-500">in the next 7 days</div>
+             <div className="font-bold text-gray-900 flex items-baseline gap-1"><span className="text-lg">{statsData?.dueSoon || 0}</span> Active Trips</div>
+             <div className="text-xs text-gray-500">Active &amp; scheduled trips</div>
            </div>
         </div>
       </div>

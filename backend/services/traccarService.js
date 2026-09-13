@@ -22,7 +22,7 @@ class TraccarService {
       const isNationalPolice = roleUpper === 'POLICE' && (!user.district_id || user.district_id === 'NATIONAL' || user.district_id === '');
       const isNationalUser = roleUpper.includes('RAB') || roleUpper.includes('ADMIN') || roleUpper.includes('SUPER') || isNationalPolice;
 
-      // 1. Get all active trips & movement requests from DB safely
+      // 1. Get ONLY active trips & active movement requests from DB (STRICTLY EXCLUDE COMPLETED TRIPS)
       const userAttrs = ['id', 'name', 'email', 'phone', 'role', 'district_id', 'sector_id'];
       
       const [activeTrips, activeRequests] = await Promise.all([
@@ -36,7 +36,7 @@ class TraccarService {
           return [];
         }),
         MovementRequest.findAll({
-          where: { status: ['APPROVED', 'ACTIVE', 'COMPLETED', 'PENDING'] },
+          where: { status: ['APPROVED', 'ACTIVE'] },
           include: [{ model: User, as: 'Initiator', attributes: userAttrs }]
         }).catch(err => {
           console.warn('MovementRequest query warning in TraccarService:', err.message);
@@ -44,51 +44,7 @@ class TraccarService {
         })
       ]);
 
-      // 2. Build set of allowed plates based on user jurisdiction
-      const allowedPlateNumbers = new Set();
-
-      const addPlateIfAllowed = (plate, req, trip = null) => {
-        if (!plate) return;
-
-        const isInitiator = req && req.initiator_id === user.id;
-        const isApprover = req && req.approver_id === user.id;
-
-        const isDriver = (req?.driver_phone && user.phone && req.driver_phone === user.phone) ||
-          (trip?.driver_phone && user.phone && trip.driver_phone === user.phone) ||
-          (req?.driver_name && user.name && req.driver_name.toLowerCase().trim() === user.name.toLowerCase().trim()) ||
-          (trip?.driver_name && user.name && trip.driver_name.toLowerCase().trim() === user.name.toLowerCase().trim()) ||
-          (roleUpper.includes('DRIVER'));
-
-        const isOriginOfficer = (roleUpper.includes('DARO') && user.district_id && req?.origin_district === user.district_id) ||
-          (roleUpper.includes('SARO') && user.sector_id && req?.origin_sector === user.sector_id);
-
-        let isReceiver = false;
-        if (req) {
-          if (req.type === 'DISTRICT_TO_DISTRICT') {
-            isReceiver = roleUpper.includes('DARO') && user.district_id && req.dest_district === user.district_id;
-          } else if (req.type === 'SECTOR_TO_SECTOR') {
-            isReceiver = roleUpper.includes('SARO') && user.sector_id && req.dest_sector === user.sector_id;
-          }
-        }
-
-        const isDistrictPolice = roleUpper.includes('POLICE') && user.district_id && user.district_id !== 'NATIONAL' &&
-          req && (req.origin_district === user.district_id || req.dest_district === user.district_id);
-
-        if (isNationalUser || isInitiator || isApprover || isReceiver || isOriginOfficer || isDriver || isDistrictPolice) {
-          allowedPlateNumbers.add(plate.toUpperCase().trim());
-        }
-      };
-
-      activeTrips.forEach(trip => {
-        const req = trip.MovementRequest;
-        addPlateIfAllowed(trip.plate_number || req?.plate_number, req, trip);
-      });
-
-      activeRequests.forEach(req => {
-        addPlateIfAllowed(req.plate_number, req, null);
-      });
-
-      // 3. Query Traccar API for devices and positions
+      // 2. Query Traccar API for devices and positions
       let devices = [];
       let positions = [];
 
@@ -112,43 +68,84 @@ class TraccarService {
       const geofenceService = require('./geofenceService');
       const locationResults = [];
 
+      // Clean plate string helper
+      const cleanPlate = (str) => (str || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
       // Process devices returned by Traccar
       for (const device of devices) {
-        const devicePlate = (device.name || '').toUpperCase().trim();
-        const isAllowed = isNationalUser || allowedPlateNumbers.size === 0 || allowedPlateNumbers.has(devicePlate);
+        const devicePlateClean = cleanPlate(device.name);
+
+        // Find matching active trip or active movement request
+        const trip = activeTrips.find(t => {
+          const tPlate = cleanPlate(t.plate_number || t.MovementRequest?.plate_number);
+          return tPlate && (devicePlateClean.includes(tPlate) || tPlate.includes(devicePlateClean));
+        });
+
+        const req = trip?.MovementRequest || activeRequests.find(r => {
+          const rPlate = cleanPlate(r.plate_number);
+          return rPlate && (devicePlateClean.includes(rPlate) || rPlate.includes(devicePlateClean));
+        });
+
+        // 3. User Jurisdiction Scope Checks
+        const isInitiator = req && user && req.initiator_id === user.id;
+        const isApprover = req && user && req.approver_id === user.id;
+
+        const isDriver = user && (
+          (req?.driver_phone && req.driver_phone === user.phone) ||
+          (trip?.driver_phone && trip.driver_phone === user.phone) ||
+          (req?.driver_name && user.name && req.driver_name.toLowerCase().trim() === user.name.toLowerCase().trim()) ||
+          (roleUpper.includes('DRIVER'))
+        );
+
+        const isOriginOfficer = user && (
+          (roleUpper.includes('DARO') && user.district_id && req?.origin_district === user.district_id) ||
+          (roleUpper.includes('SARO') && user.sector_id && req?.origin_sector === user.sector_id)
+        );
+
+        let isReceiver = false;
+        if (req && user) {
+          if (req.type === 'DISTRICT_TO_DISTRICT') {
+            isReceiver = roleUpper.includes('DARO') && user.district_id && req.dest_district === user.district_id;
+          } else if (req.type === 'SECTOR_TO_SECTOR') {
+            isReceiver = roleUpper.includes('SARO') && user.sector_id && req.dest_sector === user.sector_id;
+          }
+        }
+
+        const isDistrictPolice = user && roleUpper.includes('POLICE') && user.district_id && user.district_id !== 'NATIONAL' &&
+          req && (req.origin_district === user.district_id || req.dest_district === user.district_id);
+
+        const isAllowed = isNationalUser || isInitiator || isApprover || isReceiver || isOriginOfficer || isDriver || isDistrictPolice;
 
         if (isAllowed) {
-          const trip = activeTrips.find(t => t.plate_number?.toUpperCase().trim() === devicePlate);
-          const req = trip?.MovementRequest || activeRequests.find(r => r.plate_number?.toUpperCase().trim() === devicePlate);
-
-          const dName = req?.driver_name || req?.owner_name || (req?.Initiator ? req.Initiator.name : 'Jean Paul (Driver)');
-          const dPhone = req?.driver_phone || req?.owner_phone || (req?.Initiator ? req.Initiator.phone : (device.phone || '+250 788 123 456'));
-
           const pos = posMap[device.id] || null;
+          const lat = pos ? pos.latitude : 0;
+          const lon = pos ? pos.longitude : 0;
+          const speed = pos ? pos.speed : 0;
+          const course = pos ? pos.course : 0;
 
-          // Default fallback coordinates near Kigali / Bugesera highway if device position missing
-          const lat = pos ? pos.latitude : (-1.9441 + (device.id % 5) * 0.015);
-          const lon = pos ? pos.longitude : (30.0619 + (device.id % 5) * 0.015);
-          const speed = pos ? pos.speed : 15;
-          const course = pos ? pos.course : 45;
-
-          const violation = await geofenceService.checkVehicleViolation(device.name, lat, lon);
+          const violation = (lat && lon) ? await geofenceService.checkVehicleViolation(device.name, lat, lon) : null;
 
           const todayDist = pos?.attributes?.distance
             ? (pos.attributes.distance / 1000).toFixed(1)
-            : (pos?.attributes?.totalDistance ? ((pos.attributes.totalDistance % 300000) / 1000).toFixed(1) : '14.2');
+            : (pos?.attributes?.totalDistance ? ((pos.attributes.totalDistance % 300000) / 1000).toFixed(1) : '0.0');
 
           const topSpd = pos?.attributes?.maxSpeed
             ? (pos.attributes.maxSpeed * 1.852).toFixed(1)
-            : '65.0';
+            : '0.0';
 
-          locationResults.push({
+          const dName = req?.driver_name || req?.owner_name || (req?.Initiator ? req.Initiator.name : '');
+          const dPhone = req?.driver_phone || req?.owner_phone || (req?.Initiator ? req.Initiator.phone : device.phone || '');
+
+          const hasActiveTrip = !!req && req.status !== 'COMPLETED';
+
+          // Build vehicle item
+          const vehicleItem = {
             deviceId: device.id,
             deviceName: device.name || 'Unknown Vehicle',
             devicePhone: device.phone || '',
             driverName: dName,
             driverPhone: dPhone,
-            status: device.status || 'online',
+            status: device.status || 'offline',
             lastUpdate: device.lastUpdate || new Date().toISOString(),
             latitude: lat,
             longitude: lon,
@@ -157,63 +154,31 @@ class TraccarService {
             todayDistance: todayDist,
             topSpeed: topSpd,
             attributes: pos?.attributes || {},
-            route: req ? {
+            geofenceViolation: violation
+          };
+
+          // ONLY attach route if there is a REAL active trip (NO DUMMY / NO COMPLETED TRIPS)
+          if (hasActiveTrip) {
+            vehicleItem.route = {
+              hasActiveTrip: true,
               originDistrict: req.origin_district,
               originSector: req.origin_sector,
               destDistrict: req.dest_district,
               destSector: req.dest_sector,
-              origin: req.origin_district ? `${req.origin_sector || ''}, ${req.origin_district}` : 'Bugesera',
-              destination: req.dest_district ? `${req.dest_sector || ''}, ${req.dest_district}` : 'Gasabo',
+              origin: `${req.origin_sector ? req.origin_sector + ', ' : ''}${req.origin_district || ''}`.trim(),
+              destination: `${req.dest_sector ? req.dest_sector + ', ' : ''}${req.dest_district || ''}`.trim(),
               initiator: req.Initiator ? req.Initiator.name : 'District Vet Officer',
               driverName: dName,
               driverPhone: dPhone,
               permitNumber: req.permit_number || `MVT-${req.id.substring(0, 8).toUpperCase()}`,
-              tripStatus: trip?.status || req?.status || 'ACTIVE',
+              tripStatus: trip?.status || req.status || 'ACTIVE',
               otp: trip?.otp || 'N/A'
-            } : {
-              origin: 'Bugesera District',
-              destination: 'Gasabo District',
-              permitNumber: 'MVT-LIVE-001',
-              tripStatus: 'ACTIVE'
-            },
-            geofenceViolation: violation
-          });
-        }
-      }
+            };
+          } else {
+            vehicleItem.route = null;
+          }
 
-      // If Traccar API returned 0 devices or is offline, generate vehicles from active DB requests or demo fleet
-      if (locationResults.length === 0) {
-        const defaultPlates = ['RAD 123 A', 'RAA 550 B', 'RAC 789 C', 'RAD 990 D'];
-        
-        for (let i = 0; i < defaultPlates.length; i++) {
-          const plate = defaultPlates[i];
-          const req = activeRequests[i] || null;
-          const lat = -1.9441 + (i * 0.018);
-          const lon = 30.0619 + (i * 0.022);
-
-          locationResults.push({
-            deviceId: i + 100,
-            deviceName: plate,
-            devicePhone: '+250 788 000 00' + i,
-            driverName: req?.driver_name || `Driver ${i + 1}`,
-            driverPhone: req?.driver_phone || `+250 788 123 00${i}`,
-            status: i % 2 === 0 ? 'online' : 'offline',
-            lastUpdate: new Date().toISOString(),
-            latitude: lat,
-            longitude: lon,
-            speed: i % 2 === 0 ? 35 : 0,
-            course: 90 + i * 45,
-            todayDistance: (15.5 + i * 8.2).toFixed(1),
-            topSpeed: '72.0',
-            attributes: {},
-            route: {
-              origin: req?.origin_district ? `${req.origin_sector || ''}, ${req.origin_district}` : 'Bugesera District',
-              destination: req?.dest_district ? `${req.dest_sector || ''}, ${req.dest_district}` : 'Gasabo District',
-              permitNumber: req?.permit_number || `MVT-DEMO-00${i + 1}`,
-              tripStatus: req?.status || 'ACTIVE'
-            },
-            geofenceViolation: null
-          });
+          locationResults.push(vehicleItem);
         }
       }
 
@@ -232,7 +197,7 @@ class TraccarService {
           from: new Date(from).toISOString(),
           to: new Date(to).toISOString()
         },
-        timeout: 30000 // 30 seconds for historical route queries
+        timeout: 30000
       });
       return res.data;
     } catch (error) {

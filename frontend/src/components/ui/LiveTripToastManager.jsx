@@ -110,7 +110,9 @@ const LiveTripToastManager = () => {
     const now = Date.now();
 
     scopedLocations.forEach(async (loc) => {
-      if (!loc.route) return;
+      // ONLY process vehicles that have an active, non-completed trip
+      if (!loc.route || !loc.route.hasActiveTrip) return;
+      if (loc.route.tripStatus === 'COMPLETED') return;
 
       const deviceId = loc.deviceId || loc.deviceName;
       const plate = loc.deviceName || 'Vehicle';
@@ -129,33 +131,23 @@ const LiveTripToastManager = () => {
         lastMovingTime: now,
         originStartTime: now,
         wasMoving: false,
+        hasNotifiedOrigin: false,
         hasNotifiedDeparted: false,
         hasNotifiedArrived: false
       };
 
       // --------------------------------------------------------------------------
-      // 1. RULE: Car at Origin (pickup point) — Show reminder every 3 minutes (180,000 ms)
+      // 1. RULE: Car at Origin (pickup point) — Show notification ONLY ONCE per session!
       // --------------------------------------------------------------------------
-      if (tripStatus === 'SCHEDULED' || (!isMoving && !prevState.hasNotifiedDeparted)) {
-        if (!prevState.originStartTime) prevState.originStartTime = now;
-        const timeAtOriginMs = now - prevState.originStartTime;
-        const hoursAtOrigin = Math.floor(timeAtOriginMs / (1000 * 60 * 60));
-
-        if (now - prevState.lastOriginToastTime >= 180000 || prevState.lastOriginToastTime === 0) {
-          let msg = `Imodoka ${plate} iri ku nkomoko (${origin}) irategereza gukura no guhaguruka.`;
-          if (hoursAtOrigin >= 24) {
-            msg = `Imodoka ${plate} imaze amasaha irenga 24 (${hoursAtOrigin}h) ikiri ku nkomoko (${origin}).`;
-          } else if (hoursAtOrigin >= 2) {
-            msg = `Imodoka ${plate} imaze amasaha ${hoursAtOrigin} ikiri ku nkomoko (${origin}).`;
-          }
-
-          showRightSlideToast(`origin-remind-${deviceId}`, msg, 6000);
-          prevState.lastOriginToastTime = now;
-        }
+      if ((tripStatus === 'SCHEDULED' || tripStatus === 'APPROVED') && !isMoving && !prevState.hasNotifiedDeparted && !prevState.hasNotifiedOrigin) {
+        let msg = `Imodoka ${plate} iri ku nkomoko (${origin}) irategereza gukura no guhaguruka.`;
+        showRightSlideToast(`origin-remind-${deviceId}`, msg, 6000);
+        prevState.hasNotifiedOrigin = true;
+        prevState.lastOriginToastTime = now;
       }
 
       // --------------------------------------------------------------------------
-      // 2. RULE: Once car starts moving toward destination — Show departure reminder!
+      // 2. RULE: Once car starts moving toward destination — Show departure notification!
       // --------------------------------------------------------------------------
       if (isMoving && !prevState.wasMoving && !prevState.hasNotifiedDeparted) {
         const msg = `Imodoka ${plate} yahagurutse ku nkomoko (${origin}) yerekeza (${dest}) ku muvuduko wa ${speedKmh} km/h.`;
@@ -164,10 +156,10 @@ const LiveTripToastManager = () => {
       }
 
       // --------------------------------------------------------------------------
-      // 3. RULE: While car is on the way — Keep showing "Car is here" toast + live location ("aho igeze")
+      // 3. RULE: While car is on the way — Live location update
       // --------------------------------------------------------------------------
       if (isMoving && (tripStatus === 'ACTIVE' || tripStatus === 'IN_TRANSIT' || prevState.hasNotifiedDeparted)) {
-        if (now - prevState.lastEnRouteToastTime >= 180000 || prevState.lastEnRouteToastTime === 0) {
+        if (now - prevState.lastEnRouteToastTime >= 300000 || prevState.lastEnRouteToastTime === 0) {
           const currLocation = await getReverseLocationName(loc.latitude, loc.longitude);
           const msg = `Imodoka ${plate} iri mu nzira yerekeza (${dest}) ku muvuduko wa ${speedKmh} km/h, aho igeze ni: ${currLocation}.`;
           showRightSlideToast(`enroute-${deviceId}`, msg, 8000);
@@ -177,7 +169,7 @@ const LiveTripToastManager = () => {
       }
 
       // --------------------------------------------------------------------------
-      // 4. RULE: Car stops for > 5 minutes (300,000 ms) en route — Show Warning Toast + location ("aho ihagaze ni")
+      // 4. RULE: Car stops for > 5 minutes (300,000 ms) en route
       // --------------------------------------------------------------------------
       if (!isMoving && prevState.hasNotifiedDeparted && tripStatus !== 'ARRIVED' && tripStatus !== 'COMPLETED') {
         const stoppedDurationMs = now - prevState.lastMovingTime;
@@ -192,10 +184,10 @@ const LiveTripToastManager = () => {
       }
 
       // --------------------------------------------------------------------------
-      // 5. RULE: Route Deviation / Geofence Breach Notification ("yayobye inzira yashyizweho")
+      // 5. RULE: Route Deviation / Geofence Breach Notification
       // --------------------------------------------------------------------------
       if (loc.geofenceViolation?.violation) {
-        if (now - prevState.lastDeviationToastTime >= 180000 || prevState.lastDeviationToastTime === 0) {
+        if (now - prevState.lastDeviationToastTime >= 300000 || prevState.lastDeviationToastTime === 0) {
           const currLocation = await getReverseLocationName(loc.latitude, loc.longitude);
           const msg = `Imodoka ${plate} yayobye inzira yashyizweho yerekeza (${dest}), aho igeze ubu ni: ${currLocation}.`;
           showRightSlideToast(`route-deviation-${deviceId}`, msg, 12000);
@@ -204,7 +196,7 @@ const LiveTripToastManager = () => {
       }
 
       // --------------------------------------------------------------------------
-      // 6. RULE: Car reaches destination — Show toast notification to give driver OTP code!
+      // 6. RULE: Car reaches destination — OTP notification
       // --------------------------------------------------------------------------
       if (tripStatus === 'ARRIVED' && !prevState.hasNotifiedArrived) {
         const msg = `Imodoka ${plate} yageze aho yajyaga (${dest}). Tangira umushoferi kode ya OTP: [ ${otp} ].`;

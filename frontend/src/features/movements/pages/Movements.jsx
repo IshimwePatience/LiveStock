@@ -33,7 +33,7 @@ const getColorForInitials = (initials) => {
 
 const Movements = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'Requests';
+  const explicitTab = searchParams.get('tab');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
@@ -513,6 +513,14 @@ const Movements = () => {
   const historyCount = useMemo(() => {
     return filteredMovements.filter(m => isOutgoing(m) && ['APPROVED', 'REJECTED', 'COMPLETED'].includes(m.rawStatus)).length;
   }, [filteredMovements]);
+
+  const activeTab = useMemo(() => {
+    if (explicitTab) return explicitTab;
+    if (requestsCount > 0) return 'Requests';
+    if (historyCount > 0) return 'History';
+    if (incomingCount > 0) return 'Incoming (Destination)';
+    return 'Requests';
+  }, [explicitTab, requestsCount, historyCount, incomingCount]);
 
   return (
     <div className="flex flex-col h-full bg-white">

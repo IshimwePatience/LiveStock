@@ -43,28 +43,20 @@ class AnalyticsService {
     };
 
     const districtToDistrict = await MovementRequest.count({
-      where: buildWhere({ type: 'DISTRICT_TO_DISTRICT', createdAt: { [Op.gte]: sevenDaysAgo } })
+      where: buildWhere({ type: 'DISTRICT_TO_DISTRICT' })
     });
 
     const sectorToSector = await MovementRequest.count({
-      where: buildWhere({ type: 'SECTOR_TO_SECTOR', createdAt: { [Op.gte]: sevenDaysAgo } })
+      where: buildWhere({ type: 'SECTOR_TO_SECTOR' })
     });
 
     const completed = await MovementRequest.count({
-      where: buildWhere({ status: 'COMPLETED', updatedAt: { [Op.gte]: sevenDaysAgo } })
+      where: buildWhere({ status: 'COMPLETED' })
     });
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
 
     const dueSoon = await MovementRequest.count({
       where: buildWhere({
-        status: { [Op.in]: ['APPROVED', 'ACTIVE'] },
-        [Op.or]: [
-          { valid_until: { [Op.gte]: startOfToday } },
-          { valid_until: null },
-          { updatedAt: { [Op.gte]: sevenDaysAgo } }
-        ]
+        status: { [Op.in]: ['APPROVED', 'ACTIVE'] }
       })
     });
 
