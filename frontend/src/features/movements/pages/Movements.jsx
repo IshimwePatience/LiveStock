@@ -37,8 +37,11 @@ const Movements = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
   const [timeRange, setTimeRange] = useState('ALL');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [recordScope, setRecordScope] = useState('CURRENT_TAB');
   const [animalFilter, setAnimalFilter] = useState('ALL');
+  const [transportFilter, setTransportFilter] = useState('ALL');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -280,7 +283,7 @@ const Movements = () => {
     if (timeRange !== 'ALL') {
       const now = new Date();
       result = result.filter(m => {
-        const date = new Date(m.updatedAt || Date.now());
+        const date = new Date(m.createdAt || m.updatedAt || Date.now());
         if (timeRange === 'TODAY') {
           return date.toDateString() === now.toDateString();
         } else if (timeRange === 'WEEK') {
@@ -289,6 +292,18 @@ const Movements = () => {
         } else if (timeRange === 'MONTH') {
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           return date >= monthAgo;
+        } else if (timeRange === 'CUSTOM') {
+          if (customStartDate) {
+            const start = new Date(customStartDate);
+            start.setHours(0, 0, 0, 0);
+            if (date < start) return false;
+          }
+          if (customEndDate) {
+            const end = new Date(customEndDate);
+            end.setHours(23, 59, 59, 999);
+            if (date > end) return false;
+          }
+          return true;
         }
         return true;
       });
@@ -337,8 +352,33 @@ const Movements = () => {
 
     return result;
   }, [movements, searchQuery, selectedFilters, timeRange]);
-  // Helper function to filter dataset by recordScope and animalFilter
-  const getExportDataset = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
+  // Helper function to match Kinyarwanda & English animal types
+  const matchAnimalType = (str, filterKey) => {
+    if (!filterKey || filterKey === 'ALL') return true;
+    if (!str) return false;
+    const s = String(str).toLowerCase();
+    const f = String(filterKey).toLowerCase();
+
+    if (f === 'cattle' || f === 'cow' || f === 'inka') {
+      return s.includes('inka') || s.includes('cow') || s.includes('cattle') || s.includes('impfizi') || s.includes('inyana') || s.includes('bull') || s.includes('calf');
+    }
+    if (f === 'sheep' || f === 'intama') {
+      return s.includes('intama') || s.includes('sheep') || s.includes('lamb');
+    }
+    if (f === 'goat' || f === 'ihene') {
+      return s.includes('ihene') || s.includes('goat') || s.includes('goats');
+    }
+    if (f === 'pig' || f === 'ingurube') {
+      return s.includes('ingurube') || s.includes('pig') || s.includes('pigs') || s.includes('swine');
+    }
+    if (f === 'poultry' || f === 'inkoko') {
+      return s.includes('inkoko') || s.includes('poultry') || s.includes('chicken') || s.includes('duck');
+    }
+    return s.includes(f);
+  };
+
+  // Helper function to filter dataset by recordScope, animalFilter, and transportFilter
+  const getExportDataset = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
     let target = filteredMovements;
     if (scopeParam === 'CURRENT_TAB') {
       if (activeTab === 'Requests') {
@@ -361,12 +401,21 @@ const Movements = () => {
     }
 
     if (animalFilterParam && animalFilterParam !== 'ALL') {
-      const q = animalFilterParam.toLowerCase();
       target = target.filter(m => {
-        if (m.filterAnimal === q) return true;
-        if (m.rawAnimalType && m.rawAnimalType.toLowerCase().includes(q)) return true;
-        if (m.rawAnimals && m.rawAnimals.some(a => (a.animal_type || '').toLowerCase().includes(q))) return true;
+        if (m.filterAnimal && matchAnimalType(m.filterAnimal, animalFilterParam)) return true;
+        if (m.rawAnimalType && matchAnimalType(m.rawAnimalType, animalFilterParam)) return true;
+        if (m.title && matchAnimalType(m.title, animalFilterParam)) return true;
+        if (m.rawAnimals && m.rawAnimals.some(a => matchAnimalType(a.animal_type, animalFilterParam))) return true;
         return false;
+      });
+    }
+
+    if (transportFilterParam && transportFilterParam !== 'ALL') {
+      target = target.filter(m => {
+        const isFoot = m.transporterMode === 'PERSON_ON_FOOT' || !m.plateNumber || m.plateNumber === 'N/A' || m.plateNumber === 'Unknown';
+        if (transportFilterParam === 'PERSON_ON_FOOT') return isFoot;
+        if (transportFilterParam === 'DRIVER_VEHICLE') return !isFoot;
+        return true;
       });
     }
 
@@ -374,10 +423,10 @@ const Movements = () => {
   };
 
   // CSV Export Handler - Exports Animal by Animal
-  const exportToCSV = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
-    const dataset = getExportDataset(scopeParam, animalFilterParam);
+  const exportToCSV = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam);
     if (!dataset || dataset.length === 0) {
-      toast.error('No movement records available to export for selected scope & animal filter');
+      toast.error('No movement records available to export for selected scope & filters');
       return;
     }
 
@@ -458,7 +507,13 @@ const Movements = () => {
       ];
 
       if (m.rawAnimals && m.rawAnimals.length > 0) {
-        m.rawAnimals.forEach((anim, idx) => {
+        let matchingAnimals = m.rawAnimals;
+        if (animalFilterParam && animalFilterParam !== 'ALL') {
+          matchingAnimals = m.rawAnimals.filter(anim => matchAnimalType(anim.animal_type || m.rawAnimalType || m.title, animalFilterParam));
+          if (matchingAnimals.length === 0) matchingAnimals = m.rawAnimals;
+        }
+
+        matchingAnimals.forEach((anim, idx) => {
           const animalTypeStr = anim.animal_type || m.rawAnimalType || 'Animal';
           const tagStr = anim.tag_number || `TAG-${idx + 1}`;
           const sexStr = anim.sex || 'F';
@@ -500,20 +555,21 @@ const Movements = () => {
     const link = document.createElement('a');
     link.href = url;
     const scopeLabel = scopeParam === 'CURRENT_TAB' ? activeTab.replace(/\s+/g, '') : scopeParam;
-    link.setAttribute('download', `RAB_Animal_Movements_${scopeLabel}_${animalFilterParam}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `RAB_Animal_Movements_${scopeLabel}_${animalFilterParam}_${transportFilterParam}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // PDF Print Report Handler - Exports Animal by Animal
-  const printPDFReport = (scopeParam = recordScope, animalFilterParam = animalFilter) => {
-    const dataset = getExportDataset(scopeParam, animalFilterParam);
+  const printPDFReport = (scopeParam = recordScope, animalFilterParam = animalFilter, transportFilterParam = transportFilter) => {
+    const dataset = getExportDataset(scopeParam, animalFilterParam, transportFilterParam);
     if (!dataset || dataset.length === 0) {
       toast.error('No movement records available to print report');
       return;
     }
     const scopeLabel = scopeParam === 'CURRENT_TAB' ? `CURRENT TAB: ${activeTab.toUpperCase()}` : scopeParam === 'REQUESTS' ? 'ACTIVE REQUESTS' : scopeParam === 'HISTORY' ? 'COMPLETED HISTORY' : 'FULL REGISTRY';
+    const transportLabel = transportFilterParam === 'PERSON_ON_FOOT' ? 'UMUNYAMAGURU / OMUSHUMBA' : transportFilterParam === 'DRIVER_VEHICLE' ? 'IMODOKA N\'UMUSHOFERI' : 'ALL TRANSPORT MODES';
 
     const pdfRowsHtml = [];
     dataset.forEach(m => {
@@ -523,7 +579,13 @@ const Movements = () => {
       const driverStr = m.driverName !== 'N/A' && m.driverName !== 'Unknown' ? m.driverName : (isPersonOnFoot ? 'Umushumba' : 'Unassigned');
 
       if (m.rawAnimals && m.rawAnimals.length > 0) {
-        m.rawAnimals.forEach((anim, idx) => {
+        let matchingAnimals = m.rawAnimals;
+        if (animalFilterParam && animalFilterParam !== 'ALL') {
+          matchingAnimals = m.rawAnimals.filter(anim => matchAnimalType(anim.animal_type || m.rawAnimalType || m.title, animalFilterParam));
+          if (matchingAnimals.length === 0) matchingAnimals = m.rawAnimals;
+        }
+
+        matchingAnimals.forEach((anim, idx) => {
           pdfRowsHtml.push(`
             <tr>
               <td class="col-bold">${m.permitNumber}</td>
@@ -561,6 +623,7 @@ const Movements = () => {
         { label: 'Generated On', value: new Date().toLocaleString() },
         { label: 'Export Scope', value: scopeLabel },
         { label: 'Animal Filter', value: animalFilterParam.toUpperCase() },
+        { label: 'Transport Mode', value: transportLabel },
         { label: 'Total Animal Rows', value: pdfRowsHtml.length }
       ],
       columns: [
@@ -575,7 +638,7 @@ const Movements = () => {
       ],
       rowsHtml: pdfRowsHtml.join('')
     });
-    downloadPdfReport(htmlContent, `RAB_Animal_Registry_${scopeParam}_${animalFilterParam}.pdf`);
+    downloadPdfReport(htmlContent, `RAB_Animal_Registry_${scopeParam}_${animalFilterParam}_${transportFilterParam}.pdf`);
   };
 
   // Helper to check if movement is incoming to current user's jurisdiction
@@ -760,8 +823,17 @@ const Movements = () => {
             onPrintPDF={printPDFReport}
             timeRange={timeRange}
             setTimeRange={setTimeRange}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
             recordScope={recordScope}
             setRecordScope={setRecordScope}
+            animalFilter={animalFilter}
+            setAnimalFilter={setAnimalFilter}
+            transportFilter={transportFilter}
+            setTransportFilter={setTransportFilter}
+            activeTab={activeTab}
           />
         </div>
 
