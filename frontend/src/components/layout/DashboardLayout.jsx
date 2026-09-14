@@ -83,14 +83,60 @@ const DashboardLayout = () => {
     refetchInterval: 15000
   });
 
-  const openFeedbackCount = openFeedbackData?.count || 0;
+  const handleOpenGiveFeedback = () => {
+    setIsHelpOpen(false);
+    setFeedbackScreenshot(null);
+    setFeedbackDescription('');
+    setIsFeedbackModalOpen(true);
+  };
 
   const handleTakeScreenshot = async () => {
     setIsHelpOpen(false);
     setIsCapturingScreenshot(true);
-    const toastId = toast.loading('Capturing screenshot...');
+    const toastId = toast.loading('Select a screen or window to capture...');
+
     try {
-      // Small delay to allow menu overlay to hide
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: 'browser' },
+          audio: false
+        });
+
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+          };
+        });
+
+        await new Promise(r => setTimeout(r, 250));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 1280;
+        canvas.height = video.videoHeight || 720;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        stream.getTracks().forEach(track => track.stop());
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        setFeedbackScreenshot(dataUrl);
+        toast.success('Screenshot captured!', { id: toastId });
+        setIsFeedbackModalOpen(true);
+        return;
+      }
+    } catch (err) {
+      console.warn('Screen capture window closed or failed, attempting document snapshot:', err);
+      if (err.name === 'NotAllowedError') {
+        toast.dismiss(toastId);
+        setIsCapturingScreenshot(false);
+        return;
+      }
+    }
+
+    try {
       await new Promise(r => setTimeout(r, 150));
       const canvas = await html2canvas(document.body, {
         useCORS: true,
@@ -101,9 +147,9 @@ const DashboardLayout = () => {
       setFeedbackScreenshot(dataUrl);
       toast.success('Screenshot captured!', { id: toastId });
       setIsFeedbackModalOpen(true);
-    } catch (err) {
-      console.error('Screenshot failed:', err);
-      toast.error('Could not capture screen automatically. You can attach an image manually.', { id: toastId });
+    } catch (fallbackErr) {
+      console.error('Screenshot failed:', fallbackErr);
+      toast.error('Could not capture screen. You can attach an image manually.', { id: toastId });
       setIsFeedbackModalOpen(true);
     } finally {
       setIsCapturingScreenshot(false);
@@ -486,10 +532,7 @@ const DashboardLayout = () => {
             {isHelpOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-700 font-sans">
                 <button
-                  onClick={() => {
-                    setIsHelpOpen(false);
-                    setIsFeedbackModalOpen(true);
-                  }}
+                  onClick={handleOpenGiveFeedback}
                   className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
                 >
                   <MessageSquare className="w-4 h-4 text-gray-500" />
