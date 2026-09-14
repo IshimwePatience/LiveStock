@@ -174,7 +174,7 @@ const NationalReports = () => {
 
   // Weekly Distance Travelled widget states (cloned reference widget)
   const [selectedDistPlates, setSelectedDistPlates] = useState(['RAD 237K', 'RAI 928Q', 'RAH 142Y', 'RAG 272X', 'RAJ 395R', 'RAF 740N', 'RAI 222R']);
-  const [distanceViewMode, setDistanceViewMode] = useState('chart'); // 'chart' | 'table'
+  const [distanceViewMode, setDistanceViewMode] = useState('map'); // 'map' | 'table'
   const [tableSubTab, setTableSubTab] = useState('routes'); // 'routes' | 'stops'
   const [isDistanceDownloadOpen, setIsDistanceDownloadOpen] = useState(false);
   const [isDistanceDotsOpen, setIsDistanceDotsOpen] = useState(false);
@@ -1731,6 +1731,30 @@ const NationalReports = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Map View vs Table View Switcher Pills */}
+                  <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 text-xs font-semibold">
+                    <button
+                      onClick={() => setDistanceViewMode('map')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                        distanceViewMode === 'map'
+                          ? 'bg-[#0052cc] text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <MapPin className="w-3.5 h-3.5" /> Map View
+                    </button>
+                    <button
+                      onClick={() => setDistanceViewMode('table')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                        distanceViewMode === 'table'
+                          ? 'bg-[#0052cc] text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Table className="w-3.5 h-3.5" /> Table View
+                    </button>
+                  </div>
+
                   {/* Green Download Button */}
                   <div className="relative" ref={distanceExportRef}>
                     <button
