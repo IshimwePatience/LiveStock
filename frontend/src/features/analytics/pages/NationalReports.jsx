@@ -12,9 +12,20 @@ import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
   Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown,
-  MoreVertical, Download, FileSpreadsheet
+  MoreVertical, Download, FileSpreadsheet, Camera, BarChart3, Table
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Data for Weekly Distance Travelled (cloned reference widget)
+const distanceVehiclesList = [
+  { plate: 'RAD 237K', color: '#2563eb', totalKm: 1585.8, daily: { 'Sep 08': 300.0, 'Sep 09': 435.5, 'Sep 10': 5.0, 'Sep 11': 394.78, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+  { plate: 'RAI 928Q', color: '#10b981', totalKm: 1082.4, daily: { 'Sep 08': 190.0, 'Sep 09': 265.0, 'Sep 10': 200.0, 'Sep 11': 305.19, 'Sep 12': 110.0, 'Sep 13': 0, 'Sep 14': 0 } },
+  { plate: 'RAH 142Y', color: '#f59e0b', totalKm: 513.1, daily: { 'Sep 08': 170.0, 'Sep 09': 0, 'Sep 10': 0, 'Sep 11': 300.31, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 42.8 } },
+  { plate: 'RAG 272X', labelExt: '(collected)', color: '#ef4444', totalKm: 443.0, daily: { 'Sep 08': 330.0, 'Sep 09': 113.0, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+  { plate: 'RAJ 395R', color: '#8b5cf6', totalKm: 2.2, daily: { 'Sep 08': 0, 'Sep 09': 2.15, 'Sep 10': 0, 'Sep 11': 0.05, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+  { plate: 'RAF 740N', color: '#ec4899', totalKm: 2.1, daily: { 'Sep 08': 0.5, 'Sep 09': 1.6, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+  { plate: 'RAI 222R', color: '#14b8a6', totalKm: 0.5, daily: { 'Sep 08': 0, 'Sep 09': 0, 'Sep 10': 0.5, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+];
 
 // Fix Leaflet marker icon default paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -47,6 +58,22 @@ const createEndIcon = () => new L.divIcon({
   iconSize: [24, 24],
   iconAnchor: [12, 12]
 });
+
+// Generate realistic intermediate coordinates for map polylines
+const interpolatePoints = (p1, p2, steps = 30) => {
+  const points = [];
+  const [lat1, lng1] = p1;
+  const [lat2, lng2] = p2;
+
+  for (let i = 0; i <= steps; i++) {
+    const factor = i / steps;
+    const lat = lat1 + (lat2 - lat1) * factor + (Math.sin(factor * Math.PI) * 0.02);
+    const lng = lng1 + (lng2 - lng1) * factor + (Math.cos(factor * Math.PI) * 0.015);
+    points.push([lat, lng]);
+  }
+
+  return points;
+};
 
 // Coordinate Lookup for Rwanda Districts
 const RWANDA_DISTRICT_COORDS = {
@@ -137,17 +164,39 @@ const NationalReports = () => {
   const [analyticsTransportMode, setAnalyticsTransportMode] = useState('ALL');
   const [analyticsAnimal, setAnalyticsAnimal] = useState('ALL');
 
+  // Weekly Distance Travelled widget states (cloned reference widget)
+  const [selectedDistPlates, setSelectedDistPlates] = useState(['RAD 237K', 'RAI 928Q', 'RAH 142Y', 'RAG 272X', 'RAJ 395R', 'RAF 740N', 'RAI 222R']);
+  const [distanceViewMode, setDistanceViewMode] = useState('chart'); // 'chart' | 'table'
+  const [isDistanceDownloadOpen, setIsDistanceDownloadOpen] = useState(false);
+  const [hoveredDistDate, setHoveredDistDate] = useState(null);
+
   const exportMenuRef = useRef(null);
+  const distanceExportRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
         setIsExportMenuOpen(false);
       }
+      if (distanceExportRef.current && !distanceExportRef.current.contains(e.target)) {
+        setIsDistanceDownloadOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Helpers for canvas & PDF generation
+  const ensureHtml2Canvas = () => {
+    return new Promise((resolve) => {
+      if (window.html2canvas) return resolve(window.html2canvas);
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  };
 
   // Helpers for PDF generation
   const ensureHtml2Pdf = () => {
@@ -666,6 +715,236 @@ const NationalReports = () => {
     }
   };
 
+  // Export handlers for Weekly Distance Travelled card
+  const handleExportDistancePNG = async () => {
+    setIsDistanceDownloadOpen(false);
+    const targetEl = document.getElementById('weekly-distance-chart-card');
+    if (!targetEl) {
+      toast.error('Chart container not found for PNG export');
+      return;
+    }
+    const toastId = toast.loading('Generating high-resolution PNG image...');
+    try {
+      const html2canvas = await ensureHtml2Canvas();
+      if (html2canvas) {
+        const canvas = await html2canvas(targetEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const imageUri = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imageUri;
+        link.download = `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('PNG image report downloaded successfully!', { id: toastId });
+      } else {
+        toast.error('Failed to load image canvas library.', { id: toastId });
+      }
+    } catch (e) {
+      console.error('PNG Export Error:', e);
+      toast.error('Error generating PNG image report.', { id: toastId });
+    }
+  };
+
+  const handleExportDistanceCSV = () => {
+    setIsDistanceDownloadOpen(false);
+    const rows = [
+      ['Date', 'Vehicle Plate', 'Logged Distance (km)', 'Route Corridor', 'Status']
+    ];
+
+    distanceVehiclesList.forEach(v => {
+      if (selectedDistPlates.includes(v.plate)) {
+        Object.entries(v.daily).forEach(([date, km]) => {
+          if (km > 0) {
+            rows.push([date, v.plate, `${km} km`, 'District Traversal Route', 'Logged']);
+          }
+        });
+      }
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Excel / CSV distance report downloaded!');
+  };
+
+  const handleExportDistancePDF = async () => {
+    setIsDistanceDownloadOpen(false);
+    const toastId = toast.loading('Generating official PDF distance report...');
+
+    try {
+      let officerName = 'RAB Official Auditor (RAB)';
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          let rawName = parsed.name || parsed.fullName || parsed.username || 'RAB Official Auditor';
+          rawName = rawName.replace(/Super Admin/gi, 'RAB Officer').replace(/\s*\(RAB\)/gi, '').trim();
+          officerName = `${rawName} (RAB)`;
+        }
+      } catch (e) { }
+
+      const coatOfArmsRaw = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Coat_of_arms_of_Rwanda.svg/250px-Coat_of_arms_of_Rwanda.svg.png";
+
+      const [coatOfArmsUrl, rabLogoBase64] = await Promise.all([
+        getBase64FromUrl(coatOfArmsRaw),
+        getBase64FromUrl(rabLogo)
+      ]);
+
+      const activeList = distanceVehiclesList.filter(v => selectedDistPlates.includes(v.plate));
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '794px';
+      iframe.style.height = '1123px';
+      iframe.style.border = 'none';
+      iframe.style.zIndex = '-9999';
+      iframe.style.visibility = 'hidden';
+
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Vehicle_Weekly_Distance_Report</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; background: #fff; font-family: Arial, Helvetica, sans-serif; color: #0f172a; font-size: 11px; }
+            .report-container { width: 794px; padding: 28px 36px; margin: 0 auto; background: #fff; }
+            .page-flex { min-height: 1020px; display: flex; flex-direction: column; justify-content: space-between; }
+            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; border: none; }
+            .header-table td { border: none; padding: 0; vertical-align: middle; }
+            .flag-bar { height: 4px; width: 100%; background: linear-gradient(to right, #10b981, #facc15, #0284c7); border-radius: 9999px; margin: 8px 0 14px 0; }
+            .doc-title { text-align: center; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; padding: 6px 0; background: #ffffff; margin-bottom: 14px; }
+            .doc-title h2 { font-size: 14px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+            .meta-grid { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; display: table; width: 100%; box-sizing: border-box; }
+            .meta-row { display: table-row; }
+            .meta-cell { display: table-cell; padding: 4px 6px; font-size: 10.5px; color: #334155; }
+            .meta-cell strong { color: #0f172a; font-weight: 700; }
+            table.data-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; border: 1px solid #cbd5e1; page-break-inside: auto; }
+            table.data-table tr { page-break-inside: avoid; page-break-after: auto; }
+            table.data-table th { background: #f8fafc; color: #0f172a; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; padding: 9px 10px; border-bottom: 2px solid #0f172a; border-right: 1px solid #e2e8f0; text-align: left; }
+            table.data-table td { border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; padding: 8px 10px; color: #1e293b; vertical-align: top; }
+            table.data-table tr:nth-child(even) { background-color: #fdfdfd; }
+            .footer-section { border-top: 2px solid #0f172a; padding-top: 10px; margin-top: 20px; font-size: 9px; color: #475569; }
+          </style>
+        </head>
+        <body>
+          <div class="report-container">
+            <div class="page-flex">
+              <div>
+                <table class="header-table">
+                  <tr>
+                    <td style="width: 70px;">
+                      <img src="${coatOfArmsUrl}" alt="Coat of Arms" style="width: 58px; height: 58px; object-fit: contain;" />
+                    </td>
+                    <td style="text-align: center;">
+                      <h1 style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase;">REPUBLIC OF RWANDA</h1>
+                      <p style="font-size: 10px; color: #334155; margin: 2px 0 0 0; font-weight: 700;">MINISTRY OF AGRICULTURE AND ANIMAL RESOURCES (MINAGRI)</p>
+                      <p style="font-size: 9.5px; color: #0052cc; margin: 1px 0 0 0; font-weight: 700;">RWANDA AGRICULTURE AND ANIMAL RESOURCES DEVELOPMENT BOARD (RAB)</p>
+                    </td>
+                    <td style="width: 70px; text-align: right;">
+                      <img src="${rabLogoBase64}" alt="RAB Logo" style="width: 58px; height: 58px; object-fit: contain; float: right;" />
+                    </td>
+                  </tr>
+                </table>
+
+                <div class="flag-bar"></div>
+
+                <div class="doc-title">
+                  <h2>Official Vehicle Traversal &amp; Weekly Distance Report</h2>
+                </div>
+
+                <div class="meta-grid">
+                  <div class="meta-row">
+                    <div class="meta-cell"><strong>Generated At:</strong> ${new Date().toLocaleString()}</div>
+                    <div class="meta-cell"><strong>Generated By:</strong> ${officerName}</div>
+                  </div>
+                  <div class="meta-row">
+                    <div class="meta-cell"><strong>Vehicles Included:</strong> ${activeList.map(v => v.plate).join(', ')}</div>
+                    <div class="meta-cell"><strong>Time Range:</strong> Sep 08, 2026 &ndash; Sep 14, 2026</div>
+                  </div>
+                </div>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Vehicle Plate</th>
+                      <th>Total Distance Logged</th>
+                      <th>Sep 08</th>
+                      <th>Sep 09</th>
+                      <th>Sep 10</th>
+                      <th>Sep 11</th>
+                      <th>Sep 12</th>
+                      <th>Sep 13</th>
+                      <th>Sep 14</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${activeList.map(v => `
+                      <tr>
+                        <td><strong style="color:#0f172a; font-size:11px;">${v.plate}</strong></td>
+                        <td><strong style="color:#0052cc;">${v.totalKm} km</strong></td>
+                        <td>${v.daily['Sep 08'] || 0} km</td>
+                        <td>${v.daily['Sep 09'] || 0} km</td>
+                        <td>${v.daily['Sep 10'] || 0} km</td>
+                        <td>${v.daily['Sep 11'] || 0} km</td>
+                        <td>${v.daily['Sep 12'] || 0} km</td>
+                        <td>${v.daily['Sep 13'] || 0} km</td>
+                        <td>${v.daily['Sep 14'] || 0} km</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="footer-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 600;">
+                  <span>Official RAB Telemetry Report &bull; National Livestock Tracking System</span>
+                  <span>Generated By: ${officerName}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      doc.close();
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const html2pdf = await ensureHtml2Pdf();
+      if (html2pdf) {
+        const fileName = `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await html2pdf().set(opt).from(doc.body).save();
+        document.body.removeChild(iframe);
+        toast.success('PDF distance report downloaded successfully!', { id: toastId });
+      } else {
+        toast.error('Failed to load PDF library', { id: toastId });
+        document.body.removeChild(iframe);
+      }
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+      toast.error('Error generating PDF distance report.', { id: toastId });
+    }
+  };
+
   const activePlate = selectedPlate && trackedVehiclesMap[selectedPlate] ? selectedPlate : Object.keys(trackedVehiclesMap)[0];
   const currentRoute = trackedVehiclesMap[activePlate] || Object.values(trackedVehiclesMap)[0];
   const coordinates = currentRoute.coordinates;
@@ -1138,6 +1417,273 @@ const NationalReports = () => {
               );
             })()}
 
+            {/* Clone of Reference Design: Weekly Distance Travelled Card */}
+            <div id="weekly-distance-chart-card" className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm flex flex-col gap-4 relative">
+              
+              {/* Card Header & Controls */}
+              <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-gray-100">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base">Weekly Distance Travelled</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Top 10 vehicle distance tracking</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Green Download Button */}
+                  <div className="relative" ref={distanceExportRef}>
+                    <button
+                      onClick={() => setIsDistanceDownloadOpen(!isDistanceDownloadOpen)}
+                      className="bg-[#10b981] hover:bg-[#059669] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" /> Download
+                    </button>
+
+                    {isDistanceDownloadOpen && (
+                      <div className="absolute right-0 mt-1.5 w-60 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 text-xs font-medium">
+                        <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 tracking-wider">
+                          Distance Report Formats
+                        </div>
+                        <button
+                          onClick={handleExportDistancePNG}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
+                        >
+                          <Camera className="w-4 h-4 text-purple-600" />
+                          <span>Export Chart Image (.png)</span>
+                        </button>
+                        <button
+                          onClick={handleExportDistancePDF}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4 text-red-600" />
+                          <span>Export PDF Table Report (.pdf)</span>
+                        </button>
+                        <button
+                          onClick={handleExportDistanceCSV}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
+                        >
+                          <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                          <span>Export Excel / CSV (.csv)</span>
+                        </button>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={() => {
+                            setDistanceViewMode(distanceViewMode === 'chart' ? 'table' : 'chart');
+                            setIsDistanceDownloadOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer font-bold"
+                        >
+                          {distanceViewMode === 'chart' ? <Table className="w-4 h-4 text-blue-600" /> : <BarChart3 className="w-4 h-4 text-blue-600" />}
+                          <span>Switch to {distanceViewMode === 'chart' ? 'Table View' : 'Chart View'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Select Date Range Button */}
+                  <button
+                    onClick={() => setTimeRange(timeRange === 'custom' ? 'all' : 'custom')}
+                    className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1d4ed8] px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-[#bfdbfe]"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600" /> Select Date Range
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Main Content: Split Chart/Table (Left) vs Vehicle Selector Sidebar (Right) */}
+              <div className="flex flex-col md:flex-row gap-6 min-h-[340px]">
+                
+                {/* Left Column: Interactive Grouped Bar Chart or Data Table */}
+                <div className="flex-1 flex flex-col justify-between relative pt-2">
+                  {distanceViewMode === 'chart' ? (
+                    <div className="h-full flex flex-col justify-between relative">
+                      
+                      {/* Y-axis grid & labels */}
+                      <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8 pointer-events-none">
+                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-500">600</span><div className="h-px bg-gray-200 flex-1 border-b border-dashed border-gray-200"></div></div>
+                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">450</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
+                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">300</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
+                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">150</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
+                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-700">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
+                      </div>
+
+                      {/* Grouped Bars Area */}
+                      <div className="flex justify-around items-end h-[240px] pl-12 pr-4 pb-0.5 z-10">
+                        {['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'].map((dateKey) => {
+                          const activeVehicles = distanceVehiclesList.filter(v => selectedDistPlates.includes(v.plate));
+                          const isHovered = hoveredDistDate === dateKey;
+
+                          return (
+                            <div
+                              key={dateKey}
+                              onMouseEnter={() => setHoveredDistDate(dateKey)}
+                              onMouseLeave={() => setHoveredDistDate(null)}
+                              className="flex-1 flex justify-center items-end h-full px-1 group relative cursor-pointer"
+                            >
+                              {/* Hover background column highlights */}
+                              <div className={`absolute inset-y-0 w-full rounded-md transition-colors ${isHovered ? 'bg-gray-50/90 shadow-2xs border border-gray-200/50' : ''}`}></div>
+
+                              {/* Grouped Bars per Date */}
+                              <div className="flex items-end gap-1 z-10 pb-0.5">
+                                {activeVehicles.map((v) => {
+                                  const distVal = v.daily[dateKey] || 0;
+                                  if (distVal === 0) return null;
+                                  const heightPct = Math.max(4, Math.round((distVal / 600) * 100));
+
+                                  return (
+                                    <div
+                                      key={v.plate}
+                                      title={`${v.plate}: ${distVal} km on ${dateKey}`}
+                                      className="w-2.5 rounded-t-sm transition-all group-hover:brightness-110"
+                                      style={{
+                                        height: `${heightPct}%`,
+                                        backgroundColor: v.color
+                                      }}
+                                    />
+                                  );
+                                })}
+                              </div>
+
+                              {/* Floating Tooltip Card (Exact Picture 3 Clone!) */}
+                              {isHovered && activeVehicles.some(v => (v.daily[dateKey] || 0) > 0) && (
+                                <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-40 bg-white rounded-xl shadow-2xl border border-gray-200 p-3.5 min-w-[210px] text-xs pointer-events-none transition-all">
+                                  <div className="font-extrabold text-gray-900 mb-2 pb-1.5 border-b border-gray-100 text-sm flex items-center justify-between">
+                                    <span>{dateKey}</span>
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Distance</span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {activeVehicles.map((v) => {
+                                      const val = v.daily[dateKey] || 0;
+                                      if (val === 0) return null;
+                                      return (
+                                        <div key={v.plate} className="flex items-center justify-between gap-3">
+                                          <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs" style={{ backgroundColor: v.color }}></span>
+                                            <span className="font-bold text-gray-800">{v.plate}</span>
+                                          </div>
+                                          <span className="font-extrabold text-gray-900">{val} km</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* X-axis date legends & Y-axis label */}
+                      <div className="flex justify-around items-center pl-12 pr-4 mt-3 text-xs font-semibold text-gray-600 z-10 border-t border-gray-100 pt-2">
+                        {['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'].map((d) => (
+                          <span key={d} className="flex-1 text-center">{d}</span>
+                        ))}
+                      </div>
+                      
+                      <div className="absolute left-0 top-1/2 -rotate-90 text-[10px] font-bold text-gray-400 tracking-wider uppercase -ml-4">
+                        Distance (km)
+                      </div>
+
+                    </div>
+                  ) : (
+                    /* Table View Mode */
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
+                            <th className="py-2.5 px-3">Vehicle Plate</th>
+                            <th className="py-2.5 px-3">Logged Distance</th>
+                            <th className="py-2.5 px-3">Sep 08</th>
+                            <th className="py-2.5 px-3">Sep 09</th>
+                            <th className="py-2.5 px-3">Sep 10</th>
+                            <th className="py-2.5 px-3">Sep 11</th>
+                            <th className="py-2.5 px-3">Sep 12</th>
+                            <th className="py-2.5 px-3">Sep 13</th>
+                            <th className="py-2.5 px-3">Sep 14</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {distanceVehiclesList
+                            .filter(v => selectedDistPlates.includes(v.plate))
+                            .map((v, idx) => (
+                              <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                                <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: v.color }}></span>
+                                  {v.plate} {v.labelExt || ''}
+                                </td>
+                                <td className="py-2.5 px-3 font-bold text-gray-900">{v.totalKm} km</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 08'] ? `${v.daily['Sep 08']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 09'] ? `${v.daily['Sep 09']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 10'] ? `${v.daily['Sep 10']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 11'] ? `${v.daily['Sep 11']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 12'] ? `${v.daily['Sep 12']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 13'] ? `${v.daily['Sep 13']} km` : '-'}</td>
+                                <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 14'] ? `${v.daily['Sep 14']} km` : '-'}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Vehicles Selector Sidebar (Exact Picture 2 Clone!) */}
+                <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-5 flex flex-col shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-gray-900 text-xs">Vehicles</span>
+                    <button
+                      onClick={() => {
+                        if (selectedDistPlates.length === distanceVehiclesList.length) {
+                          setSelectedDistPlates([]);
+                        } else {
+                          setSelectedDistPlates(distanceVehiclesList.map(v => v.plate));
+                        }
+                      }}
+                      className="text-xs font-semibold text-[#0052cc] hover:underline cursor-pointer"
+                    >
+                      {selectedDistPlates.length === distanceVehiclesList.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[300px]">
+                    {distanceVehiclesList.map(v => {
+                      const isSelected = selectedDistPlates.includes(v.plate);
+                      return (
+                        <div
+                          key={v.plate}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedDistPlates(selectedDistPlates.filter(p => p !== v.plate));
+                            } else {
+                              setSelectedDistPlates([...selectedDistPlates, v.plate]);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-gray-50/90 border-gray-200 shadow-2xs font-semibold'
+                              : 'bg-white border-transparent opacity-40 hover:opacity-75'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <span
+                              className="w-3 h-3 rounded-md shrink-0 transition-transform"
+                              style={{ backgroundColor: v.color }}
+                            ></span>
+                            <span className="font-bold text-gray-800 truncate">
+                              {v.plate} {v.labelExt || ''}
+                            </span>
+                          </div>
+                          <span className="text-gray-500 font-medium whitespace-nowrap ml-2">
+                            {v.totalKm} km
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
             {/* Vehicle Analytics Grid (Exact District & Sector Charts Layout) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -1243,45 +1789,61 @@ const NationalReports = () => {
               {/* Chart 3: Animal Volume Transported by Vehicle */}
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Vehicle Cargo Breakdown</h3>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-sm text-gray-500 mb-4">
                   Livestock breakdown transported by tracked GPS vehicles. <span className="text-green-600 hover:underline cursor-pointer">View animal types</span>
                 </p>
 
-                <div className="flex-1 flex flex-col justify-end relative mt-4">
+                <div className="flex-1 flex flex-col justify-end relative mt-2">
                   {/* Y-axis lines & labels */}
-                  <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8">
-                    <div className="flex items-center gap-2"><span className="w-6 text-right">Max</span><div className="h-px bg-gray-100 flex-1"></div></div>
-                    <div className="flex items-center gap-2"><span className="w-6 text-right">High</span><div className="h-px bg-gray-100 flex-1"></div></div>
-                    <div className="flex items-center gap-2"><span className="w-6 text-right">Med</span><div className="h-px bg-gray-100 flex-1"></div></div>
-                    <div className="flex items-center gap-2"><span className="w-6 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
-                  </div>
+                  {(() => {
+                    const counts = districtStats.animalCounts || { cowCount: 0, goatCount: 0, sheepCount: 0, pigCount: 0, poultryCount: 0 };
+                    const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
+                    const items = [
+                      { label: 'Cows', count: counts.cowCount, color: 'bg-[#0052cc]' },
+                      { label: 'Goats', count: counts.goatCount, color: 'bg-gray-400' },
+                      { label: 'Sheep', count: counts.sheepCount, color: 'bg-amber-500' },
+                      { label: 'Pigs', count: counts.pigCount, color: 'bg-[#8c929d]' },
+                      { label: 'Poultry', count: counts.poultryCount, color: 'bg-teal-500' },
+                    ];
 
-                  {/* Bars */}
-                  <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
-                    {(() => {
-                      const counts = districtStats.animalCounts || { cowCount: 1108, goatCount: 795, sheepCount: 454, pigCount: 284, poultryCount: 199 };
-                      const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
-                      const totalAnimals = districtStats.totalAnimals || 1;
-                      return (
-                        <>
-                          <div title={`Cows: ${counts.cowCount} Animals (${Math.round((counts.cowCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Goats: ${counts.goatCount} Animals (${Math.round((counts.goatCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Sheep: ${counts.sheepCount} Animals (${Math.round((counts.sheepCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Pigs: ${counts.pigCount} Animals (${Math.round((counts.pigCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Poultry: ${counts.poultryCount} Animals (${Math.round((counts.poultryCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                    return (
+                      <>
+                        <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8 pointer-events-none">
+                          <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-500">{maxVal}</span><div className="h-px bg-gray-200 flex-1"></div></div>
+                          <div className="flex items-center gap-2"><span className="w-8 text-right">{Math.round(maxVal * 0.66)}</span><div className="h-px bg-gray-100 flex-1"></div></div>
+                          <div className="flex items-center gap-2"><span className="w-8 text-right">{Math.round(maxVal * 0.33)}</span><div className="h-px bg-gray-100 flex-1"></div></div>
+                          <div className="flex items-center gap-2"><span className="w-8 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
+                        </div>
 
-                  {/* X-axis legends */}
-                  <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                    <div title={`Cows: ${(districtStats.animalCounts?.cowCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-red-500"></span> Cows</div>
-                    <div title={`Goats: ${(districtStats.animalCounts?.goatCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-red-500 -rotate-90" /> Goats</div>
-                    <div title={`Sheep: ${(districtStats.animalCounts?.sheepCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-orange-500 -rotate-90" /> Sheep</div>
-                    <div title={`Pigs: ${(districtStats.animalCounts?.pigCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-blue-500" /> Pigs</div>
-                    <div title={`Poultry: ${(districtStats.animalCounts?.poultryCount || 0).toLocaleString()} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-gray-400"></span> Poultry</div>
-                  </div>
+                        {/* Bars with Overhead Numbers */}
+                        <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
+                          {items.map((item, i) => {
+                            const heightPct = Math.max(8, Math.round((item.count / maxVal) * 100));
+                            return (
+                              <div key={i} className="flex flex-col items-center gap-1 group cursor-pointer" title={`${item.label}: ${item.count.toLocaleString()} Animals`}>
+                                <span className="text-[11px] font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
+                                  {item.count}
+                                </span>
+                                <div
+                                  className={`w-12 ${item.color} group-hover:brightness-110 group-hover:scale-105 transition-all rounded-t-sm`}
+                                  style={{ height: `${heightPct}%` }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* X-axis legends */}
+                        <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
+                          <div title={`Cows: ${counts.cowCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-[#0052cc] rounded"></span> Cows ({counts.cowCount})</div>
+                          <div title={`Goats: ${counts.goatCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-gray-500 -rotate-90" /> Goats ({counts.goatCount})</div>
+                          <div title={`Sheep: ${counts.sheepCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-amber-500 -rotate-90" /> Sheep ({counts.sheepCount})</div>
+                          <div title={`Pigs: ${counts.pigCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-gray-600" /> Pigs ({counts.pigCount})</div>
+                          <div title={`Poultry: ${counts.poultryCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-teal-500"></span> Poultry ({counts.poultryCount})</div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
