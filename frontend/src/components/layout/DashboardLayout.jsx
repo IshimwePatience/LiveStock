@@ -545,7 +545,7 @@ const DashboardLayout = () => {
                     className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center justify-between transition"
                   >
                     <div className="flex items-center gap-3">
-                      <Shield className="w-4 h-4 text-gray-500" />
+                      <Settings className="w-4 h-4 text-gray-500" />
                       <span>View Feedback & Issues</span>
                     </div>
                     {openFeedbackCount > 0 && (
