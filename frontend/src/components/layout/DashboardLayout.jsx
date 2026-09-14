@@ -83,6 +83,8 @@ const DashboardLayout = () => {
     refetchInterval: 15000
   });
 
+  const openFeedbackCount = openFeedbackData?.count ?? openFeedbackData?.openCount ?? (typeof openFeedbackData === 'number' ? openFeedbackData : 0);
+
   const handleOpenGiveFeedback = () => {
     setIsHelpOpen(false);
     setFeedbackScreenshot(null);
