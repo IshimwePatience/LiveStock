@@ -10,6 +10,7 @@ const Case = require('./Case');
 const NotificationLog = require('./NotificationLog');
 const Animal = require('./Animal');
 const MovementAnimal = require('./MovementAnimal');
+const Feedback = require('./Feedback');
 const { sequelize } = require('../config/db');
 
 // --- Relationships ---
@@ -62,9 +63,9 @@ Case.belongsTo(Trip, { foreignKey: 'trip_id' });
 User.hasMany(NotificationLog, { foreignKey: 'user_id' });
 NotificationLog.belongsTo(User, { foreignKey: 'user_id' });
 
-// Animals (sector_id is stored as string)
-// Sector.hasMany(Animal, { foreignKey: 'sector_id' });
-// Animal.belongsTo(Sector, { foreignKey: 'sector_id' });
+// Feedback
+User.hasMany(Feedback, { foreignKey: 'user_id' });
+Feedback.belongsTo(User, { foreignKey: 'user_id' });
 
 const Geofence = require('./Geofence');
 
@@ -82,6 +83,7 @@ module.exports = {
   Case,
   NotificationLog,
   Animal,
-  Geofence
+  Geofence,
+  Feedback
 };
 

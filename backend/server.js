@@ -31,6 +31,7 @@ const driverRoutes = require('./routes/driverRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const geofenceRoutes = require('./routes/geofenceRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movement', movementRoutes);
@@ -44,6 +45,7 @@ app.use('/api/driver', driverRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/geofence', geofenceRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Socket.io for Real-time
 const socketService = require('./services/socketService');

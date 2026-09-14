@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power } from 'lucide-react';
+import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power, MessageSquare, Camera, X } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import LiveTripToastManager from '../ui/LiveTripToastManager';
@@ -61,6 +62,95 @@ const DashboardLayout = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+
+  // Feedback & Screenshot Modal State
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackScreenshot, setFeedbackScreenshot] = useState(null);
+  const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+  const isAdmin = user?.role === 'RAB' || user?.role === 'SuperAdmin';
+
+  // Fetch open feedback count for SuperAdmin/Admin alert dot
+  const { data: openFeedbackData, refetch: refetchFeedbackCount } = useQuery({
+    queryKey: ['open-feedback-count'],
+    queryFn: async () => {
+      const res = await api.get('/feedback/open-count');
+      return res.data;
+    },
+    enabled: !!user && isAdmin,
+    refetchInterval: 15000
+  });
+
+  const openFeedbackCount = openFeedbackData?.count || 0;
+
+  const handleTakeScreenshot = async () => {
+    setIsHelpOpen(false);
+    setIsCapturingScreenshot(true);
+    const toastId = toast.loading('Capturing screenshot...');
+    try {
+      // Small delay to allow menu overlay to hide
+      await new Promise(r => setTimeout(r, 150));
+      const canvas = await html2canvas(document.body, {
+        useCORS: true,
+        logging: false,
+        scale: 0.85
+      });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      setFeedbackScreenshot(dataUrl);
+      toast.success('Screenshot captured!', { id: toastId });
+      setIsFeedbackModalOpen(true);
+    } catch (err) {
+      console.error('Screenshot failed:', err);
+      toast.error('Could not capture screen automatically. You can attach an image manually.', { id: toastId });
+      setIsFeedbackModalOpen(true);
+    } finally {
+      setIsCapturingScreenshot(false);
+    }
+  };
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFeedbackScreenshot(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    if (!feedbackDescription.trim()) {
+      toast.error('Please describe the issue before submitting.');
+      return;
+    }
+    setIsSubmittingFeedback(true);
+    try {
+      await api.post('/feedback', {
+        description: feedbackDescription.trim(),
+        screenshot_url: feedbackScreenshot
+      });
+      toast.success('Feedback submitted! System Admin has been notified.');
+      setFeedbackDescription('');
+      setFeedbackScreenshot(null);
+      setIsFeedbackModalOpen(false);
+      if (isAdmin) {
+        refetchFeedbackCount();
+      }
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      toast.error('Failed to submit feedback. Please try again.');
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   // Global Session Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -384,18 +474,34 @@ const DashboardLayout = () => {
           <div className="relative">
             <button
               onClick={() => setIsHelpOpen(!isHelpOpen)}
-              className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white"
+              className="w-10 h-10 flex items-center justify-center hover:bg-white/15 rounded-full transition text-white relative"
+              title="Help & Feedback"
             >
               <HelpCircle className="w-5 h-5" />
+              {/* Red dot alert for System Admin when open feedback requests exist */}
+              {isAdmin && openFeedbackCount > 0 && (
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-[#0056d2] animate-pulse" />
+              )}
             </button>
             {isHelpOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 text-gray-800">
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Help &amp; Support</button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Terms of Service</button>
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Privacy Policy</button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Send Feedback</button>
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-700 font-sans">
+                <button
+                  onClick={() => {
+                    setIsHelpOpen(false);
+                    setIsFeedbackModalOpen(true);
+                  }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
+                >
+                  <MessageSquare className="w-4 h-4 text-gray-500" />
+                  Give feedback
+                </button>
+                <button
+                  onClick={handleTakeScreenshot}
+                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
+                >
+                  <Camera className="w-4 h-4 text-gray-500" />
+                  Take a screenshot
+                </button>
               </div>
             )}
           </div>
@@ -639,6 +745,97 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Give Feedback Modal */}
+      {isFeedbackModalOpen && (
+        <div id="feedback-modal-overlay" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 overflow-hidden text-gray-800 animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-2">
+              <h3 className="text-lg font-bold text-gray-900">Give feedback</h3>
+              <button
+                type="button"
+                onClick={() => setIsFeedbackModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-full p-1 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitFeedback} className="px-6 pb-6 pt-1 space-y-4">
+              <p className="text-sm text-gray-500">
+                Describe the issue. The admin will be notified immediately.
+              </p>
+
+              {/* Textarea */}
+              <div>
+                <textarea
+                  rows={4}
+                  value={feedbackDescription}
+                  onChange={(e) => setFeedbackDescription(e.target.value)}
+                  placeholder="e.g. The goods receipt form won't submit, or I can't access the bincard for warehouse X..."
+                  className="w-full border border-gray-200 rounded-xl p-3.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 resize-none transition"
+                  required
+                />
+              </div>
+
+              {/* Screenshot Attachment Box */}
+              {feedbackScreenshot ? (
+                <div className="border border-gray-200 rounded-xl p-2.5 bg-gray-50 flex items-center justify-between">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <img
+                      src={feedbackScreenshot}
+                      alt="Screenshot attached"
+                      className="w-16 h-12 object-cover rounded-lg border border-gray-200 shrink-0"
+                    />
+                    <div className="truncate">
+                      <p className="text-xs font-semibold text-gray-800 truncate">Screenshot attached</p>
+                      <p className="text-[11px] text-gray-400">Ready to send with report</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackScreenshot(null)}
+                    className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg transition shrink-0 cursor-pointer"
+                    title="Remove screenshot"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="border border-dashed border-gray-300 hover:border-gray-400 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer bg-gray-50/50 hover:bg-gray-100/50 transition text-gray-600 text-sm">
+                  <Camera className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-600">Attach a screenshot (optional)</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsFeedbackModalOpen(false)}
+                  className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingFeedback}
+                  className="px-6 py-2 rounded-xl text-sm font-semibold text-white bg-[#70798c] hover:bg-[#5a6272] disabled:opacity-50 transition shadow-sm cursor-pointer"
+                >
+                  {isSubmittingFeedback ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
