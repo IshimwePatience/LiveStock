@@ -170,7 +170,7 @@ const SystemSettings = () => {
 
   return (
     <div className="min-h-full bg-white flex flex-col font-sans text-gray-800 p-8 max-w-5xl">
-      {/* Settings Navigation Header Tabs (Matching Image 4) */}
+      {/* Settings Navigation Header Tabs */}
       <div className="flex items-center gap-3 border-b border-gray-200 pb-3 mb-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab('settings')}
@@ -181,17 +181,6 @@ const SystemSettings = () => {
           }`}
         >
           Settings
-        </button>
-
-        <button
-          onClick={() => setActiveTab('tracking')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all cursor-pointer ${
-            activeTab === 'tracking'
-              ? 'bg-blue-50 text-[#0052cc] border border-blue-300 font-semibold'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-        >
-          Tracking Control
         </button>
 
         {/* Feedback & Issues Tab — Strictly visible to System Admin */}
@@ -214,37 +203,11 @@ const SystemSettings = () => {
             )}
           </button>
         )}
-
-        <button
-          onClick={() => setActiveTab('reports')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all cursor-pointer ${
-            activeTab === 'reports'
-              ? 'bg-blue-50 text-[#0052cc] border border-blue-300 font-semibold'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-        >
-          Report Control
-        </button>
       </div>
 
       {/* --- TAB 1: PERMISSIONS & SYSTEM SETTINGS --- */}
       {activeTab === 'settings' && (
         <>
-          {/* Breadcrumb */}
-          <div className="text-xs text-gray-500 mb-1 font-normal flex items-center gap-1.5">
-            <span>System Settings</span>
-            <span>/</span>
-            <span>Permissions & Access Control</span>
-          </div>
-
-          {/* Main Title & Description */}
-          <div className="mb-6">
-            <h1 className="text-xl font-bold text-gray-900">Permissions & Access Control</h1>
-            <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">
-              Configure default sidebar module permissions for entire system roles.
-              Individual user accounts are created and managed in User Management.
-            </p>
-          </div>
 
           {/* Role Selector */}
           <div className="mb-6">
@@ -499,22 +462,6 @@ const SystemSettings = () => {
         </div>
       )}
 
-      {/* --- TAB 3 & 4 PLACEHOLDERS --- */}
-      {activeTab === 'tracking' && (
-        <div className="py-16 text-center text-gray-500 text-sm">
-          <MapPin className="w-8 h-8 text-blue-500 mx-auto mb-2 opacity-60" />
-          <p className="font-semibold text-gray-700">Tracking Control Settings</p>
-          <p className="text-xs text-gray-400 mt-1">Configure global Traccar GPS refresh rates, buffer sizes, and speed threshold policies.</p>
-        </div>
-      )}
-
-      {activeTab === 'reports' && (
-        <div className="py-16 text-center text-gray-500 text-sm">
-          <FileText className="w-8 h-8 text-blue-500 mx-auto mb-2 opacity-60" />
-          <p className="font-semibold text-gray-700">Report Control Settings</p>
-          <p className="text-xs text-gray-400 mt-1">Configure automated export formats, district report schedules, and official signature headers.</p>
-        </div>
-      )}
 
       {/* Full Image Preview Modal */}
       {selectedImage && (
