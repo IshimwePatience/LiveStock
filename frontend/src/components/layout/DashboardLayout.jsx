@@ -526,48 +526,53 @@ const DashboardLayout = () => {
               title="Help & Feedback"
             >
               <HelpCircle className="w-5 h-5" />
-              {/* Red dot alert for System Admin when open feedback requests exist */}
+              {/* Red dot alert matching notification bell for System Admin when open feedback exists */}
               {isAdmin && openFeedbackCount > 0 && (
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-[#0056d2] animate-pulse" />
+                <span className="absolute top-2 right-2 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-white"></span>
+                </span>
               )}
             </button>
             {isHelpOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-700 font-sans">
-                {isAdmin && (
+                {isAdmin ? (
                   <button
                     onClick={() => {
                       setIsHelpOpen(false);
-                      navigate('/dashboard/system-settings');
+                      navigate('/dashboard/system-settings', { state: { activeTab: 'feedback' } });
                     }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-semibold text-[#0052cc] flex items-center justify-between transition border-b border-gray-100"
+                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center justify-between transition"
                   >
                     <div className="flex items-center gap-3">
-                      <Shield className="w-4 h-4 text-[#0052cc]" />
+                      <Shield className="w-4 h-4 text-gray-500" />
                       <span>View Feedback & Issues</span>
                     </div>
                     {openFeedbackCount > 0 && (
-                      <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                      <span className="px-2 py-0.5 text-[11px] font-bold bg-red-500 text-white rounded-full">
                         {openFeedbackCount}
                       </span>
                     )}
                   </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleOpenGiveFeedback}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
+                    >
+                      <MessageSquare className="w-4 h-4 text-gray-500" />
+                      Give feedback / Report issue
+                    </button>
+
+                    <button
+                      onClick={handleTakeScreenshot}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
+                    >
+                      <Camera className="w-4 h-4 text-gray-500" />
+                      Capture screenshot evidence
+                    </button>
+                  </>
                 )}
-
-                <button
-                  onClick={handleOpenGiveFeedback}
-                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
-                >
-                  <MessageSquare className="w-4 h-4 text-gray-500" />
-                  {isAdmin ? 'Submit System Feedback' : 'Give feedback / Report issue'}
-                </button>
-
-                <button
-                  onClick={handleTakeScreenshot}
-                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
-                >
-                  <Camera className="w-4 h-4 text-gray-500" />
-                  Capture screenshot evidence
-                </button>
               </div>
             )}
           </div>

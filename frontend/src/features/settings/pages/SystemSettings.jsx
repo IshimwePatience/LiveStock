@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Check, CheckCircle2, RefreshCw, Layout, MapPin, Navigation, Shield, FileText, Activity, Bell, Settings, Users, Info, MessageSquare, Image as ImageIcon, X, CheckCircle, Clock, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
@@ -33,6 +34,8 @@ const SYSTEM_ROLES = [
 
 const SystemSettings = () => {
   const queryClient = useQueryClient();
+  const location = useLocation();
+
   const [currentUser] = useState(() => {
     const u = localStorage.getItem('user');
     return u ? JSON.parse(u) : null;
@@ -40,7 +43,16 @@ const SystemSettings = () => {
 
   const isAdmin = currentUser?.role === 'RAB' || currentUser?.role === 'SuperAdmin';
 
-  const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'tracking' | 'feedback' | 'reports'
+  const [activeTab, setActiveTab] = useState(() => {
+    return location.state?.activeTab || 'settings';
+  });
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState('OPEN'); // 'OPEN' | 'RESOLVED' | 'ALL'
   const [selectedImage, setSelectedImage] = useState(null);
 
