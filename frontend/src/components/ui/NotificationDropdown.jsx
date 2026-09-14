@@ -114,8 +114,24 @@ const NotificationDropdown = () => {
     });
   };
 
+  const isTodayDate = (dateString) => {
+    if (!dateString) return false;
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+      d.getMonth() === today.getMonth() &&
+      d.getFullYear() === today.getFullYear();
+  };
+
+  const directCount = notifications.filter(n => isTodayDate(n.createdAt) && (!showOnlyUnread || !n.read)).length;
+  const recentsCount = notifications.filter(n => !isTodayDate(n.createdAt) && (!showOnlyUnread || !n.read)).length;
+
   const filteredNotifications = notifications.filter(n => {
     if (showOnlyUnread && n.read) return false;
+    const isToday = isTodayDate(n.createdAt);
+    if (activeTab === 'Direct' && !isToday) return false;
+    if (activeTab === 'Recents' && isToday) return false;
     return true;
   });
 
@@ -175,15 +191,25 @@ const NotificationDropdown = () => {
             <div className="flex gap-6 border-b border-gray-200">
               <button 
                 onClick={() => setActiveTab('Direct')}
-                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'Direct' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${activeTab === 'Direct' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
               >
                 Direct
+                {directCount > 0 && (
+                  <span className={`px-1.5 py-0.5 text-xs rounded-full ${activeTab === 'Direct' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {directCount}
+                  </span>
+                )}
               </button>
               <button 
                 onClick={() => setActiveTab('Recents')}
-                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'Recents' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${activeTab === 'Recents' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
               >
                 Recents
+                {recentsCount > 0 && (
+                  <span className={`px-1.5 py-0.5 text-xs rounded-full ${activeTab === 'Recents' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {recentsCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -196,7 +222,7 @@ const NotificationDropdown = () => {
                    <Flag className="w-24 h-24 stroke-1 fill-blue-100" />
                 </div>
                 <p className="text-[15px] text-gray-700 font-medium leading-relaxed">
-                  You have no notifications from<br/>the last 30 days.
+                  {activeTab === 'Direct' ? 'You have no notifications for today.' : 'You have no older notifications.'}
                 </p>
               </div>
             ) : (

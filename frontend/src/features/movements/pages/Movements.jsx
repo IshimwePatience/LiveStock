@@ -233,26 +233,8 @@ const Movements = () => {
     });
   }, [rawMovements]);
 
-  const movementCategories = ['District', 'Sector', 'Type', 'Status', 'Animal', 'Transport Mode'];
+  const movementCategories = ['Location', 'Type', 'Status', 'Animal', 'Transport Mode'];
   const movementOptionsMap = {
-    'District': [
-      { id: 'Gasabo', title: 'Gasabo District', subtitle: 'Kigali City' },
-      { id: 'Bugesera', title: 'Bugesera District', subtitle: 'Eastern Province' },
-      { id: 'Kicukiro', title: 'Kicukiro District', subtitle: 'Kigali City' },
-      { id: 'Nyarugenge', title: 'Nyarugenge District', subtitle: 'Kigali City' },
-      { id: 'Musanze', title: 'Musanze District', subtitle: 'Northern Province' },
-      { id: 'Rubavu', title: 'Rubavu District', subtitle: 'Western Province' },
-      { id: 'Huye', title: 'Huye District', subtitle: 'Southern Province' },
-      { id: 'Rwamagana', title: 'Rwamagana District', subtitle: 'Eastern Province' }
-    ],
-    'Sector': [
-      { id: 'Nyamata', title: 'Nyamata Sector', subtitle: 'Bugesera' },
-      { id: 'Gashora', title: 'Gashora Sector', subtitle: 'Bugesera' },
-      { id: 'Rilima', title: 'Rilima Sector', subtitle: 'Bugesera' },
-      { id: 'Kimironko', title: 'Kimironko Sector', subtitle: 'Gasabo' },
-      { id: 'Remera', title: 'Remera Sector', subtitle: 'Gasabo' },
-      { id: 'Kacyiru', title: 'Kacyiru Sector', subtitle: 'Gasabo' }
-    ],
     'Type': [
       { id: 'DISTRICT_TO_DISTRICT', title: 'District to District', subtitle: 'Requires RAB approval' },
       { id: 'SECTOR_TO_SECTOR', title: 'Sector to Sector', subtitle: 'Requires DARO approval' }
@@ -334,6 +316,20 @@ const Movements = () => {
     const hasFilters = Object.values(selectedFilters).some(arr => arr && arr.length > 0);
     if (hasFilters) {
       result = result.filter(m => {
+        if (selectedFilters['Location']?.length > 0) {
+          const locs = selectedFilters['Location'];
+          const matchLoc = locs.some(loc => {
+            const l = loc.toLowerCase();
+            return (
+              (m.originDistrict && m.originDistrict.toLowerCase().includes(l)) ||
+              (m.destDistrict && m.destDistrict.toLowerCase().includes(l)) ||
+              (m.originSector && m.originSector.toLowerCase().includes(l)) ||
+              (m.destSector && m.destSector.toLowerCase().includes(l)) ||
+              (m.route && m.route.toLowerCase().includes(l))
+            );
+          });
+          if (!matchLoc) return false;
+        }
         if (selectedFilters['District']?.length > 0 && !selectedFilters['District'].some(d => m.route.toLowerCase().includes(d.toLowerCase()))) return false;
         if (selectedFilters['Sector']?.length > 0 && !selectedFilters['Sector'].some(s => m.route.toLowerCase().includes(s.toLowerCase()))) return false;
         if (selectedFilters['Type']?.length > 0 && !selectedFilters['Type'].includes(m.rawType)) return false;
