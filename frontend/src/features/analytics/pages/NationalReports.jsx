@@ -168,10 +168,12 @@ const NationalReports = () => {
   const [selectedDistPlates, setSelectedDistPlates] = useState(['RAD 237K', 'RAI 928Q', 'RAH 142Y', 'RAG 272X', 'RAJ 395R', 'RAF 740N', 'RAI 222R']);
   const [distanceViewMode, setDistanceViewMode] = useState('chart'); // 'chart' | 'table'
   const [isDistanceDownloadOpen, setIsDistanceDownloadOpen] = useState(false);
+  const [isDistanceDotsOpen, setIsDistanceDotsOpen] = useState(false);
   const [hoveredDistDate, setHoveredDistDate] = useState(null);
 
   const exportMenuRef = useRef(null);
   const distanceExportRef = useRef(null);
+  const distanceDotsRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -180,6 +182,9 @@ const NationalReports = () => {
       }
       if (distanceExportRef.current && !distanceExportRef.current.contains(e.target)) {
         setIsDistanceDownloadOpen(false);
+      }
+      if (distanceDotsRef.current && !distanceDotsRef.current.contains(e.target)) {
+        setIsDistanceDotsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -497,7 +502,14 @@ const NationalReports = () => {
         color: paletteColors[index % paletteColors.length],
         totalKm: calculatedTotal,
         daily,
-        labelExt: v.status === 'Completed' ? '(completed)' : ''
+        labelExt: v.status === 'Completed' ? '(completed)' : '',
+        route: v.route || `${v.origin || 'Gatsibo District'} → ${v.destination || 'Nyarugenge District'}`,
+        permitNumber: v.permitNumber || 'MVT-B2620996HC9X',
+        status: v.status || 'In Transit',
+        stopsCount: v.stops ? v.stops.length : 1,
+        stopsDetails: v.stops && v.stops.length > 0
+          ? v.stops.map(s => `${s.location} (${s.duration || '25 Mins Rest'})`).join('; ')
+          : 'Gatsibo Control Post Rest Area (25 Mins Rest - RAB Health Scan)'
       };
     });
   }, [trackedVehiclesMap]);
@@ -802,17 +814,23 @@ const NationalReports = () => {
   const handleExportDistanceCSV = () => {
     setIsDistanceDownloadOpen(false);
     const rows = [
-      ['Date', 'Vehicle Plate', 'Logged Distance (km)', 'Route Corridor', 'Status']
+      ['Date', 'Vehicle Plate', 'Assigned Permit #', 'Status', 'Places Travelled (Route Corridor)', 'Stops Made', 'Logged Distance (km)']
     ];
 
-    distanceVehiclesList.forEach(v => {
-      if (selectedDistPlates.includes(v.plate)) {
-        Object.entries(v.daily).forEach(([date, km]) => {
-          if (km > 0) {
-            rows.push([date, v.plate, `${km} km`, 'District Traversal Route', 'Logged']);
-          }
-        });
-      }
+    activeDistanceVehicles.forEach(v => {
+      Object.entries(v.daily).forEach(([date, km]) => {
+        if (km > 0) {
+          rows.push([
+            date,
+            v.plate,
+            v.permitNumber || 'MVT-APPROVED',
+            v.status || 'APPROVED',
+            `"${v.route || 'Gatsibo District → Nyarugenge District'}"`,
+            `"${v.stopsCount || 1} Stop (${v.stopsDetails || 'Gatsibo Rest Post'})"`,
+            `${km} km`
+          ]);
+        }
+      });
     });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
@@ -1373,38 +1391,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              {/* Three Dots Download & Export Menu */}
-              <div className="relative shrink-0" ref={exportMenuRef}>
-                <button
-                  onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-                  title="Export & Download Report"
-                  className="p-2.5 rounded-lg border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 shadow-sm transition-all flex items-center justify-center cursor-pointer"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
 
-                {isExportMenuOpen && (
-                  <div className="absolute right-0 mt-1.5 w-56 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 text-xs font-medium">
-                    <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 tracking-wider">
-                      Export Report Options
-                    </div>
-                    <button
-                      onClick={handleExportCSV}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
-                    >
-                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                      <span>Export Excel / CSV (.csv)</span>
-                    </button>
-                    <button
-                      onClick={handleExportPDF}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
-                    >
-                      <Download className="w-4 h-4 text-red-600" />
-                      <span>Export PDF Report (.pdf)</span>
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
 
 
@@ -1439,7 +1426,7 @@ const NationalReports = () => {
                           className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer"
                         >
                           <Camera className="w-4 h-4 text-purple-600" />
-                          <span>Export Chart Image (.png)</span>
+                          <span>Export Route Image (.png)</span>
                         </button>
                         <button
                           onClick={handleExportDistancePDF}
@@ -1455,11 +1442,29 @@ const NationalReports = () => {
                           <FileSpreadsheet className="w-4 h-4 text-green-600" />
                           <span>Export Excel / CSV (.csv)</span>
                         </button>
-                        <div className="border-t border-gray-100 my-1"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Three Dots View Options Button (Aside Download) */}
+                  <div className="relative" ref={distanceDotsRef}>
+                    <button
+                      onClick={() => setIsDistanceDotsOpen(!isDistanceDotsOpen)}
+                      title="View & Display Options"
+                      className="p-1.5 rounded-lg border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 shadow-sm transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+
+                    {isDistanceDotsOpen && (
+                      <div className="absolute right-0 mt-1.5 w-56 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 text-xs font-medium">
+                        <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 tracking-wider">
+                          View Options
+                        </div>
                         <button
                           onClick={() => {
                             setDistanceViewMode(distanceViewMode === 'chart' ? 'table' : 'chart');
-                            setIsDistanceDownloadOpen(false);
+                            setIsDistanceDotsOpen(false);
                           }}
                           className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer font-bold"
                         >
@@ -1505,17 +1510,17 @@ const NationalReports = () => {
                               <div className={`absolute inset-y-0 w-full rounded-md transition-colors ${isHovered ? 'bg-gray-50/90 shadow-2xs border border-gray-200/50' : ''}`}></div>
 
                               {/* Grouped Bars per Date */}
-                              <div className="flex items-end gap-1.5 z-10 pb-0.5">
+                              <div className="flex items-end justify-center gap-1.5 z-10 pb-0.5 h-full w-full">
                                 {activeDistanceVehicles.map((v) => {
                                   const distVal = v.daily[dateKey] || 0;
                                   if (distVal === 0) return null;
-                                  const heightPct = Math.max(6, Math.round((distVal / maxDistanceScale) * 100));
+                                  const heightPct = Math.max(8, Math.round((distVal / maxDistanceScale) * 100));
 
                                   return (
                                     <div
                                       key={v.plate}
                                       title={`${v.plate}: ${distVal} km on ${dateKey}`}
-                                      className="w-4 rounded-t-sm transition-all group-hover:brightness-110 relative flex flex-col items-center"
+                                      className="w-4 rounded-t transition-all hover:scale-105 hover:brightness-110 relative flex flex-col items-center shadow-xs"
                                       style={{
                                         height: `${heightPct}%`,
                                         backgroundColor: v.color
@@ -1581,6 +1586,9 @@ const NationalReports = () => {
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
                             <th className="py-2.5 px-3">Vehicle Plate</th>
+                            <th className="py-2.5 px-3">Assigned Permit &amp; Status</th>
+                            <th className="py-2.5 px-3">Places Travelled (Route Corridor)</th>
+                            <th className="py-2.5 px-3">Stops Made</th>
                             <th className="py-2.5 px-3">Logged Distance</th>
                             <th className="py-2.5 px-3">Sep 08</th>
                             <th className="py-2.5 px-3">Sep 09</th>
@@ -1594,9 +1602,23 @@ const NationalReports = () => {
                         <tbody>
                           {activeDistanceVehicles.map((v, idx) => (
                             <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                              <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2">
+                              <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2 whitespace-nowrap">
                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: v.color }}></span>
                                 {v.plate} {v.labelExt || ''}
+                              </td>
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <div className="font-bold text-gray-800 text-[11px]">{v.permitNumber || 'MVT-B2620996'}</div>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${v.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                  {v.status || 'APPROVED'}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 font-semibold text-gray-700 whitespace-nowrap">
+                                {v.route || 'Gatsibo District → Nyarugenge District'}
+                              </td>
+                              <td className="py-2.5 px-3 whitespace-nowrap" title={v.stopsDetails}>
+                                <span className="bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200 text-[10px] inline-flex items-center gap-1">
+                                  🛑 {v.stopsCount || 1} Rest Stop (25m)
+                                </span>
                               </td>
                               <td className="py-2.5 px-3 font-bold text-gray-900">{v.totalKm} km</td>
                               <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 08'] ? `${v.daily['Sep 08']} km` : '-'}</td>
@@ -1659,11 +1681,19 @@ const NationalReports = () => {
                               className="w-3 h-3 rounded-md shrink-0 transition-transform"
                               style={{ backgroundColor: v.color }}
                             ></span>
-                            <span className="font-bold text-gray-800 truncate">
-                              {v.plate} {v.labelExt || ''}
-                            </span>
+                            <div className="flex flex-col truncate">
+                              <span className="font-bold text-gray-800 truncate">
+                                {v.plate} {v.labelExt || ''}
+                              </span>
+                              <span className="text-[10px] text-gray-500 font-normal truncate">
+                                {v.route || 'Gatsibo → Nyarugenge'}
+                              </span>
+                              <span className="text-[9px] text-amber-700 font-bold truncate">
+                                Permit #{v.permitNumber || 'MVT-APPROVED'} • 🛑 {v.stopsCount || 1} Stop
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-gray-500 font-medium whitespace-nowrap ml-2">
+                          <span className="text-gray-500 font-medium whitespace-nowrap ml-2 shrink-0">
                             {v.totalKm} km
                           </span>
                         </div>
