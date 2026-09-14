@@ -574,13 +574,23 @@ const NationalReports = () => {
     return Math.ceil(max / 50) * 50 || 150;
   }, [activeDistanceVehicles]);
 
-  // Flat date-by-date routes rows (row per row per date) filtered by selected Time Range
+  // Flat date-by-date routes rows (row per row per date) filtered by selected Time Range AND Selected Vehicle(s)
   const flattenedRoutesRows = useMemo(() => {
     const rows = [];
     const now = new Date();
+    const activePlatesList = activeDistanceVehicles.map(v => v.plate);
 
     // 1. Process real database movements
-    const dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    let dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+
+    // Filter DB movements by activePlatesList if selected
+    if (activePlatesList.length > 0) {
+      dbList = dbList.filter(m => {
+        const p = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
+        return activePlatesList.includes(p);
+      });
+    }
+
     if (dbList.length > 0) {
       dbList.forEach(m => {
         const plate = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
@@ -596,11 +606,14 @@ const NationalReports = () => {
         const coords = generateTrajectoryWaypoints(startCoord, endCoord);
         const computedDist = calculateRouteDistanceKm(coords);
 
+        const vInfo = activeDistanceVehicles.find(v => v.plate === plate);
+        const itemColor = vInfo?.color || '#2563eb';
+
         rows.push({
           date: formattedDate,
           rawDate: mDate,
           plate: plate,
-          color: '#2563eb',
+          color: itemColor,
           permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
           status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status),
           route: `${originDist} District → ${destDist} District`,
@@ -610,16 +623,26 @@ const NationalReports = () => {
       });
     }
 
-    // 2. Fallback sample items with dates to demonstrate time range filtering
+    // 2. Fallback sample items filtered by activePlatesList and timeRange
     if (rows.length === 0) {
       const sampleRoutes = [
-        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '128.4 km' },
-        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '70.6 km' },
-        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:16 PM', distance: '38.5 km' },
-        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '19.3 km' }
+        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAE 212V', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Gatsibo District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '108.9 km' },
+        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAE 212V', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Gatsibo District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '70.6 km' },
+        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAE 212V', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Gatsibo District → Nyarugenge District', timePeriod: '08:00 AM → 01:16 PM', distance: '38.5 km' },
+        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAE 212V', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Gatsibo District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '19.3 km' },
+        
+        { date: 'Sep 07, 2026', rawDate: new Date('2026-09-07T11:00:00'), plate: 'RAI 222R', color: '#14b8a6', permitNumber: 'B26686363XFPV', status: 'In Transit', route: 'Gatsibo District → Nyagatare District', timePeriod: '11:01 AM → 03:01 PM', distance: '45.4 km' },
+        { date: 'Sep 04, 2026', rawDate: new Date('2026-09-04T13:53:00'), plate: 'RAI 182I', color: '#ec4899', permitNumber: 'B2678082465ZS', status: 'Completed', route: 'Nyagatare District → Nyarugenge District', timePeriod: '01:53 PM → 05:53 PM', distance: '97.7 km' },
+        { date: 'Sep 03, 2026', rawDate: new Date('2026-09-03T10:25:00'), plate: 'RAB 195F', color: '#10b981', permitNumber: 'B26956905BXOM', status: 'Completed', route: 'Bugesera District → Burera District', timePeriod: '10:25 AM → 02:25 PM', distance: '108.7 km' },
+        { date: 'Sep 01, 2026', rawDate: new Date('2026-09-01T22:27:00'), plate: 'RTF123A', color: '#8b5cf6', permitNumber: 'B26462635XCAK', status: 'In Transit', route: 'Bugesera District → Gasabo District', timePeriod: '10:27 PM → 02:27 AM', distance: '28.7 km' },
+        { date: 'Sep 01, 2026', rawDate: new Date('2026-09-01T22:25:00'), plate: 'RAC202A', color: '#f59e0b', permitNumber: 'B26351397PQXO', status: 'In Transit', route: 'Bugesera District → Gakenke District', timePeriod: '10:25 PM → 02:25 AM', distance: '75.2 km' }
       ];
 
       return sampleRoutes.filter(r => {
+        // Vehicle plate filter
+        if (activePlatesList.length > 0 && !activePlatesList.includes(r.plate)) return false;
+
+        // Time range filter
         if (timeRange === 'all') return true;
         if (timeRange === 'today') return r.rawDate.toDateString() === now.toDateString();
         if (timeRange === '7d') return r.rawDate >= new Date(now.getTime() - 7 * 24 * 3600 * 1000);
@@ -636,15 +659,25 @@ const NationalReports = () => {
     }
 
     return rows;
-  }, [filteredRawMovements, timeRange, startDate, endDate]);
+  }, [filteredRawMovements, activeDistanceVehicles, timeRange, startDate, endDate]);
 
-  // Flat stops & checkpoints rows (row per row per date) filtered by selected Time Range
+  // Flat stops & checkpoints rows (row per row per date) filtered by selected Time Range AND Selected Vehicle(s)
   const flattenedStopsRows = useMemo(() => {
     const rows = [];
     const now = new Date();
+    const activePlatesList = activeDistanceVehicles.map(v => v.plate);
 
     // 1. Process real database movements
-    const dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    let dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+
+    // Filter DB movements by activePlatesList if selected
+    if (activePlatesList.length > 0) {
+      dbList = dbList.filter(m => {
+        const p = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
+        return activePlatesList.includes(p);
+      });
+    }
+
     if (dbList.length > 0) {
       dbList.forEach(m => {
         const plate = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
@@ -652,11 +685,14 @@ const NationalReports = () => {
         const mDate = m.createdAt ? new Date(m.createdAt) : new Date();
         const formattedDate = mDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
+        const vInfo = activeDistanceVehicles.find(v => v.plate === plate);
+        const itemColor = vInfo?.color || '#0052cc';
+
         rows.push({
           date: formattedDate,
           rawDate: mDate,
           plate: plate,
-          color: '#0052cc',
+          color: itemColor,
           location: `${originDist} District Control Post Rest Area`,
           timePeriod: '09:40 AM → 10:05 AM',
           duration: '25 Mins',
@@ -666,16 +702,26 @@ const NationalReports = () => {
       });
     }
 
-    // 2. Fallback sample items with dates to demonstrate time range filtering
+    // 2. Fallback sample items with dates to demonstrate vehicle & time range filtering
     if (rows.length === 0) {
       const sampleStops = [
-        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
-        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
-        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
-        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' }
+        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAE 212V', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAE 212V', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAE 212V', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAE 212V', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+
+        { date: 'Sep 07, 2026', rawDate: new Date('2026-09-07T11:00:00'), plate: 'RAI 222R', color: '#14b8a6', location: 'Gatsibo Control Post Rest Area', timePeriod: '11:30 AM → 11:55 AM', duration: '25 Mins', reason: 'RAB Health Verification', permitNumber: 'B26686363XFPV' },
+        { date: 'Sep 04, 2026', rawDate: new Date('2026-09-04T13:53:00'), plate: 'RAI 182I', color: '#ec4899', location: 'Nyagatare Control Post Rest Area', timePeriod: '02:15 PM → 02:40 PM', duration: '25 Mins', reason: 'RAB Quarantine Health Inspection', permitNumber: 'B2678082465ZS' },
+        { date: 'Sep 03, 2026', rawDate: new Date('2026-09-03T10:25:00'), plate: 'RAB 195F', color: '#10b981', location: 'Bugesera Weighbridge Inspection Post', timePeriod: '11:10 AM → 11:35 AM', duration: '25 Mins', reason: 'RAB Health Clearance', permitNumber: 'B26956905BXOM' },
+        { date: 'Sep 01, 2026', rawDate: new Date('2026-09-01T22:27:00'), plate: 'RTF123A', color: '#8b5cf6', location: 'Gasabo Sector Control Gate', timePeriod: '11:00 PM → 11:25 PM', duration: '25 Mins', reason: 'Midnight Security & Ear-Tag Audit', permitNumber: 'B26462635XCAK' },
+        { date: 'Sep 01, 2026', rawDate: new Date('2026-09-01T22:25:00'), plate: 'RAC202A', color: '#f59e0b', location: 'Gakenke Inspection Station', timePeriod: '11:05 PM → 11:30 PM', duration: '25 Mins', reason: 'Routine Health Scan', permitNumber: 'B26351397PQXO' }
       ];
 
       return sampleStops.filter(s => {
+        // Vehicle plate filter
+        if (activePlatesList.length > 0 && !activePlatesList.includes(s.plate)) return false;
+
+        // Time range filter
         if (timeRange === 'all') return true;
         if (timeRange === 'today') return s.rawDate.toDateString() === now.toDateString();
         if (timeRange === '7d') return s.rawDate >= new Date(now.getTime() - 7 * 24 * 3600 * 1000);
@@ -692,7 +738,7 @@ const NationalReports = () => {
     }
 
     return rows;
-  }, [filteredRawMovements, timeRange, startDate, endDate]);
+  }, [filteredRawMovements, activeDistanceVehicles, timeRange, startDate, endDate]);
 
   const handleExportCSV = () => {
     const list = Object.values(trackedVehiclesMap);
