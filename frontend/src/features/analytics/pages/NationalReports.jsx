@@ -574,59 +574,125 @@ const NationalReports = () => {
     return Math.ceil(max / 50) * 50 || 150;
   }, [activeDistanceVehicles]);
 
-  // Flat date-by-date routes rows (row per row per date)
+  // Flat date-by-date routes rows (row per row per date) filtered by selected Time Range
   const flattenedRoutesRows = useMemo(() => {
     const rows = [];
-    const dateKeys = ['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'];
-    activeDistanceVehicles.forEach(v => {
-      let depTime = '08:00 AM';
-      let arrTime = '01:15 PM';
-      if (v.departedTime && v.departedTime.includes(',')) depTime = v.departedTime.split(',')[1]?.trim() || '08:00 AM';
-      if (v.expectedArrival && v.expectedArrival.includes(',')) arrTime = v.expectedArrival.split(',')[1]?.trim() || '01:15 PM';
+    const now = new Date();
 
-      dateKeys.forEach(dKey => {
-        const km = v.daily[dKey];
-        if (km && km > 0) {
-          rows.push({
-            date: `${dKey}, 2026`,
-            plate: v.plate,
-            color: v.color,
-            permitNumber: v.permitNumber || 'MVT-B2620996',
-            status: v.status || 'APPROVED',
-            route: v.route || 'Gatsibo District → Nyarugenge District',
-            timePeriod: `${depTime} → ${arrTime}`,
-            distance: `${km} km`
-          });
-        }
+    // 1. Process real database movements
+    const dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    if (dbList.length > 0) {
+      dbList.forEach(m => {
+        const plate = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
+        const originDist = m.origin_district || m.origin_id || 'Nyagatare';
+        const destDist = m.dest_district || m.destination_id || 'Nyarugenge';
+        const mDate = m.createdAt ? new Date(m.createdAt) : new Date();
+        const formattedDate = mDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const depTime = mDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const arrTime = new Date(mDate.getTime() + 4 * 3600 * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const startCoord = RWANDA_DISTRICT_COORDS[originDist] || RWANDA_DISTRICT_COORDS['Nyagatare'];
+        const endCoord = RWANDA_DISTRICT_COORDS[destDist] || RWANDA_DISTRICT_COORDS['Nyarugenge'];
+        const coords = generateTrajectoryWaypoints(startCoord, endCoord);
+        const computedDist = calculateRouteDistanceKm(coords);
+
+        rows.push({
+          date: formattedDate,
+          rawDate: mDate,
+          plate: plate,
+          color: '#2563eb',
+          permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
+          status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status),
+          route: `${originDist} District → ${destDist} District`,
+          timePeriod: `${depTime} → ${arrTime}`,
+          distance: `${computedDist} km`
+        });
       });
-    });
-    return rows;
-  }, [activeDistanceVehicles]);
+    }
 
-  // Flat stops & checkpoints rows (row per row per date)
+    // 2. Fallback sample items with dates to demonstrate time range filtering
+    if (rows.length === 0) {
+      const sampleRoutes = [
+        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '128.4 km' },
+        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '70.6 km' },
+        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:16 PM', distance: '38.5 km' },
+        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAI 182I', color: '#2563eb', permitNumber: 'MVT-7B1A2C3D', status: 'In Transit', route: 'Nyagatare District → Nyarugenge District', timePeriod: '08:00 AM → 01:15 PM', distance: '19.3 km' }
+      ];
+
+      return sampleRoutes.filter(r => {
+        if (timeRange === 'all') return true;
+        if (timeRange === 'today') return r.rawDate.toDateString() === now.toDateString();
+        if (timeRange === '7d') return r.rawDate >= new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+        if (timeRange === '30d') return r.rawDate >= new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+        if (timeRange === 'this_month') return r.rawDate.getMonth() === now.getMonth() && r.rawDate.getFullYear() === now.getFullYear();
+        if (timeRange === 'this_year') return r.rawDate.getFullYear() === now.getFullYear();
+        if (timeRange === 'custom') {
+          const s = startDate ? new Date(startDate) : new Date(0);
+          const e = endDate ? new Date(endDate + 'T23:59:59') : new Date();
+          return r.rawDate >= s && r.rawDate <= e;
+        }
+        return true;
+      });
+    }
+
+    return rows;
+  }, [filteredRawMovements, timeRange, startDate, endDate]);
+
+  // Flat stops & checkpoints rows (row per row per date) filtered by selected Time Range
   const flattenedStopsRows = useMemo(() => {
     const rows = [];
-    const dateKeys = ['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'];
-    activeDistanceVehicles.forEach(v => {
-      const activeDates = dateKeys.filter(dKey => (v.daily[dKey] || 0) > 0);
-      const targetDates = activeDates.length > 0 ? activeDates : ['Sep 08'];
-      
-      targetDates.forEach((dKey) => {
-        const originDist = v.route ? v.route.split('→')[0].trim() : 'Gatsibo District';
+    const now = new Date();
+
+    // 1. Process real database movements
+    const dbList = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    if (dbList.length > 0) {
+      dbList.forEach(m => {
+        const plate = (m.plate_number || m.Trip?.plate_number || `MVT-${(m.permit_number || m.id).substring(0, 8)}`).toUpperCase();
+        const originDist = m.origin_district || m.origin_id || 'Gatsibo';
+        const mDate = m.createdAt ? new Date(m.createdAt) : new Date();
+        const formattedDate = mDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+
         rows.push({
-          date: `${dKey}, 2026`,
-          plate: v.plate,
-          color: v.color,
-          location: `${originDist} Control Post Rest Area`,
+          date: formattedDate,
+          rawDate: mDate,
+          plate: plate,
+          color: '#0052cc',
+          location: `${originDist} District Control Post Rest Area`,
           timePeriod: '09:40 AM → 10:05 AM',
           duration: '25 Mins',
           reason: 'RAB Health Verification & Ear-Tag Scan',
-          permitNumber: v.permitNumber || 'MVT-B2620996'
+          permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`
         });
       });
-    });
+    }
+
+    // 2. Fallback sample items with dates to demonstrate time range filtering
+    if (rows.length === 0) {
+      const sampleStops = [
+        { date: 'Sep 14, 2026', rawDate: new Date('2026-09-14T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 11, 2026', rawDate: new Date('2026-09-11T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 09, 2026', rawDate: new Date('2026-09-09T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' },
+        { date: 'Sep 08, 2026', rawDate: new Date('2026-09-08T08:00:00'), plate: 'RAI 182I', color: '#2563eb', location: 'Gatsibo District Control Post Rest Area', timePeriod: '09:40 AM → 10:05 AM', duration: '25 Mins', reason: 'RAB Health Verification & Ear-Tag Scan', permitNumber: 'MVT-7B1A2C3D' }
+      ];
+
+      return sampleStops.filter(s => {
+        if (timeRange === 'all') return true;
+        if (timeRange === 'today') return s.rawDate.toDateString() === now.toDateString();
+        if (timeRange === '7d') return s.rawDate >= new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+        if (timeRange === '30d') return s.rawDate >= new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+        if (timeRange === 'this_month') return s.rawDate.getMonth() === now.getMonth() && s.rawDate.getFullYear() === now.getFullYear();
+        if (timeRange === 'this_year') return s.rawDate.getFullYear() === now.getFullYear();
+        if (timeRange === 'custom') {
+          const start = startDate ? new Date(startDate) : new Date(0);
+          const end = endDate ? new Date(endDate + 'T23:59:59') : new Date();
+          return s.rawDate >= start && s.rawDate <= end;
+        }
+        return true;
+      });
+    }
+
     return rows;
-  }, [activeDistanceVehicles]);
+  }, [filteredRawMovements, timeRange, startDate, endDate]);
 
   const handleExportCSV = () => {
     const list = Object.values(trackedVehiclesMap);
