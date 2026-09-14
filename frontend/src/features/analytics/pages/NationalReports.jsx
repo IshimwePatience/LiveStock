@@ -1681,17 +1681,9 @@ const NationalReports = () => {
                               className="w-3 h-3 rounded-md shrink-0 transition-transform"
                               style={{ backgroundColor: v.color }}
                             ></span>
-                            <div className="flex flex-col truncate">
-                              <span className="font-bold text-gray-800 truncate">
-                                {v.plate} {v.labelExt || ''}
-                              </span>
-                              <span className="text-[10px] text-gray-500 font-normal truncate">
-                                {v.route || 'Gatsibo → Nyarugenge'}
-                              </span>
-                              <span className="text-[9px] text-amber-700 font-bold truncate">
-                                Permit #{v.permitNumber || 'MVT-APPROVED'} • 🛑 {v.stopsCount || 1} Stop
-                              </span>
-                            </div>
+                            <span className="font-bold text-gray-800 truncate">
+                              {v.plate} {v.labelExt || ''}
+                            </span>
                           </div>
                           <span className="text-gray-500 font-medium whitespace-nowrap ml-2 shrink-0">
                             {v.totalKm} km
