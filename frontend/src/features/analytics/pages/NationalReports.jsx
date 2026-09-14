@@ -877,7 +877,59 @@ const NationalReports = () => {
     try {
       const html2canvas = await ensureHtml2Canvas();
       if (html2canvas) {
-        const canvas = await html2canvas(targetEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const canvas = await html2canvas(targetEl, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc) => {
+            // 1. Sanitize style tags containing oklch
+            const styleTags = clonedDoc.querySelectorAll('style');
+            styleTags.forEach(style => {
+              if (style.textContent && style.textContent.includes('oklch')) {
+                style.textContent = style.textContent.replace(/oklch\([^)]+\)/g, '#000000');
+              }
+            });
+
+            // 2. Convert all computed styles containing oklch on container & child elements
+            const container = clonedDoc.getElementById('weekly-distance-chart-card');
+            if (!container) return;
+
+            const dummyCanvas = clonedDoc.createElement('canvas');
+            const ctx = dummyCanvas.getContext('2d');
+
+            const safeColor = (colorStr, fallback = '#ffffff') => {
+              if (!colorStr || typeof colorStr !== 'string' || !colorStr.includes('oklch')) return colorStr;
+              try {
+                ctx.fillStyle = '#000000';
+                ctx.fillStyle = colorStr;
+                return ctx.fillStyle;
+              } catch (e) {
+                return fallback;
+              }
+            };
+
+            const allEls = [container, ...Array.from(container.querySelectorAll('*'))];
+            allEls.forEach(el => {
+              const comp = window.getComputedStyle(el);
+              
+              if (comp.backgroundColor && comp.backgroundColor.includes('oklch')) {
+                el.style.backgroundColor = safeColor(comp.backgroundColor, '#ffffff');
+              }
+              if (comp.color && comp.color.includes('oklch')) {
+                el.style.color = safeColor(comp.color, '#1e293b');
+              }
+              if (comp.borderColor && comp.borderColor.includes('oklch')) {
+                el.style.borderColor = safeColor(comp.borderColor, '#cbd5e1');
+              }
+              if (comp.boxShadow && comp.boxShadow.includes('oklch')) {
+                el.style.boxShadow = 'none';
+              }
+              if (comp.outlineColor && comp.outlineColor.includes('oklch')) {
+                el.style.outlineColor = 'transparent';
+              }
+            });
+          }
+        });
         const imageUri = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.href = imageUri;
