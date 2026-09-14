@@ -25,7 +25,7 @@ const seedAdmin = async () => {
       role: 'RAB',
     });
 
-    console.log('RAB Admin seeded successfully! Email: admin@rab.gov.rw, Password: RabAdmin123!');
+    console.log('RAB Admin seeded successfully! Email: , Password: RabAdmin123!');
     process.exit();
   } catch (error) {
     console.error('Error seeding admin:', error);

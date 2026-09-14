@@ -1498,29 +1498,31 @@ const NationalReports = () => {
                   />
                 </div>
 
-                {/* Calendar Range Inputs (From Date -> To Date) */}
-                <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-200 text-xs">
-                  <span className="font-bold text-gray-700">From:</span>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      setTimeRange('custom');
-                    }}
-                    className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
-                  />
-                  <span className="font-bold text-gray-700">To:</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setTimeRange('custom');
-                    }}
-                    className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
-                  />
-                </div>
+                {/* Calendar Range Inputs (From Date -> To Date if Custom) */}
+                {timeRange === 'custom' && (
+                  <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-200 text-xs">
+                    <span className="font-bold text-gray-700">From:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        setTimeRange('custom');
+                      }}
+                      className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
+                    />
+                    <span className="font-bold text-gray-700">To:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => {
+                        setEndDate(e.target.value);
+                        setTimeRange('custom');
+                      }}
+                      className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
+                    />
+                  </div>
+                )}
               </div>
 
 
@@ -1595,13 +1597,13 @@ const NationalReports = () => {
                         </div>
                         <button
                           onClick={() => {
-                            setDistanceViewMode(distanceViewMode === 'chart' ? 'table' : 'chart');
+                            setDistanceViewMode(distanceViewMode === 'map' ? 'table' : 'map');
                             setIsDistanceDotsOpen(false);
                           }}
                           className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer font-bold"
                         >
-                          {distanceViewMode === 'chart' ? <Table className="w-4 h-4 text-blue-600" /> : <BarChart3 className="w-4 h-4 text-blue-600" />}
-                          <span>Switch to {distanceViewMode === 'chart' ? 'Table View' : 'Chart View'}</span>
+                          {distanceViewMode === 'map' ? <Table className="w-4 h-4 text-blue-600" /> : <MapPin className="w-4 h-4 text-blue-600" />}
+                          <span>Switch to {distanceViewMode === 'map' ? 'Table View' : 'Map View'}</span>
                         </button>
                       </div>
                     )}
@@ -1614,135 +1616,93 @@ const NationalReports = () => {
                 
                 {/* Left Column: Interactive Grouped Bar Chart or Data Table */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between relative pt-2">
-                  {distanceViewMode === 'chart' ? (
-                    <div className="h-full flex flex-col justify-between relative">
-                      
-                      {/* Dynamic Y-axis grid & labels */}
-                      <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8 pointer-events-none">
-                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-500">{maxDistanceScale}</span><div className="h-px bg-gray-200 flex-1 border-b border-dashed border-gray-200"></div></div>
-                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">{Math.round(maxDistanceScale * 0.75)}</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
-                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">{Math.round(maxDistanceScale * 0.50)}</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
-                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-400">{Math.round(maxDistanceScale * 0.25)}</span><div className="h-px bg-gray-100 flex-1 border-b border-dashed border-gray-100"></div></div>
-                        <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-700">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
-                      </div>
-
-                      {/* Grouped Bars Area */}
-                      <div className="flex justify-around items-end h-[240px] pl-12 pr-4 pb-0.5 z-10">
-                        {['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'].map((dateKey) => {
-                          const isHovered = hoveredDistDate === dateKey;
+                  {distanceViewMode === 'map' ? (
+                    /* Interactive GPS Route Map Mode showing all drawn routes and rest stops */
+                    <div className="w-full h-[310px] min-h-[300px] rounded-lg overflow-hidden border border-gray-200 shadow-2xs relative">
+                      <MapContainer
+                        center={[-1.8000, 30.1500]}
+                        zoom={9}
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={true}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution="&copy; OpenStreetMap"
+                        />
+                        {activeDistanceVehicles.map((v) => {
+                          const coords = v.coordinates || (trackedVehiclesMap[v.plate]?.coordinates);
+                          if (!coords || coords.length < 2) return null;
+                          const startPos = coords[0];
+                          const endPos = coords[coords.length - 1];
 
                           return (
-                            <div
-                              key={dateKey}
-                              onMouseEnter={() => setHoveredDistDate(dateKey)}
-                              onMouseLeave={() => setHoveredDistDate(null)}
-                              className="flex-1 flex justify-center items-end h-full px-1 group relative cursor-pointer"
-                            >
-                              {/* Hover background column highlights */}
-                              <div className={`absolute inset-y-0 w-full rounded-md transition-colors ${isHovered ? 'bg-gray-50/90 shadow-2xs border border-gray-200/50' : ''}`}></div>
+                            <React.Fragment key={v.plate}>
+                              {/* Route Polyline drawn on map */}
+                              <Polyline
+                                positions={coords}
+                                color={v.color || '#2563eb'}
+                                weight={4}
+                                opacity={0.85}
+                              />
 
-                              {/* Grouped Bars per Date */}
-                              <div className="flex items-end justify-center gap-1.5 z-10 pb-0.5 h-full w-full">
-                                {activeDistanceVehicles.map((v) => {
-                                  const distVal = v.daily[dateKey] || 0;
-                                  if (distVal === 0) return null;
-                                  const heightPct = Math.max(8, Math.round((distVal / maxDistanceScale) * 100));
-
-                                  return (
-                                    <div
-                                      key={v.plate}
-                                      title={`${v.plate}: ${distVal} km on ${dateKey}`}
-                                      className="w-4 rounded-t transition-all hover:scale-105 hover:brightness-110 relative flex flex-col items-center shadow-xs"
-                                      style={{
-                                        height: `${heightPct}%`,
-                                        backgroundColor: v.color
-                                      }}
-                                    >
-                                      {/* Single vehicle count badge overhead */}
-                                      {activeDistanceVehicles.length === 1 && (
-                                        <span className="absolute -top-4 text-[10px] font-bold text-gray-700 whitespace-nowrap">
-                                          {distVal} km
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Floating Tooltip Card (Exact Picture 3 Clone!) */}
-                              {isHovered && activeDistanceVehicles.some(v => (v.daily[dateKey] || 0) > 0) && (
-                                <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-40 bg-white rounded-xl shadow-2xl border border-gray-200 p-3.5 min-w-[210px] text-xs pointer-events-none transition-all">
-                                  <div className="font-extrabold text-gray-900 mb-2 pb-1.5 border-b border-gray-100 text-sm flex items-center justify-between">
-                                    <span>{dateKey}</span>
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Distance</span>
+                              {/* Origin Start Marker */}
+                              <Marker position={startPos} icon={createStartIcon()}>
+                                <Popup>
+                                  <div className="text-xs p-1 font-sans">
+                                    <div className="font-bold text-gray-900">{v.plate} (Origin Start)</div>
+                                    <div className="text-gray-600 font-medium">{v.route}</div>
+                                    <div className="text-blue-600 font-bold mt-1">Permit: {v.permitNumber || 'MVT-B2620996'}</div>
                                   </div>
-                                  <div className="space-y-1.5">
-                                    {activeDistanceVehicles.map((v) => {
-                                      const val = v.daily[dateKey] || 0;
-                                      if (val === 0) return null;
-                                      return (
-                                        <div key={v.plate} className="flex items-center justify-between gap-3">
-                                          <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs" style={{ backgroundColor: v.color }}></span>
-                                            <span className="font-bold text-gray-800">{v.plate}</span>
-                                          </div>
-                                          <span className="font-extrabold text-gray-900">{val} km</span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
+                                </Popup>
+                              </Marker>
 
-                            </div>
+                              {/* Destination End Marker */}
+                              <Marker position={endPos} icon={createEndIcon()}>
+                                <Popup>
+                                  <div className="text-xs p-1 font-sans">
+                                    <div className="font-bold text-gray-900">{v.plate} (Destination End)</div>
+                                    <div className="text-gray-600 font-medium">{v.route}</div>
+                                    <div className="text-green-600 font-bold mt-1">Total Distance: {v.totalKm} km</div>
+                                  </div>
+                                </Popup>
+                              </Marker>
+                            </React.Fragment>
                           );
                         })}
-                      </div>
-
-                      {/* X-axis date legends & Y-axis label */}
-                      <div className="flex justify-around items-center pl-12 pr-4 mt-3 text-xs font-semibold text-gray-600 z-10 border-t border-gray-100 pt-2">
-                        {['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'].map((d) => (
-                          <span key={d} className="flex-1 text-center">{d}</span>
-                        ))}
-                      </div>
-                      
-                      <div className="absolute left-0 top-1/2 -rotate-90 text-[10px] font-bold text-gray-400 tracking-wider uppercase -ml-4">
-                        Distance (km)
-                      </div>
-
+                      </MapContainer>
                     </div>
                   ) : (
                     /* Table View Mode with Sub-Tabs (Routes vs Stops Row per Row) */
                     <div className="flex flex-col h-full gap-2">
-                      {/* Sub-tabs bar */}
-                      <div className="flex items-center justify-between bg-gray-50/80 p-1.5 rounded-lg border border-gray-200">
+                      {/* Sub-tabs bar (Clean navigation without outer gray box) */}
+                      <div className="flex items-center justify-between pb-1">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setTableSubTab('routes')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                               tableSubTab === 'routes'
-                                ? 'bg-gray-800 text-white shadow-xs'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-[#0052cc] text-white shadow-xs'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
                             <MapPin className="w-3.5 h-3.5" />
                             <span>Routes History (Row by Date)</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'routes' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'routes' ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>
                               {flattenedRoutesRows.length}
                             </span>
                           </button>
 
                           <button
                             onClick={() => setTableSubTab('stops')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                               tableSubTab === 'stops'
-                                ? 'bg-gray-800 text-white shadow-xs'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-[#0052cc] text-white shadow-xs'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
                             <AlertTriangle className="w-3.5 h-3.5" />
                             <span>Rest Stops &amp; Checkpoints</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'stops' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'stops' ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>
                               {flattenedStopsRows.length}
                             </span>
                           </button>
