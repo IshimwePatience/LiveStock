@@ -66,7 +66,7 @@ const ForgotPassword = () => {
   return (
     <DashboardSkeletonBackground>
       {/* Exact Coursera Cloned Modal Card (Image 1) */}
-      <div className="w-full max-w-[460px] bg-white rounded-[16px] border border-gray-200 shadow-[0_16px_32px_rgba(0,0,0,0.12)] p-8 font-sans relative">
+      <div className="w-full max-w-[440px] bg-white rounded-md border border-gray-200 shadow-lg px-6 py-6 font-sans relative">
         
         {/* Logo & Heading */}
         <div className="mb-6">

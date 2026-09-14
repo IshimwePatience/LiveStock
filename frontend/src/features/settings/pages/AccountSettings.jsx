@@ -39,7 +39,7 @@ const AccountSettings = () => {
   const [groupNotifications, setGroupNotifications] = useState(true);
 
   // General settings
-  const [timezone, setTimezone] = useState('Africa/Kigali');
+  const [timezone, setTimezone] = useState('Kigali');
   const [language, setLanguage] = useState('English (United States)');
   const [profilePic, setProfilePic] = useState(user?.profile_picture || null);
   const [uploadingPic, setUploadingPic] = useState(false);
@@ -305,9 +305,7 @@ const AccountSettings = () => {
                   onChange={(e) => setTimezone(e.target.value)}
                   className="w-full bg-[#f4f5f7] border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-800 focus:bg-white focus:border-[#0052cc] outline-none transition"
                 >
-                  <option value="Africa/Kigali">Africa/Kigali (CAT, UTC+2)</option>
-                  <option value="UTC">UTC (Coordinated Universal Time)</option>
-                  <option value="Australia/Perth">Australia/Perth (AWST)</option>
+                  <option value="Kigali">Kigali</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Configure your timezone for livestock movement log timestamps.</p>
               </div>
