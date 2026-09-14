@@ -167,6 +167,7 @@ const NationalReports = () => {
   // Weekly Distance Travelled widget states (cloned reference widget)
   const [selectedDistPlates, setSelectedDistPlates] = useState(['RAD 237K', 'RAI 928Q', 'RAH 142Y', 'RAG 272X', 'RAJ 395R', 'RAF 740N', 'RAI 222R']);
   const [distanceViewMode, setDistanceViewMode] = useState('chart'); // 'chart' | 'table'
+  const [tableSubTab, setTableSubTab] = useState('routes'); // 'routes' | 'stops'
   const [isDistanceDownloadOpen, setIsDistanceDownloadOpen] = useState(false);
   const [isDistanceDotsOpen, setIsDistanceDotsOpen] = useState(false);
   const [hoveredDistDate, setHoveredDistDate] = useState(null);
@@ -554,6 +555,55 @@ const NationalReports = () => {
     return Math.ceil(max / 50) * 50 || 150;
   }, [activeDistanceVehicles]);
 
+  // Flat date-by-date routes rows (row per row per date)
+  const flattenedRoutesRows = useMemo(() => {
+    const rows = [];
+    const dateKeys = ['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'];
+    activeDistanceVehicles.forEach(v => {
+      dateKeys.forEach(dKey => {
+        const km = v.daily[dKey];
+        if (km && km > 0) {
+          rows.push({
+            date: `${dKey}, 2026`,
+            plate: v.plate,
+            color: v.color,
+            permitNumber: v.permitNumber || 'MVT-B2620996',
+            status: v.status || 'APPROVED',
+            route: v.route || 'Gatsibo District → Nyarugenge District',
+            timePeriod: '08:00 AM → 01:15 PM',
+            distance: `${km} km`
+          });
+        }
+      });
+    });
+    return rows;
+  }, [activeDistanceVehicles]);
+
+  // Flat stops & checkpoints rows (row per row per date)
+  const flattenedStopsRows = useMemo(() => {
+    const rows = [];
+    const dateKeys = ['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'];
+    activeDistanceVehicles.forEach(v => {
+      const activeDates = dateKeys.filter(dKey => (v.daily[dKey] || 0) > 0);
+      const targetDates = activeDates.length > 0 ? activeDates : ['Sep 08'];
+      
+      targetDates.forEach((dKey) => {
+        const originDist = v.route ? v.route.split('→')[0].trim() : 'Gatsibo District';
+        rows.push({
+          date: `${dKey}, 2026`,
+          plate: v.plate,
+          color: v.color,
+          location: `${originDist} Control Post Rest Area`,
+          timePeriod: '09:40 AM → 10:05 AM',
+          duration: '25 Mins',
+          reason: 'RAB Health Verification & Ear-Tag Scan',
+          permitNumber: v.permitNumber || 'MVT-B2620996'
+        });
+      });
+    });
+    return rows;
+  }, [activeDistanceVehicles]);
+
   const handleExportCSV = () => {
     const list = Object.values(trackedVehiclesMap);
     const targetList = selectedPlate ? list.filter(v => v.plate === selectedPlate) : list;
@@ -834,35 +884,57 @@ const NationalReports = () => {
 
   const handleExportDistanceCSV = () => {
     setIsDistanceDownloadOpen(false);
-    const rows = [
-      ['Date', 'Vehicle Plate', 'Assigned Permit #', 'Status', 'Places Travelled (Route Corridor)', 'Stops Made', 'Logged Distance (km)']
-    ];
-
-    activeDistanceVehicles.forEach(v => {
-      Object.entries(v.daily).forEach(([date, km]) => {
-        if (km > 0) {
-          rows.push([
-            date,
-            v.plate,
-            v.permitNumber || 'MVT-APPROVED',
-            v.status || 'APPROVED',
-            `"${v.route || 'Gatsibo District → Nyarugenge District'}"`,
-            `"${v.stopsCount || 1} Stop (${v.stopsDetails || 'Gatsibo Rest Post'})"`,
-            `${km} km`
-          ]);
-        }
+    if (tableSubTab === 'stops') {
+      const rows = [
+        ['Date', 'Vehicle Plate', 'Stop Location & District', 'Time Period (Stopped -> Resumed)', 'Duration', 'Reason & Verification Details', 'Assigned Permit']
+      ];
+      flattenedStopsRows.forEach(s => {
+        rows.push([
+          s.date,
+          s.plate,
+          `"${s.location}"`,
+          `"${s.timePeriod}"`,
+          s.duration,
+          `"${s.reason}"`,
+          s.permitNumber
+        ]);
       });
+      const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `Vehicle_Rest_Stops_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Excel / CSV rest stops report downloaded!');
+      return;
+    }
+
+    const rows = [
+      ['Date', 'Vehicle Plate', 'Route Corridor (Origin -> Destination)', 'Time Period (From -> To)', 'Logged Distance', 'Assigned Permit', 'Status']
+    ];
+    flattenedRoutesRows.forEach(r => {
+      rows.push([
+        r.date,
+        r.plate,
+        `"${r.route}"`,
+        `"${r.timePeriod}"`,
+        r.distance,
+        r.permitNumber,
+        r.status
+      ]);
     });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `Vehicle_Route_Traversals_Report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Excel / CSV distance report downloaded!');
+    toast.success('Excel / CSV route traversals report downloaded!');
   };
 
   const handleExportDistancePDF = async () => {
@@ -1635,58 +1707,152 @@ const NationalReports = () => {
 
                     </div>
                   ) : (
-                    /* Table View Mode (Clean Self-Contained Scroll Container) */
-                    <div className="w-full overflow-x-auto overflow-y-auto max-h-[310px] border border-gray-200 rounded-lg shadow-2xs bg-white">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="sticky top-0 z-20 bg-gray-50 shadow-2xs">
-                          <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold whitespace-nowrap">
-                            <th className="py-2.5 px-3 bg-gray-50">Vehicle Plate</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Assigned Permit &amp; Status</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Places Travelled (Route Corridor)</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Stops Made</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Logged Distance</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 08</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 09</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 10</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 11</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 12</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 13</th>
-                            <th className="py-2.5 px-3 bg-gray-50">Sep 14</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activeDistanceVehicles.map((v, idx) => (
-                            <tr key={idx} className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors">
-                              <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2 whitespace-nowrap">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: v.color }}></span>
-                                {v.plate} {v.labelExt || ''}
-                              </td>
-                              <td className="py-2.5 px-3 whitespace-nowrap">
-                                <div className="font-bold text-gray-800 text-[11px]">{v.permitNumber || 'MVT-B2620996'}</div>
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${v.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                  {v.status || 'APPROVED'}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 font-semibold text-gray-700 whitespace-nowrap">
-                                {v.route || 'Gatsibo District → Nyarugenge District'}
-                              </td>
-                              <td className="py-2.5 px-3 whitespace-nowrap" title={v.stopsDetails}>
-                                <span className="bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200 text-[10px] inline-flex items-center gap-1">
-                                  🛑 {v.stopsCount || 1} Rest Stop (25m)
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 font-bold text-gray-900">{v.totalKm} km</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 08'] ? `${v.daily['Sep 08']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 09'] ? `${v.daily['Sep 09']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 10'] ? `${v.daily['Sep 10']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 11'] ? `${v.daily['Sep 11']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 12'] ? `${v.daily['Sep 12']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 13'] ? `${v.daily['Sep 13']} km` : '-'}</td>
-                              <td className="py-2.5 px-3 text-gray-600">{v.daily['Sep 14'] ? `${v.daily['Sep 14']} km` : '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    /* Table View Mode with Sub-Tabs (Routes vs Stops Row per Row) */
+                    <div className="flex flex-col h-full gap-2">
+                      {/* Sub-tabs bar */}
+                      <div className="flex items-center justify-between bg-gray-50/80 p-1.5 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setTableSubTab('routes')}
+                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              tableSubTab === 'routes'
+                                ? 'bg-[#0052cc] text-white shadow-xs'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>Routes History (Row by Date)</span>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'routes' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                              {flattenedRoutesRows.length}
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => setTableSubTab('stops')}
+                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              tableSubTab === 'stops'
+                                ? 'bg-amber-600 text-white shadow-xs'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span>Rest Stops &amp; Checkpoints</span>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tableSubTab === 'stops' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                              {flattenedStopsRows.length}
+                            </span>
+                          </button>
+                        </div>
+
+                        <span className="text-[11px] font-semibold text-gray-500 pr-1 hidden sm:inline">
+                          {tableSubTab === 'routes' ? 'Showing individual date & time route entries' : 'Showing logged rest stops & health scan checkpoints'}
+                        </span>
+                      </div>
+
+                      {/* Scrollable Data Table Container */}
+                      <div className="w-full overflow-x-auto overflow-y-auto max-h-[300px] border border-gray-200 rounded-lg shadow-2xs bg-white">
+                        {tableSubTab === 'routes' ? (
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 z-20 bg-gray-50 shadow-2xs">
+                              <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold whitespace-nowrap">
+                                <th className="py-2.5 px-3 bg-gray-50">Date</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Vehicle Plate</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Places Travelled (Route Corridor)</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Time Period (From → To)</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Logged Distance</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Assigned Permit &amp; Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {flattenedRoutesRows.map((r, idx) => (
+                                <tr key={idx} className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors">
+                                  <td className="py-2.5 px-3 font-extrabold text-gray-900 whitespace-nowrap">
+                                    {r.date}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2 whitespace-nowrap">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: r.color }}></span>
+                                    {r.plate}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap">
+                                    {r.route}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-gray-700 font-medium whitespace-nowrap">
+                                    <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-semibold text-gray-800">
+                                      {r.timePeriod}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-extrabold text-gray-900 whitespace-nowrap">{r.distance}</td>
+                                  <td className="py-2.5 px-3 whitespace-nowrap">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-gray-800 text-[11px]">{r.permitNumber}</span>
+                                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${r.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        {r.status}
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                              {flattenedRoutesRows.length === 0 && (
+                                <tr>
+                                  <td colSpan={6} className="py-8 text-center text-xs text-gray-400">
+                                    No route movement logs found for the selected vehicle / date filter.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="sticky top-0 z-20 bg-gray-50 shadow-2xs">
+                              <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold whitespace-nowrap">
+                                <th className="py-2.5 px-3 bg-gray-50">Date</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Vehicle Plate</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Stop Location &amp; District</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Time Period (Stopped → Resumed)</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Duration</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Reason &amp; Scan Details</th>
+                                <th className="py-2.5 px-3 bg-gray-50">Assigned Permit</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {flattenedStopsRows.map((s, idx) => (
+                                <tr key={idx} className="border-b border-gray-100 hover:bg-amber-50/40 transition-colors">
+                                  <td className="py-2.5 px-3 font-extrabold text-gray-900 whitespace-nowrap">
+                                    {s.date}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2 whitespace-nowrap">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }}></span>
+                                    {s.plate}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-gray-800 whitespace-nowrap">
+                                    📍 {s.location}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-gray-700 font-medium whitespace-nowrap">
+                                    <span className="bg-amber-100/70 text-amber-900 px-2 py-0.5 rounded text-[11px] font-bold">
+                                      {s.timePeriod}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-amber-800 whitespace-nowrap">
+                                    ⏱️ {s.duration}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-gray-600 font-medium whitespace-nowrap">
+                                    {s.reason}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-gray-800 whitespace-nowrap">
+                                    {s.permitNumber}
+                                  </td>
+                                </tr>
+                              ))}
+                              {flattenedStopsRows.length === 0 && (
+                                <tr>
+                                  <td colSpan={7} className="py-8 text-center text-xs text-gray-400">
+                                    No rest stops or checkpoints logged for the selected vehicle / date filter.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

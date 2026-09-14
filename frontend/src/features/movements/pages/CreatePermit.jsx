@@ -1446,7 +1446,7 @@ const CreatePermit = () => {
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition"
             >
-              <Plus className="w-3.5 h-3.5" /> + 30 Rows
+              <Plus className="w-3.5 h-3.5" /> 30 Rows
             </button>
             <span className="text-gray-500 ml-2">
               Total rows: <strong className="text-gray-700">{gridData.length}</strong>
