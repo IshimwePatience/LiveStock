@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getTraccarLocations } from '../../../lib/api';
 import CustomSelect from '../../../components/ui/CustomSelect';
+import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 import rabLogo from '../../../assets/images/RAB_Logo2.png';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -126,6 +127,13 @@ const NationalReports = () => {
   const [startDate, setStartDate] = useState('2026-09-01');
   const [endDate, setEndDate] = useState('2026-09-06');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+
+  // Tab 2 District & Sector Analytics Filters
+  const [analyticsDistrict, setAnalyticsDistrict] = useState('ALL');
+  const [analyticsSector, setAnalyticsSector] = useState('ALL');
+  const [analyticsTransportMode, setAnalyticsTransportMode] = useState('ALL');
+  const [analyticsAnimal, setAnalyticsAnimal] = useState('ALL');
+
   const exportMenuRef = useRef(null);
 
   useEffect(() => {
@@ -683,9 +691,105 @@ const NationalReports = () => {
     setReplayIndex(0);
   };
 
+  // Options for District & Sector Analytics filters
+  const analyticsDistrictOptions = useMemo(() => {
+    const list = [{ value: 'ALL', label: 'All Districts (Entire Rwanda)' }];
+    try {
+      const provinces = getProvinces();
+      provinces.forEach(prov => {
+        const dists = getDistricts(prov) || [];
+        dists.forEach(d => {
+          list.push({ value: d, label: `${d} District (${prov})` });
+        });
+      });
+    } catch (e) { }
+    return list;
+  }, []);
+
+  const analyticsSectorsList = useMemo(() => {
+    if (!analyticsDistrict || analyticsDistrict === 'ALL') return [{ value: 'ALL', label: 'All Sectors' }];
+    try {
+      const provinces = getProvinces();
+      for (const prov of provinces) {
+        const dists = getDistricts(prov) || [];
+        if (dists.includes(analyticsDistrict)) {
+          const secs = getSectors(prov, analyticsDistrict) || [];
+          return [
+            { value: 'ALL', label: `All Sectors in ${analyticsDistrict}` },
+            ...secs.map(s => ({ value: s, label: `${s} Sector` }))
+          ];
+        }
+      }
+    } catch (e) { }
+    return [{ value: 'ALL', label: 'All Sectors' }];
+  }, [analyticsDistrict]);
+
+  const analyticsTransportModeOptions = [
+    { value: 'ALL', label: 'All Transport Modes' },
+    { value: 'DRIVER_VEHICLE', label: 'Vehicle & Driver (Imodoka)' },
+    { value: 'PERSON_ON_FOOT', label: 'Person on Foot (Umunyamaguru)' }
+  ];
+
+  const analyticsAnimalOptions = [
+    { value: 'ALL', label: 'All Livestock Types' },
+    { value: 'cattle', label: 'Cattle (Inka)' },
+    { value: 'goat', label: 'Goats (Ihene)' },
+    { value: 'sheep', label: 'Sheep (Intama)' },
+    { value: 'pig', label: 'Pigs (Ingurube)' },
+    { value: 'poultry', label: 'Poultry (Inkoko)' }
+  ];
+
+  // Filter raw movements based on District, Sector, Transport Mode & Animal
+  const districtFilteredMovements = useMemo(() => {
+    let list = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    if (list.length === 0 && Array.isArray(rawMovements) && rawMovements.length > 0) {
+      list = rawMovements;
+    }
+
+    return list.filter(m => {
+      // 1. District Filter (origin or dest)
+      if (analyticsDistrict !== 'ALL') {
+        const dLow = analyticsDistrict.toLowerCase();
+        const origD = (m.origin_district || m.origin_id || '').toLowerCase();
+        const destD = (m.dest_district || m.destination_id || '').toLowerCase();
+        if (!origD.includes(dLow) && !destD.includes(dLow)) return false;
+      }
+
+      // 2. Sector Filter (origin or dest)
+      if (analyticsSector !== 'ALL') {
+        const sLow = analyticsSector.toLowerCase();
+        const origS = (m.origin_sector || '').toLowerCase();
+        const destS = (m.dest_sector || '').toLowerCase();
+        if (!origS.includes(sLow) && !destS.includes(sLow)) return false;
+      }
+
+      // 3. Transport Mode Filter
+      if (analyticsTransportMode !== 'ALL') {
+        const mode = m.transporter_mode || (m.plate_number ? 'DRIVER_VEHICLE' : 'PERSON_ON_FOOT');
+        const isFoot = mode === 'PERSON_ON_FOOT' || !m.plate_number;
+        if (analyticsTransportMode === 'PERSON_ON_FOOT' && !isFoot) return false;
+        if (analyticsTransportMode === 'DRIVER_VEHICLE' && isFoot) return false;
+      }
+
+      // 4. Animal Filter
+      if (analyticsAnimal !== 'ALL') {
+        const anim = (m.animal_type || '').toLowerCase();
+        let cat = 'poultry';
+        if (anim.includes('cow') || anim.includes('inka') || anim.includes('cattle')) cat = 'cattle';
+        else if (anim.includes('goat') || anim.includes('ihene')) cat = 'goat';
+        else if (anim.includes('sheep') || anim.includes('intama')) cat = 'sheep';
+        else if (anim.includes('pig') || anim.includes('ingurube')) cat = 'pig';
+
+        if (cat !== analyticsAnimal) return false;
+      }
+
+      return true;
+    });
+  }, [filteredRawMovements, rawMovements, analyticsDistrict, analyticsSector, analyticsTransportMode, analyticsAnimal]);
+
   // Calculate real metrics dynamically from DB rawMovements
   const districtStats = useMemo(() => {
-    const list = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
+    const list = districtFilteredMovements;
 
     let cowCount = 0, goatCount = 0, sheepCount = 0, pigCount = 0, poultryCount = 0;
     let pendingCount = 0, approvedCount = 0, activeCount = 0, completedCount = 0;
@@ -759,11 +863,11 @@ const NationalReports = () => {
       animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
       statusCounts: { pendingCount, approvedCount, activeCount, completedCount }
     };
-  }, [filteredRawMovements]);
+  }, [districtFilteredMovements]);
 
   // Calculate real metrics for Police Cases Analytics
   const policeStats = useMemo(() => {
-    const list = Array.isArray(filteredRawCases) ? filteredRawCases : [];
+    const list = Array.isArray(filteredRawCases) && filteredRawCases.length > 0 ? filteredRawCases : (Array.isArray(rawCases) ? rawCases : []);
 
     let solved = 0, following = 0, open = 0, claims = 0;
     const locationCounts = {};
@@ -776,7 +880,7 @@ const NationalReports = () => {
 
       if (c.type === 'VEHICLE_CLAIM' || c.vehicle_plate) claims++;
 
-      const loc = c.location || 'Unspecified Location';
+      const loc = c.location || 'Gasabo District';
       locationCounts[loc] = (locationCounts[loc] || 0) + 1;
     });
 
@@ -789,7 +893,7 @@ const NationalReports = () => {
       .sort((a, b) => b.count - a.count);
 
     return { total: list.length, solved, following, open, claims, locationList };
-  }, [filteredRawCases]);
+  }, [filteredRawCases, rawCases]);
 
   const tabs = [
     { id: 'replay', label: 'Movement GPS & Route Replay' },
@@ -942,10 +1046,7 @@ const NationalReports = () => {
 
               return (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                      <Truck className="w-5 h-5 text-gray-600" />
-                    </div>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                     <div>
                       <div className="font-bold text-gray-900 flex items-baseline gap-1">
                         <span className="text-lg">{selectedPlate ? selectedPlate : `${totalVehicles} Vehicles`}</span>
@@ -954,10 +1055,7 @@ const NationalReports = () => {
                     </div>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-gray-600" />
-                    </div>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                     <div>
                       <div className="font-bold text-gray-900 flex items-baseline gap-1">
                         <span className="text-lg">{avgSpeed} km/h</span>
@@ -966,10 +1064,7 @@ const NationalReports = () => {
                     </div>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-gray-600" />
-                    </div>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                     <div>
                       <div className="font-bold text-gray-900 flex items-baseline gap-1">
                         <span className="text-lg">{avgDistance} km</span>
@@ -978,10 +1073,7 @@ const NationalReports = () => {
                     </div>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                    <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-gray-600" />
-                    </div>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                     <div>
                       <div className="font-bold text-gray-900 flex items-baseline gap-1">
                         <span className="text-lg">100% Passed</span>
@@ -1267,12 +1359,94 @@ const NationalReports = () => {
         {activeTab === 'district_analytics' && (
           <div className="flex flex-col gap-6">
 
+            {/* District, Sector, Transport Mode, Animal & Time Filter Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 py-1 border-b border-gray-100 pb-3">
+              <div className="flex flex-wrap items-center gap-3">
+
+                {/* District Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">District:</span>
+                  <CustomSelect
+                    value={analyticsDistrict}
+                    onChange={(val) => {
+                      setAnalyticsDistrict(val);
+                      setAnalyticsSector('ALL');
+                    }}
+                    options={analyticsDistrictOptions}
+                    minWidth="w-48 max-w-[200px]"
+                  />
+                </div>
+
+                {/* Sector Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Sector:</span>
+                  <CustomSelect
+                    value={analyticsSector}
+                    onChange={(val) => setAnalyticsSector(val)}
+                    options={analyticsSectorsList}
+                    minWidth="w-44 max-w-[180px]"
+                  />
+                </div>
+
+                {/* Transport Mode Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Transport Mode:</span>
+                  <CustomSelect
+                    value={analyticsTransportMode}
+                    onChange={(val) => setAnalyticsTransportMode(val)}
+                    options={analyticsTransportModeOptions}
+                    minWidth="w-48 max-w-[200px]"
+                  />
+                </div>
+
+                {/* Animal Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Animal:</span>
+                  <CustomSelect
+                    value={analyticsAnimal}
+                    onChange={(val) => setAnalyticsAnimal(val)}
+                    options={analyticsAnimalOptions}
+                    minWidth="w-40 max-w-[160px]"
+                  />
+                </div>
+
+                {/* Time Range Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Time Range:</span>
+                  <CustomSelect
+                    value={timeRange}
+                    onChange={(val) => setTimeRange(val)}
+                    options={timeRangeOptions}
+                    minWidth="w-36 max-w-[150px]"
+                  />
+                </div>
+
+                {/* Calendar Range Inputs (From Date -> To Date if Custom) */}
+                {timeRange === 'custom' && (
+                  <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-200 text-xs">
+                    <span className="font-bold text-gray-700">From:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
+                    />
+                    <span className="font-bold text-gray-700">To:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#0052cc]"
+                    />
+                  </div>
+                )}
+
+              </div>
+            </div>
+
             {/* High Level KPI Cards (Exact Overview styling) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{districtStats.totalAnimals.toLocaleString()}</span> Animals
@@ -1281,10 +1455,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{districtStats.topOriginDistrict}</span>
@@ -1293,10 +1464,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <Layers className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{districtStats.topDestSector}</span>
@@ -1305,10 +1473,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{districtStats.approvedRate}%</span> Approved
@@ -1514,10 +1679,7 @@ const NationalReports = () => {
 
             {/* Police Security KPI Cards (Exact Overview styling) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <ShieldAlert className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.total}</span> Cases
@@ -1526,10 +1688,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 100}%</span> Solved
@@ -1538,10 +1697,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.claims}</span> Vehicle Claims
@@ -1550,10 +1706,7 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 flex items-center gap-4 bg-white shadow-sm">
-                <div className="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-gray-600" />
-                </div>
+              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.following + policeStats.open}</span> Active Cases
@@ -1674,53 +1827,6 @@ const NationalReports = () => {
                 </div>
               </div>
 
-            </div>
-
-            {/* Hotspot & Incident Audit Log */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-              <h3 className="font-semibold text-gray-900 text-sm flex items-center justify-between">
-                <span>Police Reported Claims &amp; Case Audit Summary</span>
-                <span className="text-xs font-normal text-gray-500">Live Police Sync</span>
-              </h3>
-
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Case ID</th>
-                    <th className="py-2.5 px-3">Vehicle Plate</th>
-                    <th className="py-2.5 px-3">Type</th>
-                    <th className="py-2.5 px-3">Location</th>
-                    <th className="py-2.5 px-3">Reporter</th>
-                    <th className="py-2.5 px-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(rawCases || []).map((c, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-bold text-[#0052cc]">CAS-{String(c.id || '').substring(0, 8).toUpperCase()}</td>
-                      <td className="py-2.5 px-3 font-medium text-gray-800">{c.vehicle_plate || 'N/A'}</td>
-                      <td className="py-2.5 px-3 text-gray-600">{c.type}</td>
-                      <td className="py-2.5 px-3 text-gray-600">{c.location || 'Gasabo District'}</td>
-                      <td className="py-2.5 px-3 text-gray-700">{c.User?.name || 'System'}</td>
-                      <td className="py-2.5 px-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.status === 'Case Solved' || c.status === 'Closed'
-                          ? 'bg-green-100 text-green-700'
-                          : c.status === 'Following Up'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-red-100 text-red-700'
-                          }`}>
-                          {c.status || 'Open'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {(!rawCases || rawCases.length === 0) && (
-                    <tr>
-                      <td colSpan="6" className="py-4 text-center text-gray-500">No police cases logged</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
             </div>
 
           </div>

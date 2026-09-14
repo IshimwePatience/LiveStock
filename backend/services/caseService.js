@@ -30,7 +30,8 @@ ensureCaseColumns();
 
 class CaseService {
   _buildScopeFilter(user) {
-    if (user.role === 'POLICE' || user.role === 'RAB') return {};
+    const roleUpper = (user?.role || '').toUpperCase();
+    if (['POLICE', 'RAB', 'ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'NATIONAL'].includes(roleUpper)) return {};
     return { reporter_id: user.id };
   }
 
