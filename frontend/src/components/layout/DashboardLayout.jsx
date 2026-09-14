@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power, MessageSquare, Camera, X } from 'lucide-react';
+import { Menu, Search, HelpCircle, Settings, Grid, ChevronDown, ChevronRight, PlaySquare, Sparkles, Gift, Terminal, MoreVertical, Hexagon, Power, MessageSquare, Camera, X, Shield } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import logo from '../../assets/images/RAB_Logo2.png';
 import NotificationDropdown from '../ui/NotificationDropdown';
