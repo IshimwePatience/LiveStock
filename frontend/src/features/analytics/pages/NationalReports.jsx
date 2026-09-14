@@ -1794,34 +1794,7 @@ const NationalReports = () => {
                     )}
                   </div>
 
-                  {/* Three Dots View Options Button (Aside Download) */}
-                  <div className="relative" ref={distanceDotsRef}>
-                    <button
-                      onClick={() => setIsDistanceDotsOpen(!isDistanceDotsOpen)}
-                      title="View & Display Options"
-                      className="p-1.5 rounded-lg border border-gray-300 hover:border-gray-400 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 shadow-sm transition-all flex items-center justify-center cursor-pointer"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
 
-                    {isDistanceDotsOpen && (
-                      <div className="absolute right-0 mt-1.5 w-56 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 text-xs font-medium">
-                        <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 tracking-wider">
-                          View Options
-                        </div>
-                        <button
-                          onClick={() => {
-                            setDistanceViewMode(distanceViewMode === 'map' ? 'table' : 'map');
-                            setIsDistanceDotsOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#0052cc] text-left transition-colors cursor-pointer font-bold"
-                        >
-                          {distanceViewMode === 'map' ? <Table className="w-4 h-4 text-blue-600" /> : <MapPin className="w-4 h-4 text-blue-600" />}
-                          <span>Switch to {distanceViewMode === 'map' ? 'Table View' : 'Map View'}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
 
