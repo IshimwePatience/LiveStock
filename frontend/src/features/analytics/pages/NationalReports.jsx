@@ -379,39 +379,59 @@ const NationalReports = () => {
         cargoStr = Object.entries(counts).map(([t, c]) => `${c} ${t}`).join(', ');
       }
 
-      map[plate] = {
-        plate,
-        driverName: m.driver_name || m.Trip?.driver_name || 'Driver',
-        driverPhone: m.driver_phone || m.Trip?.driver_phone || 'N/A',
-        driverNid: m.driver_nid || m.Trip?.driver_national_id || 'N/A',
-        farmerName: m.owner_name || 'Registered Owner',
+      const routeItem = {
+        permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
         route: `${originDist} District → ${destDist} District`,
         origin: `${originDist}${m.origin_sector ? ', ' + m.origin_sector : ''}`,
         destination: `${destDist}${m.dest_sector ? ', ' + m.dest_sector : ''}`,
         cargo: cargoStr,
-        permitNumber: m.permit_number || `MVT-${m.id.substring(0, 8).toUpperCase()}`,
         distance: liveGps?.attributes?.distance ? `${(liveGps.attributes.distance / 1000).toFixed(1)} km` : `${computedDist} km`,
         avgSpeed: `${computedSpeed} km/h`,
         departedTime: m.createdAt ? new Date(m.createdAt).toLocaleString() : '05 Sep 2026, 08:00 AM',
         expectedArrival: m.valid_until ? new Date(m.valid_until).toLocaleString() : '05 Sep 2026, 01:15 PM',
-        status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status),
-        coordinates: coords,
-        checkpoints: [
-          { name: `${originDist} Sector Gate Checkpoint`, date: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
-          { name: 'National Weighbridge & Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' },
-          { name: `${destDist} Entry Inspection Station`, date: '05 Sep 2026', time: '12:35 PM', status: 'Verified', details: 'Final Permit Clearance' }
-        ],
-        stops: [
-          {
-            location: `${originDist} Control Post Rest Area`,
-            district: `${originDist} District`,
-            stoppedAt: '05 Sep 2026, 09:40 AM',
-            resumedAt: '05 Sep 2026, 10:05 AM',
-            duration: '25 Mins',
-            reason: 'RAB Health Verification & Ear-Tag Scan'
-          }
-        ]
+        status: m.status === 'APPROVED' || m.status === 'ACTIVE' ? 'In Transit' : (m.status === 'COMPLETED' ? 'Completed' : m.status)
       };
+
+      if (!map[plate]) {
+        map[plate] = {
+          plate,
+          driverName: m.driver_name || m.Trip?.driver_name || 'Driver',
+          driverPhone: m.driver_phone || m.Trip?.driver_phone || 'N/A',
+          driverNid: m.driver_nid || m.Trip?.driver_national_id || 'N/A',
+          farmerName: m.owner_name || 'Registered Owner',
+          route: routeItem.route,
+          origin: routeItem.origin,
+          destination: routeItem.destination,
+          cargo: cargoStr,
+          permitNumber: routeItem.permitNumber,
+          distance: routeItem.distance,
+          avgSpeed: routeItem.avgSpeed,
+          departedTime: routeItem.departedTime,
+          expectedArrival: routeItem.expectedArrival,
+          status: routeItem.status,
+          coordinates: coords,
+          checkpoints: [
+            { name: `${originDist} Sector Gate Checkpoint`, date: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '05 Sep 2026', time: '08:15 AM', status: 'Verified', details: 'Passed & Logged' },
+            { name: 'National Weighbridge & Control Post', date: '05 Sep 2026', time: '09:40 AM', status: 'Verified', details: 'Stopped for Health Check' },
+            { name: `${destDist} Entry Inspection Station`, date: '05 Sep 2026', time: '12:35 PM', status: 'Verified', details: 'Final Permit Clearance' }
+          ],
+          stops: [
+            {
+              location: `${originDist} Control Post Rest Area`,
+              district: `${originDist} District`,
+              stoppedAt: '05 Sep 2026, 09:40 AM',
+              resumedAt: '05 Sep 2026, 10:05 AM',
+              duration: '25 Mins',
+              reason: 'RAB Health Verification & Ear-Tag Scan'
+            }
+          ],
+          allRoutes: [routeItem]
+        };
+      } else {
+        map[plate].allRoutes.push(routeItem);
+        const uniqueRoutes = Array.from(new Set(map[plate].allRoutes.map(r => r.route)));
+        map[plate].route = uniqueRoutes.join(' | ');
+      }
     });
 
     // Default fallback if no permits exist in DB yet
@@ -504,6 +524,7 @@ const NationalReports = () => {
         daily,
         labelExt: v.status === 'Completed' ? '(completed)' : '',
         route: v.route || `${v.origin || 'Gatsibo District'} → ${v.destination || 'Nyarugenge District'}`,
+        allRoutes: v.allRoutes || [],
         permitNumber: v.permitNumber || 'MVT-B2620996HC9X',
         status: v.status || 'In Transit',
         stopsCount: v.stops ? v.stops.length : 1,
@@ -1164,109 +1185,144 @@ const NationalReports = () => {
 
     let totalAnimals = 0;
     let approvedTotal = 0;
-    const originCounts = {};
-    const sectorCounts = {};
+      const originDistCounts = {};
+      const destDistCounts = {};
+      const originSecCounts = {};
+      const destSecCounts = {};
 
-    list.forEach(m => {
-      const count = Number(m.count) || 1;
-      totalAnimals += count;
+      list.forEach(m => {
+        const count = Number(m.count) || 1;
+        totalAnimals += count;
 
-      if (m.type === 'DISTRICT_TO_DISTRICT') {
-        distToDistCount++;
-        distToDistAnimals += count;
-      } else if (m.type === 'SECTOR_TO_SECTOR') {
-        secToSecCount++;
-        secToSecAnimals += count;
-      }
-
-      const st = (m.status || '').toUpperCase();
-      if (st === 'PENDING') pendingCount++;
-      else if (st === 'APPROVED') approvedCount++;
-      else if (st === 'ACTIVE') activeCount++;
-      else if (st === 'COMPLETED') completedCount++;
-
-      if (['APPROVED', 'ACTIVE', 'COMPLETED'].includes(st)) {
-        approvedTotal++;
-      }
-
-      // Animal count distribution
-      const anim = (m.animal_type || '').toLowerCase();
-      if (anim.includes('cow') || anim.includes('inka') || anim.includes('cattle')) cowCount += count;
-      else if (anim.includes('goat') || anim.includes('ihene')) goatCount += count;
-      else if (anim.includes('sheep') || anim.includes('intama')) sheepCount += count;
-      else if (anim.includes('pig') || anim.includes('ingurube')) pigCount += count;
-      else poultryCount += count;
-
-      // Clean Origin District Extraction
-      let originDist = m.origin_district || m.origin_id || '';
-      if (!originDist || originDist === 'N/A' || originDist === 'Unknown') {
-        if (m.route) {
-          const parts = m.route.split('→');
-          if (parts[0]) originDist = parts[0].split(',')[0].trim();
+        if (m.type === 'DISTRICT_TO_DISTRICT') {
+          distToDistCount++;
+          distToDistAnimals += count;
+        } else if (m.type === 'SECTOR_TO_SECTOR') {
+          secToSecCount++;
+          secToSecAnimals += count;
         }
-      }
-      if (!originDist || originDist === 'N/A' || originDist === 'Unknown') originDist = 'Nyagatare';
-      originDist = originDist.trim();
-      if (!originDist.toLowerCase().includes('district')) {
+
+        const st = (m.status || '').toUpperCase();
+        if (st === 'PENDING') pendingCount++;
+        else if (st === 'APPROVED') approvedCount++;
+        else if (st === 'ACTIVE') activeCount++;
+        else if (st === 'COMPLETED') completedCount++;
+
+        if (['APPROVED', 'ACTIVE', 'COMPLETED'].includes(st)) {
+          approvedTotal++;
+        }
+
+        // Animal count distribution
+        const anim = (m.animal_type || '').toLowerCase();
+        if (anim.includes('cow') || anim.includes('inka') || anim.includes('cattle')) cowCount += count;
+        else if (anim.includes('goat') || anim.includes('ihene')) goatCount += count;
+        else if (anim.includes('sheep') || anim.includes('intama')) sheepCount += count;
+        else if (anim.includes('pig') || anim.includes('ingurube')) pigCount += count;
+        else poultryCount += count;
+
+        // Clean Origin District Extraction
+        let originDist = m.origin_district || m.origin_id || '';
+        if (!originDist || originDist === 'N/A' || originDist === 'Unknown') {
+          if (m.route) {
+            const parts = m.route.split('→');
+            if (parts[0]) originDist = parts[0].split(',')[0].trim();
+          }
+        }
+        if (!originDist || originDist === 'N/A' || originDist === 'Unknown') originDist = 'Gatsibo';
+        originDist = originDist.trim().replace(/\s*District$/gi, '');
         originDist = `${originDist.charAt(0).toUpperCase() + originDist.slice(1)} District`;
-      }
-      originCounts[originDist] = (originCounts[originDist] || 0) + count;
+        originDistCounts[originDist] = (originDistCounts[originDist] || 0) + count;
 
-      // Clean Destination Sector Extraction
-      let destSec = m.dest_sector || '';
-      if (!destSec || destSec === 'N/A' || destSec === 'Unknown') {
-        if (m.dest_district) destSec = `${m.dest_district} Sector`;
-        else if (m.destination_id) destSec = `${m.destination_id} Sector`;
-        else if (m.route) {
-          const parts = m.route.split('→');
-          if (parts[1]) destSec = parts[1].trim();
+        // Clean Destination District Extraction
+        let destDist = m.dest_district || m.destination_id || '';
+        if (!destDist || destDist === 'N/A' || destDist === 'Unknown') {
+          if (m.route) {
+            const parts = m.route.split('→');
+            if (parts[1]) destDist = parts[1].split(',')[0].trim();
+          }
         }
-      }
-      if (!destSec || destSec === 'N/A' || destSec === 'Unknown') destSec = 'Gitega Sector';
-      destSec = destSec.trim();
-      if (!destSec.toLowerCase().includes('sector')) {
+        if (!destDist || destDist === 'N/A' || destDist === 'Unknown') destDist = 'Nyarugenge';
+        destDist = destDist.trim().replace(/\s*District$/gi, '');
+        destDist = `${destDist.charAt(0).toUpperCase() + destDist.slice(1)} District`;
+        destDistCounts[destDist] = (destDistCounts[destDist] || 0) + count;
+
+        // Clean Origin Sector Extraction
+        let originSec = m.origin_sector || '';
+        if (!originSec || originSec === 'N/A' || originSec === 'Unknown') {
+          if (m.origin_district) originSec = `${m.origin_district} Sector`;
+          else originSec = 'Kabarore Sector';
+        }
+        originSec = originSec.trim().replace(/\s*Sector$/gi, '');
+        originSec = `${originSec.charAt(0).toUpperCase() + originSec.slice(1)} Sector`;
+        originSecCounts[originSec] = (originSecCounts[originSec] || 0) + count;
+
+        // Clean Destination Sector Extraction
+        let destSec = m.dest_sector || '';
+        if (!destSec || destSec === 'N/A' || destSec === 'Unknown') {
+          if (m.dest_district) destSec = `${m.dest_district} Sector`;
+          else if (m.destination_id) destSec = `${m.destination_id} Sector`;
+          else if (m.route) {
+            const parts = m.route.split('→');
+            if (parts[1]) destSec = parts[1].trim();
+          }
+        }
+        if (!destSec || destSec === 'N/A' || destSec === 'Unknown') destSec = 'Gitega Sector';
+        destSec = destSec.trim().replace(/\s*Sector$/gi, '');
         destSec = `${destSec.charAt(0).toUpperCase() + destSec.slice(1)} Sector`;
-      }
-      sectorCounts[destSec] = (sectorCounts[destSec] || 0) + count;
-    });
+        destSecCounts[destSec] = (destSecCounts[destSec] || 0) + count;
+      });
 
-    const totalMovements = list.length;
-    const approvedRate = totalMovements > 0 ? ((approvedTotal / totalMovements) * 100).toFixed(1) : '0.0';
+      const totalMovements = list.length;
+      const approvedRate = totalMovements > 0 ? ((approvedTotal / totalMovements) * 100).toFixed(1) : '0.0';
 
-    const originsList = Object.entries(originCounts)
-      .map(([name, count]) => ({
-        name: String(name).toLowerCase().includes('district') ? String(name) : `${name} District`,
-        count,
-        pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
-      }))
-      .sort((a, b) => b.count - a.count);
+      const originsList = Object.entries(originDistCounts)
+        .map(([name, count]) => ({
+          name,
+          count,
+          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
 
-    const sectorsList = Object.entries(sectorCounts)
-      .map(([name, count]) => ({
-        name: String(name).toLowerCase().includes('sector') ? String(name) : `${name} Sector`,
-        count,
-        pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
-      }))
-      .sort((a, b) => b.count - a.count);
+      const destDistrictsList = Object.entries(destDistCounts)
+        .map(([name, count]) => ({
+          name,
+          count,
+          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
 
-    const topOriginDistrict = originsList[0] ? `${originsList[0].name} (${originsList[0].pct}%)` : 'N/A';
-    const topDestSector = sectorsList[0] ? sectorsList[0].name : 'N/A';
+      const originSectorsList = Object.entries(originSecCounts)
+        .map(([name, count]) => ({
+          name,
+          count,
+          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
 
-    return {
-      totalAnimals,
-      totalMovements,
-      approvedRate,
-      topOriginDistrict,
-      topDestSector,
-      distToDistCount,
-      distToDistAnimals,
-      secToSecCount,
-      secToSecAnimals,
-      originsList,
-      sectorsList,
-      animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
-      statusCounts: { pendingCount, approvedCount, activeCount, completedCount }
-    };
+      const destSectorsList = Object.entries(destSecCounts)
+        .map(([name, count]) => ({
+          name,
+          count,
+          pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      return {
+        totalAnimals,
+        totalMovements,
+        approvedRate,
+        originsList,
+        destDistrictsList,
+        originSectorsList,
+        destSectorsList,
+        sectorsList: destSectorsList,
+        distToDistCount,
+        distToDistAnimals,
+        secToSecCount,
+        secToSecAnimals,
+        animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
+        statusCounts: { pendingCount, approvedCount, activeCount, completedCount }
+      };
   }, [districtFilteredMovements]);
 
   // Calculate real metrics for Police Cases Analytics
@@ -1402,8 +1458,8 @@ const NationalReports = () => {
               {/* Card Header & Controls */}
               <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-gray-100">
                 <div>
-                  <h3 className="font-bold text-gray-900 text-base">Weekly Distance Travelled</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Top 10 vehicle distance tracking</p>
+                  <h3 className="font-bold text-gray-900 text-base">GPS Movement Routes &amp; Distance Analytics</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Vehicle transit route corridors and distance travelled for selected filter range</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1842,27 +1898,33 @@ const NationalReports = () => {
             {/* Volume Leaderboards & Animal Breakdown Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              {/* Origin District Volume Distribution (Overview Chart Design) */}
+              {/* Origin District/Sector Volume Distribution */}
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Top Origin Districts Movement Volume</h3>
+                <h3 className="font-bold text-gray-900">
+                  {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Top Origin Sectors Movement Volume' : 'Top Origin Districts Movement Volume'}
+                </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Get a breakdown of livestock movement by origin district. <span className="text-green-600 hover:underline cursor-pointer">Live DB Metrics</span>
+                  Get a breakdown of livestock movement by origin {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'sector' : 'district'}. <span className="text-green-600 hover:underline cursor-pointer">Live DB Metrics</span>
                 </p>
 
                 <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-                  <div className="w-44">District</div>
+                  <div className="w-44">{analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Sector' : 'District'}</div>
                   <div>Distribution</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-                  {districtStats.originsList.map((item, index) => (
+                  {(analyticsMovementType === 'SECTOR_TO_SECTOR' ? (districtStats.originSectorsList || []) : (districtStats.originsList || [])).map((item, index) => (
                     <div
                       key={index}
                       className="flex items-center group cursor-pointer"
-                      title={`Origin District: ${item.name}\nTotal Animals Moved: ${item.count.toLocaleString()} (${item.pct}%)`}
+                      title={`Origin ${analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Sector' : 'District'}: ${item.name}\nTotal Animals Moved: ${item.count.toLocaleString()} (${item.pct}%)`}
                     >
                       <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
-                        <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
+                        {analyticsMovementType === 'SECTOR_TO_SECTOR' ? (
+                          <Layers className="w-4 h-4 text-gray-500 shrink-0" />
+                        ) : (
+                          <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
+                        )}
                         <span className="truncate">{item.name}</span>
                       </div>
                       <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
@@ -1880,33 +1942,39 @@ const NationalReports = () => {
                       </div>
                     </div>
                   ))}
-                  {districtStats.originsList.length === 0 && (
-                    <p className="text-xs text-gray-400 py-4">No origin district data recorded yet.</p>
+                  {(analyticsMovementType === 'SECTOR_TO_SECTOR' ? (districtStats.originSectorsList || []) : (districtStats.originsList || [])).length === 0 && (
+                    <p className="text-xs text-gray-400 py-4">No origin {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'sector' : 'district'} data recorded yet.</p>
                   )}
                 </div>
               </div>
 
-              {/* Destination Sector Transit Volume (Overview Chart Design) */}
+              {/* Destination District/Sector Transit Volume */}
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Top Destination Sectors Volume</h3>
+                <h3 className="font-bold text-gray-900">
+                  {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Top Destination Sectors Volume' : 'Top Destination Districts Volume'}
+                </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Get a breakdown of permits by destination sector. <span className="text-green-600 hover:underline cursor-pointer">Live DB Metrics</span>
+                  Get a breakdown of permits by destination {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'sector' : 'district'}. <span className="text-green-600 hover:underline cursor-pointer">Live DB Metrics</span>
                 </p>
 
                 <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-                  <div className="w-44">Sector</div>
+                  <div className="w-44">{analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Sector' : 'District'}</div>
                   <div>Distribution</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-                  {districtStats.sectorsList.map((item, index) => (
+                  {(analyticsMovementType === 'SECTOR_TO_SECTOR' ? (districtStats.destSectorsList || []) : (districtStats.destDistrictsList || [])).map((item, index) => (
                     <div
                       key={index}
                       className="flex items-center group cursor-pointer"
-                      title={`Destination Sector: ${item.name}\nTotal Animals Received: ${item.count.toLocaleString()} (${item.pct}%)`}
+                      title={`Destination ${analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'Sector' : 'District'}: ${item.name}\nTotal Animals Received: ${item.count.toLocaleString()} (${item.pct}%)`}
                     >
                       <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
-                        <Layers className="w-4 h-4 text-gray-500 shrink-0" />
+                        {analyticsMovementType === 'SECTOR_TO_SECTOR' ? (
+                          <Layers className="w-4 h-4 text-gray-500 shrink-0" />
+                        ) : (
+                          <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
+                        )}
                         <span className="truncate">{item.name}</span>
                       </div>
                       <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
@@ -1924,8 +1992,8 @@ const NationalReports = () => {
                       </div>
                     </div>
                   ))}
-                  {districtStats.sectorsList.length === 0 && (
-                    <p className="text-xs text-gray-400 py-4">No destination sector data recorded yet.</p>
+                  {(analyticsMovementType === 'SECTOR_TO_SECTOR' ? (districtStats.destSectorsList || []) : (districtStats.destDistrictsList || [])).length === 0 && (
+                    <p className="text-xs text-gray-400 py-4">No destination {analyticsMovementType === 'SECTOR_TO_SECTOR' ? 'sector' : 'district'} data recorded yet.</p>
                   )}
                 </div>
               </div>
