@@ -3,9 +3,23 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { Feedback, NotificationLog } = require('../models');
 
+// Auto-ensure table exists
+let isSynced = false;
+const ensureSynced = async () => {
+  if (!isSynced) {
+    try {
+      await Feedback.sync({ alter: true });
+      isSynced = true;
+    } catch (e) {
+      console.error('Feedback table sync warning:', e.message);
+    }
+  }
+};
+
 // Submit Feedback or Help Request
 router.post('/', protect, async (req, res) => {
   try {
+    await ensureSynced();
     const { description, screenshot_url } = req.body;
     if (!description || !description.trim()) {
       return res.status(400).json({ message: 'Description is required' });
@@ -24,13 +38,14 @@ router.post('/', protect, async (req, res) => {
     res.status(201).json(feedback);
   } catch (err) {
     console.error('Error creating feedback:', err);
-    res.status(500).json({ message: 'Failed to submit feedback' });
+    res.status(500).json({ message: 'Failed to submit feedback', error: err.message });
   }
 });
 
 // Get Feedback items (Admin sees all, regular user sees their own)
 router.get('/', protect, async (req, res) => {
   try {
+    await ensureSynced();
     const { status } = req.query;
     const isAdmin = req.user.role === 'RAB' || req.user.role === 'SuperAdmin';
 
@@ -51,20 +66,21 @@ router.get('/', protect, async (req, res) => {
     res.json(items);
   } catch (err) {
     console.error('Error fetching feedback:', err);
-    res.status(500).json({ message: 'Failed to fetch feedback' });
+    res.status(500).json({ message: 'Failed to fetch feedback', error: err.message });
   }
 });
 
 // Get count of open feedback items for Admin alert dot
 router.get('/open-count', protect, async (req, res) => {
   try {
+    await ensureSynced();
     const count = await Feedback.count({
       where: { status: 'OPEN' }
     });
     res.json({ count });
   } catch (err) {
     console.error('Error fetching open feedback count:', err);
-    res.status(500).json({ message: 'Failed to fetch open feedback count' });
+    res.status(500).json({ message: 'Failed to fetch open feedback count', error: err.message });
   }
 });
 

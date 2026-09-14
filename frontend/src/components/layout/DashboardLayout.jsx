@@ -532,20 +532,41 @@ const DashboardLayout = () => {
               )}
             </button>
             {isHelpOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-700 font-sans">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-700 font-sans">
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setIsHelpOpen(false);
+                      navigate('/dashboard/system-settings');
+                    }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-semibold text-[#0052cc] flex items-center justify-between transition border-b border-gray-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-4 h-4 text-[#0052cc]" />
+                      <span>View Feedback & Issues</span>
+                    </div>
+                    {openFeedbackCount > 0 && (
+                      <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                        {openFeedbackCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 <button
                   onClick={handleOpenGiveFeedback}
                   className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
                 >
                   <MessageSquare className="w-4 h-4 text-gray-500" />
-                  Give feedback
+                  {isAdmin ? 'Submit System Feedback' : 'Give feedback / Report issue'}
                 </button>
+
                 <button
                   onClick={handleTakeScreenshot}
                   className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center gap-3 transition"
                 >
                   <Camera className="w-4 h-4 text-gray-500" />
-                  Take a screenshot
+                  Capture screenshot evidence
                 </button>
               </div>
             )}
@@ -797,7 +818,9 @@ const DashboardLayout = () => {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 overflow-hidden text-gray-800 animate-in fade-in zoom-in-95">
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-2">
-              <h3 className="text-lg font-bold text-gray-900">Give feedback</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {feedbackScreenshot ? 'Report Issue with Screenshot Evidence' : 'Give feedback / Report issue'}
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsFeedbackModalOpen(false)}
@@ -808,8 +831,10 @@ const DashboardLayout = () => {
             </div>
 
             <form onSubmit={handleSubmitFeedback} className="px-6 pb-6 pt-1 space-y-4">
-              <p className="text-sm text-gray-500">
-                Describe the issue. The admin will be notified immediately.
+              <p className="text-xs text-gray-500 font-medium">
+                {feedbackScreenshot 
+                  ? 'Describe what went wrong in your attached screenshot evidence. System admin will be notified.' 
+                  : 'Describe the issue or feedback. System admin will be notified immediately.'}
               </p>
 
               {/* Textarea */}
@@ -818,7 +843,7 @@ const DashboardLayout = () => {
                   rows={4}
                   value={feedbackDescription}
                   onChange={(e) => setFeedbackDescription(e.target.value)}
-                  placeholder="e.g. The goods receipt form won't submit, or I can't access the bincard for warehouse X..."
+                  placeholder={feedbackScreenshot ? "Describe what happened in this screenshot..." : "Describe the issue or suggestion..."}
                   className="w-full border border-gray-200 rounded-xl p-3.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 resize-none transition"
                   required
                 />
@@ -826,16 +851,18 @@ const DashboardLayout = () => {
 
               {/* Screenshot Attachment Box */}
               {feedbackScreenshot ? (
-                <div className="border border-gray-200 rounded-xl p-2.5 bg-gray-50 flex items-center justify-between">
+                <div className="border border-blue-200 rounded-xl p-3 bg-blue-50/60 flex items-center justify-between">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <img
                       src={feedbackScreenshot}
                       alt="Screenshot attached"
-                      className="w-16 h-12 object-cover rounded-lg border border-gray-200 shrink-0"
+                      className="w-16 h-12 object-cover rounded-lg border border-blue-200 shrink-0 shadow-xs"
                     />
                     <div className="truncate">
-                      <p className="text-xs font-semibold text-gray-800 truncate">Screenshot attached</p>
-                      <p className="text-[11px] text-gray-400">Ready to send with report</p>
+                      <p className="text-xs font-bold text-blue-950 truncate flex items-center gap-1">
+                        📸 Visual Screenshot Attached
+                      </p>
+                      <p className="text-[11px] text-blue-700 font-medium">Ready to send with report</p>
                     </div>
                   </div>
                   <button
@@ -850,7 +877,7 @@ const DashboardLayout = () => {
               ) : (
                 <label className="border border-dashed border-gray-300 hover:border-gray-400 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer bg-gray-50/50 hover:bg-gray-100/50 transition text-gray-600 text-sm">
                   <Camera className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-medium text-gray-600">Attach a screenshot (optional)</span>
+                  <span className="text-xs font-semibold text-gray-600">Attach screenshot evidence (optional)</span>
                   <input
                     type="file"
                     accept="image/*"
