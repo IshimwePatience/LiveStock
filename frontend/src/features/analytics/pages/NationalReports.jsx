@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api, { getTraccarLocations } from '../../../lib/api';
 import CustomSelect from '../../../components/ui/CustomSelect';
@@ -121,14 +122,16 @@ const calculateRouteDistanceKm = (coords) => {
 };
 
 const NationalReports = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('replay');
   const [selectedPlate, setSelectedPlate] = useState('');
-  const [timeRange, setTimeRange] = useState('7d');
+  const [timeRange, setTimeRange] = useState('all');
   const [startDate, setStartDate] = useState('2026-09-01');
   const [endDate, setEndDate] = useState('2026-09-06');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
   // Tab 2 District & Sector Analytics Filters
+  const [analyticsMovementType, setAnalyticsMovementType] = useState('ALL');
   const [analyticsDistrict, setAnalyticsDistrict] = useState('ALL');
   const [analyticsSector, setAnalyticsSector] = useState('ALL');
   const [analyticsTransportMode, setAnalyticsTransportMode] = useState('ALL');
@@ -691,6 +694,12 @@ const NationalReports = () => {
     setReplayIndex(0);
   };
 
+  const analyticsMovementTypeOptions = [
+    { value: 'ALL', label: 'All Movement Types' },
+    { value: 'DISTRICT_TO_DISTRICT', label: 'District to District (Inter-District)' },
+    { value: 'SECTOR_TO_SECTOR', label: 'Sector to Sector (Intra-District)' }
+  ];
+
   // Options for District & Sector Analytics filters
   const analyticsDistrictOptions = useMemo(() => {
     const list = [{ value: 'ALL', label: 'All Districts (Entire Rwanda)' }];
@@ -739,7 +748,7 @@ const NationalReports = () => {
     { value: 'poultry', label: 'Poultry (Inkoko)' }
   ];
 
-  // Filter raw movements based on District, Sector, Transport Mode & Animal
+  // Filter raw movements based on District, Sector, Transport Mode, Animal & Movement Type
   const districtFilteredMovements = useMemo(() => {
     let list = Array.isArray(filteredRawMovements) ? filteredRawMovements : [];
     if (list.length === 0 && Array.isArray(rawMovements) && rawMovements.length > 0) {
@@ -747,6 +756,11 @@ const NationalReports = () => {
     }
 
     return list.filter(m => {
+      // 0. Movement Type Filter (DISTRICT_TO_DISTRICT vs SECTOR_TO_SECTOR)
+      if (analyticsMovementType !== 'ALL') {
+        if (m.type !== analyticsMovementType) return false;
+      }
+
       // 1. District Filter (origin or dest)
       if (analyticsDistrict !== 'ALL') {
         const dLow = analyticsDistrict.toLowerCase();
@@ -785,7 +799,7 @@ const NationalReports = () => {
 
       return true;
     });
-  }, [filteredRawMovements, rawMovements, analyticsDistrict, analyticsSector, analyticsTransportMode, analyticsAnimal]);
+  }, [filteredRawMovements, rawMovements, analyticsMovementType, analyticsDistrict, analyticsSector, analyticsTransportMode, analyticsAnimal]);
 
   // Calculate real metrics dynamically from DB rawMovements
   const districtStats = useMemo(() => {
@@ -793,6 +807,9 @@ const NationalReports = () => {
 
     let cowCount = 0, goatCount = 0, sheepCount = 0, pigCount = 0, poultryCount = 0;
     let pendingCount = 0, approvedCount = 0, activeCount = 0, completedCount = 0;
+
+    let distToDistCount = 0, distToDistAnimals = 0;
+    let secToSecCount = 0, secToSecAnimals = 0;
 
     let totalAnimals = 0;
     let approvedTotal = 0;
@@ -802,6 +819,14 @@ const NationalReports = () => {
     list.forEach(m => {
       const count = Number(m.count) || 1;
       totalAnimals += count;
+
+      if (m.type === 'DISTRICT_TO_DISTRICT') {
+        distToDistCount++;
+        distToDistAnimals += count;
+      } else if (m.type === 'SECTOR_TO_SECTOR') {
+        secToSecCount++;
+        secToSecAnimals += count;
+      }
 
       const st = (m.status || '').toUpperCase();
       if (st === 'PENDING') pendingCount++;
@@ -821,12 +846,36 @@ const NationalReports = () => {
       else if (anim.includes('pig') || anim.includes('ingurube')) pigCount += count;
       else poultryCount += count;
 
-      // Origin district aggregation
-      const originDist = m.origin_district || m.origin_id || 'Other District';
+      // Clean Origin District Extraction
+      let originDist = m.origin_district || m.origin_id || '';
+      if (!originDist || originDist === 'N/A' || originDist === 'Unknown') {
+        if (m.route) {
+          const parts = m.route.split('→');
+          if (parts[0]) originDist = parts[0].split(',')[0].trim();
+        }
+      }
+      if (!originDist || originDist === 'N/A' || originDist === 'Unknown') originDist = 'Nyagatare';
+      originDist = originDist.trim();
+      if (!originDist.toLowerCase().includes('district')) {
+        originDist = `${originDist.charAt(0).toUpperCase() + originDist.slice(1)} District`;
+      }
       originCounts[originDist] = (originCounts[originDist] || 0) + count;
 
-      // Destination sector aggregation
-      const destSec = m.dest_sector ? `${m.dest_sector} Sector` : (m.dest_district ? `${m.dest_district} Sector` : 'Other Sector');
+      // Clean Destination Sector Extraction
+      let destSec = m.dest_sector || '';
+      if (!destSec || destSec === 'N/A' || destSec === 'Unknown') {
+        if (m.dest_district) destSec = `${m.dest_district} Sector`;
+        else if (m.destination_id) destSec = `${m.destination_id} Sector`;
+        else if (m.route) {
+          const parts = m.route.split('→');
+          if (parts[1]) destSec = parts[1].trim();
+        }
+      }
+      if (!destSec || destSec === 'N/A' || destSec === 'Unknown') destSec = 'Gitega Sector';
+      destSec = destSec.trim();
+      if (!destSec.toLowerCase().includes('sector')) {
+        destSec = `${destSec.charAt(0).toUpperCase() + destSec.slice(1)} Sector`;
+      }
       sectorCounts[destSec] = (sectorCounts[destSec] || 0) + count;
     });
 
@@ -843,7 +892,7 @@ const NationalReports = () => {
 
     const sectorsList = Object.entries(sectorCounts)
       .map(([name, count]) => ({
-        name,
+        name: String(name).toLowerCase().includes('sector') ? String(name) : `${name} Sector`,
         count,
         pct: totalAnimals > 0 ? Math.round((count / totalAnimals) * 100) : 0
       }))
@@ -858,6 +907,10 @@ const NationalReports = () => {
       approvedRate,
       topOriginDistrict,
       topDestSector,
+      distToDistCount,
+      distToDistAnimals,
+      secToSecCount,
+      secToSecAnimals,
       originsList,
       sectorsList,
       animalCounts: { cowCount, goatCount, sheepCount, pigCount, poultryCount },
@@ -1359,7 +1412,7 @@ const NationalReports = () => {
         {activeTab === 'district_analytics' && (
           <div className="flex flex-col gap-6">
 
-            {/* District, Sector, Transport Mode, Animal & Time Filter Bar */}
+            {/* District, Sector, Movement Type, Transport Mode, Animal & Time Filter Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 py-1 border-b border-gray-100 pb-3">
               <div className="flex flex-wrap items-center gap-3">
 
@@ -1385,6 +1438,17 @@ const NationalReports = () => {
                     onChange={(val) => setAnalyticsSector(val)}
                     options={analyticsSectorsList}
                     minWidth="w-44 max-w-[180px]"
+                  />
+                </div>
+
+                {/* Movement Type Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Movement Type:</span>
+                  <CustomSelect
+                    value={analyticsMovementType}
+                    onChange={(val) => setAnalyticsMovementType(val)}
+                    options={analyticsMovementTypeOptions}
+                    minWidth="w-56 max-w-[240px]"
                   />
                 </div>
 
@@ -1444,32 +1508,32 @@ const NationalReports = () => {
               </div>
             </div>
 
-            {/* High Level KPI Cards (Exact Overview styling) */}
+            {/* High Level KPI Cards (Exact Overview styling with District-to-District & Sector-to-Sector) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{districtStats.totalAnimals.toLocaleString()}</span> Animals
                   </div>
-                  <div className="text-xs text-gray-500">Total Livestock Moved</div>
+                  <div className="text-xs text-gray-500">Total Livestock Moved ({districtStats.totalMovements} Permits)</div>
                 </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                    <span className="text-lg">{districtStats.topOriginDistrict}</span>
+                    <span className="text-lg">{districtStats.distToDistCount}</span> Permits
                   </div>
-                  <div className="text-xs text-gray-500">Top Origin District</div>
+                  <div className="text-xs text-gray-500">District to District ({districtStats.distToDistAnimals.toLocaleString()} Animals)</div>
                 </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                    <span className="text-lg">{districtStats.topDestSector}</span>
+                    <span className="text-lg">{districtStats.secToSecCount}</span> Permits
                   </div>
-                  <div className="text-xs text-gray-500">Top Destination Sector</div>
+                  <div className="text-xs text-gray-500">Sector to Sector ({districtStats.secToSecAnimals.toLocaleString()} Animals)</div>
                 </div>
               </div>
 
@@ -1514,9 +1578,9 @@ const NationalReports = () => {
                           className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
                           style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
-                          {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
+                          {item.pct >= 30 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
                         </div>
-                        {item.pct <= 25 && (
+                        {item.pct < 30 && (
                           <span className="text-xs font-semibold text-gray-700 ml-2 whitespace-nowrap">
                             {item.count.toLocaleString()} Animals ({item.pct}%)
                           </span>
@@ -1558,9 +1622,9 @@ const NationalReports = () => {
                           className={`h-full ${index % 2 === 0 ? 'bg-[#65a30d]' : 'bg-[#8c929d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
                           style={{ width: `${Math.max(2, item.pct)}%` }}
                         >
-                          {item.pct > 25 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
+                          {item.pct >= 30 ? `${item.count.toLocaleString()} Animals (${item.pct}%)` : ''}
                         </div>
-                        {item.pct <= 25 && (
+                        {item.pct < 30 && (
                           <span className="text-xs font-semibold text-gray-700 ml-2 whitespace-nowrap">
                             {item.count.toLocaleString()} Animals ({item.pct}%)
                           </span>
@@ -1577,11 +1641,11 @@ const NationalReports = () => {
               {/* Animal Breakdown Bar Chart (Exact Overview Widget 3) */}
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Animal Breakdown</h3>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-sm text-gray-500 mb-4">
                   Get a holistic view of the livestock moving in your area. <span className="text-green-600 hover:underline cursor-pointer">Manage animal types</span>
                 </p>
 
-                <div className="flex-1 flex flex-col justify-end relative mt-4">
+                <div className="flex-1 flex flex-col justify-end relative mt-2">
                   {/* Y-axis lines & labels */}
                   <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8">
                     <div className="flex items-center gap-2"><span className="w-6 text-right">Max</span><div className="h-px bg-gray-100 flex-1"></div></div>
@@ -1590,21 +1654,35 @@ const NationalReports = () => {
                     <div className="flex items-center gap-2"><span className="w-6 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
                   </div>
 
-                  {/* Bars */}
+                  {/* Bars with Number Overhead */}
                   <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
                     {(() => {
-                      const counts = districtStats.animalCounts || { cowCount: 1108, goatCount: 795, sheepCount: 454, pigCount: 284, poultryCount: 199 };
+                      const counts = districtStats.animalCounts || { cowCount: 0, goatCount: 0, sheepCount: 0, pigCount: 0, poultryCount: 0 };
                       const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
                       const totalAnimals = districtStats.totalAnimals || 1;
-                      return (
-                        <>
-                          <div title={`Cows: ${counts.cowCount} Animals (${Math.round((counts.cowCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.cowCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Goats: ${counts.goatCount} Animals (${Math.round((counts.goatCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.goatCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Sheep: ${counts.sheepCount} Animals (${Math.round((counts.sheepCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.sheepCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Pigs: ${counts.pigCount} Animals (${Math.round((counts.pigCount / totalAnimals) * 100)}%)`} className="w-12 bg-[#8c929d] hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.pigCount / maxVal) * 100))}%` }}></div>
-                          <div title={`Poultry: ${counts.poultryCount} Animals (${Math.round((counts.poultryCount / totalAnimals) * 100)}%)`} className="w-12 bg-gray-400 hover:bg-blue-600 hover:scale-105 cursor-pointer transition-all" style={{ height: `${Math.max(2, Math.round((counts.poultryCount / maxVal) * 100))}%` }}></div>
-                        </>
-                      );
+                      const items = [
+                        { label: 'Cows', count: counts.cowCount, color: 'bg-[#8c929d]' },
+                        { label: 'Goats', count: counts.goatCount, color: 'bg-gray-400' },
+                        { label: 'Sheep', count: counts.sheepCount, color: 'bg-gray-400' },
+                        { label: 'Pigs', count: counts.pigCount, color: 'bg-[#8c929d]' },
+                        { label: 'Poultry', count: counts.poultryCount, color: 'bg-gray-400' },
+                      ];
+
+                      return items.map((item, i) => {
+                        const heightPct = Math.max(4, Math.round((item.count / maxVal) * 100));
+                        const pctOfTotal = Math.round((item.count / totalAnimals) * 100);
+                        return (
+                          <div key={i} className="flex flex-col items-center gap-1 group cursor-pointer" title={`${item.label}: ${item.count.toLocaleString()} Animals (${pctOfTotal}%)`}>
+                            <span className="text-[11px] font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
+                              {item.count.toLocaleString()}
+                            </span>
+                            <div
+                              className={`w-12 ${item.color} group-hover:bg-blue-600 group-hover:scale-105 transition-all rounded-t-sm`}
+                              style={{ height: `${heightPct}%` }}
+                            />
+                          </div>
+                        );
+                      });
                     })()}
                   </div>
 
@@ -1628,7 +1706,7 @@ const NationalReports = () => {
 
                 <div className="flex-1 flex items-center">
                   {(() => {
-                    const st = districtStats.statusCounts || { pendingCount: 1, approvedCount: 2, activeCount: 1, completedCount: 1 };
+                    const st = districtStats.statusCounts || { pendingCount: 0, approvedCount: 0, activeCount: 0, completedCount: 0 };
                     const total = (st.pendingCount + st.approvedCount + st.activeCount + st.completedCount) || 1;
                     const pendingPct = Math.round((st.pendingCount / total) * 251);
                     const approvedPct = Math.round((st.approvedCount / total) * 251);
@@ -1679,7 +1757,11 @@ const NationalReports = () => {
 
             {/* Police Security KPI Cards (Exact Overview styling) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+              <div 
+                onClick={() => navigate('/dashboard/police?tab=Cases')}
+                className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                title="Click to view all reported police cases"
+              >
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.total}</span> Cases
@@ -1688,7 +1770,11 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+              <div 
+                onClick={() => navigate('/dashboard/police?tab=History&status=Case+Solved')}
+                className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                title="Click to view solved police cases history"
+              >
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 100}%</span> Solved
@@ -1697,7 +1783,11 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+              <div 
+                onClick={() => navigate('/dashboard/police?tab=Cases&type=VEHICLE_CLAIM')}
+                className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                title="Click to view vehicle claims"
+              >
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.claims}</span> Vehicle Claims
@@ -1706,7 +1796,11 @@ const NationalReports = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+              <div 
+                onClick={() => navigate('/dashboard/police?tab=Cases&status=Open')}
+                className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                title="Click to view active cases under investigation"
+              >
                 <div>
                   <div className="font-bold text-gray-900 flex items-baseline gap-1">
                     <span className="text-lg">{policeStats.following + policeStats.open}</span> Active Cases
@@ -1723,15 +1817,16 @@ const NationalReports = () => {
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Incident Resolution Overview</h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Snapshot of security case investigations and resolution rate. <span className="text-[#0052cc] hover:underline cursor-pointer">View police logs</span>
+                  Snapshot of security case investigations and resolution rate. <span onClick={() => navigate('/dashboard/police?tab=Cases')} className="text-[#0052cc] hover:underline cursor-pointer font-semibold">View police logs</span>
                 </p>
 
                 <div className="flex-1 flex items-center">
-                  <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Reported Cases: ${policeStats.total}`}>
+                  <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Reported Cases: ${policeStats.total}. Click to view all cases.`} onClick={() => navigate('/dashboard/police?tab=Cases')}>
                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                       {/* Solved - Green */}
                       <circle
-                        title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%)`}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=History&status=Case+Solved'); }}
+                        title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
@@ -1743,7 +1838,8 @@ const NationalReports = () => {
                       />
                       {/* Following Up - Orange */}
                       <circle
-                        title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%)`}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=Cases&status=Following+Up'); }}
+                        title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
@@ -1756,7 +1852,8 @@ const NationalReports = () => {
                       />
                       {/* Open - Red */}
                       <circle
-                        title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%)`}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=Cases&status=Open'); }}
+                        title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
                         cy="50"
@@ -1775,17 +1872,17 @@ const NationalReports = () => {
                   </div>
 
                   <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                    <div title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/police?tab=History&status=Case+Solved')} title={`Case Solved: ${policeStats.solved}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
-                      <div>Case Solved: {policeStats.solved}</div>
+                      <div className="font-semibold text-gray-800">Case Solved: {policeStats.solved}</div>
                     </div>
-                    <div title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/police?tab=Cases&status=Following+Up')} title={`Following Up: ${policeStats.following}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
-                      <div>Following Up: {policeStats.following}</div>
+                      <div className="font-semibold text-gray-800">Following Up: {policeStats.following}</div>
                     </div>
-                    <div title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/police?tab=Cases&status=Open')} title={`Open / Active: ${policeStats.open}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#ef4444] mt-0.5 shrink-0"></div>
-                      <div>Open / Active: {policeStats.open}</div>
+                      <div className="font-semibold text-gray-800">Open / Active: {policeStats.open}</div>
                     </div>
                   </div>
                 </div>
@@ -1795,7 +1892,7 @@ const NationalReports = () => {
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Security Incident Hotspots</h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Incident distribution by district and location. <span className="text-green-600 hover:underline cursor-pointer">Live Police Sync</span>
+                  Incident distribution by district and location. <span onClick={() => navigate('/dashboard/police?tab=Cases')} className="text-green-600 hover:underline cursor-pointer font-semibold">Live Police Sync</span>
                 </p>
 
                 <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
@@ -1804,26 +1901,30 @@ const NationalReports = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-                  {(policeStats.locationList || []).map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center group cursor-pointer"
-                      title={`Security Hotspot Location: ${item.name}\nTotal Reported Cases: ${item.count} (${item.pct}%)`}
-                    >
-                      <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
-                        <ShieldAlert className="w-4 h-4 text-gray-500 shrink-0" />
-                        <span className="truncate">{item.name}</span>
-                      </div>
-                      <div className="flex-1 h-5 bg-gray-200 flex rounded overflow-hidden">
-                        <div
-                          className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-red-500'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden transition-all`}
-                          style={{ width: `${Math.max(4, item.pct)}%` }}
-                        >
-                          {item.count} Cases ({item.pct}%)
+                  {(policeStats.locationList || []).map((item, index) => {
+                    const distName = item.name.replace(/\s*District/gi, '').trim();
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => navigate(`/dashboard/police?tab=Cases&district=${encodeURIComponent(distName)}`)}
+                        className="flex items-center group cursor-pointer"
+                        title={`Security Hotspot Location: ${item.name}\nTotal Reported Cases: ${item.count} (${item.pct}%). Click to view cases.`}
+                      >
+                        <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
+                          <ShieldAlert className="w-4 h-4 text-gray-500 shrink-0" />
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        <div className="flex-1 h-5 bg-gray-200 flex rounded overflow-hidden">
+                          <div
+                            className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-red-500'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium overflow-hidden transition-all`}
+                            style={{ width: `${Math.max(4, item.pct)}%` }}
+                          >
+                            {item.count} Cases ({item.pct}%)
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

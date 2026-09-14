@@ -43,6 +43,33 @@ const PoliceCases = () => {
     setSearchParams({ tab });
   };
 
+  // Synchronize URL search params to filter state when navigated from Analytics Dashboard
+  React.useEffect(() => {
+    const statusParam = searchParams.get('status');
+    const typeParam = searchParams.get('type');
+    const districtParam = searchParams.get('district');
+    const searchParam = searchParams.get('search');
+
+    const newFilters = {};
+    if (statusParam && statusParam !== 'ALL') {
+      newFilters['Status'] = [statusParam];
+    }
+    if (typeParam && typeParam !== 'ALL') {
+      newFilters['Type'] = [typeParam];
+    }
+    if (districtParam && districtParam !== 'ALL') {
+      newFilters['District'] = [districtParam];
+    }
+
+    if (Object.keys(newFilters).length > 0) {
+      setSelectedFilters(newFilters);
+    }
+
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [searchParams]);
+
   const handleFilterChange = (categoryId, filters) => {
     if (categoryId === 'all') {
       setSelectedFilters({});
@@ -210,13 +237,17 @@ const PoliceCases = () => {
     return result;
   }, [cases, searchQuery, selectedFilters, timeRange, customStartDate, customEndDate]);
 
-  // Filter cases based on active tab ('Cases' vs 'History')
+  // Filter cases based on active tab ('Cases' vs 'History') or status filter
   const displayedCases = useMemo(() => {
+    const statusSel = selectedFilters['Status'] || [];
+    if (statusSel.includes('Case Solved') || statusSel.includes('Closed') || statusSel.includes('RESOLVED')) {
+      return filteredCases;
+    }
     if (activeTab === 'History') {
       return filteredCases.filter(c => c.status === 'Case Solved' || c.status === 'Closed' || c.status === 'RESOLVED');
     }
     return filteredCases.filter(c => c.status !== 'Case Solved' && c.status !== 'Closed' && c.status !== 'RESOLVED');
-  }, [filteredCases, activeTab]);
+  }, [filteredCases, activeTab, selectedFilters]);
 
   // Helper to filter cases by caseScope and caseTypeFilter
   const getExportDataset = (scopeParam = caseScope, caseTypeParam = caseTypeFilter) => {
