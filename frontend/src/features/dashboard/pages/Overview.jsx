@@ -41,7 +41,7 @@ const Overview = () => {
 
   let roleMessage = "Here's what's happening in your workspace today. Check out the latest reports.";
   let roleLinkText = "View Reports";
-  let roleLinkHref = "/dashboard/reports";
+  let roleLinkHref = "/dashboard/national-reports";
   
   if (user?.role === 'SARO') {
     roleMessage = "You have new sector-level permit requests waiting for review. Ensure all local livestock movements are compliant.";

@@ -180,6 +180,7 @@ function App() {
           <Route path="system-settings" element={<PermittedRoute permKey="system_settings"><SystemSettings /></PermittedRoute>} />
           <Route path="account-settings" element={<AccountSettings />} />
           <Route path="national-reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
+          <Route path="reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
           <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><NationalReports /></PermittedRoute>} />
           <Route path="cases" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
           <Route path="police" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
