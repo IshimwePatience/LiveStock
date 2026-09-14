@@ -59,6 +59,14 @@ const createEndIcon = () => new L.divIcon({
   iconAnchor: [12, 12]
 });
 
+// Rest Stop pin icon
+const createStopIcon = () => new L.divIcon({
+  html: `<div style="background-color: #d97706; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: white; font-weight: bold; font-size: 11px;">S</div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
 // Generate realistic intermediate coordinates for map polylines
 const interpolatePoints = (p1, p2, steps = 30) => {
   const points = [];
@@ -1611,6 +1619,22 @@ const NationalReports = () => {
                   {distanceViewMode === 'map' ? (
                     /* Interactive GPS Route Map Mode showing all drawn routes and rest stops */
                     <div className="w-full h-[310px] min-h-[300px] rounded-lg overflow-hidden border border-gray-200 shadow-2xs relative">
+                      {/* Map Markers Legend Overlay (Top Right) */}
+                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-gray-200 z-[400] text-[11px] flex items-center gap-3 font-semibold text-gray-700">
+                        <div className="flex items-center gap-1">
+                          <span className="w-4 h-4 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[9px] font-bold">A</span>
+                          <span>Origin</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">S</span>
+                          <span>Rest Stop</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="w-4 h-4 rounded-full bg-red-800 text-white flex items-center justify-center text-[9px] font-bold">B</span>
+                          <span>Destination</span>
+                        </div>
+                      </div>
+
                       <MapContainer
                         center={[-1.8000, 30.1500]}
                         zoom={9}
@@ -1626,6 +1650,16 @@ const NationalReports = () => {
                           if (!coords || coords.length < 2) return null;
                           const startPos = coords[0];
                           const endPos = coords[coords.length - 1];
+
+                          // Extract rest stops for vehicle
+                          const stopsList = (trackedVehiclesMap[v.plate]?.stops) || (v.stops) || [
+                            {
+                              location: `${v.route ? v.route.split('→')[0].trim() : 'Gatsibo District'} Control Post Rest Area`,
+                              timePeriod: '09:40 AM → 10:05 AM',
+                              duration: '25 Mins',
+                              reason: 'RAB Health Verification & Ear-Tag Scan'
+                            }
+                          ];
 
                           return (
                             <React.Fragment key={v.plate}>
@@ -1647,6 +1681,24 @@ const NationalReports = () => {
                                   </div>
                                 </Popup>
                               </Marker>
+
+                              {/* Rest Stop Markers */}
+                              {stopsList.map((stop, sIdx) => {
+                                const stepIdx = Math.floor(coords.length * (sIdx + 1) / (stopsList.length + 1));
+                                const stopPos = coords[stepIdx] || coords[Math.floor(coords.length / 2)];
+                                return (
+                                  <Marker key={`stop-${sIdx}`} position={stopPos} icon={createStopIcon()}>
+                                    <Popup>
+                                      <div className="text-xs p-1 font-sans">
+                                        <div className="font-bold text-amber-700">{stop.location || 'Rest Stop & Control Post'}</div>
+                                        <div className="text-gray-900 font-semibold">{v.plate} &bull; {stop.duration || '25 Mins Rest'}</div>
+                                        <div className="text-gray-600 mt-0.5">{stop.timePeriod || stop.stoppedAt || '09:40 AM → 10:05 AM'}</div>
+                                        <div className="text-gray-500 font-medium mt-1">{stop.reason || 'RAB Health Verification'}</div>
+                                      </div>
+                                    </Popup>
+                                  </Marker>
+                                );
+                              })}
 
                               {/* Destination End Marker */}
                               <Marker position={endPos} icon={createEndIcon()}>
