@@ -1478,15 +1478,7 @@ const NationalReports = () => {
             {/* Vehicle Selection, Time Range Filter & Export Menu */}
             <div className="flex items-center justify-between gap-3 py-1 flex-wrap sm:flex-nowrap">
               <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Select Tracked GPS Vehicle:</span>
-                  <CustomSelect
-                    value={selectedPlate || 'ALL'}
-                    onChange={(val) => setSelectedPlate(val === 'ALL' ? '' : val)}
-                    options={vehicleOptions}
-                    minWidth="w-52 max-w-[220px]"
-                  />
-                </div>
+
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-gray-900 whitespace-nowrap">Time Range:</span>
