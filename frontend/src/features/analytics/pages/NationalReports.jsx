@@ -560,6 +560,11 @@ const NationalReports = () => {
     const rows = [];
     const dateKeys = ['Sep 08', 'Sep 09', 'Sep 10', 'Sep 11', 'Sep 12', 'Sep 13', 'Sep 14'];
     activeDistanceVehicles.forEach(v => {
+      let depTime = '08:00 AM';
+      let arrTime = '01:15 PM';
+      if (v.departedTime && v.departedTime.includes(',')) depTime = v.departedTime.split(',')[1]?.trim() || '08:00 AM';
+      if (v.expectedArrival && v.expectedArrival.includes(',')) arrTime = v.expectedArrival.split(',')[1]?.trim() || '01:15 PM';
+
       dateKeys.forEach(dKey => {
         const km = v.daily[dKey];
         if (km && km > 0) {
@@ -570,7 +575,7 @@ const NationalReports = () => {
             permitNumber: v.permitNumber || 'MVT-B2620996',
             status: v.status || 'APPROVED',
             route: v.route || 'Gatsibo District → Nyarugenge District',
-            timePeriod: '08:00 AM → 01:15 PM',
+            timePeriod: `${depTime} → ${arrTime}`,
             distance: `${km} km`
           });
         }
@@ -1716,7 +1721,7 @@ const NationalReports = () => {
                             onClick={() => setTableSubTab('routes')}
                             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                               tableSubTab === 'routes'
-                                ? 'bg-[#0052cc] text-white shadow-xs'
+                                ? 'bg-gray-800 text-white shadow-xs'
                                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                             }`}
                           >
@@ -1731,7 +1736,7 @@ const NationalReports = () => {
                             onClick={() => setTableSubTab('stops')}
                             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                               tableSubTab === 'stops'
-                                ? 'bg-amber-600 text-white shadow-xs'
+                                ? 'bg-gray-800 text-white shadow-xs'
                                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                             }`}
                           >
@@ -1764,7 +1769,7 @@ const NationalReports = () => {
                             </thead>
                             <tbody>
                               {flattenedRoutesRows.map((r, idx) => (
-                                <tr key={idx} className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors">
+                                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/70 transition-colors">
                                   <td className="py-2.5 px-3 font-extrabold text-gray-900 whitespace-nowrap">
                                     {r.date}
                                   </td>
@@ -1815,7 +1820,7 @@ const NationalReports = () => {
                             </thead>
                             <tbody>
                               {flattenedStopsRows.map((s, idx) => (
-                                <tr key={idx} className="border-b border-gray-100 hover:bg-amber-50/40 transition-colors">
+                                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/70 transition-colors">
                                   <td className="py-2.5 px-3 font-extrabold text-gray-900 whitespace-nowrap">
                                     {s.date}
                                   </td>
@@ -1824,15 +1829,15 @@ const NationalReports = () => {
                                     {s.plate}
                                   </td>
                                   <td className="py-2.5 px-3 font-bold text-gray-800 whitespace-nowrap">
-                                    📍 {s.location}
+                                    {s.location}
                                   </td>
                                   <td className="py-2.5 px-3 text-gray-700 font-medium whitespace-nowrap">
-                                    <span className="bg-amber-100/70 text-amber-900 px-2 py-0.5 rounded text-[11px] font-bold">
+                                    <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-[11px] font-semibold">
                                       {s.timePeriod}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 font-bold text-amber-800 whitespace-nowrap">
-                                    ⏱️ {s.duration}
+                                  <td className="py-2.5 px-3 font-bold text-gray-800 whitespace-nowrap">
+                                    {s.duration}
                                   </td>
                                   <td className="py-2.5 px-3 text-gray-600 font-medium whitespace-nowrap">
                                     {s.reason}
