@@ -212,6 +212,17 @@ const NationalReports = () => {
     });
   };
 
+  const ensureHtmlToImage = () => {
+    return new Promise((resolve) => {
+      if (window.htmlToImage) return resolve(window.htmlToImage);
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
+      script.onload = () => resolve(window.htmlToImage);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  };
+
   // Helpers for PDF generation
   const ensureHtml2Pdf = () => {
     return new Promise((resolve) => {
@@ -874,75 +885,90 @@ const NationalReports = () => {
       return;
     }
     const toastId = toast.loading('Generating high-resolution PNG image...');
+
     try {
-      const html2canvas = await ensureHtml2Canvas();
-      if (html2canvas) {
-        const canvas = await html2canvas(targetEl, {
-          scale: 2,
-          useCORS: true,
+      // 1. Primary: Use html-to-image library (native browser SVG rendering, fully supports oklch, Tailwind & Leaflet)
+      const htmlToImage = await ensureHtmlToImage();
+      if (htmlToImage && htmlToImage.toPng) {
+        const dataUrl = await htmlToImage.toPng(targetEl, {
+          quality: 0.98,
           backgroundColor: '#ffffff',
-          onclone: (clonedDoc) => {
-            // 1. Sanitize style tags containing oklch
-            const styleTags = clonedDoc.querySelectorAll('style');
-            styleTags.forEach(style => {
-              if (style.textContent && style.textContent.includes('oklch')) {
-                style.textContent = style.textContent.replace(/oklch\([^)]+\)/g, '#000000');
-              }
-            });
-
-            // 2. Convert all computed styles containing oklch on container & child elements
-            const container = clonedDoc.getElementById('weekly-distance-chart-card');
-            if (!container) return;
-
-            const dummyCanvas = clonedDoc.createElement('canvas');
-            const ctx = dummyCanvas.getContext('2d');
-
-            const safeColor = (colorStr, fallback = '#ffffff') => {
-              if (!colorStr || typeof colorStr !== 'string' || !colorStr.includes('oklch')) return colorStr;
-              try {
-                ctx.fillStyle = '#000000';
-                ctx.fillStyle = colorStr;
-                return ctx.fillStyle;
-              } catch (e) {
-                return fallback;
-              }
-            };
-
-            const allEls = [container, ...Array.from(container.querySelectorAll('*'))];
-            allEls.forEach(el => {
-              const comp = window.getComputedStyle(el);
-              
-              if (comp.backgroundColor && comp.backgroundColor.includes('oklch')) {
-                el.style.backgroundColor = safeColor(comp.backgroundColor, '#ffffff');
-              }
-              if (comp.color && comp.color.includes('oklch')) {
-                el.style.color = safeColor(comp.color, '#1e293b');
-              }
-              if (comp.borderColor && comp.borderColor.includes('oklch')) {
-                el.style.borderColor = safeColor(comp.borderColor, '#cbd5e1');
-              }
-              if (comp.boxShadow && comp.boxShadow.includes('oklch')) {
-                el.style.boxShadow = 'none';
-              }
-              if (comp.outlineColor && comp.outlineColor.includes('oklch')) {
-                el.style.outlineColor = 'transparent';
-              }
-            });
+          pixelRatio: 2,
+          filter: (node) => {
+            // Exclude dropdown menus
+            if (node.classList && (node.classList.contains('absolute') && node.querySelector('button'))) {
+              return true;
+            }
+            return true;
           }
         });
-        const imageUri = canvas.toDataURL('image/png');
+
         const link = document.createElement('a');
-        link.href = imageUri;
+        link.href = dataUrl;
         link.download = `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         toast.success('PNG image report downloaded successfully!', { id: toastId });
-      } else {
-        toast.error('Failed to load image canvas library.', { id: toastId });
+        return;
       }
-    } catch (e) {
-      console.error('PNG Export Error:', e);
+
+      // 2. Secondary Fallback: Native SVG foreignObject rendering
+      const rect = targetEl.getBoundingClientRect();
+      const width = rect.width || 800;
+      const height = rect.height || 400;
+
+      const clone = targetEl.cloneNode(true);
+      const popups = clone.querySelectorAll('.absolute.right-0');
+      popups.forEach(p => p.remove());
+
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(clone);
+
+      const svgData = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="background:#ffffff; font-family: sans-serif; width: 100%; height: 100%;">
+              ${wrapper.innerHTML}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+
+      const img = new Image();
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width * 2;
+        canvas.height = height * 2;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(2, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+
+        URL.revokeObjectURL(url);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `Vehicle_Weekly_Distance_Report_${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('PNG image report downloaded successfully!', { id: toastId });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        toast.error('Failed to generate PNG image.', { id: toastId });
+      };
+
+      img.src = url;
+    } catch (err) {
+      console.error('PNG export failed:', err);
       toast.error('Error generating PNG image report.', { id: toastId });
     }
   };
