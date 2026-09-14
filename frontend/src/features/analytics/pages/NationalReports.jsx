@@ -11,7 +11,7 @@ import L from 'leaflet';
 import {
   BarChart2, MapPin, Play, Pause, RotateCcw, Truck,
   ShieldAlert, CheckCircle2, AlertTriangle, User, Phone,
-  Calendar, ArrowRight, Layers, Award, FileText, Search, Activity, Clock, ChevronDown,
+  Calendar, ArrowRight, ArrowUp, Layers, Award, FileText, Search, Activity, Clock, ChevronDown,
   MoreVertical, Download, FileSpreadsheet, Camera, BarChart3, Table
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -1407,69 +1407,7 @@ const NationalReports = () => {
               </div>
             </div>
 
-            {/* Vehicle Analytics KPI Cards (Exact District & Sector / Police styling) */}
-            {(() => {
-              const allVehicles = Object.values(trackedVehiclesMap);
-              const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
 
-              const totalVehicles = targetList.length;
-              let inTransit = 0, completed = 0, approved = 0, pending = 0;
-              let sumSpeed = 0, sumDistance = 0;
-
-              targetList.forEach(v => {
-                const st = (v.status || '').toUpperCase();
-                if (st.includes('TRANSIT') || st.includes('ACTIVE')) inTransit++;
-                else if (st.includes('COMPLETED')) completed++;
-                else if (st.includes('APPROVED')) approved++;
-                else pending++;
-
-                sumSpeed += parseInt(v.avgSpeed) || 56;
-                sumDistance += parseFloat(v.distance) || 128.4;
-              });
-
-              const avgSpeed = totalVehicles > 0 ? Math.round(sumSpeed / totalVehicles) : 56;
-              const avgDistance = totalVehicles > 0 ? (sumDistance / totalVehicles).toFixed(1) : '128.4';
-
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <div>
-                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                        <span className="text-lg">{selectedPlate ? selectedPlate : `${totalVehicles} Vehicles`}</span>
-                      </div>
-                      <div className="text-xs text-gray-500">Tracked Vehicles Fleet</div>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <div>
-                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                        <span className="text-lg">{avgSpeed} km/h</span>
-                      </div>
-                      <div className="text-xs text-gray-500">Average Transit Speed</div>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <div>
-                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                        <span className="text-lg">{avgDistance} km</span>
-                      </div>
-                      <div className="text-xs text-gray-500">Logged Traversal Distance</div>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <div>
-                      <div className="font-bold text-gray-900 flex items-baseline gap-1">
-                        <span className="text-lg">100% Passed</span>
-                      </div>
-                      <div className="text-xs text-gray-500">Checkpoint Clearance</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* Clone of Reference Design: Weekly Distance Travelled Card */}
             <div id="weekly-distance-chart-card" className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm flex flex-col gap-4 relative">
@@ -1531,14 +1469,6 @@ const NationalReports = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Select Date Range Button */}
-                  <button
-                    onClick={() => setTimeRange(timeRange === 'custom' ? 'all' : 'custom')}
-                    className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1d4ed8] px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-[#bfdbfe]"
-                  >
-                    <Calendar className="w-4 h-4 text-blue-600" /> Select Date Range
-                  </button>
                 </div>
               </div>
 
@@ -1743,289 +1673,6 @@ const NationalReports = () => {
                 </div>
 
               </div>
-            </div>
-
-            {/* Vehicle Analytics Grid (Exact District & Sector Charts Layout) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* Chart 1: Vehicle Transit Corridors Volume */}
-              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Top Active Transit Corridors</h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Breakdown of active vehicle routes across Rwanda districts. <span className="text-green-600 hover:underline cursor-pointer">Live GPS Corridors</span>
-                </p>
-
-                <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-                  <div className="w-48">Route Corridor</div>
-                  <div>Distribution</div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-                  {(() => {
-                    const allVehicles = Object.values(trackedVehiclesMap);
-                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
-
-                    const routeCounts = {};
-                    targetList.forEach(v => {
-                      const r = v.route || 'District Transit Corridor';
-                      routeCounts[r] = (routeCounts[r] || 0) + 1;
-                    });
-
-                    const routesList = Object.entries(routeCounts).map(([name, count]) => ({
-                      name,
-                      count,
-                      pct: targetList.length > 0 ? Math.round((count / targetList.length) * 100) : 100
-                    })).sort((a, b) => b.count - a.count);
-
-                    return routesList.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center group cursor-pointer"
-                        title={`Route Corridor: ${item.name}\nActive Vehicles: ${item.count} (${item.pct}%)`}
-                      >
-                        <div className="w-48 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={item.name}>
-                          <Truck className="w-4 h-4 text-gray-500 shrink-0" />
-                          <span className="truncate">{item.name}</span>
-                        </div>
-                        <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
-                          <div
-                            className={`h-full ${index % 2 === 0 ? 'bg-[#8c929d]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
-                            style={{ width: `${Math.max(4, item.pct)}%` }}
-                          >
-                            {item.count} Vehicles ({item.pct}%)
-                          </div>
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-
-              {/* Chart 2: Vehicle Telemetry & Speed Distribution */}
-              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Vehicle Speed &amp; Telemetry Analytics</h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Live speed and traversal telemetry logged per vehicle. <span className="text-green-600 hover:underline cursor-pointer">Live Traccar Feed</span>
-                </p>
-
-                <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
-                  <div className="w-44">Vehicle Plate</div>
-                  <div>Logged Speed &amp; Distance</div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-4 px-2 pr-4">
-                  {(() => {
-                    const allVehicles = Object.values(trackedVehiclesMap);
-                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
-
-                    return targetList.map((v, index) => {
-                      const speedVal = parseInt(v.avgSpeed) || 56;
-                      const speedPct = Math.min(100, Math.round((speedVal / 100) * 100));
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center group cursor-pointer"
-                          title={`Vehicle: ${v.plate} (${v.driverName})\nSpeed: ${v.avgSpeed} | Distance: ${v.distance}`}
-                        >
-                          <div className="w-44 flex items-center gap-2 text-sm text-gray-700 capitalize truncate group-hover:text-blue-600 transition-colors" title={v.plate}>
-                            <Activity className="w-4 h-4 text-blue-600 shrink-0" />
-                            <span className="truncate font-semibold">{v.plate}</span>
-                          </div>
-                          <div className="flex-1 h-5 bg-gray-100 flex relative items-center rounded overflow-hidden">
-                            <div
-                              className={`h-full ${index % 2 === 0 ? 'bg-[#0052cc]' : 'bg-[#65a30d]'} group-hover:brightness-110 flex items-center px-2 text-xs text-white font-medium whitespace-nowrap transition-all`}
-                              style={{ width: `${Math.max(10, speedPct)}%` }}
-                            >
-                              {v.avgSpeed} ({v.distance})
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-
-              {/* Chart 3: Animal Volume Transported by Vehicle */}
-              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Vehicle Cargo Breakdown</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Livestock breakdown transported by tracked GPS vehicles. <span className="text-green-600 hover:underline cursor-pointer">View animal types</span>
-                </p>
-
-                <div className="flex-1 flex flex-col justify-end relative mt-2">
-                  {/* Y-axis lines & labels */}
-                  {(() => {
-                    const counts = districtStats.animalCounts || { cowCount: 0, goatCount: 0, sheepCount: 0, pigCount: 0, poultryCount: 0 };
-                    const maxVal = Math.max(counts.cowCount, counts.goatCount, counts.sheepCount, counts.pigCount, counts.poultryCount, 1);
-                    const items = [
-                      { label: 'Cows', count: counts.cowCount, color: 'bg-[#0052cc]' },
-                      { label: 'Goats', count: counts.goatCount, color: 'bg-gray-400' },
-                      { label: 'Sheep', count: counts.sheepCount, color: 'bg-amber-500' },
-                      { label: 'Pigs', count: counts.pigCount, color: 'bg-[#8c929d]' },
-                      { label: 'Poultry', count: counts.poultryCount, color: 'bg-teal-500' },
-                    ];
-
-                    return (
-                      <>
-                        <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 font-medium pb-8 pointer-events-none">
-                          <div className="flex items-center gap-2"><span className="w-8 text-right font-semibold text-gray-500">{maxVal}</span><div className="h-px bg-gray-200 flex-1"></div></div>
-                          <div className="flex items-center gap-2"><span className="w-8 text-right">{Math.round(maxVal * 0.66)}</span><div className="h-px bg-gray-100 flex-1"></div></div>
-                          <div className="flex items-center gap-2"><span className="w-8 text-right">{Math.round(maxVal * 0.33)}</span><div className="h-px bg-gray-100 flex-1"></div></div>
-                          <div className="flex items-center gap-2"><span className="w-8 text-right">0</span><div className="h-px bg-gray-300 flex-1"></div></div>
-                        </div>
-
-                        {/* Bars with Overhead Numbers */}
-                        <div className="flex justify-around items-end h-[160px] pl-10 pr-4 pb-0.5 z-10">
-                          {items.map((item, i) => {
-                            const heightPct = Math.max(8, Math.round((item.count / maxVal) * 100));
-                            return (
-                              <div key={i} className="flex flex-col items-center gap-1 group cursor-pointer" title={`${item.label}: ${item.count.toLocaleString()} Animals`}>
-                                <span className="text-[11px] font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
-                                  {item.count}
-                                </span>
-                                <div
-                                  className={`w-12 ${item.color} group-hover:brightness-110 group-hover:scale-105 transition-all rounded-t-sm`}
-                                  style={{ height: `${heightPct}%` }}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* X-axis legends */}
-                        <div className="flex justify-around items-center pl-10 pr-4 mt-2 text-[11px] text-gray-600 font-medium whitespace-nowrap">
-                          <div title={`Cows: ${counts.cowCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-1 bg-[#0052cc] rounded"></span> Cows ({counts.cowCount})</div>
-                          <div title={`Goats: ${counts.goatCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-gray-500 -rotate-90" /> Goats ({counts.goatCount})</div>
-                          <div title={`Sheep: ${counts.sheepCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ArrowRight className="w-3 h-3 text-amber-500 -rotate-90" /> Sheep ({counts.sheepCount})</div>
-                          <div title={`Pigs: ${counts.pigCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><ChevronDown className="w-3 h-3 text-gray-600" /> Pigs ({counts.pigCount})</div>
-                          <div title={`Poultry: ${counts.poultryCount} Animals`} className="flex items-center gap-1 cursor-pointer hover:underline"><span className="w-3 h-3 rounded-full border-2 border-teal-500"></span> Poultry ({counts.poultryCount})</div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* Chart 4: Vehicle Trip Status Donut Overview */}
-              <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
-                <h3 className="font-bold text-gray-900">Vehicle Trip Status Overview</h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Snapshot of vehicle transit &amp; trip statuses. <span className="text-[#0052cc] hover:underline cursor-pointer">View active trips</span>
-                </p>
-
-                <div className="flex-1 flex items-center">
-                  {(() => {
-                    const allVehicles = Object.values(trackedVehiclesMap);
-                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
-
-                    let inTransit = 0, completed = 0, approved = 0, pending = 0;
-                    targetList.forEach(v => {
-                      const st = (v.status || '').toUpperCase();
-                      if (st.includes('TRANSIT') || st.includes('ACTIVE')) inTransit++;
-                      else if (st.includes('COMPLETED')) completed++;
-                      else if (st.includes('APPROVED')) approved++;
-                      else pending++;
-                    });
-
-                    const total = targetList.length || 1;
-                    const inTransitPct = Math.round((inTransit / total) * 251);
-                    const approvedPct = Math.round((approved / total) * 251);
-                    const completedPct = Math.round((completed / total) * 251);
-                    const pendingPct = Math.round((pending / total) * 251);
-
-                    return (
-                      <>
-                        <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Vehicles: ${total}`}>
-                          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                            <circle title={`In Transit: ${inTransit} Vehicles (${Math.round((inTransit / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" strokeWidth="16" strokeDasharray={`${inTransitPct} 251`} />
-                            <circle title={`Approved: ${approved} Vehicles (${Math.round((approved / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#26b3d4" strokeWidth="16" strokeDasharray={`${approvedPct} 251`} strokeDashoffset={`-${inTransitPct}`} />
-                            <circle title={`Pending: ${pending} Vehicles (${Math.round((pending / total) * 100)}%)`} className="hover:opacity-80 transition-opacity cursor-pointer" cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="16" strokeDasharray={`${pendingPct} 251`} strokeDashoffset={`-${inTransitPct + approvedPct}`} />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-2xl font-black text-gray-900">{total}</span>
-                            <span className="text-xs text-gray-500">Total Vehicles</span>
-                          </div>
-                        </div>
-
-                        <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                          <div title={`In Transit / Active: ${inTransit} (${Math.round((inTransit / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
-                            <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
-                            <div>In Transit: {inTransit}</div>
-                          </div>
-                          <div title={`Approved: ${approved} (${Math.round((approved / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
-                            <div className="w-3 h-3 bg-[#26b3d4] mt-0.5 shrink-0"></div>
-                            <div>Approved: {approved}</div>
-                          </div>
-                          <div title={`Pending Review: ${pending} (${Math.round((pending / total) * 100)}%)`} className="flex items-start gap-2 cursor-pointer hover:underline">
-                            <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
-                            <div>Pending: {pending}</div>
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Vehicle Fleet & Transit Telemetry Audit Summary Table */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-              <h3 className="font-semibold text-gray-900 text-sm flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-blue-600" /> Tracked GPS Vehicle Fleet Telemetry Audit Log
-                </span>
-                <span className="text-xs font-normal text-gray-500">Live Traccar &amp; DB Sync</span>
-              </h3>
-
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Vehicle Plate</th>
-                    <th className="py-2.5 px-3">Driver Name &amp; Contact</th>
-                    <th className="py-2.5 px-3">Permit # &amp; Owner</th>
-                    <th className="py-2.5 px-3">Departure Date &amp; Time</th>
-                    <th className="py-2.5 px-3">Route Corridor</th>
-                    <th className="py-2.5 px-3">Cargo Type</th>
-                    <th className="py-2.5 px-3">Speed / Distance</th>
-                    <th className="py-2.5 px-3">Trip Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    const allVehicles = Object.values(trackedVehiclesMap);
-                    const targetList = selectedPlate && trackedVehiclesMap[selectedPlate] ? [trackedVehiclesMap[selectedPlate]] : allVehicles;
-
-                    return targetList.map((v, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-2.5 px-3 font-bold text-[#0052cc]">{v.plate}</td>
-                        <td className="py-2.5 px-3 font-medium text-gray-800">
-                          <div>{v.driverName}</div>
-                          <div className="text-[10px] text-gray-400">{v.driverPhone}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-gray-700 font-medium">
-                          <div>{v.permitNumber}</div>
-                          <div className="text-[10px] text-gray-400">{v.farmerName}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-emerald-700 font-semibold whitespace-nowrap">
-                          <div>{v.departedTime || '06 Sep 2026, 08:30 AM'}</div>
-                          <div className="text-[10px] text-gray-400 font-normal">Exp: {v.expectedArrival || '06 Sep 2026, 01:15 PM'}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-gray-600">{v.route}</td>
-                        <td className="py-2.5 px-3 text-blue-700 font-medium">{v.cargo}</td>
-                        <td className="py-2.5 px-3 text-gray-700 font-medium">{v.avgSpeed} | {v.distance}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${v.status === 'Completed' ? 'bg-green-100 text-green-700' : (v.status === 'In Transit' || v.status === 'APPROVED' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700')}`}>
-                            {v.status || 'Active'}
-                          </span>
-                        </td>
-                      </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
             </div>
 
           </div>
@@ -2394,7 +2041,7 @@ const NationalReports = () => {
             {/* Police Security KPI Cards (Exact Overview styling) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div 
-                onClick={() => navigate('/dashboard/police?tab=Cases')}
+                onClick={() => navigate('/dashboard/cases?tab=Cases')}
                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
                 title="Click to view all reported police cases"
               >
@@ -2407,7 +2054,7 @@ const NationalReports = () => {
               </div>
 
               <div 
-                onClick={() => navigate('/dashboard/police?tab=History&status=Case+Solved')}
+                onClick={() => navigate('/dashboard/cases?tab=History&status=Case+Solved')}
                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
                 title="Click to view solved police cases history"
               >
@@ -2420,7 +2067,7 @@ const NationalReports = () => {
               </div>
 
               <div 
-                onClick={() => navigate('/dashboard/police?tab=Cases&type=VEHICLE_CLAIM')}
+                onClick={() => navigate('/dashboard/cases?tab=Cases&type=VEHICLE_CLAIM')}
                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
                 title="Click to view vehicle claims"
               >
@@ -2433,7 +2080,7 @@ const NationalReports = () => {
               </div>
 
               <div 
-                onClick={() => navigate('/dashboard/police?tab=Cases&status=Open')}
+                onClick={() => navigate('/dashboard/cases?tab=Cases&status=Open')}
                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
                 title="Click to view active cases under investigation"
               >
@@ -2453,15 +2100,15 @@ const NationalReports = () => {
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Incident Resolution Overview</h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Snapshot of security case investigations and resolution rate. <span onClick={() => navigate('/dashboard/police?tab=Cases')} className="text-[#0052cc] hover:underline cursor-pointer font-semibold">View police logs</span>
+                  Snapshot of security case investigations and resolution rate. <span onClick={() => navigate('/dashboard/cases?tab=Cases')} className="text-[#0052cc] hover:underline cursor-pointer font-semibold">View police logs</span>
                 </p>
 
                 <div className="flex-1 flex items-center">
-                  <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Reported Cases: ${policeStats.total}. Click to view all cases.`} onClick={() => navigate('/dashboard/police?tab=Cases')}>
+                  <div className="relative w-44 h-44 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" title={`Total Reported Cases: ${policeStats.total}. Click to view all cases.`} onClick={() => navigate('/dashboard/cases?tab=Cases')}>
                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                       {/* Solved - Green */}
                       <circle
-                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=History&status=Case+Solved'); }}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/cases?tab=History&status=Case+Solved'); }}
                         title={`Case Solved: ${policeStats.solved} (${policeStats.total > 0 ? Math.round((policeStats.solved / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
@@ -2474,7 +2121,7 @@ const NationalReports = () => {
                       />
                       {/* Following Up - Orange */}
                       <circle
-                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=Cases&status=Following+Up'); }}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/cases?tab=Cases&status=Following+Up'); }}
                         title={`Following Up: ${policeStats.following} (${policeStats.total > 0 ? Math.round((policeStats.following / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
@@ -2488,7 +2135,7 @@ const NationalReports = () => {
                       />
                       {/* Open - Red */}
                       <circle
-                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/police?tab=Cases&status=Open'); }}
+                        onClick={(e) => { e.stopPropagation(); navigate('/dashboard/cases?tab=Cases&status=Open'); }}
                         title={`Open / Active: ${policeStats.open} (${policeStats.total > 0 ? Math.round((policeStats.open / policeStats.total) * 100) : 0}%). Click to view.`}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                         cx="50"
@@ -2508,15 +2155,15 @@ const NationalReports = () => {
                   </div>
 
                   <div className="ml-6 flex-1 text-xs text-gray-600 space-y-3">
-                    <div onClick={() => navigate('/dashboard/police?tab=History&status=Case+Solved')} title={`Case Solved: ${policeStats.solved}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/cases?tab=History&status=Case+Solved')} title={`Case Solved: ${policeStats.solved}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#22c55e] mt-0.5 shrink-0"></div>
                       <div className="font-semibold text-gray-800">Case Solved: {policeStats.solved}</div>
                     </div>
-                    <div onClick={() => navigate('/dashboard/police?tab=Cases&status=Following+Up')} title={`Following Up: ${policeStats.following}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/cases?tab=Cases&status=Following+Up')} title={`Following Up: ${policeStats.following}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#f97316] mt-0.5 shrink-0"></div>
                       <div className="font-semibold text-gray-800">Following Up: {policeStats.following}</div>
                     </div>
-                    <div onClick={() => navigate('/dashboard/police?tab=Cases&status=Open')} title={`Open / Active: ${policeStats.open}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
+                    <div onClick={() => navigate('/dashboard/cases?tab=Cases&status=Open')} title={`Open / Active: ${policeStats.open}. Click to view.`} className="flex items-start gap-2 cursor-pointer hover:underline">
                       <div className="w-3 h-3 bg-[#ef4444] mt-0.5 shrink-0"></div>
                       <div className="font-semibold text-gray-800">Open / Active: {policeStats.open}</div>
                     </div>
@@ -2528,7 +2175,7 @@ const NationalReports = () => {
               <div className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm flex flex-col h-[320px]">
                 <h3 className="font-bold text-gray-900">Security Incident Hotspots</h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Incident distribution by district and location. <span onClick={() => navigate('/dashboard/police?tab=Cases')} className="text-green-600 hover:underline cursor-pointer font-semibold">Live Police Sync</span>
+                  Incident distribution by district and location. <span onClick={() => navigate('/dashboard/cases?tab=Cases')} className="text-green-600 hover:underline cursor-pointer font-semibold">Live Police Sync</span>
                 </p>
 
                 <div className="flex text-xs font-bold text-gray-500 mb-3 px-2">
@@ -2542,7 +2189,7 @@ const NationalReports = () => {
                     return (
                       <div
                         key={index}
-                        onClick={() => navigate(`/dashboard/police?tab=Cases&district=${encodeURIComponent(distName)}`)}
+                        onClick={() => navigate(`/dashboard/cases?tab=Cases&district=${encodeURIComponent(distName)}`)}
                         className="flex items-center group cursor-pointer"
                         title={`Security Hotspot Location: ${item.name}\nTotal Reported Cases: ${item.count} (${item.pct}%). Click to view cases.`}
                       >

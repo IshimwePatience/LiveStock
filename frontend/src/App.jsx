@@ -182,6 +182,7 @@ function App() {
           <Route path="national-reports" element={<PermittedRoute permKey="national_reports"><NationalReports /></PermittedRoute>} />
           <Route path="performance-audit" element={<PermittedRoute permKey="performance_audit"><NationalReports /></PermittedRoute>} />
           <Route path="cases" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
+          <Route path="police" element={<PermittedRoute permKey="cases"><PoliceCases /></PermittedRoute>} />
           <Route path="vet-records" element={<VetRoute><VetRecords /></VetRoute>} />
           <Route path="vet-records/create" element={<VetRoute><CreateVetRecord /></VetRoute>} />
           <Route path="gps" element={<PermittedRoute permKey="gps"><TrackingMap /></PermittedRoute>} />
