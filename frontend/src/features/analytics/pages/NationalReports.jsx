@@ -1481,7 +1481,7 @@ const NationalReports = () => {
               <div className="flex flex-col md:flex-row gap-6 min-h-[340px]">
                 
                 {/* Left Column: Interactive Grouped Bar Chart or Data Table */}
-                <div className="flex-1 flex flex-col justify-between relative pt-2">
+                <div className="flex-1 min-w-0 flex flex-col justify-between relative pt-2">
                   {distanceViewMode === 'chart' ? (
                     <div className="h-full flex flex-col justify-between relative">
                       
@@ -1580,30 +1580,30 @@ const NationalReports = () => {
 
                     </div>
                   ) : (
-                    /* Table View Mode */
-                    <div className="overflow-x-auto">
+                    /* Table View Mode (Clean Self-Contained Scroll Container) */
+                    <div className="w-full overflow-x-auto overflow-y-auto max-h-[310px] border border-gray-200 rounded-lg shadow-2xs bg-white">
                       <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-                            <th className="py-2.5 px-3">Vehicle Plate</th>
-                            <th className="py-2.5 px-3">Assigned Permit &amp; Status</th>
-                            <th className="py-2.5 px-3">Places Travelled (Route Corridor)</th>
-                            <th className="py-2.5 px-3">Stops Made</th>
-                            <th className="py-2.5 px-3">Logged Distance</th>
-                            <th className="py-2.5 px-3">Sep 08</th>
-                            <th className="py-2.5 px-3">Sep 09</th>
-                            <th className="py-2.5 px-3">Sep 10</th>
-                            <th className="py-2.5 px-3">Sep 11</th>
-                            <th className="py-2.5 px-3">Sep 12</th>
-                            <th className="py-2.5 px-3">Sep 13</th>
-                            <th className="py-2.5 px-3">Sep 14</th>
+                        <thead className="sticky top-0 z-20 bg-gray-50 shadow-2xs">
+                          <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold whitespace-nowrap">
+                            <th className="py-2.5 px-3 bg-gray-50">Vehicle Plate</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Assigned Permit &amp; Status</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Places Travelled (Route Corridor)</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Stops Made</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Logged Distance</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 08</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 09</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 10</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 11</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 12</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 13</th>
+                            <th className="py-2.5 px-3 bg-gray-50">Sep 14</th>
                           </tr>
                         </thead>
                         <tbody>
                           {activeDistanceVehicles.map((v, idx) => (
-                            <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                            <tr key={idx} className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors">
                               <td className="py-2.5 px-3 font-bold text-[#0052cc] flex items-center gap-2 whitespace-nowrap">
-                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: v.color }}></span>
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: v.color }}></span>
                                 {v.plate} {v.labelExt || ''}
                               </td>
                               <td className="py-2.5 px-3 whitespace-nowrap">
