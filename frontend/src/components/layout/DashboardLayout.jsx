@@ -46,6 +46,26 @@ const DashboardLayout = () => {
   }, [locations]);
 
   React.useEffect(() => {
+    const fetchCurrentProfile = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        if (res.data) {
+          setUser(prev => {
+            const updated = { ...prev, ...res.data };
+            localStorage.setItem('user', JSON.stringify(updated));
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to sync current profile:', err);
+      }
+    };
+    if (localStorage.getItem('token')) {
+      fetchCurrentProfile();
+    }
+  }, []);
+
+  React.useEffect(() => {
     const handleUpdate = () => {
       const userStr = localStorage.getItem('user');
       setUser(userStr ? JSON.parse(userStr) : null);

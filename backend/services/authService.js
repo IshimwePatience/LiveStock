@@ -62,6 +62,7 @@ class AuthService {
         role: user.role,
         district_id: user.district_id,
         sector_id: user.sector_id,
+        profile_picture: user.profile_picture,
         permissions,
         token: this.generateToken(user.id),
       };
@@ -69,11 +70,37 @@ class AuthService {
     throw new Error('Invalid phone number/email or password');
   }
 
-  async register(data) {
-    const { name, email, password, role, district_id, sector_id, permissions } = data;
-    const userExists = await User.findOne({ where: { email } });
+  async getMe(userId) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+    const userJson = user.toJSON();
+    delete userJson.password_hash;
+    delete userJson.reset_token;
+    delete userJson.reset_token_expires;
+    userJson.permissions = resolveUserPermissions(user);
+    return userJson;
+  }
 
-    if (userExists) throw new Error('User already exists');
+  async register(data) {
+    const { name, email, phone, password, role, district_id, sector_id, permissions } = data;
+    
+    let finalEmail = email;
+    const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : null;
+    if ((role === 'SARO' || role === 'DARO') && !finalEmail && cleanPhone) {
+      finalEmail = `${cleanPhone}@${role.toLowerCase()}.gov.rw`;
+    }
+
+    const { Op } = require('sequelize');
+    const existingWhere = [];
+    if (finalEmail) existingWhere.push({ email: finalEmail });
+    if (cleanPhone) existingWhere.push({ phone: cleanPhone });
+
+    if (existingWhere.length > 0) {
+      const userExists = await User.findOne({
+        where: { [Op.or]: existingWhere }
+      });
+      if (userExists) throw new Error('A user with this phone number or email already exists');
+    }
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
@@ -83,7 +110,11 @@ class AuthService {
       : DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS.SARO;
 
     const user = await User.create({
-      name, email, password_hash, role,
+      name,
+      email: finalEmail,
+      phone: cleanPhone || null,
+      password_hash,
+      role,
       district_id: district_id || null,
       sector_id: sector_id || null,
       permissions: initialPermissions,
@@ -93,6 +124,7 @@ class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       district_id: user.district_id,
       sector_id: user.sector_id,
@@ -134,6 +166,15 @@ class AuthService {
       delete updateData.password;
     }
 
+    if (updateData.phone) {
+      updateData.phone = updateData.phone.replace(/[^0-9]/g, '');
+      if ((updateData.role === 'SARO' || updateData.role === 'DARO')) {
+        if (!updateData.email || updateData.email.includes('@saro.gov.rw') || updateData.email.includes('@daro.gov.rw')) {
+          updateData.email = `${updateData.phone}@${updateData.role.toLowerCase()}.gov.rw`;
+        }
+      }
+    }
+
     await user.update(updateData);
     const permissions = resolveUserPermissions(user);
 
@@ -141,6 +182,7 @@ class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       status: user.status,
       district_id: user.district_id,

@@ -16,6 +16,7 @@ const UserManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     role: 'SARO',
     district_id: '',
@@ -156,7 +157,23 @@ const UserManagement = () => {
     setLoading(true);
 
     try {
+      if (formData.role === 'SARO' || formData.role === 'DARO') {
+        const cleanPhone = (formData.phone || '').replace(/[^0-9]/g, '');
+        if (!cleanPhone || cleanPhone.length !== 10) {
+          toast.error('Phone number must be exactly 10 digits (e.g. 0788123456).');
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload = { ...formData, permissions: modalPermissions };
+      if (payload.role === 'SARO' || payload.role === 'DARO') {
+        payload.phone = (formData.phone || '').replace(/[^0-9]/g, '');
+        if (!payload.email) {
+          payload.email = `${payload.phone}@${payload.role.toLowerCase()}.gov.rw`;
+        }
+      }
+
       if (payload.role === 'RAB') {
         payload.district_id = null;
         payload.sector_id = null;
@@ -206,7 +223,7 @@ const UserManagement = () => {
     setIsModalOpen(false);
     setIsEditMode(false);
     setEditUserId(null);
-    setFormData({ name: '', email: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
+    setFormData({ name: '', email: '', phone: '', password: '', role: 'SARO', district_id: '', sector_id: '' });
     setModalPermissions([]);
   };
 
@@ -216,10 +233,11 @@ const UserManagement = () => {
       try { perms = JSON.parse(perms); } catch (e) { perms = null; }
     }
     setFormData({
-      name: user.name,
-      email: user.email,
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || (user.email && user.email.includes('@') ? user.email.split('@')[0] : ''),
       password: '',
-      role: user.role,
+      role: user.role || 'SARO',
       district_id: user.district_id || '',
       sector_id: user.sector_id || ''
     });
@@ -822,17 +840,45 @@ const UserManagement = () => {
                   />
                 </div>
 
-                {/* Email */}
-                <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
-                  <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email" name="email" required value={formData.email}
-                    onChange={handleInputChange}
-                    className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
-                  />
-                </div>
+                {/* Phone Number (SARO / DARO) or Email Address (RAB / POLICE) */}
+                {(formData.role === 'SARO' || formData.role === 'DARO') ? (
+                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      required
+                      maxLength={10}
+                      minLength={10}
+                      value={formData.phone || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 10) {
+                          setFormData(prev => ({ ...prev, phone: val }));
+                        }
+                      }}
+                      placeholder="e.g. 0788123456 (10 digits)"
+                      className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
+                    <label className="w-36 shrink-0 text-[13.5px] font-medium text-gray-700">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g. officer@domain.gov.rw"
+                      className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc] transition-colors"
+                    />
+                  </div>
+                )}
 
                 {/* Password */}
                 <div className="flex items-center min-h-[56px] border-b border-gray-200/80">
