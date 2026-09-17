@@ -63,11 +63,45 @@ class AuthService {
         district_id: user.district_id,
         sector_id: user.sector_id,
         profile_picture: user.profile_picture,
+        must_change_password: !!user.must_change_password,
         permissions,
         token: this.generateToken(user.id),
       };
     }
     throw new Error('Invalid phone number/email or password');
+  }
+
+  async forceChangePassword(userId, newPassword) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('New password must be at least 6 characters');
+    }
+    if (newPassword === '12345678') {
+      throw new Error('Please choose a new permanent password (cannot be 12345678)');
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    const salt = await bcrypt.genSalt(10);
+    user.password_hash = await bcrypt.hash(newPassword, salt);
+    user.must_change_password = false;
+    await user.save();
+
+    const permissions = resolveUserPermissions(user);
+    return {
+      message: 'Permanent password updated successfully!',
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      district_id: user.district_id,
+      sector_id: user.sector_id,
+      profile_picture: user.profile_picture,
+      must_change_password: false,
+      permissions,
+      token: this.generateToken(user.id),
+    };
   }
 
   async getMe(userId) {
@@ -90,6 +124,10 @@ class AuthService {
       finalEmail = `${cleanPhone}@${role.toLowerCase()}.gov.rw`;
     }
 
+    const effectivePassword = (role === 'SARO' || role === 'DARO')
+      ? (password || '12345678')
+      : password;
+
     const { Op } = require('sequelize');
     const existingWhere = [];
     if (finalEmail) existingWhere.push({ email: finalEmail });
@@ -103,11 +141,13 @@ class AuthService {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    const password_hash = await bcrypt.hash(effectivePassword, salt);
 
     const initialPermissions = permissions && Array.isArray(permissions) && permissions.length > 0
       ? permissions
       : DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS.SARO;
+
+    const mustChange = (role === 'SARO' || role === 'DARO');
 
     const user = await User.create({
       name,
@@ -118,6 +158,7 @@ class AuthService {
       district_id: district_id || null,
       sector_id: sector_id || null,
       permissions: initialPermissions,
+      must_change_password: mustChange,
     });
     
     return {
@@ -128,6 +169,7 @@ class AuthService {
       role: user.role,
       district_id: user.district_id,
       sector_id: user.sector_id,
+      must_change_password: user.must_change_password,
       permissions: user.permissions,
     };
   }

@@ -5,7 +5,7 @@ import api, { getTraccarLocations } from '../../../lib/api';
 import CustomSelect from '../../../components/ui/CustomSelect';
 import { getProvinces, getDistricts, getSectors } from 'rwanda-locations';
 import rabLogo from '../../../assets/images/RAB_Logo2.png';
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {
@@ -18,14 +18,218 @@ import toast from 'react-hot-toast';
 
 // Data for Weekly Distance Travelled (cloned reference widget)
 const distanceVehiclesList = [
-  { plate: 'RAD 237K', color: '#2563eb', totalKm: 1585.8, daily: { 'Sep 08': 300.0, 'Sep 09': 435.5, 'Sep 10': 5.0, 'Sep 11': 394.78, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
-  { plate: 'RAI 928Q', color: '#10b981', totalKm: 1082.4, daily: { 'Sep 08': 190.0, 'Sep 09': 265.0, 'Sep 10': 200.0, 'Sep 11': 305.19, 'Sep 12': 110.0, 'Sep 13': 0, 'Sep 14': 0 } },
-  { plate: 'RAH 142Y', color: '#f59e0b', totalKm: 513.1, daily: { 'Sep 08': 170.0, 'Sep 09': 0, 'Sep 10': 0, 'Sep 11': 300.31, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 42.8 } },
-  { plate: 'RAG 272X', labelExt: '(collected)', color: '#ef4444', totalKm: 443.0, daily: { 'Sep 08': 330.0, 'Sep 09': 113.0, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
-  { plate: 'RAJ 395R', color: '#8b5cf6', totalKm: 2.2, daily: { 'Sep 08': 0, 'Sep 09': 2.15, 'Sep 10': 0, 'Sep 11': 0.05, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
-  { plate: 'RAF 740N', color: '#ec4899', totalKm: 2.1, daily: { 'Sep 08': 0.5, 'Sep 09': 1.6, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
-  { plate: 'RAI 222R', color: '#14b8a6', totalKm: 0.5, daily: { 'Sep 08': 0, 'Sep 09': 0, 'Sep 10': 0.5, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 } },
+  {
+    plate: 'RAD 237K',
+    color: '#2563eb',
+    totalKm: 1585.8,
+    daily: { 'Sep 08': 300.0, 'Sep 09': 435.5, 'Sep 10': 5.0, 'Sep 11': 394.78, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Nyagatare District → Nyarugenge District',
+    origin: 'Nyagatare, Tabagwe',
+    destination: 'Kigali, Nyarugenge',
+    permitNumber: 'MVT-7B1A2C3D',
+    status: 'In Transit',
+    coordinates: [
+      [-1.3000, 30.3200],
+      [-1.4200, 30.3500],
+      [-1.6000, 30.4500],
+      [-1.7500, 30.3000],
+      [-1.9441, 30.0619],
+      [-1.9536, 30.0605]
+    ],
+    stops: [
+      {
+        location: 'Gatsibo Control Post Rest Area',
+        timePeriod: '09:40 AM → 10:05 AM',
+        duration: '25 Mins',
+        reason: 'RAB Health Verification & Ear-Tag Scan'
+      }
+    ]
+  },
+  {
+    plate: 'RAI 928Q',
+    color: '#10b981',
+    totalKm: 1082.4,
+    daily: { 'Sep 08': 190.0, 'Sep 09': 265.0, 'Sep 10': 200.0, 'Sep 11': 305.19, 'Sep 12': 110.0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Musanze District → Gasabo District',
+    origin: 'Musanze, Muhoza',
+    destination: 'Kigali, Gasabo',
+    permitNumber: 'MVT-928Q8811',
+    status: 'In Transit',
+    coordinates: [
+      [-1.5000, 29.6300],
+      [-1.7000, 29.7800],
+      [-1.7300, 30.0000],
+      [-1.9441, 30.0619]
+    ],
+    stops: [
+      {
+        location: 'Rulindo Highway Control Post',
+        timePeriod: '10:15 AM → 10:35 AM',
+        duration: '20 Mins',
+        reason: 'Livestock Quarantine Check'
+      }
+    ]
+  },
+  {
+    plate: 'RAH 142Y',
+    color: '#f59e0b',
+    totalKm: 513.1,
+    daily: { 'Sep 08': 170.0, 'Sep 09': 0, 'Sep 10': 0, 'Sep 11': 300.31, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 42.8 },
+    route: 'Kayonza District → Kicukiro District',
+    origin: 'Kayonza, Mukarange',
+    destination: 'Kigali, Kicukiro',
+    permitNumber: 'MVT-142Y4410',
+    status: 'In Transit',
+    coordinates: [
+      [-1.8500, 30.6500],
+      [-1.9500, 30.4300],
+      [-1.9706, 30.1044]
+    ],
+    stops: [
+      {
+        location: 'Rwamagana Inspection Station',
+        timePeriod: '11:00 AM → 11:20 AM',
+        duration: '20 Mins',
+        reason: 'Permit Audit & Vet Inspection'
+      }
+    ]
+  },
+  {
+    plate: 'RAG 272X',
+    labelExt: '(collected)',
+    color: '#ef4444',
+    totalKm: 443.0,
+    daily: { 'Sep 08': 330.0, 'Sep 09': 113.0, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Huye District → Muhanga District',
+    origin: 'Huye, Ngoma',
+    destination: 'Muhanga, Nyamabuye',
+    permitNumber: 'MVT-272X9932',
+    status: 'Completed',
+    coordinates: [
+      [-2.6000, 29.7400],
+      [-2.3500, 29.7500],
+      [-2.2300, 29.7800],
+      [-2.0700, 29.7500]
+    ],
+    stops: [
+      {
+        location: 'Ruhango Transit Rest Area',
+        timePeriod: '01:30 PM → 01:50 PM',
+        duration: '20 Mins',
+        reason: 'Driver Rest & Water Stop'
+      }
+    ]
+  },
+  {
+    plate: 'RAJ 395R',
+    color: '#8b5cf6',
+    totalKm: 2.2,
+    daily: { 'Sep 08': 0, 'Sep 09': 2.15, 'Sep 10': 0, 'Sep 11': 0.05, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Rubavu District → Musanze District',
+    origin: 'Rubavu, Gisenyi',
+    destination: 'Musanze, Muhoza',
+    permitNumber: 'MVT-395R1109',
+    status: 'In Transit',
+    coordinates: [
+      [-1.6800, 29.2600],
+      [-1.6500, 29.5000],
+      [-1.5000, 29.6300]
+    ],
+    stops: [
+      {
+        location: 'Nyabihu Gate Checkpoint',
+        timePeriod: '08:45 AM → 09:05 AM',
+        duration: '20 Mins',
+        reason: 'Health Certificate Inspection'
+      }
+    ]
+  },
+  {
+    plate: 'RAF 740N',
+    color: '#ec4899',
+    totalKm: 2.1,
+    daily: { 'Sep 08': 0.5, 'Sep 09': 1.6, 'Sep 10': 0, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Rusizi District → Karongi District',
+    origin: 'Rusizi, Kamembe',
+    destination: 'Karongi, Rubengera',
+    permitNumber: 'MVT-740N7741',
+    status: 'In Transit',
+    coordinates: [
+      [-2.4800, 28.9000],
+      [-2.3600, 29.1400],
+      [-2.0600, 29.3800]
+    ],
+    stops: [
+      {
+        location: 'Nyamasheke Control Station',
+        timePeriod: '10:00 AM → 10:20 AM',
+        duration: '20 Mins',
+        reason: 'Veterinary Clearance'
+      }
+    ]
+  },
+  {
+    plate: 'RAI 222R',
+    color: '#14b8a6',
+    totalKm: 0.5,
+    daily: { 'Sep 08': 0, 'Sep 09': 0, 'Sep 10': 0.5, 'Sep 11': 0, 'Sep 12': 0, 'Sep 13': 0, 'Sep 14': 0 },
+    route: 'Bugesera District → Kicukiro District',
+    origin: 'Bugesera, Nyamata',
+    destination: 'Kigali, Kicukiro',
+    permitNumber: 'MVT-222R0012',
+    status: 'In Transit',
+    coordinates: [
+      [-2.1500, 30.0800],
+      [-2.0000, 30.0900],
+      [-1.9706, 30.1044]
+    ],
+    stops: [
+      {
+        location: 'Gahanga Checkpoint',
+        timePeriod: '07:30 AM → 07:45 AM',
+        duration: '15 Mins',
+        reason: 'Entry Inspection'
+      }
+    ]
+  }
 ];
+
+// Leaflet Bounds & Size Invalidation helper component
+const MapBoundsController = ({ activeVehicles }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  useEffect(() => {
+    if (!activeVehicles || activeVehicles.length === 0) return;
+    const allCoords = [];
+    activeVehicles.forEach(v => {
+      if (v.coordinates && Array.isArray(v.coordinates)) {
+        v.coordinates.forEach(pt => {
+          if (pt && pt.length === 2 && typeof pt[0] === 'number' && typeof pt[1] === 'number') {
+            if (pt[0] < 0 && pt[1] > 28 && pt[1] < 31) {
+              allCoords.push(pt);
+            }
+          }
+        });
+      }
+    });
+
+    if (allCoords.length > 0) {
+      const bounds = L.latLngBounds(allCoords);
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [35, 35] });
+      }
+    }
+  }, [activeVehicles, map]);
+
+  return null;
+};
 
 // Fix Leaflet marker icon default paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -547,6 +751,8 @@ const NationalReports = () => {
         allRoutes: v.allRoutes || [],
         permitNumber: v.permitNumber || 'MVT-B2620996HC9X',
         status: v.status || 'In Transit',
+        coordinates: v.coordinates || [RWANDA_DISTRICT_COORDS['Nyagatare'], RWANDA_DISTRICT_COORDS['Nyarugenge']],
+        stops: v.stops || [],
         stopsCount: v.stops ? v.stops.length : 1,
         stopsDetails: v.stops && v.stops.length > 0
           ? v.stops.map(s => `${s.location} (${s.duration || '25 Mins Rest'})`).join('; ')
@@ -1674,7 +1880,7 @@ const NationalReports = () => {
           <div className="flex flex-col gap-6">
 
             {/* Vehicle Selection, Time Range Filter & Export Menu */}
-            <div className="flex items-center justify-between gap-3 py-1 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center justify-between gap-3 py-1 flex-wrap sm:flex-nowrap relative z-[9999]">
               <div className="flex flex-wrap items-center gap-3 shrink-0">
 
 
@@ -1828,6 +2034,7 @@ const NationalReports = () => {
                         style={{ height: '100%', width: '100%' }}
                         zoomControl={true}
                       >
+                        <MapBoundsController activeVehicles={activeDistanceVehicles} />
                         <TileLayer
                           url="https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}"
                           attribution="&copy; Google Maps"

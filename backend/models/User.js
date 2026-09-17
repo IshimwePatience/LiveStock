@@ -22,6 +22,7 @@ const User = sequelize.define('User', {
   location_tracking_enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_location_updated: { type: DataTypes.DATE, allowNull: true },
   profile_picture: { type: DataTypes.TEXT, allowNull: true },
+  must_change_password: { type: DataTypes.BOOLEAN, defaultValue: false },
 });
 
 module.exports = User;

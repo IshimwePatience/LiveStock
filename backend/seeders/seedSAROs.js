@@ -15,18 +15,19 @@ const seedSAROs = async () => {
       return;
     }
 
-    // Ensure phone column exists in Users table
+    // Ensure phone and must_change_password columns exist in Users table
     try {
       await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "phone" VARCHAR(255);');
+      await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "must_change_password" BOOLEAN DEFAULT false;');
     } catch (e) {
-      console.log('Phone column check:', e.message);
+      console.log('Columns check:', e.message);
     }
 
     const sarosData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     console.log(`Loaded ${sarosData.length} SARO entries from dataset.`);
 
     const salt = await bcrypt.genSalt(10);
-    const defaultSaroPasswordHash = await bcrypt.hash('Saro@123', salt);
+    const defaultSaroPasswordHash = await bcrypt.hash('12345678', salt);
 
     // Seed 416 SARO accounts strictly using exact phone numbers from PDF dataset
     let seededSaroCount = 0;
@@ -62,7 +63,8 @@ const seedSAROs = async () => {
           role: 'SARO',
           district_id: district,
           sector_id: sector,
-          status: 'Active'
+          status: 'Active',
+          must_change_password: true
         });
         seededSaroCount++;
       } else {
@@ -70,12 +72,27 @@ const seedSAROs = async () => {
       }
     }
 
+    // Ensure all existing DARO/SARO accounts in DB with default status have must_change_password flag set
+    try {
+      await User.update(
+        { must_change_password: true, password_hash: defaultSaroPasswordHash },
+        { 
+          where: { 
+            role: ['SARO', 'DARO'],
+            must_change_password: false
+          } 
+        }
+      );
+    } catch (e) {
+      console.log('Existing SARO/DARO status update note:', e.message);
+    }
+
     console.log(`==================================================`);
     console.log(`✅ SARO Account Seeding Complete!`);
     console.log(`   - New SAROs created: ${seededSaroCount}`);
     console.log(`   - Existing SAROs found: ${existingSaroCount}`);
     console.log(`   - Total valid SAROs in DB: ${seededSaroCount + existingSaroCount}`);
-    console.log(`   - Default Password: Saro@123`);
+    console.log(`   - Default Password: 12345678 (Mandatory 1st-login reset)`);
     console.log(`==================================================`);
   } catch (error) {
     console.error('Error seeding SARO accounts:', error.message);

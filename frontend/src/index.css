@@ -38,3 +38,8 @@ html {
   margin: 0 !important;
   line-height: inherit !important;
 }
+
+/* Ensure Leaflet container stays beneath popups/dropdowns */
+.leaflet-container {
+  z-index: 1 !important;
+}

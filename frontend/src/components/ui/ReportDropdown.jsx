@@ -187,7 +187,7 @@ const ReportDropdown = ({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative ${isOpen ? 'z-[99999]' : 'z-10'}`} ref={dropdownRef}>
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -207,7 +207,7 @@ const ReportDropdown = ({
 
       {/* Popover Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-[580px] bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col font-sans">
+        <div className="absolute top-full left-0 mt-2 w-[580px] bg-white rounded-lg shadow-2xl border border-gray-200 z-[99999] flex flex-col font-sans">
 
           {/* Header Row */}
           <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50/70">

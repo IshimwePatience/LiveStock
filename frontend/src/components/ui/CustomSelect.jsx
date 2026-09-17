@@ -26,7 +26,7 @@ const CustomSelect = ({
   const selectedOption = options.find(opt => String(opt.value) === String(value));
 
   return (
-    <div className={`relative ${minWidth} ${className}`} ref={dropdownRef}>
+    <div className={`relative ${isOpen ? 'z-[99999]' : 'z-10'} ${minWidth} ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -45,7 +45,7 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 max-h-64 overflow-y-auto min-w-full">
+        <div className="absolute left-0 right-0 z-[99999] mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 max-h-64 overflow-y-auto min-w-full">
           {options.map((option) => {
             const isSelected = String(option.value) === String(value);
             return (

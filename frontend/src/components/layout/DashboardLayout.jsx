@@ -78,6 +78,40 @@ const DashboardLayout = () => {
     };
   }, []);
 
+  const [forceNewPassword, setForceNewPassword] = useState('');
+  const [forceConfirmPassword, setForceConfirmPassword] = useState('');
+  const [forceSavingPassword, setForceSavingPassword] = useState(false);
+
+  const handleForceChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!forceNewPassword || forceNewPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+    if (forceNewPassword === '12345678') {
+      toast.error('Please choose a different password than default 12345678');
+      return;
+    }
+    if (forceNewPassword !== forceConfirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setForceSavingPassword(true);
+    try {
+      const res = await api.post('/auth/force-change-password', { newPassword: forceNewPassword });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      setUser(res.data);
+      toast.success('Permanent password set successfully!');
+      window.dispatchEvent(new Event('user_permissions_updated'));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update permanent password.');
+    } finally {
+      setForceSavingPassword(false);
+    }
+  };
+
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
@@ -927,6 +961,73 @@ const DashboardLayout = () => {
                   className="px-6 py-2 rounded-xl text-sm font-semibold text-white bg-[#70798c] hover:bg-[#5a6272] disabled:opacity-50 transition shadow-sm cursor-pointer"
                 >
                   {isSubmittingFeedback ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MANDATORY FIRST-TIME PASSWORD CHANGE MODAL OVERLAY */}
+      {user?.must_change_password && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+          <div className="w-full max-w-[460px] bg-white rounded-2xl border border-blue-100 shadow-2xl p-6 font-sans">
+            <div className="flex items-center gap-3 mb-4">
+              <img src={logo} alt="RAB Logo" className="h-8 object-contain" />
+              <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">RAB System</span>
+            </div>
+
+            <div className="mb-5 bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 text-sm font-bold shadow-sm">
+                🔑
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-amber-900 leading-snug">First-Time Password Change Required</h3>
+                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                  Your account is using default password <span className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">12345678</span>.
+                  Please set your permanent password to proceed.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleForceChangePasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[13.5px] font-bold text-[#1f1f1f] mb-1.5">
+                  New Permanent Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={forceNewPassword}
+                  placeholder="Enter new password (min 6 characters)"
+                  onChange={(e) => setForceNewPassword(e.target.value)}
+                  className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[14.5px] outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13.5px] font-bold text-[#1f1f1f] mb-1.5">
+                  Confirm Permanent Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={forceConfirmPassword}
+                  placeholder="Confirm new password"
+                  onChange={(e) => setForceConfirmPassword(e.target.value)}
+                  className="w-full bg-white border border-[#7b8191] focus:border-[#0056d2] focus:ring-1 focus:ring-[#0056d2] rounded-[8px] px-3.5 py-3 text-[14.5px] outline-none transition-all"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={forceSavingPassword}
+                  className="w-full bg-[#0056d2] hover:bg-[#00419e] text-white font-bold py-3.5 px-4 rounded-[8px] transition-colors text-[15px] cursor-pointer shadow-none flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {forceSavingPassword ? 'Saving Permanent Password...' : 'Set Permanent Password & Continue'}
                 </button>
               </div>
             </form>

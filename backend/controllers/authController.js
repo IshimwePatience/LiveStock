@@ -136,10 +136,20 @@ const getMe = async (req, res) => {
   }
 };
 
+const forceChangePassword = async (req, res) => {
+  try {
+    const result = await authService.forceChangePassword(req.user.id, req.body.newPassword);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
   getMe,
+  forceChangePassword,
   forgotPassword,
   resetPassword,
   getAllUsers,
