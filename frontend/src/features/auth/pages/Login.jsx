@@ -26,12 +26,13 @@ const Login = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
       if (data.must_change_password) {
+        // First-time login: do not save token yet, stay on login page and present New Password form
         setMustChangePasswordState(data);
-        toast.error('First-time login detected! Please set a new permanent password.', { duration: 6000 });
+        toast.error('First-time login detected! Please set a new permanent password to proceed.', { duration: 6000 });
       } else {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data));
         toast.success(`Welcome back, ${data.name}!`);
         navigate('/dashboard');
       }
@@ -58,7 +59,9 @@ const Login = () => {
 
     setSavingPassword(true);
     try {
-      const res = await api.post('/auth/force-change-password', { newPassword });
+      const res = await api.post('/auth/force-change-password', { newPassword }, {
+        headers: { Authorization: `Bearer ${mustChangePasswordState.token}` }
+      });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
       toast.success('Permanent password set successfully! Welcome to RAB System.');

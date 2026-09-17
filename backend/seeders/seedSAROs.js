@@ -72,17 +72,17 @@ const seedSAROs = async () => {
       }
     }
 
-    // Ensure all existing DARO/SARO accounts in DB with default status have must_change_password flag set
+    // Ensure all existing DARO/SARO accounts in DB have default password 12345678 and must_change_password set to true
     try {
       await User.update(
         { must_change_password: true, password_hash: defaultSaroPasswordHash },
         { 
           where: { 
-            role: ['SARO', 'DARO'],
-            must_change_password: false
+            role: ['SARO', 'DARO']
           } 
         }
       );
+      console.log('Successfully updated all SARO & DARO accounts to default password 12345678 and must_change_password = true.');
     } catch (e) {
       console.log('Existing SARO/DARO status update note:', e.message);
     }
