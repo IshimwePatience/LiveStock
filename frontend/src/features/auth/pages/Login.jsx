@@ -119,14 +119,14 @@ const Login = () => {
             <span className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">RAB System</span>
           </div>
 
-          <div className="mb-5 bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-start gap-3">
+          <div className="mb-5 p-1 flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 text-sm font-bold shadow-sm">
               🔑
             </div>
             <div>
-              <h3 className="text-sm font-bold text-amber-900 leading-snug">First-Time Password Change Required</h3>
-              <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
-                You logged in using default password <span className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">12345678</span>.
+              <h3 className="text-sm font-bold text-gray-900 leading-snug">First-Time Password Change Required</h3>
+              <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+                You logged in using default password <span className="font-mono font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded">12345678</span>.
                 Please set your permanent password to protect your account.
               </p>
             </div>
