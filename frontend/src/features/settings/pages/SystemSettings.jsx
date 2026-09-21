@@ -7,13 +7,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const MODULE_PERMISSIONS = [
   { id: 'overview', label: "Overview Dashboard", desc: 'Displays main livestock activity, summary metrics, and active permit tracking.' },
-  { id: 'cases', label: "Police Cases", desc: 'Allows access to police security cases, violations, and impoundment records.' },
   { id: 'gps', label: "GPS Tracking", desc: 'Real-time vehicle GPS tracking map, live routes, and speed alert monitoring.' },
   { id: 'movements', label: "Movements & Permits", desc: 'Permit request creation, verification, approval, and official RAB PDF generation.' },
   { id: 'geofencing', label: "Geo-Fencing & Quarantine", desc: 'Configuring quarantine zones, geo-fenced perimeters, and perimeter alerts.' },
   { id: 'national_reports', label: "Analytics & Reports", desc: 'Accessing national livestock volume, GPS route replay, movement trends, and police analytics.' },
   { id: 'performance_audit', label: "Performance Audit", desc: 'Inspecting official RAB user activity logs, audit trails, and security timestamps.' },
   { id: 'notifications', label: "Notifications", desc: 'Receiving real-time security alerts, permit status updates, and system messages.' },
+  { id: 'cases', label: "Police Cases", desc: 'Allows access to police security cases, violations, and impoundment records.' },
   { id: 'system_settings', label: "System Settings", desc: 'Configuring system module permissions, role policies, and global settings.' },
   { id: 'user_management', label: "User Management", desc: 'Creating, updating, deactivating, and assigning roles to RAB/DARO/SARO officers.' }
 ];

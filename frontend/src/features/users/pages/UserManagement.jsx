@@ -27,13 +27,13 @@ const UserManagement = () => {
 
   const ALL_MODULES = [
     { id: 'overview', label: 'Overview' },
-    { id: 'cases', label: 'Police Cases' },
     { id: 'gps', label: 'GPS Tracking' },
     { id: 'movements', label: 'Movements' },
     { id: 'geofencing', label: 'Geo-Fencing' },
     { id: 'national_reports', label: 'Analytics & Reports' },
     { id: 'performance_audit', label: 'Performance Audit' },
     { id: 'notifications', label: 'Notifications' },
+    { id: 'cases', label: 'Police Cases' },
     { id: 'system_settings', label: 'System Settings' },
     { id: 'user_management', label: 'User Management' },
   ];
