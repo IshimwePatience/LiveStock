@@ -269,7 +269,7 @@ const UserManagement = () => {
   // Format display contact: Phone number for SARO/DARO or email for RAB
   const getContactDisplay = (u) => {
     if (u.phone) return u.phone;
-    if (u.email && u.email.endsWith('@saro.gov.rw')) {
+    if (u.email && (u.email.endsWith('@saro.gov.rw') || u.email.endsWith('@daro.gov.rw'))) {
       return u.email.split('@')[0];
     }
     return u.email;

@@ -355,6 +355,19 @@ const DashboardLayout = () => {
     return name.replace(/\([^)]*\)/g, '').trim();
   };
 
+  const getUserDisplayContact = (u) => {
+    if (!u) return '';
+    if (u.phone) return u.phone;
+    if (u.email) {
+      if (u.email.endsWith('@daro.gov.rw') || u.email.endsWith('@saro.gov.rw')) {
+        const parts = u.email.split('@');
+        return parts[0];
+      }
+      return u.email;
+    }
+    return 'admin@rab.gov.rw';
+  };
+
   const DEFAULT_ROLE_PERMISSIONS = {
     RAB: ['overview', 'cases', 'gps', 'movements', 'geofencing', 'national_reports', 'performance_audit', 'notifications', 'system_settings', 'user_management'],
     DARO: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management'],
@@ -655,7 +668,7 @@ const DashboardLayout = () => {
                   </div>
                   <div className="flex flex-col pt-0.5 overflow-hidden">
                     <p className="text-[15px] font-semibold text-gray-900 truncate w-full">{getCleanName(user?.name)}</p>
-                    <p className="text-xs text-gray-500 truncate w-full mt-0.5">{user?.email || user?.phone || 'admin@rab.gov.rw'}</p>
+                    <p className="text-xs text-gray-500 truncate w-full mt-0.5">{getUserDisplayContact(user)}</p>
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
