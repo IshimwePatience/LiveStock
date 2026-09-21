@@ -837,7 +837,11 @@ const CreatePermit = () => {
     if (!dist || !mobileForm.origin_sector) return [];
     const provs = getProvinces();
     let p = provs.find(p => getDistricts(p).includes(dist));
-    return p ? getCells(p, dist, mobileForm.origin_sector).sort().map(c => ({ value: c, label: c })) : [];
+    try {
+      return p ? getCells(p, dist, mobileForm.origin_sector).sort().map(c => ({ value: c, label: c })) : [];
+    } catch (e) {
+      return [];
+    }
   }, [mobileForm.origin_district, mobileForm.origin_sector, user]);
 
   const originVillageOptions = useMemo(() => {
@@ -845,7 +849,11 @@ const CreatePermit = () => {
     if (!dist || !mobileForm.origin_sector || !mobileForm.origin_cell) return [];
     const provs = getProvinces();
     let p = provs.find(p => getDistricts(p).includes(dist));
-    return p ? getVillages(p, dist, mobileForm.origin_sector, mobileForm.origin_cell).sort().map(v => ({ value: v, label: v })) : [];
+    try {
+      return p ? getVillages(p, dist, mobileForm.origin_sector, mobileForm.origin_cell).sort().map(v => ({ value: v, label: v })) : [];
+    } catch (e) {
+      return [];
+    }
   }, [mobileForm.origin_district, mobileForm.origin_sector, mobileForm.origin_cell, user]);
 
   const destCellOptions = useMemo(() => {
@@ -853,7 +861,11 @@ const CreatePermit = () => {
     if (!dist || !mobileForm.dest_sector) return [];
     const provs = getProvinces();
     let p = provs.find(p => getDistricts(p).includes(dist));
-    return p ? getCells(p, dist, mobileForm.dest_sector).sort().map(c => ({ value: c, label: c })) : [];
+    try {
+      return p ? getCells(p, dist, mobileForm.dest_sector).sort().map(c => ({ value: c, label: c })) : [];
+    } catch (e) {
+      return [];
+    }
   }, [mobileForm.dest_district, mobileForm.dest_sector, user]);
 
   const destVillageOptions = useMemo(() => {
@@ -861,7 +873,11 @@ const CreatePermit = () => {
     if (!dist || !mobileForm.dest_sector || !mobileForm.dest_cell) return [];
     const provs = getProvinces();
     let p = provs.find(p => getDistricts(p).includes(dist));
-    return p ? getVillages(p, dist, mobileForm.dest_sector, mobileForm.dest_cell).sort().map(v => ({ value: v, label: v })) : [];
+    try {
+      return p ? getVillages(p, dist, mobileForm.dest_sector, mobileForm.dest_cell).sort().map(v => ({ value: v, label: v })) : [];
+    } catch (e) {
+      return [];
+    }
   }, [mobileForm.dest_district, mobileForm.dest_sector, mobileForm.dest_cell, user]);
   return (
     <>
