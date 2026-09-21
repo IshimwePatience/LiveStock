@@ -74,6 +74,8 @@ const restoreUser = async () => {
         '2368125', '2368128', '1092201', '1055729', '2288080'
       ];
 
+      const tagsMovement3 = Array.from({ length: 20 }, (_, i) => `COW-GAT-${String(i + 1).padStart(3, '0')}`);
+
       const gatsiboMovements = [
         // 1. Gatsibo (Rwimbogo) -> Nyarugenge (Gitega)
         {
@@ -148,7 +150,7 @@ const restoreUser = async () => {
           origin_id: 'Gatsibo',
           destination_id: 'Nyagatare',
           animal_type: 'Inka (Cow)',
-          count: 20,
+          count: tagsMovement3.length,
           reason: 'Korora (Breeding)',
           owner_name: 'Gatsibo Farmer',
           owner_id_number: '1198780045812903',
@@ -170,7 +172,8 @@ const restoreUser = async () => {
           driver_nid: '1199380034812306',
           cargo_photo: '/cargo_photos/cargo3.jpg',
           status: 'APPROVED',
-          initiator_id: primaryUser.id
+          initiator_id: primaryUser.id,
+          tags: tagsMovement3
         }
       ];
 
@@ -201,7 +204,7 @@ const restoreUser = async () => {
             color: 'BLACK/WHITE'
           }));
           await MovementAnimal.bulkCreate(animalsToInsert);
-          console.log(`   🏷️  Attached ${tags.length} handwritten cow ear-tags to Permit #${reqData.permit_number}`);
+          console.log(`   🏷️  Attached ${tags.length} cow ear-tags to Permit #${reqData.permit_number}`);
         }
       }
     }

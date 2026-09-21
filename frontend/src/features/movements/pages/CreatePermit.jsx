@@ -169,69 +169,44 @@ const CreatePermit = () => {
             })));
           }
 
-          // Populate grid data dynamically based on loaded animals count
-          const animalCount = data.Animals?.length || 1;
+          // Populate grid data dynamically based on loaded animals count or total permit count
+          const animalCount = Math.max(data.Animals?.length || 0, data.count || 1);
           const totalRowsNeeded = Math.max(NUM_ROWS, Math.ceil(animalCount / PAGE_SIZE) * PAGE_SIZE);
           const newGrid = Array(totalRowsNeeded).fill(null).map(() => Array(NUM_COLS).fill(''));
 
-          if (data.Animals && data.Animals.length > 0) {
-            data.Animals.forEach((a, r) => {
-              newGrid[r][0] = data.owner_name || '';
-              newGrid[r][1] = data.owner_id_number || '';
-              newGrid[r][2] = data.owner_phone || '';
-              newGrid[r][3] = data.reason || '';
-              newGrid[r][4] = data.priority || '';
-              newGrid[r][5] = data.valid_until ? data.valid_until.split('T')[0] : '';
-              newGrid[r][6] = data.transport_type || '';
-              newGrid[r][7] = data.plate_number || '';
-              newGrid[r][8] = data.origin_district || '';
-              newGrid[r][9] = data.origin_sector || '';
-              newGrid[r][10] = data.origin_cell || '';
-              newGrid[r][11] = data.origin_village || '';
-              newGrid[r][12] = data.dest_district || '';
-              newGrid[r][13] = data.dest_sector || '';
-              newGrid[r][14] = data.dest_cell || '';
-              newGrid[r][15] = data.dest_village || '';
-              newGrid[r][16] = a.animal_type || data.animal_type || 'COW';
-              newGrid[r][17] = a.tag_number || '';
-              newGrid[r][18] = a.sex || 'F';
-              newGrid[r][19] = a.breed || '';
-              newGrid[r][20] = a.color || '';
-              newGrid[r][21] = a.vaccines || '';
-              newGrid[r][22] = a.medication || '';
-              newGrid[r][23] = data.driver_name || '';
-              newGrid[r][24] = data.driver_phone || '';
-              newGrid[r][25] = data.driver_nid || '';
-              newGrid[r][26] = data.buyer_type || '';
-              newGrid[r][27] = data.buyer_name || '';
-              newGrid[r][28] = data.buyer_phone || '';
-              newGrid[r][29] = data.buyer_id_tin || '';
-            });
-          } else {
-            newGrid[0][0] = data.owner_name || '';
-            newGrid[0][1] = data.owner_id_number || '';
-            newGrid[0][2] = data.owner_phone || '';
-            newGrid[0][3] = data.reason || '';
-            newGrid[0][4] = data.priority || '';
-            newGrid[0][5] = data.valid_until ? data.valid_until.split('T')[0] : '';
-            newGrid[0][6] = data.transport_type || '';
-            newGrid[0][7] = data.plate_number || '';
-            newGrid[0][8] = data.origin_district || '';
-            newGrid[0][9] = data.origin_sector || '';
-            newGrid[0][10] = data.origin_cell || '';
-            newGrid[0][11] = data.origin_village || '';
-            newGrid[0][12] = data.dest_district || '';
-            newGrid[0][13] = data.dest_sector || '';
-            newGrid[0][14] = data.dest_cell || '';
-            newGrid[0][15] = data.dest_village || '';
-            newGrid[0][16] = data.animal_type || 'COW';
-            newGrid[0][23] = data.driver_name || '';
-            newGrid[0][24] = data.driver_phone || '';
-            newGrid[0][25] = data.driver_nid || '';
-            newGrid[0][26] = data.buyer_type || '';
-            newGrid[0][27] = data.buyer_name || '';
-            newGrid[0][28] = data.buyer_phone || '';
-            newGrid[0][29] = data.buyer_id_tin || '';
+          const targetRows = Math.max(data.Animals?.length || 0, data.count || 1);
+          for (let r = 0; r < targetRows; r++) {
+            const a = data.Animals?.[r] || {};
+            newGrid[r][0] = data.owner_name || '';
+            newGrid[r][1] = data.owner_id_number || '';
+            newGrid[r][2] = data.owner_phone || '';
+            newGrid[r][3] = data.reason || '';
+            newGrid[r][4] = data.priority || '';
+            newGrid[r][5] = data.valid_until ? data.valid_until.split('T')[0] : '';
+            newGrid[r][6] = data.transport_type || '';
+            newGrid[r][7] = data.plate_number || '';
+            newGrid[r][8] = data.origin_district || '';
+            newGrid[r][9] = data.origin_sector || '';
+            newGrid[r][10] = data.origin_cell || '';
+            newGrid[r][11] = data.origin_village || '';
+            newGrid[r][12] = data.dest_district || '';
+            newGrid[r][13] = data.dest_sector || '';
+            newGrid[r][14] = data.dest_cell || '';
+            newGrid[r][15] = data.dest_village || '';
+            newGrid[r][16] = a.animal_type || data.animal_type || 'COW';
+            newGrid[r][17] = a.tag_number || (data.count > 1 ? `COW-GAT-${String(r + 1).padStart(3, '0')}` : '');
+            newGrid[r][18] = a.sex || 'F';
+            newGrid[r][19] = a.breed || '';
+            newGrid[r][20] = a.color || '';
+            newGrid[r][21] = a.vaccines || '';
+            newGrid[r][22] = a.medication || '';
+            newGrid[r][23] = data.driver_name || '';
+            newGrid[r][24] = data.driver_phone || '';
+            newGrid[r][25] = data.driver_nid || '';
+            newGrid[r][26] = data.buyer_type || '';
+            newGrid[r][27] = data.buyer_name || '';
+            newGrid[r][28] = data.buyer_phone || '';
+            newGrid[r][29] = data.buyer_id_tin || '';
           }
           setGridData(newGrid);
 
