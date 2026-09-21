@@ -9,38 +9,43 @@ const restoreUser = async () => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash('12345678', salt);
 
-    const emails = ['078303876@daro.gov.rw', '0788303876@daro.gov.rw', 'dvogatsibo@gmal.com', 'daro.gatsibo@daro.gov.rw'];
-    let primaryUser = null;
+    // Primary email for Gatsibo DARO officer
+    const primaryEmail = '078303876@daro.gov.rw';
+    const primaryPhone = '078303876';
 
-    for (const email of emails) {
-      let existingUser = await User.findOne({ where: { email } });
-      const phoneNum = '078303876';
-
-      if (!existingUser) {
-        existingUser = await User.create({
-          name: 'HITIYAREMYE Valens',
-          email: email,
-          phone: phoneNum,
-          password_hash,
-          role: 'DARO',
-          district_id: 'Gatsibo',
-          status: 'Active',
-          must_change_password: false,
-          permissions: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management']
-        });
-        console.log(`✅ Created Gatsibo DARO user: HITIYAREMYE Valens (${email})`);
-      } else {
-        await existingUser.update({
-          name: 'HITIYAREMYE Valens',
-          phone: phoneNum,
-          status: 'Active',
-          district_id: 'Gatsibo',
-          role: 'DARO',
-          permissions: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management']
-        });
-        console.log(`✅ Updated Gatsibo DARO user: HITIYAREMYE Valens (${email})`);
+    let primaryUser = await User.findOne({
+      where: {
+        [sequelize.Sequelize.Op.or]: [
+          { email: primaryEmail },
+          { phone: primaryPhone },
+          { email: 'dvogatsibo@gmal.com' },
+          { email: 'daro.gatsibo@daro.gov.rw' }
+        ]
       }
-      if (!primaryUser) primaryUser = existingUser;
+    });
+
+    if (!primaryUser) {
+      primaryUser = await User.create({
+        name: 'HITIYAREMYE Valens',
+        email: primaryEmail,
+        phone: primaryPhone,
+        password_hash,
+        role: 'DARO',
+        district_id: 'Gatsibo',
+        status: 'Active',
+        must_change_password: false,
+        permissions: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management']
+      });
+      console.log(`✅ Created Gatsibo DARO user: HITIYAREMYE Valens (${primaryEmail})`);
+    } else {
+      await primaryUser.update({
+        name: 'HITIYAREMYE Valens',
+        status: 'Active',
+        district_id: 'Gatsibo',
+        role: 'DARO',
+        permissions: ['overview', 'gps', 'movements', 'geofencing', 'national_reports', 'notifications', 'user_management']
+      });
+      console.log(`✅ Updated Gatsibo DARO user: HITIYAREMYE Valens (${primaryUser.email})`);
     }
 
     if (primaryUser) {
