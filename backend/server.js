@@ -53,12 +53,30 @@ socketService.init(server);
 
 // Sync Database
 const autoSeed = require('./seeders/autoSeed');
-sequelize.sync({ alter: true }).then(async () => {
-  console.log('Database synced');
-  await autoSeed();
-}).catch(err => {
-  console.error('Failed to sync db:', err);
-});
+
+async function ensureDbEnums() {
+  try {
+    await sequelize.query(`ALTER TYPE "enum_Trips_status" ADD VALUE IF NOT EXISTS 'SCHEDULED';`).catch(() => {});
+    await sequelize.query(`ALTER TYPE "enum_Trips_status" ADD VALUE IF NOT EXISTS 'ACTIVE';`).catch(() => {});
+    await sequelize.query(`ALTER TYPE "enum_Trips_status" ADD VALUE IF NOT EXISTS 'IN_PROGRESS';`).catch(() => {});
+    await sequelize.query(`ALTER TYPE "enum_Trips_status" ADD VALUE IF NOT EXISTS 'COMPLETED';`).catch(() => {});
+    await sequelize.query(`ALTER TYPE "enum_Trips_status" ADD VALUE IF NOT EXISTS 'CANCELLED';`).catch(() => {});
+    await sequelize.query(`ALTER TABLE "Trips" ALTER COLUMN status TYPE VARCHAR(255) USING status::VARCHAR;`).catch(() => {});
+  } catch (err) {
+    console.error('Db enum check notice:', err.message);
+  }
+}
+
+(async () => {
+  try {
+    await ensureDbEnums();
+    await sequelize.sync({ alter: true });
+    console.log('Database synced');
+    await autoSeed();
+  } catch (err) {
+    console.error('Failed to sync db:', err);
+  }
+})();
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

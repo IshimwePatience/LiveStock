@@ -46,8 +46,6 @@ class NotificationService {
       for (const r of rawRoles) {
         if (!r || typeof r !== 'string') continue;
         roleSet.add(r.toUpperCase());
-        roleSet.add(r.toLowerCase());
-        roleSet.add(r.charAt(0).toUpperCase() + r.slice(1).toLowerCase());
       }
       const roleList = Array.from(roleSet);
 
