@@ -43,6 +43,22 @@ const COLUMNS = [
   { title: 'Indangamuntu / TIN y\'Umuguzi', width: 180, key: 'buyer_id_tin' },
 ];
 
+const VEHICLE_PLATES = [
+  'RAD 237K',
+  'RAE 212V',
+  'RAF 740N',
+  'RAG 272X',
+  'RAH 142Y',
+  'RAI 182I',
+  'RAI 222R',
+  'RAI 928Q',
+  'RAJ 213B',
+  'RAJ 312J',
+  'RAJ 395R',
+  'RAB 195F',
+  'RTF123A'
+];
+
 const CreatePermit = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1008,14 +1024,21 @@ const CreatePermit = () => {
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Pulaki ya Imodoka (Plate Number)</label>
-                  <input
-                    type="text"
-                    readOnly={isViewMode}
+                  <select
+                    disabled={isViewMode}
                     value={headerForm.plate_number}
-                    onChange={(e) => setHeaderForm(prev => ({ ...prev, plate_number: e.target.value }))}
-                    placeholder="RAB 195F"
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm read-only:bg-gray-50 read-only:cursor-not-allowed"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setHeaderForm(prev => ({ ...prev, plate_number: val }));
+                      setMobileForm(prev => ({ ...prev, plate_number: val }));
+                    }}
+                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- Hitamo Pulaki (Select Plate) --</option>
+                    {VEHICLE_PLATES.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
                 </div>
               </>
             ) : (
@@ -1361,7 +1384,7 @@ const CreatePermit = () => {
                                   } else if (cIdx === 4) {
                                     opts = ['Minor', 'Urgency'];
                                   } else if (cIdx === 7) {
-                                    opts = ['RAB 195F'];
+                                    opts = VEHICLE_PLATES;
                                   } else if (cIdx === 26) {
                                     opts = ['Person (Umuntu)', 'Company (Isociete)'];
                                   }
@@ -1371,6 +1394,7 @@ const CreatePermit = () => {
                             ) : (
                               <input
                                 ref={inputRef}
+                                type={cIdx === 5 ? 'date' : 'text'}
                                 className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white"
                                 value={val}
                                 onChange={(e) => {
@@ -1391,7 +1415,7 @@ const CreatePermit = () => {
                                 if (isSelected) handleCellKeyDown(e, originalIndex, cIdx);
                               }}
                               onDoubleClick={() => {
-                                if (!isViewMode && ![5].includes(cIdx)) setIsEditing(true);
+                                if (!isViewMode) setIsEditing(true);
                               }}
                             >
                               <span className="truncate">{val ? val : (isDropdownCol ? <span className="text-gray-400">-- Hitamo --</span> : '')}</span>
@@ -1562,7 +1586,15 @@ const CreatePermit = () => {
                         <input type="text" name="driver_nid" required value={mobileForm.driver_nid || headerForm.driver_nid} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, driver_nid: e.target.value.replace(/\D/g, '').slice(0, 16) })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="Imibare 16" />
                       </FormCard>
                       <FormCard title="Pulaki y'Imodoka (Plate Number)" required>
-                        <input type="text" name="plate_number" required value={mobileForm.plate_number || headerForm.plate_number} onChange={(e) => { handleMobileChange(e); setHeaderForm(prev => ({ ...prev, plate_number: e.target.value })); }} className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors" placeholder="RAB 195F" />
+                        <CustomSelect
+                          value={mobileForm.plate_number || headerForm.plate_number}
+                          onChange={(v) => {
+                            handleMobileSelect('plate_number', v);
+                            setHeaderForm(prev => ({ ...prev, plate_number: v }));
+                          }}
+                          options={VEHICLE_PLATES.map(p => ({ value: p, label: p }))}
+                          disabled={isViewMode}
+                        />
                       </FormCard>
                     </>
                   ) : (
@@ -1670,8 +1702,15 @@ const CreatePermit = () => {
                     </>
                   )}
 
-                  <FormCard title="Ifite agaciro kugeza" required>
-                    <input type="date" name="valid_until" readOnly value={mobileForm.valid_until} className="w-full border-b border-gray-300 py-1 outline-none bg-gray-50 text-gray-500 cursor-not-allowed" />
+                  <FormCard title="Ifite agaciro kugeza (YYYY-MM-DD)" required>
+                    <input
+                      type="date"
+                      name="valid_until"
+                      readOnly={isViewMode}
+                      value={mobileForm.valid_until}
+                      onChange={handleMobileChange}
+                      className="w-full border-b border-gray-300 focus:border-[#673AB7] focus:border-b-2 py-1 outline-none bg-transparent transition-colors read-only:bg-gray-50 read-only:cursor-not-allowed"
+                    />
                   </FormCard>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
