@@ -54,9 +54,7 @@ const VEHICLE_PLATES = [
   'RAI 928Q',
   'RAJ 213B',
   'RAJ 312J',
-  'RAJ 395R',
-  'RAB 195F',
-  'RTF123A'
+  'RAJ 395R'
 ];
 
 const CreatePermit = () => {
@@ -426,14 +424,13 @@ const CreatePermit = () => {
 
       newData[r][c] = value;
 
-      const hasDefaults = newData[r][5] === new Date().toISOString().split('T')[0];
-      if (!hasDefaults && value.toString().trim() !== '') {
+      if (!newData[r][5] && value.toString().trim() !== '') {
         const today = new Date().toISOString().split('T')[0];
         newData[r][5] = today;
-        if (user) {
-          if (!newData[r][8]) newData[r][8] = user.district_id || '';
-          if (!newData[r][9]) newData[r][9] = user.sector_id || '';
-        }
+      }
+      if (user && value.toString().trim() !== '') {
+        if (!newData[r][8]) newData[r][8] = user.district_id || '';
+        if (!newData[r][9]) newData[r][9] = user.sector_id || '';
       }
       return newData;
     });
@@ -587,7 +584,7 @@ const CreatePermit = () => {
     transporter_mode: 'DRIVER_VEHICLE',
     cargo_photo: '',
     transport_type: 'Imodoka',
-    plate_number: 'RAB 195F',
+    plate_number: '',
     driver_name: '',
     driver_phone: '',
     driver_nid: '',
@@ -683,7 +680,7 @@ const CreatePermit = () => {
       transporter_mode: 'DRIVER_VEHICLE',
       cargo_photo: '',
       transport_type: 'Imodoka',
-      plate_number: 'RAB 195F',
+      plate_number: 'RAD 237K',
       driver_name: '',
       driver_phone: '',
       driver_nid: '',
@@ -762,7 +759,7 @@ const CreatePermit = () => {
         transporter_mode: mode,
         cargo_photo: photo,
         transport_type: mode === 'PERSON_ON_FOOT' ? 'Umunyamaguru / Person' : (mobileForm.transport_type || headerForm.transport_type || 'Imodoka'),
-        plate_number: mode === 'PERSON_ON_FOOT' ? 'ON_FOOT' : (plate || 'RAB 195F'),
+        plate_number: mode === 'PERSON_ON_FOOT' ? 'ON_FOOT' : (plate || 'RAD 237K'),
         driver_name: dName,
         driver_phone: dPhone,
         driver_nid: dNid,
@@ -1398,14 +1395,12 @@ const CreatePermit = () => {
                                   if (cIdx === 2) newVal = newVal.replace(/\D/g, '').slice(0, 10);
                                   updateGridCell(originalIndex, cIdx, newVal);
                                   if (cIdx === 5 && newVal) {
-                                    setTimeout(() => setIsEditing(false), 150);
+                                    setIsEditing(false);
                                   }
                                 }}
                                 onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
                                 onBlur={() => {
-                                  if (cIdx === 5) {
-                                    setTimeout(() => setIsEditing(false), 250);
-                                  } else {
+                                  if (cIdx !== 5) {
                                     setIsEditing(false);
                                   }
                                 }}
