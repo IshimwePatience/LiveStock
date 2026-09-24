@@ -1024,21 +1024,16 @@ const CreatePermit = () => {
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">Pulaki ya Imodoka (Plate Number)</label>
-                  <select
-                    disabled={isViewMode}
+                  <CustomSelect
                     value={headerForm.plate_number}
-                    onChange={(e) => {
-                      const val = e.target.value;
+                    onChange={(val) => {
                       setHeaderForm(prev => ({ ...prev, plate_number: val }));
                       setMobileForm(prev => ({ ...prev, plate_number: val }));
                     }}
-                    className="w-full bg-white border border-gray-300 focus:border-[#4c9aff] focus:ring-2 focus:ring-[#4c9aff]/20 rounded-md px-3 py-1.5 text-sm text-gray-800 outline-none transition-all shadow-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">-- Hitamo Pulaki (Select Plate) --</option>
-                    {VEHICLE_PLATES.map(p => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
+                    options={VEHICLE_PLATES.map(p => ({ value: p, label: p }))}
+                    disabled={isViewMode}
+                    placeholder="-- Hitamo Pulaki (Select Plate) --"
+                  />
                 </div>
               </>
             ) : (
@@ -1396,15 +1391,24 @@ const CreatePermit = () => {
                                 ref={inputRef}
                                 type={cIdx === 5 ? 'date' : 'text'}
                                 className="w-full h-full outline-none px-1.5 absolute inset-0 bg-white"
-                                value={val}
+                                value={cIdx === 5 && val ? val.split('T')[0] : val}
                                 onChange={(e) => {
                                   let newVal = e.target.value;
                                   if (cIdx === 1) newVal = newVal.replace(/\D/g, '').slice(0, 16);
                                   if (cIdx === 2) newVal = newVal.replace(/\D/g, '').slice(0, 10);
                                   updateGridCell(originalIndex, cIdx, newVal);
+                                  if (cIdx === 5 && newVal) {
+                                    setTimeout(() => setIsEditing(false), 150);
+                                  }
                                 }}
                                 onKeyDown={(e) => handleCellKeyDown(e, originalIndex, cIdx)}
-                                onBlur={() => setIsEditing(false)}
+                                onBlur={() => {
+                                  if (cIdx === 5) {
+                                    setTimeout(() => setIsEditing(false), 250);
+                                  } else {
+                                    setIsEditing(false);
+                                  }
+                                }}
                               />
                             )
                           ) : (
